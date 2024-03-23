@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useElementSize } from '@vueuse/core'
+
+import GardenFeature from './GardenFeature.vue'
+import NewFeature from './NewFeature.vue'
 import ToolButton from './ToolButton.vue'
-import { colors, type HexColor } from './colors'
-import ColorPicker from './ColorPicker.vue'
+import type { GardenThing, Tool } from './types'
+import GardenSymbols from './GardenSymbols.vue'
 
 const getFileBase64 = async (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -24,6 +28,7 @@ onMounted(() => {
   if (storedShapes) {
     shapes.value = JSON.parse(storedShapes)
   }
+
   document.addEventListener('paste', async (e) => {
     if (!e.clipboardData || !e.clipboardData.items) return
     const file = e.clipboardData.items[0].getAsFile()
@@ -37,207 +42,194 @@ onMounted(() => {
   })
 })
 
-const tools = ['circle', 'rectangle', 'line'] as const
-const tool = ref<'circle' | 'rectangle' | 'line'>()
+const img = ref<HTMLImageElement | null>(null)
+const { width: imgWidth, height: imgHeight } = useElementSize(img)
 
-const shapes = ref<
-  (
-    | {
-        type: 'circle'
-        cx: number
-        cy: number
-        r: number
-        color: HexColor
-      }
-    | {
-        type: 'rectangle'
-        x: number
-        y: number
-        width: number
-        height: number
-        color: HexColor
-      }
-    | {
-        type: 'line'
-        path: string
-        color: HexColor
-      }
-  )[]
->([])
+const tools: Tool[] = [{ kind: 'blueberry', name: 'blueberry' }]
 
-watch(
-  shapes,
-  () => {
-    localStorage.setItem('shapes', JSON.stringify(shapes.value))
-  },
-  { deep: true }
+const tool = ref<Tool>()
+
+const shapes = ref<GardenThing[]>([])
+
+watch(shapes, () => localStorage.setItem('shapes', JSON.stringify(shapes.value)), { deep: true })
+
+const scaleUp = (s: GardenThing, imgWidth: number, imgHeight: number): GardenThing => {
+  return {
+    ...s,
+    x: s.x * imgWidth,
+    y: s.y * imgHeight,
+    width: s.width * imgWidth,
+    height: s.height * imgHeight
+  }
+}
+
+const scaleDown = (s: GardenThing, imgWidth: number, imgHeight: number): GardenThing => {
+  return {
+    ...s,
+    x: s.x / imgWidth,
+    y: s.y / imgHeight,
+    width: s.width / imgWidth,
+    height: s.height / imgHeight
+  }
+}
+
+const scaledShapes = computed<GardenThing[]>(() =>
+  shapes.value.map((s) => scaleUp(s, imgWidth.value, imgHeight.value))
 )
 
-const newCircle = ref<{ cx: number; cy: number; r: number; color: HexColor }>()
-const newRectangle = ref<{ x: number; y: number; width: number; height: number; color: HexColor }>()
-const newLine = ref<{ x1: number; y1: number; x2: number; y2: number; color: HexColor }>()
-
-const getPath = (x1: number, y1: number, x2: number, y2: number) => `M ${x1} ${y1} L ${x2} ${y2}`
+const shapeStart = ref({ x: 0, y: 0 })
+const scaledShapeStart = computed(() => ({
+  x: shapeStart.value.x * imgWidth.value,
+  y: shapeStart.value.y * imgHeight.value
+}))
+const shapeEnd = ref<{ x: number; y: number }>()
+const scaledShapeEnd = computed(() => {
+  if (!shapeEnd.value) {
+    return undefined
+  }
+  return {
+    x: shapeEnd.value.x * imgWidth.value,
+    y: shapeEnd.value.y * imgHeight.value
+  }
+})
 
 const start = (e: MouseEvent) => {
-  if (tool.value === 'circle') {
-    newCircle.value = { cx: e.offsetX, cy: e.offsetY, r: 0, color: currentColor.value }
+  if (!tool.value) {
+    return
   }
 
-  if (tool.value === 'rectangle') {
-    newRectangle.value = {
-      x: e.offsetX,
-      y: e.offsetY,
-      width: 0,
-      height: 0,
-      color: currentColor.value
-    }
+  if (e.button !== 0 || e.shiftKey) {
+    return
   }
 
-  if (tool.value === 'line') {
-    newLine.value = {
-      x1: e.offsetX,
-      y1: e.offsetY,
-      x2: e.offsetX,
-      y2: e.offsetY,
-      color: currentColor.value
-    }
-  }
+  shapeStart.value = { x: e.offsetX / imgWidth.value, y: e.offsetY / imgHeight.value }
+  shapeEnd.value = { x: e.offsetX / imgWidth.value, y: e.offsetY / imgHeight.value }
 }
 
 const update = (e: MouseEvent) => {
-  if (newCircle.value) {
-    newCircle.value.r = Math.sqrt(
-      Math.pow(e.offsetX - newCircle.value.cx, 2) + Math.pow(e.offsetY - newCircle.value.cy, 2)
-    )
+  if (!shapeStart.value) {
+    return
   }
-
-  if (newRectangle.value) {
-    newRectangle.value.width = e.offsetX - newRectangle.value.x
-    newRectangle.value.height = e.offsetY - newRectangle.value.y
+  if (!shapeEnd.value) {
+    return
   }
-
-  if (newLine.value) {
-    newLine.value.x2 = e.offsetX
-    newLine.value.y2 = e.offsetY
-  }
+  shapeEnd.value = { x: e.offsetX / imgWidth.value, y: e.offsetY / imgHeight.value }
 }
 
 const end = () => {
-  if (newCircle.value) {
-    shapes.value.push({
-      type: 'circle',
-      cx: newCircle.value.cx,
-      cy: newCircle.value.cy,
-      r: newCircle.value.r,
-      color: currentColor.value
-    })
-    newCircle.value = undefined
+  if (!shapeEnd.value) {
+    return
   }
 
-  if (newRectangle.value) {
-    shapes.value.push({
-      type: 'rectangle',
-      x: newRectangle.value.x,
-      y: newRectangle.value.y,
-      width: newRectangle.value.width,
-      height: newRectangle.value.height,
-      color: currentColor.value
-    })
-    newRectangle.value = undefined
+  const x = Math.min(shapeStart.value.x, shapeEnd.value.x)
+  const y = Math.min(shapeStart.value.y, shapeEnd.value.y)
+  const width = Math.abs(shapeStart.value.x - shapeEnd.value.x)
+  const height = Math.abs(shapeStart.value.y - shapeEnd.value.y)
+
+  console.log(width, height)
+
+  if (width < 0.01 || height < 0.01) {
+    return
   }
 
-  if (newLine.value) {
+  if (tool.value?.kind === 'blueberry') {
     shapes.value.push({
-      type: 'line',
-      path: getPath(newLine.value.x1, newLine.value.y1, newLine.value.x2, newLine.value.y2),
-      color: currentColor.value
+      kind: 'blueberry',
+      name: 'blueberry',
+      x: Math.min(shapeStart.value.x, shapeEnd.value.x),
+      y: Math.min(shapeStart.value.y, shapeEnd.value.y),
+      width: Math.abs(shapeStart.value.x - shapeEnd.value.x),
+      height: Math.abs(shapeStart.value.y - shapeEnd.value.y)
     })
-    newLine.value = undefined
   }
+
+  shapeEnd.value = undefined
 }
+
+const newShape = computed(() => {
+  if (!shapeEnd.value) {
+    return
+  }
+
+  const x = Math.min(shapeStart.value.x, shapeEnd.value.x)
+  const y = Math.min(shapeStart.value.y, shapeEnd.value.y)
+  const width = Math.abs(shapeStart.value.x - shapeEnd.value.x)
+  const height = Math.abs(shapeStart.value.y - shapeEnd.value.y)
+
+  if (tool.value?.kind === 'blueberry') {
+    return scaleUp(
+      {
+        kind: 'blueberry',
+        name: 'blueberry',
+        x,
+        y,
+        width,
+        height
+      },
+      imgWidth.value,
+      imgHeight.value
+    )
+  }
+})
 
 const deleteShape = (index: number) => {
   shapes.value.splice(index, 1)
 }
 
-const currentColor = ref<HexColor>(colors.blueberry)
+const handleKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'z' && e.metaKey) {
+    shapes.value.pop()
+  }
+}
+onMounted(() => document.addEventListener('keydown', handleKeydown))
+onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown))
+
+const selectedIndex = ref<number | null>(null)
 </script>
 
 <template>
-  <div class="relative flex place-items-center w-full h-full justify-center">
-    <img
-      class="max-w-full max-h-full object-contain flex-grow opacity-50"
-      v-if="imgSrc"
-      :src="imgSrc"
-    />
-    <div v-else>Paste a clip from google maps here</div>
-    <svg class="absolute w-full h-full" @mousedown="start" @mousemove="update" @mouseup="end">
-      <template v-for="(shape, index) in shapes">
-        <circle
-          @click.shift="deleteShape(index)"
-          v-if="shape.type === 'circle'"
-          :cx="shape.cx"
-          :cy="shape.cy"
-          :r="shape.r"
-          fill="transparent"
-          stroke-width="3"
-          :stroke="shape.color"
-        />
-        <rect
-          @click.shift="deleteShape(index)"
-          v-if="shape.type === 'rectangle'"
-          :x="shape.x"
-          :y="shape.y"
-          :width="shape.width"
-          :height="shape.height"
-          fill="transparent"
-          stroke-width="3"
-          :stroke="shape.color"
-        />
-        <path
-          @click.shift="deleteShape(index)"
-          v-if="shape.type === 'line'"
-          :d="shape.path"
-          stroke-width="3"
-          :stroke="shape.color"
-        />
-      </template>
-      <circle
-        v-if="newCircle"
-        :cx="newCircle.cx"
-        :cy="newCircle.cy"
-        :r="newCircle.r"
-        fill="transparent"
-        stroke-width="3"
-        :stroke="currentColor"
+  <GardenSymbols />
+  <div class="flex place-items-center w-full h-full justify-center">
+    <div class="grid grid-cols-[1fr] place-items-center">
+      <img
+        class="col-start-1 col-span-1 row-start-1 row-span-1 h-full object-contain opacity-50"
+        v-if="imgSrc"
+        :src="imgSrc"
+        ref="img"
       />
-      <rect
-        v-if="newRectangle"
-        :x="newRectangle.x"
-        :y="newRectangle.y"
-        :width="newRectangle.width"
-        :height="newRectangle.height"
-        fill="transparent"
-        stroke-width="3"
-        :stroke="currentColor"
-      />
-      <path
-        v-if="newLine"
-        :d="getPath(newLine.x1, newLine.y1, newLine.x2, newLine.y2)"
-        :stroke="currentColor"
-        stroke-width="3"
-      />
-    </svg>
+      <div v-else>Paste a clip from google maps here</div>
+      <svg
+        @mousedown="start"
+        @mousemove="update"
+        @mouseup="end"
+        class="col-start-1 col-span-1 row-start-1 row-span-1 z-10 w-full h-full"
+      >
+        <GardenFeature
+          :shape="shape"
+          v-for="(shape, index) in scaledShapes"
+          @delete="deleteShape(index)"
+          :active="selectedIndex === index"
+          @click="selectedIndex = index"
+          @update="($event) => (shapes[index] = scaleDown($event, imgWidth, imgHeight))"
+        />
+        <GardenFeature v-if="newShape" :shape="newShape" active />
+        <NewFeature
+          v-if="scaledShapeEnd && tool"
+          :start="scaledShapeStart"
+          :end="scaledShapeEnd"
+          :tool="tool"
+        />
+      </svg>
+    </div>
     <div class="absolute left-0 top-0 p-2 flex flex-col gap-1 text-sky-200">
       <ToolButton
         v-for="t in tools"
         @click="tool = t"
-        :tool="t"
-        :active="tool === t"
-        :color="currentColor"
+        :tool-kind="t.kind"
+        :tool-name="t.name"
+        :active="tool?.kind === t.kind"
       />
-      <ColorPicker :currentColor="currentColor" @change="currentColor = $event" />
     </div>
   </div>
 </template>
+./types ./geometry

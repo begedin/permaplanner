@@ -1,7 +1,8 @@
-/* eslint-env node */
-require('@rushstack/eslint-patch/modern-module-resolution')
+import '@rushstack/eslint-patch/modern-module-resolution'
 
-module.exports = {
+import tseslint from 'typescript-eslint'
+
+export default tseslint.config({
   root: true,
   extends: [
     'plugin:vue/vue3-essential',
@@ -13,7 +14,8 @@ module.exports = {
     ecmaVersion: 'latest'
   },
   rules: {
-    'arrow-body-style': 'as-needed',
+    'arrow-body-style': ['error', 'as-needed'],
     'arrow-parens': 'as-needed'
-  }
-}
+  },
+  ...tseslint.configs.recommended
+})
