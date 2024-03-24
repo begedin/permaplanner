@@ -2,12 +2,12 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useElementSize } from '@vueuse/core'
 
+import { scaleUp, scaleDown } from './geometry'
+import { tools } from './data'
 import GardenFeature from './GardenFeature.vue'
-import NewFeature from './NewFeature.vue'
+import GardenSymbols from './GardenSymbols.vue'
 import ToolButton from './ToolButton.vue'
 import type { GardenThing, Tool } from './data'
-import { tools } from './data'
-import GardenSymbols from './GardenSymbols.vue'
 
 const getFileBase64 = async (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -51,26 +51,6 @@ const tool = ref<Tool>()
 const shapes = ref<GardenThing[]>([])
 
 watch(shapes, () => localStorage.setItem('shapes', JSON.stringify(shapes.value)), { deep: true })
-
-const scaleUp = (s: GardenThing, imgWidth: number, imgHeight: number): GardenThing => {
-  return {
-    ...s,
-    x: s.x * imgWidth,
-    y: s.y * imgHeight,
-    width: s.width * imgWidth,
-    height: s.height * imgHeight
-  }
-}
-
-const scaleDown = (s: GardenThing, imgWidth: number, imgHeight: number): GardenThing => {
-  return {
-    ...s,
-    x: s.x / imgWidth,
-    y: s.y / imgHeight,
-    width: s.width / imgWidth,
-    height: s.height / imgHeight
-  }
-}
 
 const scaledShapes = computed<GardenThing[]>(() =>
   shapes.value.map((s) => scaleUp(s, imgWidth.value, imgHeight.value))
@@ -206,12 +186,6 @@ const hoveredIndex = ref<number | null>(null)
           @update="($event) => (shapes[index] = scaleDown($event, imgWidth, imgHeight))"
         />
         <GardenFeature v-if="newShape" :shape="newShape" active />
-        <NewFeature
-          v-if="scaledShapeEnd && tool"
-          :start="scaledShapeStart"
-          :end="scaledShapeEnd"
-          :tool="tool"
-        />
       </svg>
     </div>
     <div class="absolute left-0 top-0 p-2 flex flex-col gap-1 text-sky-200">
