@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import type { GardenThing } from './types'
+import type { GardenThing } from './data'
 
 const props = defineProps<{ shape: GardenThing; active?: boolean }>()
 const emit = defineEmits<{
@@ -8,9 +8,9 @@ const emit = defineEmits<{
   (e: 'update', shape: GardenThing): void
 }>()
 
-type Which = 'topLeft' | 'bottomRight' | 'topRight' | 'bottomLeft'
+type Which = 'topLeft' | 'bottomRight' | 'topRight' | 'bottomLeft' | 'whole'
 
-const points = computed<{ which: Which; x: number; y: number }[]>(() => [
+const points = computed<{ which: Exclude<Which, 'whole'>; x: number; y: number }[]>(() => [
   { which: 'topLeft', x: props.shape.x, y: props.shape.y },
   {
     which: 'bottomRight',
@@ -22,6 +22,14 @@ const points = computed<{ which: Which; x: number; y: number }[]>(() => [
 ])
 
 const hover = ref(false)
+
+/**
+ * Offset of the mouse cursor from the top left point of the shape
+ * at the moment a move action starts.
+ *
+ * Allows correct positioning when moving the entire shape at once.
+ */
+const movedInnerOffset = ref<{ x: number; y: number }>({ x: 0, y: 0 })
 
 const getUpdatedShape = (which: Which, x: number, y: number) => {
   const shape = { ...props.shape }
@@ -61,14 +69,37 @@ const getUpdatedShape = (which: Which, x: number, y: number) => {
     }
   }
 
+  if (which === 'whole') {
+    return { ...shape, x: x - movedInnerOffset.value.x, y: y - movedInnerOffset.value.y }
+  }
+
   return shape
 }
 
+/**
+ * The amount of pixels we need to do for a move action to trigger.
+ * Otherwise, it results in a click action.
+ */
+const MOVE_THRESHOLD = 5
+
+/**
+ * What is currently being moved. Either one of the corners or the whole shape.
+ *
+ * If null, no move is currently happening.
+ */
 const movedWhich = ref<Which | null>(null)
+
 const startMove = (e: MouseEvent, which: Which) => {
   movedWhich.value = which
+  movedInnerOffset.value = { x: e.offsetX - props.shape.x, y: e.offsetY - props.shape.y }
 
   const doMove = (moveE: MouseEvent) => {
+    if (
+      Math.abs(props.shape.x - moveE.offsetX) < MOVE_THRESHOLD &&
+      Math.abs(props.shape.y - moveE.offsetY) < MOVE_THRESHOLD
+    ) {
+      return
+    }
     emit('update', getUpdatedShape(which, moveE.offsetX, moveE.offsetY))
   }
 
@@ -112,12 +143,12 @@ const startMove = (e: MouseEvent, which: Which) => {
     @mouseenter="hover = true"
     @mouseleave="hover = false"
     @click.shift="$emit('delete')"
-    v-if="shape.kind === 'blueberry'"
-    xlink:href="#blueberry"
+    :xlink:href="`#${shape.kind}`"
     :x="shape.x"
     :y="shape.y"
     :width="shape.width"
     :height="shape.height"
     @click="emit('click')"
+    @mousedown="startMove($event, 'whole')"
   />
 </template>

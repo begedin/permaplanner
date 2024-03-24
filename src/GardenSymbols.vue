@@ -1,33 +1,22 @@
+<script setup lang="ts">
+import Apple from './GardenSymbols/Apple.vue'
+import Banana from './GardenSymbols/Banana.vue'
+import Blueberry from './GardenSymbols/Blueberry.vue'
+import Cherry from './GardenSymbols/Cherry.vue'
+import Lemon from './GardenSymbols/Lemon.vue'
+import Orange from './GardenSymbols/Orange.vue'
+import Pear from './GardenSymbols/Pear.vue'
+import Strawberry from './GardenSymbols/Strawberry.vue'
+</script>
 <template>
   <svg height="0" width="0">
-    <symbol id="blueberry" preserveAspectRatio="xMidYMid meet">
-      <svg viewBox="11.88 15.55 21.12 19.08">
-        <ellipse
-          transform="rotate(-60 17.507 21.52)"
-          fill="#AA8DD8"
-          cx="17.507"
-          cy="21.519"
-          rx="2.525"
-          ry="2.5"
-        ></ellipse>
-        <ellipse fill="#5864B7" cx="22.44" cy="25.095" rx="10.56" ry="9.542"></ellipse>
-        <path
-          fill="#334372"
-          d="
-            M17.043 19.746
-            c.702-1.228 1.699-.59 2.881-1.366
-            c.95-.624 1.079-1.574 2.079-1.574
-            s1.604.832 2.168 1.04
-            c1.327.489 2.119-.228 3.119.772
-            s-.772 1.901-.921 2.673c-.189.982 1.04 1.693.178 2.168
-            c-1.237.683-1.549-.556-3.547-.459
-            c-1.502.073-2.096 1.528-3.403 1.082
-            c-1.339-.456.475-1.752-.327-2.584
-            c-.981-1.018-2.702-.92-2.227-1.752z
-          "
-        ></path>
-        <ellipse fill="#253356" cx="22.667" cy="20.182" rx="3.758" ry="2.387"></ellipse>
-      </svg>
-    </symbol>
+    <symbol id="apple"><Apple /></symbol>
+    <symbol id="banana"><Banana /></symbol>
+    <symbol id="blueberry"><Blueberry /></symbol>
+    <symbol id="cherry"><Cherry /></symbol>
+    <symbol id="lemon"><Lemon /></symbol>
+    <symbol id="orange"><Orange /></symbol>
+    <symbol id="pear"><Pear /></symbol>
+    <symbol id="strawberry"><Strawberry /></symbol>
   </svg>
 </template>

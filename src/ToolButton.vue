@@ -1,16 +1,15 @@
 <script lang="ts" setup>
-import type { HexColor } from './colors'
-import type { Tool } from './types'
+import type { Tool } from './data'
 
 defineProps<{
   toolKind: Tool['kind']
-  toolName: string | null
+  toolName: string
   active: boolean
 }>()
 </script>
 <template>
   <button
-    title="toolName"
+    :title="toolName"
     class="p-1 rounded hover:bg-sky-50 transition-colors"
     :class="active && 'bg-sky-200'"
   >
@@ -21,10 +20,7 @@ defineProps<{
       xmlns="http://www.w3.org/2000/svg"
       xmlns:xlink="http://www.w3.org/1999/xlink"
     >
-      <use v-if="toolKind === 'blueberry'" xlink:href="#blueberry" width="25" height="25" />
-      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle">
-        {{ toolName?.charAt(0) }}
-      </text>
+      <use :xlink:href="`#${toolKind}`" width="25" height="25" />
     </svg>
   </button>
 </template>

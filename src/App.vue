@@ -5,7 +5,8 @@ import { useElementSize } from '@vueuse/core'
 import GardenFeature from './GardenFeature.vue'
 import NewFeature from './NewFeature.vue'
 import ToolButton from './ToolButton.vue'
-import type { GardenThing, Tool } from './types'
+import type { GardenThing, Tool } from './data'
+import { tools } from './data'
 import GardenSymbols from './GardenSymbols.vue'
 
 const getFileBase64 = async (file: File): Promise<string> =>
@@ -44,8 +45,6 @@ onMounted(() => {
 
 const img = ref<HTMLImageElement | null>(null)
 const { width: imgWidth, height: imgHeight } = useElementSize(img)
-
-const tools: Tool[] = [{ kind: 'blueberry', name: 'blueberry' }]
 
 const tool = ref<Tool>()
 
@@ -117,7 +116,7 @@ const update = (e: MouseEvent) => {
 }
 
 const end = () => {
-  if (!shapeEnd.value) {
+  if (!shapeEnd.value || !tool.value) {
     return
   }
 
@@ -125,29 +124,24 @@ const end = () => {
   const y = Math.min(shapeStart.value.y, shapeEnd.value.y)
   const width = Math.abs(shapeStart.value.x - shapeEnd.value.x)
   const height = Math.abs(shapeStart.value.y - shapeEnd.value.y)
-
-  console.log(width, height)
 
   if (width < 0.01 || height < 0.01) {
     return
   }
 
-  if (tool.value?.kind === 'blueberry') {
-    shapes.value.push({
-      kind: 'blueberry',
-      name: 'blueberry',
-      x: Math.min(shapeStart.value.x, shapeEnd.value.x),
-      y: Math.min(shapeStart.value.y, shapeEnd.value.y),
-      width: Math.abs(shapeStart.value.x - shapeEnd.value.x),
-      height: Math.abs(shapeStart.value.y - shapeEnd.value.y)
-    })
-  }
-
+  shapes.value.push({
+    kind: tool.value.kind,
+    name: tool.value.name,
+    x: Math.min(shapeStart.value.x, shapeEnd.value.x),
+    y: Math.min(shapeStart.value.y, shapeEnd.value.y),
+    width: Math.abs(shapeStart.value.x - shapeEnd.value.x),
+    height: Math.abs(shapeStart.value.y - shapeEnd.value.y)
+  })
   shapeEnd.value = undefined
 }
 
 const newShape = computed(() => {
-  if (!shapeEnd.value) {
+  if (!shapeEnd.value || !tool.value) {
     return
   }
 
@@ -156,20 +150,18 @@ const newShape = computed(() => {
   const width = Math.abs(shapeStart.value.x - shapeEnd.value.x)
   const height = Math.abs(shapeStart.value.y - shapeEnd.value.y)
 
-  if (tool.value?.kind === 'blueberry') {
-    return scaleUp(
-      {
-        kind: 'blueberry',
-        name: 'blueberry',
-        x,
-        y,
-        width,
-        height
-      },
-      imgWidth.value,
-      imgHeight.value
-    )
-  }
+  return scaleUp(
+    {
+      kind: tool.value.kind,
+      name: tool.value.name,
+      x,
+      y,
+      width,
+      height
+    },
+    imgWidth.value,
+    imgHeight.value
+  )
 })
 
 const deleteShape = (index: number) => {
