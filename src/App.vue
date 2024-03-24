@@ -177,6 +177,7 @@ onMounted(() => document.addEventListener('keydown', handleKeydown))
 onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown))
 
 const selectedIndex = ref<number | null>(null)
+const hoveredIndex = ref<number | null>(null)
 </script>
 
 <template>
@@ -200,7 +201,7 @@ const selectedIndex = ref<number | null>(null)
           :shape="shape"
           v-for="(shape, index) in scaledShapes"
           @delete="deleteShape(index)"
-          :active="selectedIndex === index"
+          :active="selectedIndex === index || hoveredIndex === index"
           @click="selectedIndex = index"
           @update="($event) => (shapes[index] = scaleDown($event, imgWidth, imgHeight))"
         />
@@ -221,6 +222,17 @@ const selectedIndex = ref<number | null>(null)
         :tool-name="t.name"
         :active="tool?.kind === t.kind"
       />
+    </div>
+    <div class="absolute right-0 top-0 p-2 flex flex-col gap-1">
+      <button
+        v-for="(shape, index) in shapes"
+        @click="selectedIndex = index"
+        @click.shift="deleteShape(index)"
+        @mouseenter="hoveredIndex = index"
+        @mouseleave="hoveredIndex = null"
+      >
+        {{ shape.name }}
+      </button>
     </div>
   </div>
 </template>
