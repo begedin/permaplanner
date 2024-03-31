@@ -8,64 +8,30 @@ import ToolButton from './ToolButton.vue'
 import type { GardenThing, Tool } from './data'
 import { useCamera } from './useCamera'
 import { useElementSize } from '@vueuse/core'
+import { useBackgroundImage } from './useBackgroundImage'
 
-const getFileBase64 = async (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = (error) => reject(error)
-    reader.readAsDataURL(file)
-  })
-
-const imgSrc = ref<string | null>(null)
-
-const setImage = (src: string) => {
-  imgSrc.value = src
-  const img = document.createElement('img')
-  img.src = imgSrc.value
-  document.body.appendChild(img)
-  if (img.complete) {
-    setDimensions(img)
-    img.remove()
-  } else {
-    img.onload = () => {
-      setDimensions(img)
-      img.remove()
-    }
-  }
-}
+const {
+  setImageSrc,
+  setupBackgroundImagePaste,
+  teardownBackgroundImagePaste,
+  imgWidth,
+  imgHeight,
+  imgSrc
+} = useBackgroundImage()
+onMounted(() => setupBackgroundImagePaste())
+onBeforeUnmount(() => teardownBackgroundImagePaste())
 
 onMounted(() => {
   const src = localStorage.getItem('imgSrc')
   if (src) {
-    setImage(src)
+    setImageSrc(src)
   }
 
   const storedShapes = localStorage.getItem('shapes')
   if (storedShapes) {
     shapes.value = JSON.parse(storedShapes)
   }
-
-  document.addEventListener('paste', async (e) => {
-    if (!e.clipboardData || !e.clipboardData.items) return
-    const file = e.clipboardData.items[0].getAsFile()
-    if (!file) {
-      return
-    }
-
-    const base64 = await getFileBase64(file)
-    setImage(base64)
-    localStorage.setItem('imgSrc', base64)
-  })
 })
-
-const imgWidth = ref(0)
-const imgHeight = ref(0)
-
-const setDimensions = (img: HTMLImageElement): void => {
-  imgWidth.value = img.width
-  imgHeight.value = img.height
-}
 
 const topLayer = ref<SVGElement>()
 const { camera, setupCamera, teardownCamera } = useCamera(topLayer)
