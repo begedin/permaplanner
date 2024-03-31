@@ -65,10 +65,47 @@ export const useCamera = (element: Ref<SVGElement | undefined>) => {
     )
   }
 
+  const setupMiddleMousePan = () => {
+    document.addEventListener(
+      'mousedown',
+      (e) => {
+        const wheelPanController = new AbortController()
+
+        if (e.buttons !== 4) {
+          return
+        }
+
+        e.preventDefault()
+
+        document.addEventListener(
+          'mousemove',
+          (moveE) => {
+            camera.value = {
+              scale: camera.value.scale,
+              x: camera.value.x + moveE.movementX,
+              y: camera.value.y + moveE.movementY
+            }
+          },
+          { signal: wheelPanController.signal }
+        )
+
+        document.addEventListener(
+          'mouseup',
+          () => {
+            wheelPanController.abort()
+          },
+          { signal: wheelPanController.signal }
+        )
+      },
+      { signal: teardownController.signal }
+    )
+  }
+
   const setupCamera = () => {
     setupWheelZoom()
     setupMousePositionTracking()
     setupKeyBindings()
+    setupMiddleMousePan()
   }
 
   const teardownCamera = () => teardownController.abort()
