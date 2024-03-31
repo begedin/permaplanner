@@ -1,4 +1,4 @@
-import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
+import { ref } from 'vue'
 
 export const useBackgroundImage = () => {
   const getFileBase64 = async (file: File): Promise<string> =>
