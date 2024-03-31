@@ -4,8 +4,6 @@ export const useCamera = (element: Ref<SVGElement | undefined>) => {
   const camera = ref({ scale: 1, x: 0, y: 0 })
   const mouse = ref({ x: 0, y: 0 })
 
-  const teardownController = new AbortController()
-
   const zoomBy = (factor: number) => {
     const { x, y, scale } = camera.value
 
@@ -30,7 +28,17 @@ export const useCamera = (element: Ref<SVGElement | undefined>) => {
     }
   }
 
-  const setupCamera = () => {
+  const teardownController = new AbortController()
+
+  const setupMousePositionTracking = () => {
+    element.value?.addEventListener(
+      'mousemove',
+      (event) => ((mouse.value.x = event.offsetX), (mouse.value.y = event.offsetY)),
+      { signal: teardownController.signal }
+    )
+  }
+
+  const setupWheelZoom = () => {
     element.value?.addEventListener(
       'wheel',
       (e) => {
@@ -39,12 +47,28 @@ export const useCamera = (element: Ref<SVGElement | undefined>) => {
       },
       { passive: false, signal: teardownController.signal }
     )
+  }
 
-    element.value?.addEventListener(
-      'mousemove',
-      (event) => ((mouse.value.x = event.offsetX), (mouse.value.y = event.offsetY)),
+  const setupKeyBindings = () => {
+    document.addEventListener(
+      'keydown',
+      (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'A') camera.value.x += 10
+        if (e.key === 'ArrowRight' || e.key === 'D') camera.value.x -= 10
+        if (e.key === 'ArrowUp' || e.key === 'W') camera.value.y += 10
+        if (e.key === 'ArrowDown' || e.key === 'S') camera.value.y -= 10
+
+        if (e.key === '+') zoomBy(0.1)
+        if (e.key === '-') zoomBy(-0.1)
+      },
       { signal: teardownController.signal }
     )
+  }
+
+  const setupCamera = () => {
+    setupWheelZoom()
+    setupMousePositionTracking()
+    setupKeyBindings()
   }
 
   const teardownCamera = () => teardownController.abort()

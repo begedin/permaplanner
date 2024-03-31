@@ -74,8 +74,11 @@ onMounted(() => setupCamera())
 onBeforeUnmount(() => teardownCamera())
 
 const svgViewbox = computed(() => {
-  const { scale, x, y } = camera.value
-  return `${x / scale} ${y / scale} ${imgWidth.value / scale} ${imgHeight.value / scale}`
+  const x = (camera.value.x / camera.value.scale).toFixed(2)
+  const y = (camera.value.y / camera.value.scale).toFixed(2)
+  const width = (imgWidth.value / camera.value.scale).toFixed(2)
+  const height = (imgHeight.value / camera.value.scale).toFixed(2)
+  return `${x} ${y} ${width} ${height}`
 })
 
 const tool = ref<Tool>()
@@ -209,7 +212,7 @@ const scaleDown = (shape: GardenThing): GardenThing => ({
         @mousemove="update"
         @mouseup="end"
         ref="topLayer"
-        class="col-start-1 col-span-1 row-start-1 row-span-1 z-10 w-full h-full"
+        class="col-start-1 col-span-1 row-start-1 row-span-1 z-10 w-full h-full transition"
         :viewBox="svgViewbox"
       >
         <image
@@ -242,7 +245,7 @@ const scaleDown = (shape: GardenThing): GardenThing => ({
         :active="tool?.kind === t.kind"
       />
       <div>
-        {{ camera.scale }}
+        {{ camera.scale.toFixed(2) }}
       </div>
     </div>
     <div class="absolute right-0 top-0 p-2 flex flex-col gap-1">
