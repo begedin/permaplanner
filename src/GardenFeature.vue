@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import type { GardenThing } from './data'
 
-const props = defineProps<{ shape: GardenThing; active?: boolean }>()
+const props = defineProps<{ shape: GardenThing; active?: boolean; scale: number }>()
 const emit = defineEmits<{
   (e: 'click' | 'delete'): void
   (e: 'update', shape: GardenThing): void
@@ -24,63 +24,15 @@ const points = computed<{ which: Exclude<Which, 'whole'>; x: number; y: number }
 const hover = ref(false)
 
 /**
- * Offset of the mouse cursor from the top left point of the shape
- * at the moment a move action starts.
- *
- * Allows correct positioning when moving the entire shape at once.
+ * Shape coordinates at mousedown.
+ * Allows to correctly update the shape based on total amount moved
  */
-const movedInnerOffset = ref<{ x: number; y: number }>({ x: 0, y: 0 })
-
-const getUpdatedShape = (which: Which, x: number, y: number) => {
-  const shape = { ...props.shape }
-  if (which === 'topLeft') {
-    return {
-      ...shape,
-      x,
-      y,
-      width: shape.width + shape.x - x,
-      height: shape.height + shape.y - y
-    }
-  }
-
-  if (which === 'bottomRight') {
-    return {
-      ...shape,
-      width: x - shape.x,
-      height: y - shape.y
-    }
-  }
-
-  if (which === 'topRight') {
-    return {
-      ...shape,
-      y,
-      width: x - shape.x,
-      height: shape.height + shape.y - y
-    }
-  }
-
-  if (which === 'bottomLeft') {
-    return {
-      ...shape,
-      x,
-      width: shape.width + shape.x - x,
-      height: y - shape.y
-    }
-  }
-
-  if (which === 'whole') {
-    return { ...shape, x: x - movedInnerOffset.value.x, y: y - movedInnerOffset.value.y }
-  }
-
-  return shape
-}
-
+const shapeAtStartOfMove = { ...props.shape }
 /**
- * The amount of pixels we need to do for a move action to trigger.
- * Otherwise, it results in a click action.
+ * Offset mouse coordinates at mousedown.
+ * Allows us to understand how much the mouse has moved during mousemove.
  */
-const MOVE_THRESHOLD = 5
+const moveStartOffset = { x: 0, y: 0 }
 
 /**
  * What is currently being moved. Either one of the corners or the whole shape.
@@ -89,28 +41,86 @@ const MOVE_THRESHOLD = 5
  */
 const movedWhich = ref<Which | null>(null)
 
+let moveController: AbortController | null = null
+let aspectRatio = 1
+
 const startMove = (e: MouseEvent, which: Which) => {
   movedWhich.value = which
-  movedInnerOffset.value = { x: e.offsetX - props.shape.x, y: e.offsetY - props.shape.y }
+  moveStartOffset.x = e.clientX
+  moveStartOffset.y = e.clientY
+  shapeAtStartOfMove.x = props.shape.x
+  shapeAtStartOfMove.y = props.shape.y
+  shapeAtStartOfMove.width = props.shape.width
+  shapeAtStartOfMove.height = props.shape.height
 
-  const doMove = (moveE: MouseEvent) => {
-    if (
-      Math.abs(props.shape.x - moveE.offsetX) < MOVE_THRESHOLD &&
-      Math.abs(props.shape.y - moveE.offsetY) < MOVE_THRESHOLD
-    ) {
-      return
-    }
-    emit('update', getUpdatedShape(which, moveE.offsetX, moveE.offsetY))
+  aspectRatio = props.shape.width / props.shape.height
+
+  moveController = new AbortController()
+
+  document.addEventListener('mousemove', doMove, { signal: moveController.signal })
+  document.addEventListener('mouseup', endMove, { signal: moveController.signal })
+}
+
+const doMove = (e: MouseEvent) => {
+  if (!movedWhich.value) {
+    return
   }
 
-  const endMove = () => {
-    movedWhich.value = null
-    document.removeEventListener('mousemove', doMove)
-    document.removeEventListener('mouseup', endMove)
+  const deltaX = ((e.clientX - moveStartOffset.x) * 1) / props.scale
+  const deltaY = ((e.clientY - moveStartOffset.y) * 1) / props.scale
+
+  console.log(deltaX, deltaY)
+
+  const shape = { ...props.shape }
+
+  if (movedWhich.value === 'topLeft') {
+    emit('update', {
+      ...shapeAtStartOfMove,
+      x: shapeAtStartOfMove.x + deltaX,
+      y: shapeAtStartOfMove.y + deltaY,
+      width: shapeAtStartOfMove.width - deltaX,
+      height: shapeAtStartOfMove.height - deltaY
+    })
   }
 
-  document.addEventListener('mouseup', endMove)
-  document.addEventListener('mousemove', doMove)
+  if (movedWhich.value === 'bottomRight') {
+    emit('update', {
+      ...shapeAtStartOfMove,
+      width: shapeAtStartOfMove.width + deltaX,
+      height: shapeAtStartOfMove.height + deltaY
+    })
+  }
+
+  if (movedWhich.value === 'topRight') {
+    emit('update', {
+      ...shapeAtStartOfMove,
+      y: shapeAtStartOfMove.y + deltaY,
+      width: shapeAtStartOfMove.width + deltaX,
+      height: shapeAtStartOfMove.height - deltaY
+    })
+  }
+
+  if (movedWhich.value === 'bottomLeft') {
+    emit('update', {
+      ...shape,
+      x: shapeAtStartOfMove.x + deltaX,
+      width: shapeAtStartOfMove.width - deltaX,
+      height: shapeAtStartOfMove.height + deltaY
+    })
+  }
+
+  if (movedWhich.value === 'whole') {
+    emit('update', {
+      ...shapeAtStartOfMove,
+      x: shapeAtStartOfMove.x + deltaX,
+      y: shapeAtStartOfMove.y + deltaY
+    })
+  }
+}
+
+const endMove = () => {
+  movedWhich.value = null
+  moveController?.abort()
 }
 </script>
 <template>
@@ -124,6 +134,7 @@ const startMove = (e: MouseEvent, which: Which) => {
     stroke-width="1"
     stroke="fuchsia"
     @click="emit('click')"
+    @mousedown.stop="startMove($event, 'whole')"
   />
 
   <circle
@@ -136,7 +147,7 @@ const startMove = (e: MouseEvent, which: Which) => {
     fill="fuchsia"
     class="hover:[r:8]"
     :class="p.which === movedWhich && '[fill:blue]'"
-    @mousedown="startMove($event, p.which)"
+    @mousedown.stop="startMove($event, p.which)"
   />
 
   <use
@@ -148,7 +159,7 @@ const startMove = (e: MouseEvent, which: Which) => {
     :y="shape.y"
     :width="shape.width"
     :height="shape.height"
-    @click="emit('click')"
-    @mousedown="startMove($event, 'whole')"
+    @click.stop="emit('click')"
+    @mousedown.stop="startMove($event, 'whole')"
   />
 </template>
