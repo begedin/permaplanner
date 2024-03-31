@@ -167,6 +167,56 @@ const scaleDown = (shape: GardenThing): GardenThing => ({
   width: shape.width / imgWidth.value,
   height: shape.height / imgHeight.value
 })
+
+const scaleSettingPhase = ref<'startPoint' | 'endPoint' | 'length'>()
+const scaleStartPoint = ref<{ x: number; y: number }>()
+const scaleEndPoint = ref<{ x: number; y: number }>()
+const setScaleStart = () => {
+  scaleSettingPhase.value = 'startPoint'
+}
+
+const setScalePoint = (e: MouseEvent) => {
+  if (scaleSettingPhase.value === 'startPoint') {
+    scaleStartPoint.value = { x: e.offsetX, y: e.offsetY }
+    scaleSettingPhase.value = 'endPoint'
+    return
+  }
+
+  scaleEndPoint.value = { x: e.offsetX, y: e.offsetY }
+  scaleSettingPhase.value = 'length'
+}
+
+const setScalePath = computed(() => {
+  if (!scaleStartPoint.value || !scaleEndPoint.value) {
+    return
+  }
+
+  const xFactor = imgWidth.value / containerWidth.value
+  const yFactor = imgHeight.value / containerHeight.value
+
+  const x1 = scaleStartPoint.value.x * xFactor
+  const y1 = scaleStartPoint.value.y * yFactor
+  const x2 = scaleEndPoint.value.x * xFactor
+  const y2 = scaleEndPoint.value.y * yFactor
+
+  return `M ${x1} ${y1} ${x2} ${y2} Z`
+})
+
+const scalePathCentroid = computed(() => {
+  if (!scaleStartPoint.value || !scaleEndPoint.value) {
+    return null
+  }
+
+  const xFactor = imgWidth.value / containerWidth.value
+  const yFactor = imgHeight.value / containerHeight.value
+
+  const x = Math.abs((scaleStartPoint.value.x + scaleEndPoint.value.x) / 2) * xFactor
+  const y = Math.abs((scaleStartPoint.value.y + scaleEndPoint.value.y) / 2) * yFactor
+
+  return { x, y }
+})
+
+const scaleIndicatorLength = ref<number>(1)
 </script>
 
 <template>
@@ -174,11 +224,11 @@ const scaleDown = (shape: GardenThing): GardenThing => ({
   <div class="flex place-items-center w-full h-full justify-center">
     <div class="grid grid-cols-[1fr] place-items-center flex-grow max-w-[80vw]">
       <svg
-        @mousedown="start"
+        @mousedown="($event) => (!!scaleSettingPhase ? setScalePoint($event) : start($event))"
         @mousemove="update"
         @mouseup="end"
         ref="topLayer"
-        class="col-start-1 col-span-1 row-start-1 row-span-1 z-10 w-full h-full transition"
+        class="col-start-1 col-span-1 row-start-1 row-span-1 w-full h-full"
         :viewBox="svgViewbox"
       >
         <image
@@ -200,7 +250,26 @@ const scaleDown = (shape: GardenThing): GardenThing => ({
           :scale="camera.scale"
         />
         <GardenFeature v-if="newShape" :shape="newShape" active :scale="camera.scale" />
+        <path v-if="setScalePath" :d="setScalePath" stroke="red" />
+        <text
+          v-if="scaleIndicatorLength && scalePathCentroid"
+          :x="scalePathCentroid.x"
+          :y="scalePathCentroid.y"
+          fill="red"
+        >
+          {{ scaleIndicatorLength }}
+        </text>
       </svg>
+      <div
+        v-if="scaleSettingPhase === 'length'"
+        class="col-start-1 col-span-1 row-start-1 row-span-1 p-4 bg-white shadow-sm rounded-md"
+      >
+        <label>
+          Scale factor:
+          <input type="number" v-model="scaleIndicatorLength" />
+        </label>
+        <button @click="scaleSettingPhase = undefined">Done</button>
+      </div>
     </div>
     <div class="absolute left-0 top-0 p-2 flex flex-col items-start gap-1 text-sky-200">
       <ToolButton
@@ -213,6 +282,11 @@ const scaleDown = (shape: GardenThing): GardenThing => ({
       <div>
         {{ camera.scale.toFixed(2) }}
       </div>
+      <button @click="setScaleStart()">Set scale</button>
+      <div>{{ scaleSettingPhase }}</div>
+      <div>{{ scaleStartPoint }}</div>
+      <div>{{ scaleEndPoint }}</div>
+      <div>{{ setScalePath }}</div>
     </div>
     <div class="absolute right-0 top-0 p-2 flex flex-col gap-1">
       <button
