@@ -15,10 +15,10 @@ const points = computed<{ which: Exclude<Which, 'whole'>; x: number; y: number }
   {
     which: 'bottomRight',
     x: props.shape.x + props.shape.width,
-    y: props.shape.y + props.shape.height
+    y: props.shape.y + props.shape.height,
   },
   { which: 'topRight', x: props.shape.x + props.shape.width, y: props.shape.y },
-  { which: 'bottomLeft', x: props.shape.x, y: props.shape.y + props.shape.height }
+  { which: 'bottomLeft', x: props.shape.x, y: props.shape.y + props.shape.height },
 ])
 
 const hover = ref(false)
@@ -42,7 +42,6 @@ const moveStartOffset = { x: 0, y: 0 }
 const movedWhich = ref<Which | null>(null)
 
 let moveController: AbortController | null = null
-let aspectRatio = 1
 
 const startMove = (e: MouseEvent, which: Which) => {
   movedWhich.value = which
@@ -52,8 +51,6 @@ const startMove = (e: MouseEvent, which: Which) => {
   shapeAtStartOfMove.y = props.shape.y
   shapeAtStartOfMove.width = props.shape.width
   shapeAtStartOfMove.height = props.shape.height
-
-  aspectRatio = props.shape.width / props.shape.height
 
   moveController = new AbortController()
 
@@ -66,8 +63,8 @@ const doMove = (e: MouseEvent) => {
     return
   }
 
-  const deltaX = ((e.clientX - moveStartOffset.x) * 1) / props.scale
-  const deltaY = ((e.clientY - moveStartOffset.y) * 1) / props.scale
+  const deltaX = (e.clientX - moveStartOffset.x) / props.scale
+  const deltaY = (e.clientY - moveStartOffset.y) / props.scale
 
   console.log(deltaX, deltaY)
 
@@ -79,7 +76,7 @@ const doMove = (e: MouseEvent) => {
       x: shapeAtStartOfMove.x + deltaX,
       y: shapeAtStartOfMove.y + deltaY,
       width: shapeAtStartOfMove.width - deltaX,
-      height: shapeAtStartOfMove.height - deltaY
+      height: shapeAtStartOfMove.height - deltaY,
     })
   }
 
@@ -87,7 +84,7 @@ const doMove = (e: MouseEvent) => {
     emit('update', {
       ...shapeAtStartOfMove,
       width: shapeAtStartOfMove.width + deltaX,
-      height: shapeAtStartOfMove.height + deltaY
+      height: shapeAtStartOfMove.height + deltaY,
     })
   }
 
@@ -96,7 +93,7 @@ const doMove = (e: MouseEvent) => {
       ...shapeAtStartOfMove,
       y: shapeAtStartOfMove.y + deltaY,
       width: shapeAtStartOfMove.width + deltaX,
-      height: shapeAtStartOfMove.height - deltaY
+      height: shapeAtStartOfMove.height - deltaY,
     })
   }
 
@@ -105,7 +102,7 @@ const doMove = (e: MouseEvent) => {
       ...shape,
       x: shapeAtStartOfMove.x + deltaX,
       width: shapeAtStartOfMove.width - deltaX,
-      height: shapeAtStartOfMove.height + deltaY
+      height: shapeAtStartOfMove.height + deltaY,
     })
   }
 
@@ -113,7 +110,7 @@ const doMove = (e: MouseEvent) => {
     emit('update', {
       ...shapeAtStartOfMove,
       x: shapeAtStartOfMove.x + deltaX,
-      y: shapeAtStartOfMove.y + deltaY
+      y: shapeAtStartOfMove.y + deltaY,
     })
   }
 }

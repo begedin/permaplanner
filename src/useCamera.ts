@@ -10,7 +10,7 @@ export const useCamera = (element: Ref<SVGElement | undefined>) => {
     // this is the mouse cursor position in the unscaled image
     const originalPosition = {
       x: (x + mouse.value.x) * (1.0 / scale),
-      y: (y + mouse.value.y) * (1.0 / scale)
+      y: (y + mouse.value.y) * (1.0 / scale),
     }
 
     const newScale =
@@ -24,7 +24,7 @@ export const useCamera = (element: Ref<SVGElement | undefined>) => {
     camera.value = {
       scale: newScale,
       x: newOffsetX,
-      y: newOffsetY
+      y: newOffsetY,
     }
   }
 
@@ -34,7 +34,7 @@ export const useCamera = (element: Ref<SVGElement | undefined>) => {
     element.value?.addEventListener(
       'mousemove',
       (event) => ((mouse.value.x = event.offsetX), (mouse.value.y = event.offsetY)),
-      { signal: teardownController.signal }
+      { signal: teardownController.signal },
     )
   }
 
@@ -45,7 +45,7 @@ export const useCamera = (element: Ref<SVGElement | undefined>) => {
         e.preventDefault()
         zoomBy(e.deltaY < 0 ? 0.1 : -0.1)
       },
-      { passive: false, signal: teardownController.signal }
+      { passive: false, signal: teardownController.signal },
     )
   }
 
@@ -61,7 +61,7 @@ export const useCamera = (element: Ref<SVGElement | undefined>) => {
         if (e.key === '+') zoomBy(0.1)
         if (e.key === '-') zoomBy(-0.1)
       },
-      { signal: teardownController.signal }
+      { signal: teardownController.signal },
     )
   }
 
@@ -83,10 +83,10 @@ export const useCamera = (element: Ref<SVGElement | undefined>) => {
             camera.value = {
               scale: camera.value.scale,
               x: camera.value.x + moveE.movementX,
-              y: camera.value.y + moveE.movementY
+              y: camera.value.y + moveE.movementY,
             }
           },
-          { signal: wheelPanController.signal }
+          { signal: wheelPanController.signal },
         )
 
         document.addEventListener(
@@ -94,10 +94,10 @@ export const useCamera = (element: Ref<SVGElement | undefined>) => {
           () => {
             wheelPanController.abort()
           },
-          { signal: wheelPanController.signal }
+          { signal: wheelPanController.signal },
         )
       },
-      { signal: teardownController.signal }
+      { signal: teardownController.signal },
     )
   }
 
@@ -113,6 +113,6 @@ export const useCamera = (element: Ref<SVGElement | undefined>) => {
   return {
     camera,
     setupCamera,
-    teardownCamera
+    teardownCamera,
   }
 }
