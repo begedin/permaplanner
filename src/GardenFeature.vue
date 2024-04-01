@@ -66,8 +66,6 @@ const doMove = (e: MouseEvent) => {
   const deltaX = (e.clientX - moveStartOffset.x) / props.scale
   const deltaY = (e.clientY - moveStartOffset.y) / props.scale
 
-  console.log(deltaX, deltaY)
-
   const shape = { ...props.shape }
 
   if (movedWhich.value === 'topLeft') {

@@ -67,8 +67,6 @@ const newShape = computed<GardenThing | void>(() => {
   const width = Math.abs(shapeStart.value.x - shapeEnd.value.x)
   const height = Math.abs(shapeStart.value.y - shapeEnd.value.y)
 
-  console.log(x, y, width, height)
-
   return {
     kind: tool.value.kind,
     name: tool.value.name,
@@ -200,8 +198,8 @@ setupMapScale()
           x="0"
           y="0"
           v-if="mapScaleUnitLengthPx"
-          width="100%"
-          height="100%"
+          :width="imgWidth"
+          :height="imgHeight"
           fill="url(#grid)"
           class="pointer-events-none"
         ></rect>

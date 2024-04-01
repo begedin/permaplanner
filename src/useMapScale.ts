@@ -40,7 +40,7 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
   const setupMapScale = () => {
     onMounted(() => {
       const data = localStorage.getItem('mapScale')
-      console.log(data)
+
       if (!data) {
         return
       }
@@ -53,7 +53,6 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
     watch(
       [mapScaleStart, mapScaleEnd, mapScaleReferenceLineRealLength],
       ([start, end, realLength]) => {
-        console.log('saved', start, end, realLength)
         localStorage.setItem('mapScale', JSON.stringify({ start, end, realLength }))
       },
     )
