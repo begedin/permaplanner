@@ -136,7 +136,6 @@ const bgImage = ref<SVGImageElement>()
 
 const {
   mapScaleReferenceCentroid,
-  mapScaleReferenceLength,
   mapScaleReferenceLine,
   mapScaleReferenceLineRealLength,
   mapScaleUnitLengthPx,
@@ -186,6 +185,7 @@ setupMapScale()
           </pattern>
         </defs>
         <image
+          v-if="imgSrc"
           ref="bgImage"
           :xlink:href="imgSrc"
           x="0"
@@ -194,6 +194,10 @@ setupMapScale()
           :height="imgHeight"
           opacity="0.5"
         />
+        <text v-else x="50%" y="50%" fill="red" text-anchor="middle" dominant-baseline="middle">
+          Paste an aerial photo of your plot of land here. You can use Google Maps to take a
+          screenshot
+        </text>
         <rect
           x="0"
           y="0"
