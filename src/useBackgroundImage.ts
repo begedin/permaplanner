@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 
 export const useBackgroundImage = () => {
+  const ready = ref(false)
   const getFileBase64 = async (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
       const reader = new FileReader()
@@ -17,22 +18,28 @@ export const useBackgroundImage = () => {
   const setDimensions = (img: HTMLImageElement): void => {
     imgWidth.value = img.width
     imgHeight.value = img.height
+    ready.value = true
   }
 
-  const setImageSrc = (src: string) => {
+  const setImageSrc = async (src: string) => {
+    ready.value = false
     imgSrc.value = src
     const img = document.createElement('img')
     img.src = imgSrc.value
     document.body.appendChild(img)
-    if (img.complete) {
-      setDimensions(img)
-      img.remove()
-    } else {
-      img.onload = () => {
+    return new Promise((resolve) => {
+      if (img.complete) {
         setDimensions(img)
         img.remove()
+        resolve(undefined)
+      } else {
+        img.onload = () => {
+          setDimensions(img)
+          img.remove()
+          resolve(undefined)
+        }
       }
-    }
+    })
   }
 
   let pasteController: AbortController | null = null
@@ -50,10 +57,10 @@ export const useBackgroundImage = () => {
         }
 
         const base64 = await getFileBase64(file)
-        setImageSrc(base64)
+        await setImageSrc(base64)
         localStorage.setItem('imgSrc', base64)
       },
-      { signal: pasteController.signal }
+      { signal: pasteController.signal },
     )
   }
 
@@ -65,6 +72,7 @@ export const useBackgroundImage = () => {
     teardownBackgroundImagePaste,
     imgWidth,
     imgHeight,
-    imgSrc
+    imgSrc,
+    ready,
   }
 }

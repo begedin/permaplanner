@@ -1,6 +1,14 @@
 import { ref, type Ref } from 'vue'
 
-export const useCamera = (element: Ref<SVGElement | undefined>) => {
+export const useCamera = (
+  element: Ref<SVGElement | undefined>,
+  dimensions: Ref<{
+    viewportWidth: number
+    viewportHeight: number
+    contentWidth: number
+    contentHeight: number
+  }>,
+) => {
   const camera = ref({ scale: 1, x: 0, y: 0 })
   const mouse = ref({ x: 0, y: 0 })
 
@@ -82,8 +90,8 @@ export const useCamera = (element: Ref<SVGElement | undefined>) => {
           (moveE) => {
             camera.value = {
               scale: camera.value.scale,
-              x: camera.value.x + moveE.movementX,
-              y: camera.value.y + moveE.movementY,
+              x: camera.value.x - moveE.movementX,
+              y: camera.value.y - moveE.movementY,
             }
           },
           { signal: wheelPanController.signal },
@@ -101,6 +109,16 @@ export const useCamera = (element: Ref<SVGElement | undefined>) => {
     )
   }
 
+  const fitToViewPort = () => {
+    const { viewportWidth, viewportHeight, contentWidth, contentHeight } = dimensions.value
+    const scale = Math.min(viewportWidth / contentWidth, viewportHeight / contentHeight)
+    const x = -(viewportWidth - contentWidth * scale) / 2
+    const y = -(viewportHeight - contentHeight * scale) / 2
+
+    camera.value = { x, y, scale }
+    console.log(camera.value)
+  }
+
   const setupCamera = () => {
     setupWheelZoom()
     setupMousePositionTracking()
@@ -114,5 +132,6 @@ export const useCamera = (element: Ref<SVGElement | undefined>) => {
     camera,
     setupCamera,
     teardownCamera,
+    fitToViewPort,
   }
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, useModel, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { tools } from './data'
 import GardenFeature from './GardenFeature.vue'
@@ -18,11 +18,13 @@ const {
   imgWidth,
   imgHeight,
   imgSrc,
+  ready: bgImageReady,
 } = useBackgroundImage()
 onMounted(() => setupBackgroundImagePaste())
 onBeforeUnmount(() => teardownBackgroundImagePaste())
+watch(bgImageReady, (ready) => ready && fitToViewPort())
 
-onMounted(() => {
+onMounted(async () => {
   const src = localStorage.getItem('imgSrc')
   if (src) {
     setImageSrc(src)
@@ -34,9 +36,17 @@ onMounted(() => {
   }
 })
 
-const topLayer = ref<SVGElement>()
-const { camera, setupCamera, teardownCamera } = useCamera(topLayer)
-const { width: containerWidth, height: containerHeight } = useElementSize(topLayer)
+const container = ref<SVGElement>()
+const { camera, setupCamera, teardownCamera, fitToViewPort } = useCamera(
+  container,
+  computed(() => ({
+    viewportHeight: containerHeight.value,
+    viewportWidth: containerWidth.value,
+    contentHeight: imgHeight.value,
+    contentWidth: imgWidth.value,
+  })),
+)
+const { width: containerWidth, height: containerHeight } = useElementSize(container)
 onMounted(() => setupCamera())
 onBeforeUnmount(() => teardownCamera())
 
@@ -58,7 +68,7 @@ const shapeStart = ref({ x: 0, y: 0 })
 const shapeEnd = ref<{ x: number; y: number }>()
 
 const newShape = computed<GardenThing | void>(() => {
-  if (!shapeEnd.value || !tool.value || !topLayer.value) {
+  if (!shapeEnd.value || !tool.value || !container.value) {
     return
   }
 
@@ -78,12 +88,12 @@ const newShape = computed<GardenThing | void>(() => {
 })
 
 const startDraw = (e: MouseEvent) => {
-  if (!tool.value || e.button !== 0 || e.shiftKey || !topLayer.value) {
+  if (!tool.value || e.button !== 0 || e.shiftKey || !container.value) {
     return
   }
 
-  const svgOffsetX = topLayer.value.getBoundingClientRect().left
-  const svgOffsetY = topLayer.value.getBoundingClientRect().top
+  const svgOffsetX = container.value.getBoundingClientRect().left
+  const svgOffsetY = container.value.getBoundingClientRect().top
 
   const x = e.clientX - svgOffsetX
   const y = e.clientY - svgOffsetY
@@ -165,7 +175,7 @@ setupMapScale()
     <div class="grid grid-cols-[1fr] w-full h-full">
       <svg
         @mousedown="startDraw"
-        ref="topLayer"
+        ref="container"
         class="col-start-1 col-span-1 row-start-1 row-span-1 w-full h-full"
         :viewBox="svgViewbox"
       >
