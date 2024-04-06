@@ -8,6 +8,31 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
   const mapScaleEnd = ref<{ x: number; y: number }>(DEFAULT_END)
   const mapScaleReferenceLength = ref<number>(10)
 
+  const onboardingSteps = [
+    'initial',
+    'movingFirst',
+    'movedFirst',
+    'movingSecond',
+    'movedSecond',
+    'settingLength',
+    'done',
+  ] as const
+
+  const onboardingState = ref<
+    | 'initial'
+    | 'movingFirst'
+    | 'movedFirst'
+    | 'movingSecond'
+    | 'movedSecond'
+    | 'settingLength'
+    | 'done'
+  >('initial')
+
+  const advanceOnboarding = () => {
+    const currentIndex = onboardingSteps.indexOf(onboardingState.value)
+    onboardingState.value = onboardingSteps[currentIndex + 1] || onboardingSteps.at(-1)
+  }
+
   const mapScaleReferenceLine = computed(() => {
     return {
       x1: mapScaleStart.value.x,
@@ -44,16 +69,17 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
       if (!data) {
         return
       }
-      const { start, end, realLength } = JSON.parse(data)
+      const { start, end, realLength, state } = JSON.parse(data)
       mapScaleStart.value = start || DEFAULT_START
       mapScaleEnd.value = end || DEFAULT_END
       mapScaleReferenceLineRealLength.value = parseInt(realLength)
+      onboardingState.value = state || 'initial'
     })
 
     watch(
-      [mapScaleStart, mapScaleEnd, mapScaleReferenceLineRealLength],
-      ([start, end, realLength]) => {
-        localStorage.setItem('mapScale', JSON.stringify({ start, end, realLength }))
+      [mapScaleStart, mapScaleEnd, mapScaleReferenceLineRealLength, onboardingState],
+      ([start, end, realLength, state]) => {
+        localStorage.setItem('mapScale', JSON.stringify({ start, end, realLength, state }))
       },
     )
   }
@@ -76,13 +102,26 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
       (moveE: MouseEvent) => {
         const dx = (moveE.clientX - startX) / camera.value.scale
         const dy = (moveE.clientY - startY) / camera.value.scale
+        dx > 0 &&
+          dy > 0 &&
+          onboardingState.value !== 'movingFirst' &&
+          onboardingState.value !== 'movingSecond' &&
+          advanceOnboarding()
 
         mapScaleStart.value = { x: x + dx, y: y + dy }
       },
       { signal: controller.signal },
     )
 
-    document.addEventListener('mouseup', () => controller.abort(), { once: true })
+    document.addEventListener(
+      'mouseup',
+      () => {
+        ;(onboardingState.value === 'movingFirst' || onboardingState.value === 'movingSecond') &&
+          advanceOnboarding()
+        controller.abort()
+      },
+      { once: true },
+    )
   }
 
   const startMoveScaleEnd = (e: MouseEvent) => {
@@ -104,13 +143,37 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
         const dx = (moveE.clientX - startX) / camera.value.scale
         const dy = (moveE.clientY - startY) / camera.value.scale
 
+        dx > 0 &&
+          dy > 0 &&
+          onboardingState.value !== 'movingFirst' &&
+          onboardingState.value !== 'movingSecond' &&
+          advanceOnboarding()
+
         mapScaleEnd.value = { x: x + dx, y: y + dy }
       },
       { signal: controller.signal },
     )
 
-    document.addEventListener('mouseup', () => controller.abort(), { once: true })
+    document.addEventListener(
+      'mouseup',
+      () => {
+        ;(onboardingState.value === 'movingFirst' || onboardingState.value === 'movingSecond') &&
+          advanceOnboarding()
+        controller.abort()
+      },
+      { once: true },
+    )
   }
+
+  let timeout = 0
+  watch(mapScaleReferenceLineRealLength, (l) => {
+    if (l === 1) return
+    onboardingState.value = 'settingLength'
+    window.clearTimeout(timeout)
+    timeout = window.setTimeout(() => {
+      advanceOnboarding()
+    }, 1000)
+  })
 
   return {
     mapScaleEnd,
@@ -123,5 +186,6 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
     setupMapScale,
     startMoveScaleEnd,
     startMoveScaleStart,
+    onboardingState,
   }
 }

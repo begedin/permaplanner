@@ -10,6 +10,7 @@ import { useCamera } from './useCamera'
 import { useElementSize } from '@vueuse/core'
 import { useBackgroundImage } from './useBackgroundImage'
 import { useMapScale } from './useMapScale'
+import OnboardingText from './OnboardingText.vue'
 
 const {
   setImageSrc,
@@ -58,6 +59,17 @@ const svgViewbox = computed(() => {
   return `${x} ${y} ${width} ${height}`
 })
 
+const center = computed(() => {
+  const x = camera.value.x / camera.value.scale
+  const y = camera.value.y / camera.value.scale
+  const width = containerWidth.value / camera.value.scale
+  const height = containerHeight.value / camera.value.scale
+  return {
+    x: x + width / 2,
+    y: y + height / 2,
+  }
+})
+
 const tool = ref<Tool>(tools[0])
 
 const shapes = ref<GardenThing[]>([])
@@ -66,26 +78,6 @@ watch(shapes, () => localStorage.setItem('shapes', JSON.stringify(shapes.value))
 
 const shapeStart = ref({ x: 0, y: 0 })
 const shapeEnd = ref<{ x: number; y: number }>()
-
-const newShape = computed<GardenThing | void>(() => {
-  if (!shapeEnd.value || !tool.value || !container.value) {
-    return
-  }
-
-  const x = Math.min(shapeStart.value.x, shapeEnd.value.x)
-  const y = Math.min(shapeStart.value.y, shapeEnd.value.y)
-  const width = Math.abs(shapeStart.value.x - shapeEnd.value.x)
-  const height = Math.abs(shapeStart.value.y - shapeEnd.value.y)
-
-  return {
-    kind: tool.value.kind,
-    name: tool.value.name,
-    x: (x + camera.value.x) / camera.value.scale,
-    y: (y + camera.value.y) / camera.value.scale,
-    width: width / camera.value.scale,
-    height: height / camera.value.scale,
-  }
-})
 
 const startDraw = (e: MouseEvent) => {
   if (!tool.value || e.button !== 0 || e.shiftKey || !container.value) {
@@ -126,6 +118,26 @@ const startDraw = (e: MouseEvent) => {
   )
 }
 
+const newShape = computed<GardenThing | void>(() => {
+  if (!shapeEnd.value || !tool.value || !container.value) {
+    return
+  }
+
+  const x = Math.min(shapeStart.value.x, shapeEnd.value.x)
+  const y = Math.min(shapeStart.value.y, shapeEnd.value.y)
+  const width = Math.abs(shapeStart.value.x - shapeEnd.value.x)
+  const height = Math.abs(shapeStart.value.y - shapeEnd.value.y)
+
+  return {
+    kind: tool.value.kind,
+    name: tool.value.name,
+    x: (x + camera.value.x) / camera.value.scale,
+    y: (y + camera.value.y) / camera.value.scale,
+    width: width / camera.value.scale,
+    height: height / camera.value.scale,
+  }
+})
+
 const deleteShape = (index: number) => {
   shapes.value.splice(index, 1)
 }
@@ -152,6 +164,7 @@ const {
   setupMapScale,
   startMoveScaleStart,
   startMoveScaleEnd,
+  onboardingState,
 } = useMapScale(camera)
 
 setupMapScale()
@@ -168,7 +181,7 @@ setupMapScale()
         :tool-name="t.name"
         :active="tool?.kind === t.kind"
       />
-      <input type="range" min="1" max="200" step="1" v-model="mapScaleReferenceLineRealLength" />
+      <input type="range" min="1" max="500" step="1" v-model="mapScaleReferenceLineRealLength" />
       <div>{{ mapScaleReferenceLineRealLength }}</div>
     </div>
 
@@ -208,6 +221,12 @@ setupMapScale()
           Paste an aerial photo of your plot of land here. You can use Google Maps to take a
           screenshot
         </text>
+        <OnboardingText
+          v-if="imgSrc && onboardingState !== 'done'"
+          :x="center.x"
+          :y="center.y"
+          :onboarding-state="onboardingState"
+        />
         <rect
           x="0"
           y="0"
