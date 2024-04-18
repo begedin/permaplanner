@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import type { GardenThing } from './data'
+import type { GardenThing } from './useStore'
 
 const props = defineProps<{ shape: GardenThing; active?: boolean; scale: number }>()
 const emit = defineEmits<{
@@ -126,7 +126,7 @@ const endMove = () => {
     :width="shape.width"
     :height="shape.height"
     fill="transparent"
-    stroke-width="1"
+    :stroke-width="1 / scale"
     stroke="fuchsia"
     @click="emit('click')"
     @mousedown.stop="startMove($event, 'whole')"
@@ -138,10 +138,9 @@ const endMove = () => {
     :key="p.which"
     :cx="p.x"
     :cy="p.y"
-    r="4"
+    :r="4 / scale"
     fill="fuchsia"
-    class="hover:[r:8]"
-    :class="p.which === movedWhich && '[fill:blue]'"
+    :class="[...[p.which === movedWhich && '[fill:blue]'], ...['hover:[fill:blue]']]"
     @mousedown.stop="startMove($event, p.which)"
   />
 
@@ -149,12 +148,20 @@ const endMove = () => {
     @mouseenter="hover = true"
     @mouseleave="hover = false"
     @click.shift="$emit('delete')"
-    :xlink:href="`#${shape.kind}`"
+    :xlink:href="`#${shape.bgId}`"
     :x="shape.x"
     :y="shape.y"
     :width="shape.width"
     :height="shape.height"
     @click.stop="emit('click')"
     @mousedown.stop="startMove($event, 'whole')"
+  />
+  <use
+    :xlink:href="`#${shape.layerId}`"
+    :x="shape.x"
+    :y="shape.y"
+    :width="shape.width"
+    :height="shape.height"
+    class="pointer-events-none"
   />
 </template>

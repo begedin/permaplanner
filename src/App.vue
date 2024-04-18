@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import { tools } from './data'
-import GardenFeature from './GardenFeature.vue'
-import GardenSymbols from './GardenSymbols.vue'
-import ToolButton from './ToolButton.vue'
-import type { GardenThing, Tool } from './data'
+import PlantParts from './PlantParts.vue'
+
 import { useCamera } from './useCamera'
 import { useElementSize } from '@vueuse/core'
 import { useBackgroundImage } from './useBackgroundImage'
 import { useMapScale } from './useMapScale'
 import OnboardingText from './OnboardingText.vue'
+import PlantCreator from './PlantCreator.vue'
+import { useStore, type GardenThing } from './useStore'
+import ToolBar from './ToolBar.vue'
+import GardenFeatures from './GardenFeatures.vue'
+import GardenFeature from './GardenFeature.vue'
 
 const {
   setImageSrc,
@@ -25,15 +27,12 @@ onMounted(() => setupBackgroundImagePaste())
 onBeforeUnmount(() => teardownBackgroundImagePaste())
 watch(bgImageReady, (ready) => ready && fitToViewPort())
 
+const store = useStore()
+
 onMounted(async () => {
   const src = localStorage.getItem('imgSrc')
   if (src) {
     setImageSrc(src)
-  }
-
-  const storedShapes = localStorage.getItem('shapes')
-  if (storedShapes) {
-    shapes.value = JSON.parse(storedShapes)
   }
 })
 
@@ -70,17 +69,17 @@ const center = computed(() => {
   }
 })
 
-const tool = ref<Tool>(tools[0])
-
-const shapes = ref<GardenThing[]>([])
-
-watch(shapes, () => localStorage.setItem('shapes', JSON.stringify(shapes.value)), { deep: true })
+watch(
+  () => store.gardenPlants,
+  () => localStorage.setItem('shapes', JSON.stringify(store.gardenPlants)),
+  { deep: true },
+)
 
 const shapeStart = ref({ x: 0, y: 0 })
 const shapeEnd = ref<{ x: number; y: number }>()
 
 const startDraw = (e: MouseEvent) => {
-  if (!tool.value || e.button !== 0 || e.shiftKey || !container.value) {
+  if (!store.plant || e.button !== 0 || e.shiftKey || !container.value) {
     return
   }
 
@@ -110,7 +109,7 @@ const startDraw = (e: MouseEvent) => {
         return
       }
 
-      shapes.value.push({ ...shape })
+      store.gardenPlants.push({ ...shape })
       shapeEnd.value = undefined
       controller.abort()
     },
@@ -119,7 +118,7 @@ const startDraw = (e: MouseEvent) => {
 }
 
 const newShape = computed<GardenThing | void>(() => {
-  if (!shapeEnd.value || !tool.value || !container.value) {
+  if (!shapeEnd.value || !store.plant || !container.value) {
     return
   }
 
@@ -129,8 +128,7 @@ const newShape = computed<GardenThing | void>(() => {
   const height = Math.abs(shapeStart.value.y - shapeEnd.value.y)
 
   return {
-    kind: tool.value.kind,
-    name: tool.value.name,
+    ...store.plant,
     x: (x + camera.value.x) / camera.value.scale,
     y: (y + camera.value.y) / camera.value.scale,
     width: width / camera.value.scale,
@@ -138,21 +136,14 @@ const newShape = computed<GardenThing | void>(() => {
   }
 })
 
-const deleteShape = (index: number) => {
-  shapes.value.splice(index, 1)
-}
-
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'z' && e.metaKey) {
-    shapes.value.pop()
+    store.gardenPlants.pop()
   }
 }
 
 onMounted(() => document.addEventListener('keydown', handleKeydown))
 onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown))
-
-const selectedIndex = ref<number | null>(null)
-const hoveredIndex = ref<number | null>(null)
 
 const bgImage = ref<SVGImageElement>()
 
@@ -161,28 +152,32 @@ const {
   mapScaleReferenceLine,
   mapScaleReferenceLineRealLength,
   mapScaleUnitLengthPx,
-  setupMapScale,
   startMoveScaleStart,
   startMoveScaleEnd,
   onboardingState,
 } = useMapScale(camera)
-
-setupMapScale()
 </script>
 
 <template>
-  <GardenSymbols />
+  <PlantParts />
   <div class="grid grid-cols-[150px_1fr_150px] w-full h-full justify-stretch">
     <div class="p-2 flex flex-grow flex-col items-start gap-1 text-sky-200">
-      <ToolButton
-        v-for="t in tools"
-        @click="tool = t"
-        :tool-kind="t.kind"
-        :tool-name="t.name"
-        :active="tool?.kind === t.kind"
-      />
-      <input type="range" min="1" max="500" step="1" v-model="mapScaleReferenceLineRealLength" />
-      <div>{{ mapScaleReferenceLineRealLength }}</div>
+      <ToolBar />
+      <label class="text-slate-600 flex flex-col gap-1">
+        Map scale
+        <div class="flex gap-2 flex-row items-center">
+          <input
+            type="range"
+            min="1"
+            max="500"
+            step="1"
+            v-model="mapScaleReferenceLineRealLength"
+            class="flex-grow flex-shrink w-3/4"
+          />
+          <div class="w-8">{{ mapScaleReferenceLineRealLength }}</div>
+        </div>
+      </label>
+      <PlantCreator />
     </div>
 
     <div class="grid grid-cols-[1fr] w-full h-full">
@@ -221,12 +216,6 @@ setupMapScale()
           Paste an aerial photo of your plot of land here. You can use Google Maps to take a
           screenshot
         </text>
-        <OnboardingText
-          v-if="imgSrc && onboardingState !== 'done'"
-          :x="center.x"
-          :y="center.y"
-          :onboarding-state="onboardingState"
-        />
         <rect
           x="0"
           y="0"
@@ -236,17 +225,14 @@ setupMapScale()
           fill="url(#grid)"
           class="pointer-events-none"
         ></rect>
-
-        <GardenFeature
-          :shape="shape"
-          v-for="(shape, index) in shapes"
-          @delete="deleteShape(index)"
-          :active="selectedIndex === index || hoveredIndex === index"
-          @click="selectedIndex = index"
-          @update="($event) => (shapes[index] = $event)"
-          :scale="camera.scale"
-        />
+        <GardenFeatures :scale="camera.scale" />
         <GardenFeature v-if="newShape" :shape="newShape" active :scale="camera.scale" />
+        <OnboardingText
+          v-if="imgSrc && onboardingState !== 'done'"
+          :x="center.x"
+          :y="center.y"
+          :onboarding-state="onboardingState"
+        />
 
         <line
           v-if="mapScaleReferenceLine"
@@ -290,11 +276,11 @@ setupMapScale()
 
     <div class="p-2 flex flex-col gap-1">
       <button
-        v-for="(shape, index) in shapes"
-        @click="selectedIndex = index"
-        @click.shift="deleteShape(index)"
-        @mouseenter="hoveredIndex = index"
-        @mouseleave="hoveredIndex = null"
+        v-for="(shape, index) in store.gardenPlants"
+        @click="store.selectedIndex = index"
+        @click.shift="store.deleteFeature(index)"
+        @mouseenter="store.hoveredIndex = index"
+        @mouseleave="store.hoveredIndex = undefined"
       >
         {{ shape.name }}
       </button>

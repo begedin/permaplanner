@@ -1,12 +1,12 @@
+import { useStorage } from '@vueuse/core'
 import { computed, ref, onMounted, type Ref, watch } from 'vue'
 
 const DEFAULT_START = { x: 20, y: 20 }
 const DEFAULT_END = { x: 150, y: 20 }
 
 export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>) => {
-  const mapScaleStart = ref<{ x: number; y: number }>(DEFAULT_START)
-  const mapScaleEnd = ref<{ x: number; y: number }>(DEFAULT_END)
-  const mapScaleReferenceLength = ref<number>(10)
+  const mapScaleStart = useStorage<{ x: number; y: number }>('mapScaleStart', DEFAULT_START)
+  const mapScaleEnd = useStorage<{ x: number; y: number }>('mapScaleEnd', DEFAULT_END)
 
   const onboardingSteps = [
     'initial',
@@ -18,7 +18,7 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
     'done',
   ] as const
 
-  const onboardingState = ref<
+  const onboardingState = useStorage<
     | 'initial'
     | 'movingFirst'
     | 'movedFirst'
@@ -26,11 +26,11 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
     | 'movedSecond'
     | 'settingLength'
     | 'done'
-  >('initial')
+  >('onboardingState', 'initial')
 
   const advanceOnboarding = () => {
     const currentIndex = onboardingSteps.indexOf(onboardingState.value)
-    onboardingState.value = onboardingSteps[currentIndex + 1] || onboardingSteps.at(-1)
+    onboardingState.value = onboardingSteps[currentIndex + 1] || 'done'
   }
 
   const mapScaleReferenceLine = computed(() => {
@@ -50,7 +50,7 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
     return { x, y }
   })
 
-  const mapScaleReferenceLineRealLength = ref<number>(1)
+  const mapScaleReferenceLineRealLength = useStorage<number>('mapScaleReferenceLineRealLength', 1)
 
   const mapScaleUnitLengthPx = computed(() => {
     const x1 = mapScaleStart.value.x
@@ -61,28 +61,6 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
     const indicatorLengthPx = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
     return indicatorLengthPx / mapScaleReferenceLineRealLength.value
   })
-
-  const setupMapScale = () => {
-    onMounted(() => {
-      const data = localStorage.getItem('mapScale')
-
-      if (!data) {
-        return
-      }
-      const { start, end, realLength, state } = JSON.parse(data)
-      mapScaleStart.value = start || DEFAULT_START
-      mapScaleEnd.value = end || DEFAULT_END
-      mapScaleReferenceLineRealLength.value = parseInt(realLength)
-      onboardingState.value = state || 'initial'
-    })
-
-    watch(
-      [mapScaleStart, mapScaleEnd, mapScaleReferenceLineRealLength, onboardingState],
-      ([start, end, realLength, state]) => {
-        localStorage.setItem('mapScale', JSON.stringify({ start, end, realLength, state }))
-      },
-    )
-  }
 
   const startMoveScaleStart = (e: MouseEvent) => {
     mapScaleStart.value = {
@@ -171,19 +149,17 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
     onboardingState.value = 'settingLength'
     window.clearTimeout(timeout)
     timeout = window.setTimeout(() => {
-      advanceOnboarding()
+      onboardingState.value = 'done'
     }, 1000)
   })
 
   return {
     mapScaleEnd,
     mapScaleReferenceCentroid,
-    mapScaleReferenceLength,
     mapScaleReferenceLine,
     mapScaleReferenceLineRealLength,
     mapScaleStart,
     mapScaleUnitLengthPx,
-    setupMapScale,
     startMoveScaleEnd,
     startMoveScaleStart,
     onboardingState,

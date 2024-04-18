@@ -1,5 +1,8 @@
 import { ref, type Ref } from 'vue'
 
+const MIN_ZOOM = 0.1
+const MAX_ZOOM = 10
+
 export const useCamera = (
   element: Ref<SVGElement | undefined>,
   dimensions: Ref<{
@@ -23,8 +26,8 @@ export const useCamera = (
 
     const newScale =
       factor > 0
-        ? Math.min(camera.value.scale + factor, 4)
-        : Math.max(camera.value.scale + factor, 0.25)
+        ? Math.min(camera.value.scale + factor, MAX_ZOOM)
+        : Math.max(camera.value.scale + factor, MIN_ZOOM)
 
     const newOffsetX = originalPosition.x * (newScale - 1) + (originalPosition.x - mouse.value.x)
     const newOffsetY = originalPosition.y * (newScale - 1) + (originalPosition.y - mouse.value.y)
@@ -51,7 +54,7 @@ export const useCamera = (
       'wheel',
       (e) => {
         e.preventDefault()
-        zoomBy(e.deltaY < 0 ? 0.1 : -0.1)
+        zoomBy(e.deltaY < 0 ? 0.2 : -0.2)
       },
       { passive: false, signal: teardownController.signal },
     )
@@ -116,7 +119,6 @@ export const useCamera = (
     const y = -(viewportHeight - contentHeight * scale) / 2
 
     camera.value = { x, y, scale }
-    console.log(camera.value)
   }
 
   const setupCamera = () => {
