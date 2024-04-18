@@ -13,6 +13,7 @@ import { useStore, type GardenThing } from './useStore'
 import ToolBar from './ToolBar.vue'
 import GardenFeatures from './GardenFeatures.vue'
 import GardenFeature from './GardenFeature.vue'
+import ToolSlider from './ToolSlider.vue'
 
 const {
   setImageSrc,
@@ -156,6 +157,8 @@ const {
   startMoveScaleEnd,
   onboardingState,
 } = useMapScale(camera)
+
+const bgOpacity = ref(0.4)
 </script>
 
 <template>
@@ -163,20 +166,14 @@ const {
   <div class="grid grid-cols-[150px_1fr_150px] w-full h-full justify-stretch">
     <div class="p-2 flex flex-grow flex-col items-start gap-1 text-sky-200">
       <ToolBar />
-      <label class="text-slate-600 flex flex-col gap-1">
-        Map scale
-        <div class="flex gap-2 flex-row items-center">
-          <input
-            type="range"
-            min="1"
-            max="500"
-            step="1"
-            v-model="mapScaleReferenceLineRealLength"
-            class="flex-grow flex-shrink w-3/4"
-          />
-          <div class="w-8">{{ mapScaleReferenceLineRealLength }}</div>
-        </div>
-      </label>
+      <ToolSlider
+        label="Map scale"
+        :min="1"
+        :max="300"
+        :step="1"
+        v-model:value="mapScaleReferenceLineRealLength"
+      />
+      <ToolSlider label="BG opacity" :min="0" :max="1" :step="0.01" v-model:value="bgOpacity" />
       <PlantCreator />
     </div>
 
@@ -210,7 +207,7 @@ const {
           y="0"
           :width="imgWidth"
           :height="imgHeight"
-          opacity="0.5"
+          :opacity="bgOpacity"
         />
         <text v-else x="50%" y="50%" fill="red" text-anchor="middle" dominant-baseline="middle">
           Paste an aerial photo of your plot of land here. You can use Google Maps to take a
