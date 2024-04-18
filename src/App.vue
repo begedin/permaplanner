@@ -102,20 +102,18 @@ const startDraw = (e: MouseEvent) => {
     { signal: controller.signal },
   )
 
-  document.addEventListener(
-    'mouseup',
-    () => {
-      const shape = newShape.value
-      if (!shape || shape.width < 0.01 || shape.height < 0.01) {
-        return
-      }
+  document.addEventListener('mouseup', () => {
+    controller.abort()
+    const shape = newShape.value
+    if (!shape || shape.width < 0.01 || shape.height < 0.01) {
+      return
+    }
 
-      store.gardenPlants.push({ ...shape })
-      shapeEnd.value = undefined
-      controller.abort()
-    },
-    { once: true },
-  )
+    store.gardenPlants.push({ ...shape })
+
+    shapeStart.value = { x: 0, y: 0 }
+    shapeEnd.value = undefined
+  })
 }
 
 const newShape = computed<GardenThing | void>(() => {
@@ -164,7 +162,7 @@ const bgOpacity = ref(0.4)
 <template>
   <PlantParts />
   <div class="grid grid-cols-[150px_1fr_150px] w-full h-full justify-stretch">
-    <div class="p-2 flex flex-grow flex-col items-start gap-1 text-sky-200">
+    <div class="p-2 flex flex-grow flex-col items-stretch gap-1 text-sky-200">
       <ToolBar />
       <ToolSlider
         label="Map scale"

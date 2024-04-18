@@ -9,7 +9,7 @@ defineProps<{
 <template>
   <button
     :title="plant.name"
-    class="py-1 px-2 rounded hover:bg-sky-50 transition-colors flex flex-row gap-2 items-center text-slate-600"
+    class="py-1 px-2 rounded hover:bg-sky-100 transition-colors flex flex-row gap-2 items-center text-slate-600"
     :class="active && 'bg-sky-200'"
   >
     <svg width="30" height="30" viewBox="0 0 200 200">

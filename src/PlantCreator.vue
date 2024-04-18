@@ -2,7 +2,6 @@
 import { computed, ref } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 import { useStore, type BgId, type LayerId, type Plant, bgIds, layerIds } from './useStore'
-import { idText } from 'typescript'
 
 const bgId = ref<BgId>('bg_1')
 const layerId = ref<LayerId>('layer_apple')
@@ -54,7 +53,10 @@ const remove = (plant: Plant) => {
 const isNew = computed(() => store.plants.findIndex((p) => p.id === id.value) === -1)
 </script>
 <template>
-  <button @click="open = true" class="bg-emerald-200 px-2 py-1 w-full text-slate-600 rounded-md">
+  <button
+    @click="open = true"
+    class="bg-emerald-200 hover:bg-emerald-300 px-2 py-1 w-full text-slate-600 rounded-md"
+  >
     Plant Creator
   </button>
   <div
