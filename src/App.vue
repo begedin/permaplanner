@@ -76,8 +76,13 @@ watch(
   { deep: true },
 )
 
-const shapeStart = ref({ x: 0, y: 0 })
-const shapeEnd = ref<{ x: number; y: number }>()
+const drawingBbox = ref<{ x: number; y: number; width: number; height: number }>({
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0,
+})
+const isDrawing = computed(() => drawingBbox.value.width > 0 && drawingBbox.value.height > 0)
 
 const startDraw = (e: MouseEvent) => {
   if (!store.plant || e.button !== 0 || e.shiftKey || !container.value) {
@@ -90,15 +95,24 @@ const startDraw = (e: MouseEvent) => {
   const x = e.clientX - svgOffsetX
   const y = e.clientY - svgOffsetY
 
-  shapeStart.value = { x, y }
-  shapeEnd.value = { x, y }
+  drawingBbox.value = { x, y, width: 0, height: 0 }
 
   const controller = new AbortController()
 
   document.addEventListener(
     'mousemove',
-    (moveE: MouseEvent) =>
-      (shapeEnd.value = { x: moveE.clientX - svgOffsetX, y: moveE.clientY - svgOffsetY }),
+    (moveE: MouseEvent) => {
+      const width = moveE.clientX - svgOffsetX - x
+      const height = moveE.clientY - svgOffsetY - y
+
+      drawingBbox.value = {
+        x: Math.min(x, x + width),
+        y: Math.min(y, y + height),
+        width: Math.abs(width),
+        height: Math.abs(height),
+      }
+    },
+
     { signal: controller.signal },
   )
 
@@ -111,20 +125,19 @@ const startDraw = (e: MouseEvent) => {
 
     store.gardenPlants.push({ ...shape })
 
-    shapeStart.value = { x: 0, y: 0 }
-    shapeEnd.value = undefined
+    drawingBbox.value = { x: 0, y: 0, width: 0, height: 0 }
   })
 }
 
 const newShape = computed<GardenThing | void>(() => {
-  if (!shapeEnd.value || !store.plant || !container.value) {
+  if (!isDrawing.value || !store.plant || !container.value) {
     return
   }
 
-  const x = Math.min(shapeStart.value.x, shapeEnd.value.x)
-  const y = Math.min(shapeStart.value.y, shapeEnd.value.y)
-  const width = Math.abs(shapeStart.value.x - shapeEnd.value.x)
-  const height = Math.abs(shapeStart.value.y - shapeEnd.value.y)
+  const x = Math.min(drawingBbox.value.x, drawingBbox.value.x + drawingBbox.value.width)
+  const y = Math.min(drawingBbox.value.y, drawingBbox.value.y + drawingBbox.value.height)
+  const width = Math.abs(drawingBbox.value.width)
+  const height = Math.abs(drawingBbox.value.height)
 
   return {
     ...store.plant,

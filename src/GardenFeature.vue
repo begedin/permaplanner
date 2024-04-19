@@ -66,41 +66,63 @@ const doMove = (e: MouseEvent) => {
   const deltaX = (e.clientX - moveStartOffset.x) / props.scale
   const deltaY = (e.clientY - moveStartOffset.y) / props.scale
 
-  const shape = { ...props.shape }
-
   if (movedWhich.value === 'topLeft') {
+    const width = shapeAtStartOfMove.width - deltaX
+    const height = shapeAtStartOfMove.height - deltaY
+    const x = shapeAtStartOfMove.x + deltaX
+    const y = shapeAtStartOfMove.y + deltaY
+
     emit('update', {
       ...shapeAtStartOfMove,
-      x: shapeAtStartOfMove.x + deltaX,
-      y: shapeAtStartOfMove.y + deltaY,
-      width: shapeAtStartOfMove.width - deltaX,
-      height: shapeAtStartOfMove.height - deltaY,
+      x: Math.min(x, x + width),
+      y: Math.min(y, y + height),
+      width: Math.abs(width),
+      height: Math.abs(height),
     })
   }
 
   if (movedWhich.value === 'bottomRight') {
+    const width = shapeAtStartOfMove.width + deltaX
+    const height = shapeAtStartOfMove.height + deltaY
+    const x = shapeAtStartOfMove.x
+    const y = shapeAtStartOfMove.y
+
     emit('update', {
       ...shapeAtStartOfMove,
-      width: shapeAtStartOfMove.width + deltaX,
-      height: shapeAtStartOfMove.height + deltaY,
+      x: Math.min(x, x + width),
+      y: Math.min(y, y + height),
+      width: Math.abs(width),
+      height: Math.abs(height),
     })
   }
 
   if (movedWhich.value === 'topRight') {
+    const width = shapeAtStartOfMove.width + deltaX
+    const height = shapeAtStartOfMove.height - deltaY
+    const x = shapeAtStartOfMove.x
+    const y = shapeAtStartOfMove.y + deltaY
+
     emit('update', {
       ...shapeAtStartOfMove,
-      y: shapeAtStartOfMove.y + deltaY,
-      width: shapeAtStartOfMove.width + deltaX,
-      height: shapeAtStartOfMove.height - deltaY,
+      x: Math.min(x, x + width),
+      y: Math.min(y, y + height),
+      width: Math.abs(width),
+      height: Math.abs(height),
     })
   }
 
   if (movedWhich.value === 'bottomLeft') {
+    const width = shapeAtStartOfMove.width - deltaX
+    const height = shapeAtStartOfMove.height + deltaY
+    const x = shapeAtStartOfMove.x + deltaX
+    const y = shapeAtStartOfMove.y
+
     emit('update', {
-      ...shape,
-      x: shapeAtStartOfMove.x + deltaX,
-      width: shapeAtStartOfMove.width - deltaX,
-      height: shapeAtStartOfMove.height + deltaY,
+      ...shapeAtStartOfMove,
+      x: Math.min(x, x + width),
+      y: Math.min(y, y + height),
+      width: Math.abs(width),
+      height: Math.abs(height),
     })
   }
 
