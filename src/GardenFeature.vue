@@ -63,76 +63,34 @@ const doMove = (e: MouseEvent) => {
     return
   }
 
-  const deltaX = (e.clientX - moveStartOffset.x) / props.scale
-  const deltaY = (e.clientY - moveStartOffset.y) / props.scale
-
-  if (movedWhich.value === 'topLeft') {
-    const width = shapeAtStartOfMove.width - deltaX
-    const height = shapeAtStartOfMove.height - deltaY
-    const x = shapeAtStartOfMove.x + deltaX
-    const y = shapeAtStartOfMove.y + deltaY
-
-    emit('update', {
-      ...shapeAtStartOfMove,
-      x: Math.min(x, x + width),
-      y: Math.min(y, y + height),
-      width: Math.abs(width),
-      height: Math.abs(height),
-    })
-  }
-
-  if (movedWhich.value === 'bottomRight') {
-    const width = shapeAtStartOfMove.width + deltaX
-    const height = shapeAtStartOfMove.height + deltaY
-    const x = shapeAtStartOfMove.x
-    const y = shapeAtStartOfMove.y
-
-    emit('update', {
-      ...shapeAtStartOfMove,
-      x: Math.min(x, x + width),
-      y: Math.min(y, y + height),
-      width: Math.abs(width),
-      height: Math.abs(height),
-    })
-  }
-
-  if (movedWhich.value === 'topRight') {
-    const width = shapeAtStartOfMove.width + deltaX
-    const height = shapeAtStartOfMove.height - deltaY
-    const x = shapeAtStartOfMove.x
-    const y = shapeAtStartOfMove.y + deltaY
-
-    emit('update', {
-      ...shapeAtStartOfMove,
-      x: Math.min(x, x + width),
-      y: Math.min(y, y + height),
-      width: Math.abs(width),
-      height: Math.abs(height),
-    })
-  }
-
-  if (movedWhich.value === 'bottomLeft') {
-    const width = shapeAtStartOfMove.width - deltaX
-    const height = shapeAtStartOfMove.height + deltaY
-    const x = shapeAtStartOfMove.x + deltaX
-    const y = shapeAtStartOfMove.y
-
-    emit('update', {
-      ...shapeAtStartOfMove,
-      x: Math.min(x, x + width),
-      y: Math.min(y, y + height),
-      width: Math.abs(width),
-      height: Math.abs(height),
-    })
-  }
+  const dX = (e.clientX - moveStartOffset.x) / props.scale
+  const dY = (e.clientY - moveStartOffset.y) / props.scale
 
   if (movedWhich.value === 'whole') {
     emit('update', {
-      ...shapeAtStartOfMove,
-      x: shapeAtStartOfMove.x + deltaX,
-      y: shapeAtStartOfMove.y + deltaY,
+      ...props.shape,
+      x: shapeAtStartOfMove.x + dX,
+      y: shapeAtStartOfMove.y + dY,
     })
+    return
   }
+
+  const isMovingLeftEdge = ['bottomLeft', 'topLeft'].includes(movedWhich.value)
+  const isMovingTopEdge = ['topLeft', 'topRight'].includes(movedWhich.value)
+
+  const width = isMovingLeftEdge ? shapeAtStartOfMove.width - dX : shapeAtStartOfMove.width + dX
+  const height = isMovingTopEdge ? shapeAtStartOfMove.height - dY : shapeAtStartOfMove.height + dY
+
+  const x = isMovingLeftEdge ? shapeAtStartOfMove.x + dX : shapeAtStartOfMove.x
+  const y = isMovingTopEdge ? shapeAtStartOfMove.y + dY : shapeAtStartOfMove.y
+
+  emit('update', {
+    ...shapeAtStartOfMove,
+    x: Math.min(x, x + width),
+    y: Math.min(y, y + height),
+    width: Math.abs(width),
+    height: Math.abs(height),
+  })
 }
 
 const endMove = () => {
