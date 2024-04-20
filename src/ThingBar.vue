@@ -1,8 +1,13 @@
 <script lang="ts" setup>
 import PlantIcon from './PlantIcon.vue'
-import { useStore } from './useStore'
+import { useStore, type GardenThing } from './useStore'
 
 const store = useStore()
+
+const setName = (thing: GardenThing, event: Event) => {
+  const target = event.target as HTMLInputElement
+  thing.name = target.value
+}
 </script>
 <template>
   <div class="p-2 flex flex-col gap-1">
@@ -16,7 +21,11 @@ const store = useStore()
       @mouseleave="store.hoveredId = undefined"
     >
       <PlantIcon class="h-8 w-8" :plant="plant" />
-      {{ plant.name }}
+      <input
+        :value="thing.name || plant.name"
+        @input="($event) => setName(thing, $event)"
+        class="bg-transparent appearance-none focus:outline-none border-none text-slate-600 w-full truncate"
+      />
     </button>
   </div>
 </template>

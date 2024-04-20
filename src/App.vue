@@ -116,7 +116,7 @@ const bgOpacity = useStorage('bgOpacity', 0.4)
 
 <template>
   <PlantParts />
-  <div class="grid grid-cols-[150px_1fr_150px] w-full h-full justify-stretch">
+  <div class="grid grid-cols-[200px_1fr_250px] w-full h-full justify-stretch">
     <div class="p-2 flex flex-grow flex-col items-stretch gap-1 text-sky-200">
       <ToolBar />
       <PlantCreator />

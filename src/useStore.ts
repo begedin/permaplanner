@@ -20,6 +20,7 @@ export type Plant = {
 
 export type GardenThing = {
   id: string
+  name?: string
   plantId: string
   x: number
   y: number
