@@ -5,7 +5,7 @@ import { v4 as uuidV4 } from 'uuid'
 import PlantParts from './PlantParts.vue'
 
 import { useCamera } from './useCamera'
-import { useElementSize } from '@vueuse/core'
+import { useElementSize, useLocalStorage } from '@vueuse/core'
 import { useBackgroundImage } from './useBackgroundImage'
 import { useMapScale } from './useMapScale'
 import OnboardingText from './OnboardingText.vue'
@@ -111,7 +111,7 @@ const {
   onboardingState,
 } = useMapScale(camera)
 
-const bgOpacity = ref(0.4)
+const bgOpacity = useLocalStorage('bgOpacity', 0.4)
 </script>
 
 <template>
