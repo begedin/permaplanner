@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 import { useStore, type Plant, type Feature } from './useStore'
-import PlantEditor from './PlantEditor.vue'
+import PlantCreatorCanvas from './PlantCreatorCanvas.vue'
 import PlantCreatorFeatures from './PlantCreatorFeatures.vue'
 import PlantCreatorBases from './PlantCreatorBases.vue'
 import PlantIcon from './PlantIcon.vue'
@@ -63,33 +63,39 @@ const plantInEditing = ref<Plant>({
     @click.self="open = false"
   >
     <div class="bg-white p-4 grid grid-flow-col items-start gap-8 rounded-md">
-      <div class="grid gap-1 grid-cols-4 grid-flow-col">
+      <div class="flex flex-col gap-1">
         <button
           v-for="plant in store.plants"
           :key="plant.name"
           @click="edit(plant)"
-          class="flex flex-col items-center gap-1 bg-slate-200 rounded-md p-1 hover:bg-slate-300 text-slate-900"
+          class="flex flex-row items-center gap-1 bg-slate-200 rounded-md p-1 hover:bg-slate-300 text-slate-900"
           :class="{ 'bg-slate-400': plant.id === plantInEditing.id }"
+          :title="plant.name"
         >
           <PlantIcon class="w-7 h-7" :plant="plant" />
-          {{ plant.name }}
-          <button @click.self="remove(plant)" class="bg-red-200 hover:bg-red-300 p-1 rounded-md">
+          <span class="w-20 truncate text-left">{{ plant.name }}</span>
+          <button
+            @click.self="remove(plant)"
+            class="bg-red-200 hover:bg-red-300 p-1 rounded-md text-xs"
+          >
             🗑️
           </button>
         </button>
         <button
           @click="newPlant"
-          class="flex flex-col items-center gap-1 bg-slate-200 rounded-md p-1 hover:bg-slate-300 text-slate-900"
+          class="flex flex-row items-center gap-1 bg-slate-200 rounded-md p-1 hover:bg-slate-300 text-slate-900"
           :class="{ 'bg-slate-400': isNew }"
         >
           <svg class="w-7 h-7" height="20" width="20" viewBox="0 0 20 20">
             <use xlink:href="#bg_1" width="100%" height="100%" />
           </svg>
-          {{ isNew ? plantInEditing.name || 'New' : 'New' }}
+          <span class="w-20 truncate text-left">{{
+            isNew ? plantInEditing.name || 'New' : 'New'
+          }}</span>
         </button>
       </div>
       <div>
-        <PlantEditor
+        <PlantCreatorCanvas
           :currentFeature="currentFeature"
           :scale="1 / 3"
           v-model:plant="plantInEditing"

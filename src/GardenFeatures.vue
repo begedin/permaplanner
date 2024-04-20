@@ -7,10 +7,10 @@ defineProps<{ scale: number }>()
 
 onMounted(() => {
   document.addEventListener('keydown', (e): void => {
-    if (e.key === 'Delete' && store.selectedIndex !== undefined) {
+    if (e.key === 'Delete' && store.selectedId !== undefined) {
       e.preventDefault()
       e.stopPropagation()
-      store.deleteFeature(store.selectedIndex)
+      store.deleteFeature(store.selectedId)
     }
   })
 })
@@ -22,9 +22,9 @@ const store = useStore()
     v-for="({ thing, plant }, index) in store.gardenThingsWithPlants"
     :thing="thing"
     :plant="plant"
-    @delete="store.deleteFeature(index)"
-    :active="store.selectedIndex === index || store.hoveredIndex === index"
-    @click="store.selectedIndex = index"
+    @delete="store.deleteFeature(thing.id)"
+    :active="store.selectedId === thing.id || store.hoveredId === thing.id"
+    @click="store.selectedId = thing.id"
     @update="($event) => (store.gardenThings[index] = $event)"
     :scale="scale"
   />

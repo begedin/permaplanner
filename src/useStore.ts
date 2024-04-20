@@ -46,12 +46,12 @@ export const useStore = defineStore('store', () => {
 
   const gardenThings = useStorage<GardenThing[]>('gardenThings', [])
 
-  const deleteFeature = (index: number) => {
-    gardenThings.value.splice(index, 1)
+  const deleteFeature = (id: string) => {
+    gardenThings.value = gardenThings.value.filter((thing) => thing.id !== id)
   }
 
-  const selectedIndex = ref<number>()
-  const hoveredIndex = ref<number>()
+  const selectedId = ref<string>()
+  const hoveredId = ref<string>()
 
   const gardenThingsWithPlants = computed(() => {
     const data = <{ thing: GardenThing; plant: Plant }[]>[]
@@ -70,7 +70,7 @@ export const useStore = defineStore('store', () => {
     gardenThings,
     gardenThingsWithPlants,
     deleteFeature,
-    selectedIndex,
-    hoveredIndex,
+    selectedId,
+    hoveredId,
   }
 })

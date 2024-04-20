@@ -3,7 +3,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 
 import PlantParts from './PlantParts.vue'
-
 import { useCamera } from './useCamera'
 import { useElementSize, useStorage } from '@vueuse/core'
 import { useBackgroundImage } from './useBackgroundImage'
@@ -16,6 +15,7 @@ import GardenFeatures from './GardenFeatures.vue'
 import GardenFeature from './GardenFeature.vue'
 import ToolSlider from './ToolSlider.vue'
 import { useDrawBox } from './useDrawBox'
+import ThingBar from './ThingBar.vue'
 
 const {
   setupBackgroundImagePaste,
@@ -230,16 +230,6 @@ const bgOpacity = useStorage('bgOpacity', 0.4)
       </svg>
     </div>
 
-    <div class="p-2 flex flex-col gap-1">
-      <button
-        v-for="({ plant }, index) in store.gardenThingsWithPlants"
-        @click="store.selectedIndex = index"
-        @click.shift="store.deleteFeature(index)"
-        @mouseenter="store.hoveredIndex = index"
-        @mouseleave="store.hoveredIndex = undefined"
-      >
-        {{ plant.name }}
-      </button>
-    </div>
+    <ThingBar />
   </div>
 </template>
