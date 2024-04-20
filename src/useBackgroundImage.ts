@@ -1,4 +1,5 @@
-import { ref } from 'vue'
+import { useLocalStorage } from '@vueuse/core'
+import { ref, watch } from 'vue'
 
 export const useBackgroundImage = () => {
   const ready = ref(false)
@@ -10,7 +11,7 @@ export const useBackgroundImage = () => {
       reader.readAsDataURL(file)
     })
 
-  const imgSrc = ref<string | null>(null)
+  const imgSrc = useLocalStorage<string>('imgSrc', '')
 
   const imgWidth = ref(0)
   const imgHeight = ref(0)
@@ -21,9 +22,8 @@ export const useBackgroundImage = () => {
     ready.value = true
   }
 
-  const setImageSrc = async (src: string) => {
+  const setImageSrc = async (src?: string) => {
     ready.value = false
-    imgSrc.value = src
     const img = document.createElement('img')
     img.src = imgSrc.value
     document.body.appendChild(img)
@@ -42,6 +42,8 @@ export const useBackgroundImage = () => {
     })
   }
 
+  watch(imgSrc, setImageSrc, { immediate: true })
+
   let pasteController: AbortController | null = null
 
   const setupBackgroundImagePaste = () => {
@@ -57,8 +59,7 @@ export const useBackgroundImage = () => {
         }
 
         const base64 = await getFileBase64(file)
-        await setImageSrc(base64)
-        localStorage.setItem('imgSrc', base64)
+        imgSrc.value = base64
       },
       { signal: pasteController.signal },
     )

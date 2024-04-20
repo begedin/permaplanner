@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import type { GardenThing } from './useStore'
+import type { GardenThing, Plant } from './useStore'
 import MovableResizable from './MovableResizable.vue'
 
-defineProps<{ shape: GardenThing; active: boolean; scale: number }>()
+defineProps<{ thing: GardenThing; plant: Plant; active: boolean; scale: number }>()
 
 const emit = defineEmits<{
   (e: 'click' | 'delete'): void
@@ -11,30 +11,34 @@ const emit = defineEmits<{
 </script>
 <template>
   <MovableResizable
-    @update="($event) => emit('update', { ...shape, ...$event })"
+    @update="($event) => emit('update', { ...thing, ...$event })"
     :active="active"
-    :x="shape.x"
-    :y="shape.y"
-    :width="shape.width"
-    :height="shape.height"
+    :x="thing.x"
+    :y="thing.y"
+    :width="thing.width"
+    :height="thing.height"
     :scale="scale"
   >
-    <use
-      :xlink:href="`#${shape.bgId}`"
+    <svg
+      :x="thing.x"
+      :y="thing.y"
+      :width="thing.width"
+      :height="thing.height"
       @click.shift="$emit('delete')"
       @click.stop="emit('click')"
-      :x="shape.x"
-      :y="shape.y"
-      :width="shape.width"
-      :height="shape.height"
-    />
-    <use
-      :xlink:href="`#${shape.layerId}`"
-      :x="shape.x"
-      :y="shape.y"
-      :width="shape.width"
-      :height="shape.height"
-      class="pointer-events-none"
-    />
+      viewBox="0 0 100 100"
+    >
+      <use x="0" y="0" width="100%" height="100%" :xlink:href="`#${plant.background}`" />
+      <use
+        v-for="feature in plant.features"
+        :key="feature.feature"
+        :xlink:href="`#${feature.feature}`"
+        :x="feature.x"
+        :y="feature.y"
+        :width="feature.width"
+        :height="feature.height"
+        class="pointer-events-none"
+      />
+    </svg>
   </MovableResizable>
 </template>

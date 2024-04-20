@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { v4 as uuidV4 } from 'uuid'
 
 import PlantParts from './PlantParts.vue'
 
@@ -14,9 +15,9 @@ import ToolBar from './ToolBar.vue'
 import GardenFeatures from './GardenFeatures.vue'
 import GardenFeature from './GardenFeature.vue'
 import ToolSlider from './ToolSlider.vue'
+import { useDrawBox } from './useDrawBox'
 
 const {
-  setImageSrc,
   setupBackgroundImagePaste,
   teardownBackgroundImagePaste,
   imgWidth,
@@ -29,13 +30,6 @@ onBeforeUnmount(() => teardownBackgroundImagePaste())
 watch(bgImageReady, (ready) => ready && fitToViewPort())
 
 const store = useStore()
-
-onMounted(async () => {
-  const src = localStorage.getItem('imgSrc')
-  if (src) {
-    setImageSrc(src)
-  }
-})
 
 const container = ref<SVGElement>()
 const { camera, setupCamera, teardownCamera, fitToViewPort } = useCamera(
@@ -70,64 +64,11 @@ const center = computed(() => {
   }
 })
 
-watch(
-  () => store.gardenPlants,
-  () => localStorage.setItem('shapes', JSON.stringify(store.gardenPlants)),
-  { deep: true },
+const { isDrawing, drawingBbox, startDraw } = useDrawBox(
+  computed(() => !!store.plant),
+  container,
+  () => newShape.value && store.gardenThings.push({ ...newShape.value }),
 )
-
-const drawingBbox = ref<{ x: number; y: number; width: number; height: number }>({
-  x: 0,
-  y: 0,
-  width: 0,
-  height: 0,
-})
-const isDrawing = computed(() => drawingBbox.value.width > 0 && drawingBbox.value.height > 0)
-
-const startDraw = (e: MouseEvent) => {
-  if (!store.plant || e.button !== 0 || e.shiftKey || !container.value) {
-    return
-  }
-
-  const svgOffsetX = container.value.getBoundingClientRect().left
-  const svgOffsetY = container.value.getBoundingClientRect().top
-
-  const x = e.clientX - svgOffsetX
-  const y = e.clientY - svgOffsetY
-
-  drawingBbox.value = { x, y, width: 0, height: 0 }
-
-  const controller = new AbortController()
-
-  document.addEventListener(
-    'mousemove',
-    (moveE: MouseEvent) => {
-      const width = moveE.clientX - svgOffsetX - x
-      const height = moveE.clientY - svgOffsetY - y
-
-      drawingBbox.value = {
-        x: Math.min(x, x + width),
-        y: Math.min(y, y + height),
-        width: Math.abs(width),
-        height: Math.abs(height),
-      }
-    },
-
-    { signal: controller.signal },
-  )
-
-  document.addEventListener('mouseup', () => {
-    controller.abort()
-    const shape = newShape.value
-    if (!shape || shape.width < 0.01 || shape.height < 0.01) {
-      return
-    }
-
-    store.gardenPlants.push({ ...shape })
-
-    drawingBbox.value = { x: 0, y: 0, width: 0, height: 0 }
-  })
-}
 
 const newShape = computed<GardenThing | void>(() => {
   if (!isDrawing.value || !store.plant || !container.value) {
@@ -140,7 +81,8 @@ const newShape = computed<GardenThing | void>(() => {
   const height = Math.abs(drawingBbox.value.height)
 
   return {
-    ...store.plant,
+    id: uuidV4(),
+    plantId: store.plant.id,
     x: (x + camera.value.x) / camera.value.scale,
     y: (y + camera.value.y) / camera.value.scale,
     width: width / camera.value.scale,
@@ -150,7 +92,7 @@ const newShape = computed<GardenThing | void>(() => {
 
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'z' && e.metaKey) {
-    store.gardenPlants.pop()
+    store.gardenThings.pop()
   }
 }
 
@@ -177,6 +119,7 @@ const bgOpacity = ref(0.4)
   <div class="grid grid-cols-[150px_1fr_150px] w-full h-full justify-stretch">
     <div class="p-2 flex flex-grow flex-col items-stretch gap-1 text-sky-200">
       <ToolBar />
+      <PlantCreator />
       <ToolSlider
         label="Map scale"
         :min="1"
@@ -185,7 +128,6 @@ const bgOpacity = ref(0.4)
         v-model:value="mapScaleReferenceLineRealLength"
       />
       <ToolSlider label="BG opacity" :min="0" :max="1" :step="0.01" v-model:value="bgOpacity" />
-      <PlantCreator />
     </div>
 
     <div class="grid grid-cols-[1fr] w-full h-full">
@@ -234,7 +176,13 @@ const bgOpacity = ref(0.4)
           class="pointer-events-none"
         ></rect>
         <GardenFeatures :scale="camera.scale" />
-        <GardenFeature v-if="newShape" :shape="newShape" active :scale="camera.scale" />
+        <GardenFeature
+          v-if="newShape && store.plant"
+          :thing="newShape"
+          :plant="store.plant"
+          active
+          :scale="camera.scale"
+        />
         <OnboardingText
           v-if="imgSrc && onboardingState !== 'done'"
           :x="center.x"
@@ -284,13 +232,13 @@ const bgOpacity = ref(0.4)
 
     <div class="p-2 flex flex-col gap-1">
       <button
-        v-for="(shape, index) in store.gardenPlants"
+        v-for="({ plant }, index) in store.gardenThingsWithPlants"
         @click="store.selectedIndex = index"
         @click.shift="store.deleteFeature(index)"
         @mouseenter="store.hoveredIndex = index"
         @mouseleave="store.hoveredIndex = undefined"
       >
-        {{ shape.name }}
+        {{ plant.name }}
       </button>
     </div>
   </div>

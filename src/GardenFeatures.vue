@@ -19,12 +19,13 @@ const store = useStore()
 </script>
 <template>
   <GardenFeature
-    :shape="shape"
-    v-for="(shape, index) in store.gardenPlants"
+    v-for="({ thing, plant }, index) in store.gardenThingsWithPlants"
+    :thing="thing"
+    :plant="plant"
     @delete="store.deleteFeature(index)"
     :active="store.selectedIndex === index || store.hoveredIndex === index"
     @click="store.selectedIndex = index"
-    @update="($event) => (store.gardenPlants[index] = $event)"
+    @update="($event) => (store.gardenThings[index] = $event)"
     :scale="scale"
   />
 </template>
