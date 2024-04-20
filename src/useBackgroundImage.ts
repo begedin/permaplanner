@@ -1,4 +1,4 @@
-import { useLocalStorage } from '@vueuse/core'
+import { useStorage } from '@vueuse/core'
 import { ref, watch } from 'vue'
 
 export const useBackgroundImage = () => {
@@ -11,7 +11,7 @@ export const useBackgroundImage = () => {
       reader.readAsDataURL(file)
     })
 
-  const imgSrc = useLocalStorage<string>('imgSrc', '')
+  const imgSrc = useStorage<string>('imgSrc', '')
 
   const imgWidth = ref(0)
   const imgHeight = ref(0)
