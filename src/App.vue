@@ -2,20 +2,23 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 
-import PlantParts from './PlantParts.vue'
-import { useCamera } from './useCamera'
-import { useElementSize, useStorage } from '@vueuse/core'
 import { useBackgroundImage } from './useBackgroundImage'
+import { useCamera } from './useCamera'
+import { useDrawBox } from './useDrawBox'
+import { useDrawPolygon } from './useDrawPolygon'
+import { useElementSize, useStorage } from '@vueuse/core'
 import { useMapScale } from './useMapScale'
+import { useStore, type GardenThing } from './useStore'
+import GardenBed from './GardenBed.vue'
+import GardenFeature from './GardenFeature.vue'
+import GardenFeatures from './GardenFeatures.vue'
 import OnboardingText from './OnboardingText.vue'
 import PlantCreator from './PlantCreator.vue'
-import { useStore, type GardenThing } from './useStore'
-import ToolBar from './ToolBar.vue'
-import GardenFeatures from './GardenFeatures.vue'
-import GardenFeature from './GardenFeature.vue'
-import ToolSlider from './ToolSlider.vue'
-import { useDrawBox } from './useDrawBox'
+import PlantParts from './PlantParts.vue'
 import ThingBar from './ThingBar.vue'
+import ToolBar from './ToolBar.vue'
+import ToolSlider from './ToolSlider.vue'
+import ReferenceLine from './ReferenceLine.vue'
 
 const {
   setupBackgroundImagePaste,
@@ -32,6 +35,7 @@ watch(bgImageReady, (ready) => ready && fitToViewPort())
 const store = useStore()
 
 const container = ref<SVGElement>()
+
 const { camera, setupCamera, teardownCamera, fitToViewPort } = useCamera(
   container,
   computed(() => ({
@@ -41,6 +45,7 @@ const { camera, setupCamera, teardownCamera, fitToViewPort } = useCamera(
     contentWidth: imgWidth.value,
   })),
 )
+
 const { width: containerWidth, height: containerHeight } = useElementSize(container)
 onMounted(() => setupCamera())
 onBeforeUnmount(() => teardownCamera())
@@ -82,11 +87,32 @@ const newShape = computed<GardenThing | void>(() => {
 
   return {
     id: uuidV4(),
+    type: 'plant',
     plantId: store.plant.id,
     x: (x + camera.value.x) / camera.value.scale,
     y: (y + camera.value.y) / camera.value.scale,
     width: width / camera.value.scale,
     height: height / camera.value.scale,
+  }
+})
+
+const polygon = useDrawPolygon(container, () => {
+  store.gardenBeds.push({
+    id: uuidV4(),
+    points: [...newBed.value.rawPoints],
+  })
+})
+
+const newBed = computed(() => {
+  const scaledPoints = polygon.points.value.map((p) => ({
+    x: (p.x + camera.value.x) / camera.value.scale,
+    y: (p.y + camera.value.y) / camera.value.scale,
+  }))
+
+  return {
+    rawPoints: scaledPoints,
+    path: `M ${scaledPoints.map((p) => `${p.x} ${p.y}`).join(' L ')}`,
+    points: scaledPoints.map((p) => `${p.x},${p.y}`).join(' '),
   }
 })
 
@@ -102,7 +128,6 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown))
 const bgImage = ref<SVGImageElement>()
 
 const {
-  mapScaleReferenceCentroid,
   mapScaleReferenceLine,
   mapScaleReferenceLineRealLength,
   mapScaleUnitLengthPx,
@@ -120,6 +145,7 @@ const bgOpacity = useStorage('bgOpacity', 0.4)
     <div class="p-2 flex flex-grow flex-col items-stretch gap-1 text-sky-200">
       <ToolBar />
       <PlantCreator />
+      <button @click="polygon.startDraw">bed</button>
       <ToolSlider
         label="Map scale"
         :min="1"
@@ -175,6 +201,17 @@ const bgOpacity = useStorage('bgOpacity', 0.4)
           fill="url(#grid)"
           class="pointer-events-none"
         ></rect>
+        <GardenBed
+          v-for="bed in store.gardenBeds"
+          :active="store.selectedId === bed.id || store.hoveredId === bed.id"
+          :bed="bed"
+          :key="bed.id"
+          :scale="camera.scale"
+          @click="store.selectedId = bed.id"
+          @click.shift="store.removeBed(bed.id)"
+          @mouseenter="store.hoveredId = bed.id"
+          @mouseleave="store.hoveredId = undefined"
+        />
         <GardenFeatures :scale="camera.scale" />
         <GardenFeature
           v-if="newShape && store.plant"
@@ -183,6 +220,30 @@ const bgOpacity = useStorage('bgOpacity', 0.4)
           active
           :scale="camera.scale"
         />
+
+        <!-- new bed -->
+        <path
+          v-if="newBed && newBed.rawPoints.length == 2"
+          :d="newBed.path"
+          fill="none"
+          stroke="red"
+          :stroke-width="2 / camera.scale"
+        />
+        <polygon
+          v-if="newBed && newBed.rawPoints.length > 2"
+          :points="newBed.points"
+          fill="red"
+          opacity="0.5"
+        />
+        <circle
+          v-if="newBed"
+          v-for="point in newBed.rawPoints"
+          :cx="point.x"
+          :cy="point.y"
+          :r="4 / camera.scale"
+          fill="red"
+        />
+
         <OnboardingText
           v-if="imgSrc && onboardingState !== 'done'"
           :x="center.x"
@@ -190,43 +251,13 @@ const bgOpacity = useStorage('bgOpacity', 0.4)
           :onboarding-state="onboardingState"
         />
 
-        <line
+        <ReferenceLine
+          @start-move-scale-start="startMoveScaleStart"
+          @start-move-scale-end="startMoveScaleEnd"
           v-if="mapScaleReferenceLine"
-          stroke="red"
-          :x1="mapScaleReferenceLine.x1"
-          :x2="mapScaleReferenceLine.x2"
-          :y1="mapScaleReferenceLine.y1"
-          :y2="mapScaleReferenceLine.y2"
+          :line="mapScaleReferenceLine"
+          :length="mapScaleReferenceLineRealLength"
         />
-
-        <circle
-          v-if="mapScaleReferenceLine"
-          :cx="mapScaleReferenceLine.x1"
-          :cy="mapScaleReferenceLine.y1"
-          r="5"
-          class="hover:[r:8]"
-          fill="red"
-          @mousedown.stop="startMoveScaleStart"
-        />
-
-        <circle
-          v-if="mapScaleReferenceLine"
-          :cx="mapScaleReferenceLine.x2"
-          :cy="mapScaleReferenceLine.y2"
-          r="5"
-          class="hover:[r:8]"
-          fill="red"
-          @mousedown.stop="startMoveScaleEnd"
-        />
-
-        <text
-          v-if="mapScaleReferenceCentroid"
-          :x="mapScaleReferenceCentroid.x"
-          :y="mapScaleReferenceCentroid.y"
-          fill="red"
-        >
-          {{ mapScaleReferenceLineRealLength }}
-        </text>
       </svg>
     </div>
 

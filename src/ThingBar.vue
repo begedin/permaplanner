@@ -29,6 +29,7 @@ const mode = useStorage<'plant' | 'icon'>('thingBarMode', 'icon')
         Icon
       </button>
     </div>
+    <label>Plants</label>
     <button
       class="flex flex-row gap-1 items-center justify-start hover:bg-emerald-300 transition-colors p-2 rounded text-slate-600"
       :class="store.selectedId === thing.id ? 'bg-emerald-500' : 'bg-emerald-200'"
@@ -58,6 +59,19 @@ const mode = useStorage<'plant' | 'icon'>('thingBarMode', 'icon')
         class="bg-transparent appearance-none focus:outline-none border-none text-slate-600 w-full truncate"
       />
       <span v-else>{{ thing.name || plant.name }}</span>
+    </button>
+    <label>Beds</label>
+    <button
+      class="flex flex-row gap-1 items-center justify-start hover:bg-emerald-300 transition-colors p-2 rounded text-slate-600"
+      :class="store.selectedId === bed.id ? 'bg-emerald-500' : 'bg-emerald-200'"
+      v-for="(bed, index) in store.gardenBeds"
+      :key="bed.id"
+      @click="store.selectedId = bed.id"
+      @click.shift="store.deleteFeature(bed.id)"
+      @mouseenter="store.hoveredId = bed.id"
+      @mouseleave="store.hoveredId = undefined"
+    >
+      Bed {{ index }}
     </button>
   </div>
 </template>

@@ -20,6 +20,7 @@ const store = useStore()
 <template>
   <GardenFeature
     v-for="({ thing, plant }, index) in store.gardenThingsWithPlants"
+    :key="thing.id"
     :thing="thing"
     :plant="plant"
     @delete="store.deleteFeature(thing.id)"

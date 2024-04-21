@@ -20,7 +20,7 @@ withDefaults(
         :max="max"
         :step="step"
         :value="value"
-        @input="$emit('update:value', ($event.target as HTMLInputElement).value)"
+        @input="$emit('update:value', parseInt(($event.target as HTMLInputElement).value))"
         class="flex-grow flex-shrink w-3/4"
       />
       <div class="w-8">{{ value }}</div>

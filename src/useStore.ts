@@ -65,6 +65,15 @@ export const useStore = defineStore('store', () => {
     return data
   })
 
+  const gardenBeds = useStorage<{ id: string; points: { x: number; y: number }[] }[]>(
+    'gardenBeds',
+    [],
+  )
+
+  const removeBed = (id: string) => {
+    gardenBeds.value = gardenBeds.value.filter((bed) => bed.id !== id)
+  }
+
   return {
     plants,
     plant,
@@ -73,5 +82,8 @@ export const useStore = defineStore('store', () => {
     deleteFeature,
     selectedId,
     hoveredId,
+
+    gardenBeds,
+    removeBed,
   }
 })

@@ -42,14 +42,6 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
     }
   })
 
-  const mapScaleReferenceCentroid = computed(() => {
-    const { x1, y1, x2, y2 } = mapScaleReferenceLine.value
-    const x = Math.abs((x1 + x2) / 2)
-    const y = Math.abs((y1 + y2) / 2)
-
-    return { x, y }
-  })
-
   const mapScaleReferenceLineRealLength = useStorage<number>('mapScaleReferenceLineRealLength', 1)
 
   const mapScaleUnitLengthPx = computed(() => {
@@ -155,7 +147,6 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
 
   return {
     mapScaleEnd,
-    mapScaleReferenceCentroid,
     mapScaleReferenceLine,
     mapScaleReferenceLineRealLength,
     mapScaleStart,
