@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch, nextTick } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 
 import { useBackgroundImage } from './useBackgroundImage'
 import { useCamera } from './useCamera'
 import { useDrawBox } from './useDrawBox'
-import { useDrawPolygon } from './useDrawPolygon'
 import { useElementSize, useStorage } from '@vueuse/core'
 import { useMapScale } from './useMapScale'
-import { useStore, type GardenThing } from './useStore'
+import { type GardenBed as GardenBedType, useStore, type GardenThing } from './useStore'
 import GardenBed from './GardenBed.vue'
 import GardenFeature from './GardenFeature.vue'
 import GardenFeatures from './GardenFeatures.vue'
@@ -19,6 +18,7 @@ import ThingBar from './ThingBar.vue'
 import ToolBar from './ToolBar.vue'
 import ToolSlider from './ToolSlider.vue'
 import ReferenceLine from './ReferenceLine.vue'
+import { useSVGCanvas } from './useSVGCanvas'
 
 const {
   setupBackgroundImagePaste,
@@ -96,26 +96,6 @@ const newShape = computed<GardenThing | void>(() => {
   }
 })
 
-const polygon = useDrawPolygon(container, () => {
-  store.gardenBeds.push({
-    id: uuidV4(),
-    points: [...newBed.value.rawPoints],
-  })
-})
-
-const newBed = computed(() => {
-  const scaledPoints = polygon.points.value.map((p) => ({
-    x: (p.x + camera.value.x) / camera.value.scale,
-    y: (p.y + camera.value.y) / camera.value.scale,
-  }))
-
-  return {
-    rawPoints: scaledPoints,
-    path: `M ${scaledPoints.map((p) => `${p.x} ${p.y}`).join(' L ')}`,
-    points: scaledPoints.map((p) => `${p.x},${p.y}`).join(' '),
-  }
-})
-
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'z' && e.metaKey) {
     store.gardenThings.pop()
@@ -137,6 +117,31 @@ const {
 } = useMapScale(camera)
 
 const bgOpacity = useStorage('bgOpacity', 0.4)
+
+const newBed = ref<GardenBedType>()
+const startDrawBed = () => {
+  nextTick(() => {
+    newBed.value = {
+      id: uuidV4(),
+      points: [],
+    }
+    store.plant = undefined
+  })
+}
+
+const addNewBed = (bed: GardenBedType) => {
+  store.gardenBeds.push(bed)
+  newBed.value = undefined
+}
+
+const updateBed = (bed: GardenBedType) => {
+  const index = store.gardenBeds.findIndex((b) => b.id === bed.id)
+  store.gardenBeds[index] = bed
+  store.selectedId = undefined
+  store.hoveredId = undefined
+}
+
+const { mouseX, mouseY } = useSVGCanvas(container, camera)
 </script>
 
 <template>
@@ -145,7 +150,7 @@ const bgOpacity = useStorage('bgOpacity', 0.4)
     <div class="p-2 flex flex-grow flex-col items-stretch gap-1 text-sky-200">
       <ToolBar />
       <PlantCreator />
-      <button @click="polygon.startDraw">bed</button>
+      <button @click.stop="startDrawBed">bed</button>
       <ToolSlider
         label="Map scale"
         :min="1"
@@ -203,14 +208,19 @@ const bgOpacity = useStorage('bgOpacity', 0.4)
         ></rect>
         <GardenBed
           v-for="bed in store.gardenBeds"
-          :active="store.selectedId === bed.id || store.hoveredId === bed.id"
+          :selected="store.selectedId === bed.id"
+          :hovered="store.hoveredId === bed.id"
           :bed="bed"
           :key="bed.id"
           :scale="camera.scale"
+          :mouse-x="mouseX"
+          :mouse-y="mouseY"
+          @cancel="store.deactivateAll"
           @click="store.selectedId = bed.id"
           @click.shift="store.removeBed(bed.id)"
           @mouseenter="store.hoveredId = bed.id"
           @mouseleave="store.hoveredId = undefined"
+          @update="updateBed"
         />
         <GardenFeatures :scale="camera.scale" />
         <GardenFeature
@@ -221,27 +231,15 @@ const bgOpacity = useStorage('bgOpacity', 0.4)
           :scale="camera.scale"
         />
 
-        <!-- new bed -->
-        <path
-          v-if="newBed && newBed.rawPoints.length == 2"
-          :d="newBed.path"
-          fill="none"
-          stroke="red"
-          :stroke-width="2 / camera.scale"
-        />
-        <polygon
-          v-if="newBed && newBed.rawPoints.length > 2"
-          :points="newBed.points"
-          fill="red"
-          opacity="0.5"
-        />
-        <circle
+        <GardenBed
           v-if="newBed"
-          v-for="point in newBed.rawPoints"
-          :cx="point.x"
-          :cy="point.y"
-          :r="4 / camera.scale"
-          fill="red"
+          :mouse-x="mouseX"
+          :mouse-y="mouseY"
+          :bed="newBed"
+          hovered
+          selected
+          :scale="camera.scale"
+          @update="addNewBed"
         />
 
         <OnboardingText

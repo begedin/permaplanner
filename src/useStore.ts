@@ -28,6 +28,11 @@ export type GardenThing = {
   height: number
 }
 
+export type GardenBed = {
+  id: string
+  points: { x: number; y: number }[]
+}
+
 export const features = [
   'apple',
   'banana',
@@ -65,13 +70,15 @@ export const useStore = defineStore('store', () => {
     return data
   })
 
-  const gardenBeds = useStorage<{ id: string; points: { x: number; y: number }[] }[]>(
-    'gardenBeds',
-    [],
-  )
+  const gardenBeds = useStorage<GardenBed[]>('gardenBeds', [])
 
   const removeBed = (id: string) => {
     gardenBeds.value = gardenBeds.value.filter((bed) => bed.id !== id)
+  }
+
+  const deactivateAll = () => {
+    selectedId.value = undefined
+    hoveredId.value = undefined
   }
 
   return {
@@ -80,6 +87,8 @@ export const useStore = defineStore('store', () => {
     gardenThings,
     gardenThingsWithPlants,
     deleteFeature,
+
+    deactivateAll,
     selectedId,
     hoveredId,
 
