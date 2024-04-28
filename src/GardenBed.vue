@@ -159,11 +159,12 @@ const activatePoint = (point: { x: number; y: number }) => {
   <polygon v-bind="$attrs" :points="polygonPoints" fill="brown" opacity="0.5" />
   <template v-if="hovered || selected" v-for="point in sortedPoints">
     <circle
-      v-if="point !== activePoint"
+      v-if="selected && point !== activePoint"
       :cx="point.x"
       :cy="point.y"
-      :r="(point === hoveredPoint ? 6 : 3) / scale"
-      :fill="point === activePoint ? 'blue' : 'pink'"
+      :r="3 / scale"
+      fill="pink"
+      :stroke="point === hoveredPoint ? 'black' : 'transparent'"
       @mouseenter="setHoveredPoint(point)"
       @mouseleave="unsetHoveredPoint"
       @click.stop="activatePoint(point)"
@@ -173,7 +174,7 @@ const activatePoint = (point: { x: number; y: number }) => {
       :cx="point.x"
       :cy="point.y"
       :r="(point === hoveredPoint ? 5 : 3) / scale"
-      :fill="point === activePoint ? 'blue' : 'pink'"
+      fill="blue"
       class="pointer-events-none"
     />
   </template>
