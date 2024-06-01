@@ -13,7 +13,7 @@ export default defineConfig({
   },
   test: {
     coverage: {
-      reporter: ['text', 'json-summary', 'html'],
+      reporter: ['text', 'json', 'json-summary', 'html', 'clover'],
       reportOnFailure: true,
     },
   },
