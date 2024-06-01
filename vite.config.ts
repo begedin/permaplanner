@@ -14,7 +14,7 @@ export default defineConfig({
   test: {
     coverage: {
       reporter: process.env.GITHUB_ACTIONS
-        ? ['text', 'html', 'github-actions']
+        ? ['text', 'html', 'json-summary', 'github-actions']
         : ['text', 'json-summary', 'json', 'html'],
       reportOnFailure: true,
     },
