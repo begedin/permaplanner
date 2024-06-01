@@ -54,6 +54,7 @@ export const useStore = defineStore('store', () => {
 
   const deleteFeature = (id: string) => {
     gardenThings.value = gardenThings.value.filter((thing) => thing.id !== id);
+    gardenBeds.value = gardenBeds.value.filter((bed) => bed.id !== id);
   };
 
   const selectedId = ref<string>();

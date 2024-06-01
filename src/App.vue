@@ -135,13 +135,6 @@ const addNewBed = (bed: GardenBedType) => {
   newBed.value = undefined;
 };
 
-const updateBed = (bed: GardenBedType) => {
-  const index = store.gardenBeds.findIndex((b) => b.id === bed.id);
-  store.gardenBeds[index] = bed;
-  store.selectedId = undefined;
-  store.hoveredId = undefined;
-};
-
 const { mouseX, mouseY } = useSVGCanvas(container, camera);
 </script>
 
@@ -220,23 +213,11 @@ const { mouseX, mouseY } = useSVGCanvas(container, camera);
           fill="url(#grid)"
           class="pointer-events-none"
         />
-        <GardenBed
-          v-for="bed in store.gardenBeds"
-          :key="bed.id"
-          :selected="store.selectedId === bed.id"
-          :hovered="store.hoveredId === bed.id"
-          :bed="bed"
+        <GardenFeatures
           :scale="camera.scale"
           :mouse-x="mouseX"
           :mouse-y="mouseY"
-          @cancel="store.deactivateAll"
-          @click.exact="store.selectedId = bed.id"
-          @click.shift="store.removeBed(bed.id)"
-          @mouseenter="store.hoveredId = bed.id"
-          @mouseleave="store.hoveredId = undefined"
-          @update="updateBed"
         />
-        <GardenFeatures :scale="camera.scale" />
         <GardenFeature
           v-if="newShape && store.plant"
           :thing="newShape"
