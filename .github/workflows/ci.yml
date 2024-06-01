@@ -1,4 +1,4 @@
-name: 'Test'
+name: 'CI'
 on: 
   pull_request:
 
@@ -38,11 +38,11 @@ jobs:
       uses:  davelosert/vitest-coverage-report-action@v2
     
     - name: Upload reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: coverage
-          retention-days: 2
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage
+        path: coverage
+        retention-days: 2
 
     - name: Pass or fail
       if: ${{ steps.test.outcome == 'failure' }}
