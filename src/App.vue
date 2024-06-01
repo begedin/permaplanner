@@ -119,6 +119,7 @@ const {
 const bgOpacity = useStorage('bgOpacity', 0.4);
 
 const newBed = ref<GardenBedType>();
+
 const startDrawBed = () => {
   nextTick(() => {
     newBed.value = {
@@ -150,9 +151,7 @@ const { mouseX, mouseY } = useSVGCanvas(container, camera);
     <div class="p-2 flex flex-grow flex-col items-stretch gap-1 text-sky-200">
       <ToolBar />
       <PlantCreator />
-      <button @click.stop="startDrawBed">
-        bed
-      </button>
+      <button @click.stop="startDrawBed">bed</button>
       <ToolSlider
         v-model:value="mapScaleReferenceLineRealLength"
         label="Map scale"
@@ -231,7 +230,7 @@ const { mouseX, mouseY } = useSVGCanvas(container, camera);
           :mouse-x="mouseX"
           :mouse-y="mouseY"
           @cancel="store.deactivateAll"
-          @click="store.selectedId = bed.id"
+          @click.exact="store.selectedId = bed.id"
           @click.shift="store.removeBed(bed.id)"
           @mouseenter="store.hoveredId = bed.id"
           @mouseleave="store.hoveredId = undefined"
