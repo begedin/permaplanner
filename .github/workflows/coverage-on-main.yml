@@ -1,7 +1,7 @@
 name: 'Update coverage on main branch'
 on: 
   push:
-    braches: [main]
+    branches: [main]
 
 jobs:
   test:
@@ -19,7 +19,7 @@ jobs:
     - name: 'Install Node'
       uses: actions/setup-node@v4
       with:
-        node-version: '21.x'
+        node-version: '22.x'
 
     - name: Restore cache
       uses: actions/cache@v4
