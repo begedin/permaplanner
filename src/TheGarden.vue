@@ -3,8 +3,8 @@ import { onMounted } from 'vue';
 import GardenBed from './GardenBed.vue';
 import GardenFeature from './GardenFeature.vue';
 import { useStore, type GardenBed as GardenBedType } from './useStore';
-
-defineProps<{ scale: number; mouseX: number; mouseY: number }>();
+import { useCameraStore } from './useCameraStore';
+import { useSceneMousePositionStore } from './useSceneMousePositionStore';
 
 onMounted(() => {
   document.addEventListener('keydown', (e): void => {
@@ -24,6 +24,8 @@ const updateBed = (bed: GardenBedType) => {
 };
 
 const store = useStore();
+const camera = useCameraStore();
+const mouse = useSceneMousePositionStore();
 </script>
 <template>
   <GardenBed
@@ -32,9 +34,9 @@ const store = useStore();
     :selected="store.selectedId === bed.id"
     :hovered="store.hoveredId === bed.id"
     :bed="bed"
-    :scale="scale"
-    :mouse-x="mouseX"
-    :mouse-y="mouseY"
+    :scale="camera.scale"
+    :mouse-x="mouse.x"
+    :mouse-y="mouse.y"
     @cancel="store.deactivateAll"
     @click.exact="store.selectedId = bed.id"
     @click.shift="store.removeBed(bed.id)"
@@ -48,7 +50,7 @@ const store = useStore();
     :thing="thing"
     :plant="plant"
     :active="store.selectedId === thing.id || store.hoveredId === thing.id"
-    :scale="scale"
+    :scale="camera.scale"
     @delete="store.deleteFeature(thing.id)"
     @click="store.selectedId = thing.id"
     @update="($event) => (store.gardenThings[index] = $event)"

@@ -1,10 +1,10 @@
 import { useStorage } from '@vueuse/core';
-import { computed, type Ref, watch } from 'vue';
+import { computed, watch } from 'vue';
 
 const DEFAULT_START = { x: 20, y: 20 };
 const DEFAULT_END = { x: 150, y: 20 };
 
-export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>) => {
+export const useMapScale = (camera: { x: number; y: number; scale: number }) => {
   const mapScaleStart = useStorage<{ x: number; y: number }>('mapScaleStart', DEFAULT_START);
   const mapScaleEnd = useStorage<{ x: number; y: number }>('mapScaleEnd', DEFAULT_END);
 
@@ -56,8 +56,8 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
 
   const startMoveScaleStart = (e: MouseEvent) => {
     mapScaleStart.value = {
-      x: (e.offsetX + camera.value.x) / camera.value.scale,
-      y: (e.offsetY + camera.value.y) / camera.value.scale,
+      x: (e.offsetX + camera.x) / camera.scale,
+      y: (e.offsetY + camera.y) / camera.scale,
     };
 
     const { x, y } = mapScaleStart.value;
@@ -70,8 +70,8 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
     document.addEventListener(
       'mousemove',
       (moveE: MouseEvent) => {
-        const dx = (moveE.clientX - startX) / camera.value.scale;
-        const dy = (moveE.clientY - startY) / camera.value.scale;
+        const dx = (moveE.clientX - startX) / camera.scale;
+        const dy = (moveE.clientY - startY) / camera.scale;
         if (
           dx > 0 &&
           dy > 0 &&
@@ -100,8 +100,8 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
 
   const startMoveScaleEnd = (e: MouseEvent) => {
     mapScaleEnd.value = {
-      x: (e.offsetX + camera.value.x) / camera.value.scale,
-      y: (e.offsetY + camera.value.y) / camera.value.scale,
+      x: (e.offsetX + camera.x) / camera.scale,
+      y: (e.offsetY + camera.y) / camera.scale,
     };
 
     const { x, y } = mapScaleEnd.value;
@@ -114,8 +114,8 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
     document.addEventListener(
       'mousemove',
       (moveE: MouseEvent) => {
-        const dx = (moveE.clientX - startX) / camera.value.scale;
-        const dy = (moveE.clientY - startY) / camera.value.scale;
+        const dx = (moveE.clientX - startX) / camera.scale;
+        const dy = (moveE.clientY - startY) / camera.scale;
 
         if (
           dx > 0 &&

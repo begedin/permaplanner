@@ -10,7 +10,7 @@ import { useMapScale } from './useMapScale';
 import { type GardenBed as GardenBedType, useStore, type GardenThing } from './useStore';
 import GardenBed from './GardenBed.vue';
 import GardenFeature from './GardenFeature.vue';
-import GardenFeatures from './GardenFeatures.vue';
+import TheGarden from './TheGarden.vue';
 import OnboardingText from './OnboardingText.vue';
 import PlantCreator from './PlantCreator.vue';
 import PlantParts from './PlantParts.vue';
@@ -18,7 +18,10 @@ import ThingBar from './ThingBar.vue';
 import ToolBar from './ToolBar.vue';
 import ToolSlider from './ToolSlider.vue';
 import ReferenceLine from './ReferenceLine.vue';
-import { useSVGCanvas } from './useSVGCanvas';
+
+import { useCameraStore } from './useCameraStore';
+import { useSceneMousePositionStore } from './useSceneMousePositionStore';
+import { useSceneMousePosition } from './useSceneMousePosition';
 
 const {
   setupBackgroundImagePaste,
@@ -36,7 +39,7 @@ const store = useStore();
 
 const container = ref<SVGElement>();
 
-const { camera, setupCamera, teardownCamera, fitToViewPort } = useCamera(
+const { setupCamera, teardownCamera, fitToViewPort } = useCamera(
   container,
   computed(() => ({
     viewportHeight: containerHeight.value,
@@ -46,23 +49,25 @@ const { camera, setupCamera, teardownCamera, fitToViewPort } = useCamera(
   })),
 );
 
+const camera = useCameraStore();
+
 const { width: containerWidth, height: containerHeight } = useElementSize(container);
 onMounted(() => setupCamera());
 onBeforeUnmount(() => teardownCamera());
 
 const svgViewbox = computed(() => {
-  const x = (camera.value.x / camera.value.scale).toFixed(2);
-  const y = (camera.value.y / camera.value.scale).toFixed(2);
-  const width = (containerWidth.value / camera.value.scale).toFixed(2);
-  const height = (containerHeight.value / camera.value.scale).toFixed(2);
+  const x = (camera.x / camera.scale).toFixed(2);
+  const y = (camera.y / camera.scale).toFixed(2);
+  const width = (containerWidth.value / camera.scale).toFixed(2);
+  const height = (containerHeight.value / camera.scale).toFixed(2);
   return `${x} ${y} ${width} ${height}`;
 });
 
 const center = computed(() => {
-  const x = camera.value.x / camera.value.scale;
-  const y = camera.value.y / camera.value.scale;
-  const width = containerWidth.value / camera.value.scale;
-  const height = containerHeight.value / camera.value.scale;
+  const x = camera.x / camera.scale;
+  const y = camera.y / camera.scale;
+  const width = containerWidth.value / camera.scale;
+  const height = containerHeight.value / camera.scale;
   return {
     x: x + width / 2,
     y: y + height / 2,
@@ -89,10 +94,10 @@ const newShape = computed<GardenThing | void>(() => {
     id: uuidV4(),
     type: 'plant',
     plantId: store.plant.id,
-    x: (x + camera.value.x) / camera.value.scale,
-    y: (y + camera.value.y) / camera.value.scale,
-    width: width / camera.value.scale,
-    height: height / camera.value.scale,
+    x: (x + camera.x) / camera.scale,
+    y: (y + camera.y) / camera.scale,
+    width: width / camera.scale,
+    height: height / camera.scale,
   };
 });
 
@@ -135,7 +140,8 @@ const addNewBed = (bed: GardenBedType) => {
   newBed.value = undefined;
 };
 
-const { mouseX, mouseY } = useSVGCanvas(container, camera);
+useSceneMousePosition(container);
+const sceneMouse = useSceneMousePositionStore();
 </script>
 
 <template>
@@ -213,11 +219,7 @@ const { mouseX, mouseY } = useSVGCanvas(container, camera);
           fill="url(#grid)"
           class="pointer-events-none"
         />
-        <GardenFeatures
-          :scale="camera.scale"
-          :mouse-x="mouseX"
-          :mouse-y="mouseY"
-        />
+        <TheGarden />
         <GardenFeature
           v-if="newShape && store.plant"
           :thing="newShape"
@@ -228,8 +230,8 @@ const { mouseX, mouseY } = useSVGCanvas(container, camera);
 
         <GardenBed
           v-if="newBed"
-          :mouse-x="mouseX"
-          :mouse-y="mouseY"
+          :mouse-x="sceneMouse.x"
+          :mouse-y="sceneMouse.y"
           :bed="newBed"
           hovered
           selected
