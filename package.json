@@ -21,6 +21,7 @@
     "vue": "^3.4.21"
   },
   "devDependencies": {
+    "@codecov/vite-plugin": "^0.0.1-beta.8",
     "@flydotio/dockerfile": "^0.5.7",
     "@pinia/testing": "^0.1.3",
     "@tsconfig/node22": "^22.0.0",
