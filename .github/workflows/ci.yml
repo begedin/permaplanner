@@ -46,6 +46,11 @@ jobs:
         path: coverage
         retention-days: 2
 
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4.0.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+
     - name: Pass or fail
       if: ${{ steps.test.outcome == 'failure' }}
       uses: actions/github-script@v7
