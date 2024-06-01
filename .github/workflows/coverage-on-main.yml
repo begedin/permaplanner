@@ -1,6 +1,7 @@
-name: 'CI'
+name: 'Update coverage on main branch'
 on: 
-  pull_request:
+  push:
+    braches: [main]
 
 jobs:
   test:
@@ -33,13 +34,6 @@ jobs:
       id: test
       run: npm run test:coverage
     
-    - name: Upload reports
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage
-        path: coverage
-        retention-days: 2
-
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4.0.1
       with:
