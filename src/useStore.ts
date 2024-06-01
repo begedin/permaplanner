@@ -1,37 +1,37 @@
-import { useStorage } from '@vueuse/core'
-import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { useStorage } from '@vueuse/core';
+import { defineStore } from 'pinia';
+import { computed, ref } from 'vue';
 
-export const baseLayers = ['bg_1', 'bg_2', 'bg_3', 'bg_4', 'bg_5', 'bg_6', 'bg_7', 'bg_8'] as const
-export type BaseLayer = (typeof baseLayers)[number]
+export const baseLayers = ['bg_1', 'bg_2', 'bg_3', 'bg_4', 'bg_5', 'bg_6', 'bg_7', 'bg_8'] as const;
+export type BaseLayer = (typeof baseLayers)[number];
 
 export type Plant = {
-  id: string
-  name: string
-  background: BaseLayer
+  id: string;
+  name: string;
+  background: BaseLayer;
   features: {
-    feature: Feature
-    x: number
-    y: number
-    width: number
-    height: number
-  }[]
-}
+    feature: Feature;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }[];
+};
 
 export type GardenThing = {
-  id: string
-  name?: string
-  plantId: string
-  x: number
-  y: number
-  width: number
-  height: number
-}
+  id: string;
+  name?: string;
+  plantId: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
 export type GardenBed = {
-  id: string
-  points: { x: number; y: number }[]
-}
+  id: string;
+  points: { x: number; y: number }[];
+};
 
 export const features = [
   'apple',
@@ -42,44 +42,44 @@ export const features = [
   'orange',
   'pear',
   'strawberry',
-] as const
+] as const;
 
-export type Feature = (typeof features)[number]
+export type Feature = (typeof features)[number];
 
 export const useStore = defineStore('store', () => {
-  const plants = useStorage<Plant[]>('plants', [])
-  const plant = ref<Plant>()
+  const plants = useStorage<Plant[]>('plants', []);
+  const plant = ref<Plant>();
 
-  const gardenThings = useStorage<GardenThing[]>('gardenThings', [])
+  const gardenThings = useStorage<GardenThing[]>('gardenThings', []);
 
   const deleteFeature = (id: string) => {
-    gardenThings.value = gardenThings.value.filter((thing) => thing.id !== id)
-  }
+    gardenThings.value = gardenThings.value.filter((thing) => thing.id !== id);
+  };
 
-  const selectedId = ref<string>()
-  const hoveredId = ref<string>()
+  const selectedId = ref<string>();
+  const hoveredId = ref<string>();
 
   const gardenThingsWithPlants = computed(() => {
-    const data = <{ thing: GardenThing; plant: Plant }[]>[]
+    const data = <{ thing: GardenThing; plant: Plant }[]>[];
     gardenThings.value.forEach((thing) => {
-      const plant = plants.value.find((p) => p.id === thing.plantId)
+      const plant = plants.value.find((p) => p.id === thing.plantId);
       if (plant) {
-        data.push({ thing, plant })
+        data.push({ thing, plant });
       }
-    })
-    return data
-  })
+    });
+    return data;
+  });
 
-  const gardenBeds = useStorage<GardenBed[]>('gardenBeds', [])
+  const gardenBeds = useStorage<GardenBed[]>('gardenBeds', []);
 
   const removeBed = (id: string) => {
-    gardenBeds.value = gardenBeds.value.filter((bed) => bed.id !== id)
-  }
+    gardenBeds.value = gardenBeds.value.filter((bed) => bed.id !== id);
+  };
 
   const deactivateAll = () => {
-    selectedId.value = undefined
-    hoveredId.value = undefined
-  }
+    selectedId.value = undefined;
+    hoveredId.value = undefined;
+  };
 
   return {
     plants,
@@ -94,5 +94,5 @@ export const useStore = defineStore('store', () => {
 
     gardenBeds,
     removeBed,
-  }
-})
+  };
+});

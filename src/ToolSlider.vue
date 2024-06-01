@@ -1,14 +1,16 @@
 <script setup lang="ts">
 withDefaults(
   defineProps<{
-    label: string
-    value: number
-    min?: number
-    max?: number
-    step?: number
+    label: string;
+    value: number;
+    min?: number;
+    max?: number;
+    step?: number;
   }>(),
   { min: 0, max: 100, step: 1 },
-)
+);
+
+const emit = defineEmits<{ (e: 'update:value', value: number): void }>();
 </script>
 <template>
   <label class="text-slate-600 flex flex-col gap-1">
@@ -20,8 +22,8 @@ withDefaults(
         :max="max"
         :step="step"
         :value="value"
-        @input="$emit('update:value', parseInt(($event.target as HTMLInputElement).value))"
         class="flex-grow flex-shrink w-3/4"
+        @input="emit('update:value', parseInt(($event.target as HTMLInputElement).value))"
       />
       <div class="w-8">{{ value }}</div>
     </div>

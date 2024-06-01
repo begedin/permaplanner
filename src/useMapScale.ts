@@ -1,12 +1,12 @@
-import { useStorage } from '@vueuse/core'
-import { computed, ref, onMounted, type Ref, watch } from 'vue'
+import { useStorage } from '@vueuse/core';
+import { computed, type Ref, watch } from 'vue';
 
-const DEFAULT_START = { x: 20, y: 20 }
-const DEFAULT_END = { x: 150, y: 20 }
+const DEFAULT_START = { x: 20, y: 20 };
+const DEFAULT_END = { x: 150, y: 20 };
 
 export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>) => {
-  const mapScaleStart = useStorage<{ x: number; y: number }>('mapScaleStart', DEFAULT_START)
-  const mapScaleEnd = useStorage<{ x: number; y: number }>('mapScaleEnd', DEFAULT_END)
+  const mapScaleStart = useStorage<{ x: number; y: number }>('mapScaleStart', DEFAULT_START);
+  const mapScaleEnd = useStorage<{ x: number; y: number }>('mapScaleEnd', DEFAULT_END);
 
   const onboardingSteps = [
     'initial',
@@ -16,7 +16,7 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
     'movedSecond',
     'settingLength',
     'done',
-  ] as const
+  ] as const;
 
   const onboardingState = useStorage<
     | 'initial'
@@ -26,12 +26,12 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
     | 'movedSecond'
     | 'settingLength'
     | 'done'
-  >('onboardingState', 'initial')
+  >('onboardingState', 'initial');
 
   const advanceOnboarding = () => {
-    const currentIndex = onboardingSteps.indexOf(onboardingState.value)
-    onboardingState.value = onboardingSteps[currentIndex + 1] || 'done'
-  }
+    const currentIndex = onboardingSteps.indexOf(onboardingState.value);
+    onboardingState.value = onboardingSteps[currentIndex + 1] || 'done';
+  };
 
   const mapScaleReferenceLine = computed(() => {
     return {
@@ -39,111 +39,119 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
       y1: mapScaleStart.value.y,
       x2: mapScaleEnd.value.x,
       y2: mapScaleEnd.value.y,
-    }
-  })
+    };
+  });
 
-  const mapScaleReferenceLineRealLength = useStorage<number>('mapScaleReferenceLineRealLength', 1)
+  const mapScaleReferenceLineRealLength = useStorage<number>('mapScaleReferenceLineRealLength', 1);
 
   const mapScaleUnitLengthPx = computed(() => {
-    const x1 = mapScaleStart.value.x
-    const y1 = mapScaleStart.value.y
-    const x2 = mapScaleEnd.value.x
-    const y2 = mapScaleEnd.value.y
+    const x1 = mapScaleStart.value.x;
+    const y1 = mapScaleStart.value.y;
+    const x2 = mapScaleEnd.value.x;
+    const y2 = mapScaleEnd.value.y;
 
-    const indicatorLengthPx = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-    return indicatorLengthPx / mapScaleReferenceLineRealLength.value
-  })
+    const indicatorLengthPx = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+    return indicatorLengthPx / mapScaleReferenceLineRealLength.value;
+  });
 
   const startMoveScaleStart = (e: MouseEvent) => {
     mapScaleStart.value = {
       x: (e.offsetX + camera.value.x) / camera.value.scale,
       y: (e.offsetY + camera.value.y) / camera.value.scale,
-    }
+    };
 
-    const { x, y } = mapScaleStart.value
+    const { x, y } = mapScaleStart.value;
 
-    const startX = e.clientX
-    const startY = e.clientY
+    const startX = e.clientX;
+    const startY = e.clientY;
 
-    const controller = new AbortController()
+    const controller = new AbortController();
 
     document.addEventListener(
       'mousemove',
       (moveE: MouseEvent) => {
-        const dx = (moveE.clientX - startX) / camera.value.scale
-        const dy = (moveE.clientY - startY) / camera.value.scale
-        dx > 0 &&
+        const dx = (moveE.clientX - startX) / camera.value.scale;
+        const dy = (moveE.clientY - startY) / camera.value.scale;
+        if (
+          dx > 0 &&
           dy > 0 &&
           onboardingState.value !== 'movingFirst' &&
-          onboardingState.value !== 'movingSecond' &&
-          advanceOnboarding()
+          onboardingState.value !== 'movingSecond'
+        ) {
+          advanceOnboarding();
+        }
 
-        mapScaleStart.value = { x: x + dx, y: y + dy }
+        mapScaleStart.value = { x: x + dx, y: y + dy };
       },
       { signal: controller.signal },
-    )
+    );
 
     document.addEventListener(
       'mouseup',
       () => {
-        ;(onboardingState.value === 'movingFirst' || onboardingState.value === 'movingSecond') &&
-          advanceOnboarding()
-        controller.abort()
+        if (onboardingState.value === 'movingFirst' || onboardingState.value === 'movingSecond') {
+          advanceOnboarding();
+        }
+        controller.abort();
       },
       { once: true },
-    )
-  }
+    );
+  };
 
   const startMoveScaleEnd = (e: MouseEvent) => {
     mapScaleEnd.value = {
       x: (e.offsetX + camera.value.x) / camera.value.scale,
       y: (e.offsetY + camera.value.y) / camera.value.scale,
-    }
+    };
 
-    const { x, y } = mapScaleEnd.value
+    const { x, y } = mapScaleEnd.value;
 
-    const startX = e.clientX
-    const startY = e.clientY
+    const startX = e.clientX;
+    const startY = e.clientY;
 
-    const controller = new AbortController()
+    const controller = new AbortController();
 
     document.addEventListener(
       'mousemove',
       (moveE: MouseEvent) => {
-        const dx = (moveE.clientX - startX) / camera.value.scale
-        const dy = (moveE.clientY - startY) / camera.value.scale
+        const dx = (moveE.clientX - startX) / camera.value.scale;
+        const dy = (moveE.clientY - startY) / camera.value.scale;
 
-        dx > 0 &&
+        if (
+          dx > 0 &&
           dy > 0 &&
           onboardingState.value !== 'movingFirst' &&
-          onboardingState.value !== 'movingSecond' &&
-          advanceOnboarding()
+          onboardingState.value !== 'movingSecond'
+        ) {
+          advanceOnboarding();
+        }
 
-        mapScaleEnd.value = { x: x + dx, y: y + dy }
+        mapScaleEnd.value = { x: x + dx, y: y + dy };
       },
       { signal: controller.signal },
-    )
+    );
 
     document.addEventListener(
       'mouseup',
       () => {
-        ;(onboardingState.value === 'movingFirst' || onboardingState.value === 'movingSecond') &&
-          advanceOnboarding()
-        controller.abort()
+        if (onboardingState.value === 'movingFirst' || onboardingState.value === 'movingSecond') {
+          advanceOnboarding();
+        }
+        controller.abort();
       },
       { once: true },
-    )
-  }
+    );
+  };
 
-  let timeout = 0
+  let timeout = 0;
   watch(mapScaleReferenceLineRealLength, (l) => {
-    if (l === 1) return
-    onboardingState.value = 'settingLength'
-    window.clearTimeout(timeout)
+    if (l === 1) return;
+    onboardingState.value = 'settingLength';
+    window.clearTimeout(timeout);
     timeout = window.setTimeout(() => {
-      onboardingState.value = 'done'
-    }, 1000)
-  })
+      onboardingState.value = 'done';
+    }, 1000);
+  });
 
   return {
     mapScaleEnd,
@@ -154,5 +162,5 @@ export const useMapScale = (camera: Ref<{ x: number; y: number; scale: number }>
     startMoveScaleEnd,
     startMoveScaleStart,
     onboardingState,
-  }
-}
+  };
+};

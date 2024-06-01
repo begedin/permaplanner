@@ -1,10 +1,18 @@
 <script lang="ts" setup>
-import { type Plant } from './useStore'
-defineProps<{ plant: Plant }>()
+import { type Plant } from './useStore';
+defineProps<{ plant: Plant }>();
 </script>
 <template>
-  <svg width="100%" height="100%" viewBox="0 0 100 100">
-    <use :xlink:href="'#' + plant.background" width="100%" height="100%" />
+  <svg
+    width="100%"
+    height="100%"
+    viewBox="0 0 100 100"
+  >
+    <use
+      :xlink:href="'#' + plant.background"
+      width="100%"
+      height="100%"
+    />
     <use
       v-for="feature in plant.features"
       :key="feature.feature"

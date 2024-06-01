@@ -1,33 +1,36 @@
 <script setup lang="ts">
-import Apple from './GardenSymbols/Apple.vue'
-import Banana from './GardenSymbols/Banana.vue'
-import Blueberry from './GardenSymbols/Blueberry.vue'
-import Cherry from './GardenSymbols/Cherry.vue'
-import Lemon from './GardenSymbols/Lemon.vue'
-import Orange from './GardenSymbols/Orange.vue'
-import Pear from './GardenSymbols/Pear.vue'
-import Strawberry from './GardenSymbols/Strawberry.vue'
+import Apple from './GardenSymbols/SymbolApple.vue';
+import Banana from './GardenSymbols/SymbolBanana.vue';
+import Blueberry from './GardenSymbols/SymbolBlueberry.vue';
+import Cherry from './GardenSymbols/SymbolCherry.vue';
+import Lemon from './GardenSymbols/SymbolLemon.vue';
+import Orange from './GardenSymbols/SymbolOrange.vue';
+import Pear from './GardenSymbols/SymbolPear.vue';
+import Strawberry from './GardenSymbols/SymbolStrawberry.vue';
 
-import Bg1 from './PlantParts/Bg1.vue'
-import Bg2 from './PlantParts/Bg2.vue'
-import Bg3 from './PlantParts/Bg3.vue'
-import Bg4 from './PlantParts/Bg4.vue'
-import Bg5 from './PlantParts/Bg5.vue'
-import Bg6 from './PlantParts/Bg6.vue'
-import Bg7 from './PlantParts/Bg7.vue'
-import Bg8 from './PlantParts/Bg8.vue'
+import Bg1 from './PlantParts/BackgroundType1.vue';
+import Bg2 from './PlantParts/BackgroundType2.vue';
+import Bg3 from './PlantParts/BackgroundType3.vue';
+import Bg4 from './PlantParts/BackgroundType4.vue';
+import Bg5 from './PlantParts/BackgroundType5.vue';
+import Bg6 from './PlantParts/BackgroundType6.vue';
+import Bg7 from './PlantParts/BackgroundType7.vue';
+import Bg8 from './PlantParts/BackgroundType8.vue';
 
-import LayerApple from './PlantParts/LayerApple.vue'
-import LayerBanana from './PlantParts/LayerBanana.vue'
-import LayerBlueberry from './PlantParts/LayerBlueberry.vue'
-import LayerCherry from './PlantParts/LayerCherry.vue'
-import LayerLemon from './PlantParts/LayerLemon.vue'
-import LayerOrange from './PlantParts/LayerOrange.vue'
-import LayerPear from './PlantParts/LayerPear.vue'
-import LayerStrawberry from './PlantParts/LayerStrawberry.vue'
+import LayerApple from './PlantParts/LayerApple.vue';
+import LayerBanana from './PlantParts/LayerBanana.vue';
+import LayerBlueberry from './PlantParts/LayerBlueberry.vue';
+import LayerCherry from './PlantParts/LayerCherry.vue';
+import LayerLemon from './PlantParts/LayerLemon.vue';
+import LayerOrange from './PlantParts/LayerOrange.vue';
+import LayerPear from './PlantParts/LayerPear.vue';
+import LayerStrawberry from './PlantParts/LayerStrawberry.vue';
 </script>
 <template>
-  <svg height="0" width="0">
+  <svg
+    height="0"
+    width="0"
+  >
     <!-- backgrounds -->
     <symbol id="bg_1"><Bg1 /></symbol>
     <symbol id="bg_2"><Bg2 /></symbol>
