@@ -8,6 +8,7 @@ defineProps<{
   plant: Plant;
   active: boolean;
   scale: number;
+  unitLengthPx: number;
 }>();
 
 const emit = defineEmits<{
@@ -37,4 +38,12 @@ const emit = defineEmits<{
       @mouseleave.stop="emit('mouseleave')"
     />
   </MovableResizable>
+  <text
+    v-if="thing.width > 0 && thing.height > 0 && active"
+    :x="thing.x"
+    :y="thing.y + thing.height + 14"
+    fill="red"
+  >
+    {{ `${(thing.width / unitLengthPx).toFixed(2)}x${(thing.height / unitLengthPx).toFixed(2)}` }}
+  </text>
 </template>

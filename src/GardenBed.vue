@@ -5,6 +5,7 @@ import type { GardenBed } from './useGardenStore';
 const props = defineProps<{
   mouseX: number;
   mouseY: number;
+  unitLengthPx: number;
   bed: GardenBed;
   hovered: boolean;
   selected: boolean;
@@ -161,6 +162,29 @@ const activatePoint = (point: { x: number; y: number }) => {
   activePoint.value = point;
   hoveredPoint.value = undefined;
 };
+
+const box = computed(() => {
+  if (!sortedPoints.value.length) {
+    return { x: 0, y: 0, width: 0, height: 0 };
+  }
+  const [minX, maxX, minY, maxY] = sortedPoints.value.reduce(
+    (acc, point) => {
+      acc[0] = Math.min(acc[0], point.x);
+      acc[1] = Math.max(acc[1], point.x);
+      acc[2] = Math.min(acc[2], point.y);
+      acc[3] = Math.max(acc[3], point.y);
+      return acc;
+    },
+    [Infinity, -Infinity, Infinity, -Infinity],
+  );
+
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX,
+    height: maxY - minY,
+  };
+});
 </script>
 <template>
   <polygon
@@ -195,4 +219,12 @@ const activatePoint = (point: { x: number; y: number }) => {
       />
     </template>
   </template>
+  <text
+    v-if="box.width > 0 && box.height > 0 && (hovered || selected)"
+    :x="box.x"
+    :y="box.y + box.height + 14"
+    fill="red"
+  >
+    {{ `${(box.width / unitLengthPx).toFixed(2)}x${(box.height / unitLengthPx).toFixed(2)}` }}
+  </text>
 </template>
