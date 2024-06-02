@@ -11,6 +11,7 @@ import {
 } from './useGardenStore';
 import { useCameraStore } from './useCameraStore';
 import { useSceneStore } from './useSceneStore';
+import { useMapScaleStore } from './useMapScaleStore';
 
 onMounted(() => {
   document.addEventListener('keydown', (e): void => {
@@ -32,6 +33,7 @@ const updateBed = (bed: GardenBedType) => {
 const garden = useGardenStore();
 const camera = useCameraStore();
 const scene = useSceneStore();
+const mapScale = useMapScaleStore();
 
 // bed drawing
 
@@ -76,6 +78,7 @@ watch(
   },
 );
 </script>
+
 <template>
   <GardenBed
     v-for="bed in garden.gardenBeds"
@@ -92,17 +95,32 @@ watch(
     @mouseleave="garden.hoveredId = undefined"
     @update="updateBed"
   />
-  <GardenFeature
+  <template
     v-for="({ thing, plant }, index) in garden.gardenThingsWithPlants"
     :key="thing.id"
-    :thing="thing"
-    :plant="plant"
-    :active="garden.selectedId === thing.id || garden.hoveredId === thing.id"
-    :scale="camera.scale"
-    @delete="garden.deleteFeature(thing.id)"
-    @click="garden.selectedId = thing.id"
-    @update="($event) => (garden.gardenThings[index] = $event)"
-  />
+  >
+    <GardenFeature
+      :thing="thing"
+      :plant="plant"
+      :active="garden.selectedId === thing.id || garden.hoveredId === thing.id"
+      :scale="camera.scale"
+      @delete="garden.deleteFeature(thing.id)"
+      @click="garden.selectedId = thing.id"
+      @update="($event) => (garden.gardenThings[index] = $event)"
+    />
+    <text
+      v-if="garden.selectedId === thing.id || garden.hoveredId === thing.id"
+      :x="thing.x"
+      :y="thing.y + thing.height + 14"
+      fill="red"
+    >
+      {{
+        `${(thing.width / mapScale.unitLengthPx).toFixed(2)}x${(
+          thing.height / mapScale.unitLengthPx
+        ).toFixed(2)}`
+      }}
+    </text>
+  </template>
 
   <GardenBed
     v-if="garden.newBed"

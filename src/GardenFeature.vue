@@ -3,7 +3,12 @@ import type { GardenThing, Plant } from './useGardenStore';
 import MovableResizable from './MovableResizable.vue';
 import PlantIcon from './PlantIcon.vue';
 
-defineProps<{ thing: GardenThing; plant: Plant; active: boolean; scale: number }>();
+defineProps<{
+  thing: GardenThing;
+  plant: Plant;
+  active: boolean;
+  scale: number;
+}>();
 
 const emit = defineEmits<{
   (e: 'click' | 'delete'): void;
