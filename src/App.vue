@@ -18,6 +18,7 @@ import ReferenceLine from './ReferenceLine.vue';
 
 import { useCameraStore } from './useCameraStore';
 import { useScene } from './useScene';
+import { useMapScaleStore } from './useMapScaleStore';
 
 const {
   setupBackgroundImagePaste,
@@ -81,25 +82,19 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown));
 
 const bgImage = ref<SVGImageElement>();
 
-const {
-  mapScaleReferenceLine,
-  mapScaleReferenceLineRealLength,
-  mapScaleUnitLengthPx,
-  startMoveScaleStart,
-  startMoveScaleEnd,
-  onboardingState,
-} = useMapScale(camera);
+const { startMoveScaleStart, startMoveScaleEnd, onboardingState } = useMapScale(camera);
+
+const mapScale = useMapScaleStore();
 
 const bgOpacity = useStorage('bgOpacity', 0.4);
 
 useScene(container);
 
-const startDrawBed = () => {
+const startDrawBed = () =>
   nextTick(() => {
     garden.newBed = { id: uuidV4(), points: [] };
     garden.plant = undefined;
   });
-};
 </script>
 
 <template>
@@ -110,7 +105,7 @@ const startDrawBed = () => {
       <PlantCreator />
       <button @click.stop="startDrawBed">bed</button>
       <ToolSlider
-        v-model:value="mapScaleReferenceLineRealLength"
+        v-model:value="mapScale.linePhysicalLength"
         label="Map scale"
         :min="1"
         :max="300"
@@ -134,12 +129,12 @@ const startDrawBed = () => {
         <defs>
           <pattern
             id="grid"
-            :height="mapScaleUnitLengthPx"
-            :width="mapScaleUnitLengthPx"
+            :height="mapScale.unitLengthPx"
+            :width="mapScale.unitLengthPx"
             patternUnits="userSpaceOnUse"
           >
             <path
-              :d="`M ${mapScaleUnitLengthPx} 0 L 0 0 0 ${mapScaleUnitLengthPx}`"
+              :d="`M ${mapScale.unitLengthPx} 0 L 0 0 0 ${mapScale.unitLengthPx}`"
               fill="none"
               stroke="gray"
               stroke-width="0.5"
@@ -168,7 +163,7 @@ const startDrawBed = () => {
           screenshot
         </text>
         <rect
-          v-if="mapScaleUnitLengthPx"
+          v-if="mapScale.unitLengthPx"
           x="0"
           y="0"
           :width="imgWidth"
@@ -186,9 +181,9 @@ const startDrawBed = () => {
         />
 
         <ReferenceLine
-          v-if="mapScaleReferenceLine"
-          :line="mapScaleReferenceLine"
-          :length="mapScaleReferenceLineRealLength"
+          v-if="mapScale.line"
+          :line="mapScale.line"
+          :length="mapScale.unitLengthPx"
           @start-move-scale-start="startMoveScaleStart"
           @start-move-scale-end="startMoveScaleEnd"
         />

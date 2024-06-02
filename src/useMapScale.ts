@@ -1,13 +1,10 @@
 import { useStorage } from '@vueuse/core';
-import { computed, watch } from 'vue';
+import { watch } from 'vue';
 
-const DEFAULT_START = { x: 20, y: 20 };
-const DEFAULT_END = { x: 150, y: 20 };
+import { useMapScaleStore } from './useMapScaleStore';
 
 export const useMapScale = (camera: { x: number; y: number; scale: number }) => {
-  const mapScaleStart = useStorage<{ x: number; y: number }>('mapScaleStart', DEFAULT_START);
-  const mapScaleEnd = useStorage<{ x: number; y: number }>('mapScaleEnd', DEFAULT_END);
-
+  const store = useMapScaleStore();
   const onboardingSteps = [
     'initial',
     'movingFirst',
@@ -33,34 +30,11 @@ export const useMapScale = (camera: { x: number; y: number; scale: number }) => 
     onboardingState.value = onboardingSteps[currentIndex + 1] || 'done';
   };
 
-  const mapScaleReferenceLine = computed(() => {
-    return {
-      x1: mapScaleStart.value.x,
-      y1: mapScaleStart.value.y,
-      x2: mapScaleEnd.value.x,
-      y2: mapScaleEnd.value.y,
-    };
-  });
-
-  const mapScaleReferenceLineRealLength = useStorage<number>('mapScaleReferenceLineRealLength', 1);
-
-  const mapScaleUnitLengthPx = computed(() => {
-    const x1 = mapScaleStart.value.x;
-    const y1 = mapScaleStart.value.y;
-    const x2 = mapScaleEnd.value.x;
-    const y2 = mapScaleEnd.value.y;
-
-    const indicatorLengthPx = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-    return indicatorLengthPx / mapScaleReferenceLineRealLength.value;
-  });
-
   const startMoveScaleStart = (e: MouseEvent) => {
-    mapScaleStart.value = {
-      x: (e.offsetX + camera.x) / camera.scale,
-      y: (e.offsetY + camera.y) / camera.scale,
-    };
+    store.start.x = (e.offsetX + camera.x) / camera.scale;
+    store.start.y = (e.offsetY + camera.y) / camera.scale;
 
-    const { x, y } = mapScaleStart.value;
+    const { x, y } = store.start;
 
     const startX = e.clientX;
     const startY = e.clientY;
@@ -81,7 +55,8 @@ export const useMapScale = (camera: { x: number; y: number; scale: number }) => 
           advanceOnboarding();
         }
 
-        mapScaleStart.value = { x: x + dx, y: y + dy };
+        store.start.x = x + dx;
+        store.start.y = y + dy;
       },
       { signal: controller.signal },
     );
@@ -99,12 +74,10 @@ export const useMapScale = (camera: { x: number; y: number; scale: number }) => 
   };
 
   const startMoveScaleEnd = (e: MouseEvent) => {
-    mapScaleEnd.value = {
-      x: (e.offsetX + camera.x) / camera.scale,
-      y: (e.offsetY + camera.y) / camera.scale,
-    };
+    store.end.x = (e.offsetX + camera.x) / camera.scale;
+    store.end.y = (e.offsetY + camera.y) / camera.scale;
 
-    const { x, y } = mapScaleEnd.value;
+    const { x, y } = store.end;
 
     const startX = e.clientX;
     const startY = e.clientY;
@@ -126,7 +99,8 @@ export const useMapScale = (camera: { x: number; y: number; scale: number }) => 
           advanceOnboarding();
         }
 
-        mapScaleEnd.value = { x: x + dx, y: y + dy };
+        store.end.x = x + dx;
+        store.end.y = y + dy;
       },
       { signal: controller.signal },
     );
@@ -144,21 +118,19 @@ export const useMapScale = (camera: { x: number; y: number; scale: number }) => 
   };
 
   let timeout = 0;
-  watch(mapScaleReferenceLineRealLength, (l) => {
-    if (l === 1) return;
-    onboardingState.value = 'settingLength';
-    window.clearTimeout(timeout);
-    timeout = window.setTimeout(() => {
-      onboardingState.value = 'done';
-    }, 1000);
-  });
+  watch(
+    () => store.linePhysicalLength,
+    (l) => {
+      if (l === 1) return;
+      onboardingState.value = 'settingLength';
+      window.clearTimeout(timeout);
+      timeout = window.setTimeout(() => {
+        onboardingState.value = 'done';
+      }, 1000);
+    },
+  );
 
   return {
-    mapScaleEnd,
-    mapScaleReferenceLine,
-    mapScaleReferenceLineRealLength,
-    mapScaleStart,
-    mapScaleUnitLengthPx,
     startMoveScaleEnd,
     startMoveScaleStart,
     onboardingState,
