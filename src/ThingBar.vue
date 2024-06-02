@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import PlantIcon from './PlantIcon.vue';
-import { useStore, type GardenThing } from './useStore';
+import { useGardenStore, type GardenThing } from './useGardenStore';
 import { useStorage } from '@vueuse/core';
 
-const store = useStore();
+const garden = useGardenStore();
 
 const setName = (thing: GardenThing, event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -31,14 +31,14 @@ const mode = useStorage<'plant' | 'icon'>('thingBarMode', 'icon');
     </div>
     <label>Plants</label>
     <button
-      v-for="{ thing, plant } in store.gardenThingsWithPlants"
+      v-for="{ thing, plant } in garden.gardenThingsWithPlants"
       :key="thing.id"
       class="flex flex-row gap-1 items-center justify-start hover:bg-emerald-300 transition-colors p-2 rounded text-slate-600"
-      :class="store.selectedId === thing.id ? 'bg-emerald-500' : 'bg-emerald-200'"
-      @click.exact="store.selectedId = thing.id"
-      @click.shift="store.deleteFeature(thing.id)"
-      @mouseenter="store.hoveredId = thing.id"
-      @mouseleave="store.hoveredId = undefined"
+      :class="garden.selectedId === thing.id ? 'bg-emerald-500' : 'bg-emerald-200'"
+      @click.exact="garden.selectedId = thing.id"
+      @click.shift="garden.deleteFeature(thing.id)"
+      @mouseenter="garden.hoveredId = thing.id"
+      @mouseleave="garden.hoveredId = undefined"
     >
       <div class="bg-sky-200 p-1 rounded-md">
         <PlantIcon
@@ -61,7 +61,7 @@ const mode = useStorage<'plant' | 'icon'>('thingBarMode', 'icon');
       </div>
 
       <input
-        v-if="store.selectedId === thing.id"
+        v-if="garden.selectedId === thing.id"
         :value="thing.name || plant.name"
         class="bg-transparent appearance-none focus:outline-none border-none text-slate-600 w-full truncate"
         @input="($event) => setName(thing, $event)"
@@ -70,14 +70,14 @@ const mode = useStorage<'plant' | 'icon'>('thingBarMode', 'icon');
     </button>
     <label>Beds</label>
     <button
-      v-for="(bed, index) in store.gardenBeds"
+      v-for="(bed, index) in garden.gardenBeds"
       :key="bed.id"
       class="flex flex-row gap-1 items-center justify-start hover:bg-emerald-300 transition-colors p-2 rounded text-slate-600"
-      :class="store.selectedId === bed.id ? 'bg-emerald-500' : 'bg-emerald-200'"
-      @click.exact="store.selectedId = bed.id"
-      @click.shift="store.deleteFeature(bed.id)"
-      @mouseenter="store.hoveredId = bed.id"
-      @mouseleave="store.hoveredId = undefined"
+      :class="garden.selectedId === bed.id ? 'bg-emerald-500' : 'bg-emerald-200'"
+      @click.exact="garden.selectedId = bed.id"
+      @click.shift="garden.deleteFeature(bed.id)"
+      @mouseenter="garden.hoveredId = bed.id"
+      @mouseleave="garden.hoveredId = undefined"
     >
       Bed {{ index }}
     </button>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { type Plant } from './useStore';
+import { type Plant } from './useGardenStore';
 defineProps<{ plant: Plant }>();
 </script>
 <template>

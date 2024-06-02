@@ -19,8 +19,8 @@ export const useCamera = (
   const zoomBy = (factor: number) => {
     // this is the mouse cursor position in the unscaled image
     const originalPosition = {
-      x: (camera.x + mouse.value.x) * (1.0 / camera.scale),
-      y: (camera.y + mouse.value.y) * (1.0 / camera.scale),
+      x: (camera.x + mouse.value.x) / camera.scale,
+      y: (camera.y + mouse.value.y) / camera.scale,
     };
 
     const newScale =

@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import MovableResizable from './MovableResizable.vue';
 import { useDrawBox } from './useDrawBox';
-import type { Feature, Plant } from './useStore';
+import type { Feature, Plant } from './useGardenStore';
 
 const props = defineProps<{
   plant: Plant;
@@ -15,23 +15,29 @@ const emit = defineEmits<{ (e: 'update:plant', plant: Plant): void }>();
 const selectedIndex = ref<number | null>(null);
 
 const createNewFeature = () => {
+  if (newPart.value.width === 0 || newPart.value.height === 0) {
+    return;
+  }
   const newFeatures = [...props.plant.features, newPart.value];
-  console.log('createNewFeature', newFeatures.length);
   emit('update:plant', { ...props.plant, features: newFeatures });
 };
 
 const container = ref<SVGElement>();
-const { startDraw, drawingBbox } = useDrawBox(ref(true), container, createNewFeature);
+
+const { box, isDrawing } = useDrawBox(container);
+watch(isDrawing, (isDrawing) => {
+  if (!isDrawing) {
+    createNewFeature();
+  }
+});
 
 const newPart = computed(() => ({
-  x: drawingBbox.value.x * props.scale,
-  y: drawingBbox.value.y * props.scale,
-  width: drawingBbox.value.width * props.scale,
-  height: drawingBbox.value.height * props.scale,
+  x: box.value.x * props.scale,
+  y: box.value.y * props.scale,
+  width: box.value.width * props.scale,
+  height: box.value.height * props.scale,
   feature: props.currentFeature,
 }));
-
-const isDrawing = computed(() => newPart.value.width > 0 && newPart.value.height > 0);
 
 const replaceFeature = (
   index: number,
@@ -46,12 +52,7 @@ const replaceFeature = (
   const newFeatures = [...props.plant.features];
   newFeatures.splice(index, 1, newFeature);
 
-  console.log('replaceFeature', props.plant.features.length, newFeatures.length);
-
-  emit('update:plant', {
-    ...props.plant,
-    features: newFeatures,
-  });
+  emit('update:plant', { ...props.plant, features: newFeatures });
 };
 
 const removeFeature = (index: number) => {
@@ -78,7 +79,6 @@ const removeFeature = (index: number) => {
       y="0"
       width="100%"
       height="100%"
-      @mousedown.stop="startDraw"
     />
     <MovableResizable
       v-for="(part, index) in plant.features"

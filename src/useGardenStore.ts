@@ -46,7 +46,7 @@ export const features = [
 
 export type Feature = (typeof features)[number];
 
-export const useStore = defineStore('store', () => {
+export const useGardenStore = defineStore('garden', () => {
   const plants = useStorage<Plant[]>('plants', []);
   const plant = ref<Plant>();
 
@@ -82,12 +82,18 @@ export const useStore = defineStore('store', () => {
     hoveredId.value = undefined;
   };
 
+  const newBed = ref<GardenBed>();
+
+  const newFeature = ref<GardenThing>();
+
   return {
     plants,
     plant,
     gardenThings,
-    gardenThingsWithPlants,
     deleteFeature,
+    newFeature,
+
+    gardenThingsWithPlants,
 
     deactivateAll,
     selectedId,
@@ -95,5 +101,6 @@ export const useStore = defineStore('store', () => {
 
     gardenBeds,
     removeBed,
+    newBed,
   };
 });

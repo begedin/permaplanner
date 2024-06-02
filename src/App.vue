@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch, nextTick } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { v4 as uuidV4 } from 'uuid';
 
 import { useBackgroundImage } from './useBackgroundImage';
 import { useCamera } from './useCamera';
-import { useDrawBox } from './useDrawBox';
 import { useElementSize, useStorage } from '@vueuse/core';
 import { useMapScale } from './useMapScale';
-import { type GardenBed as GardenBedType, useStore, type GardenThing } from './useStore';
-import GardenBed from './GardenBed.vue';
-import GardenFeature from './GardenFeature.vue';
+import { useGardenStore } from './useGardenStore';
 import TheGarden from './TheGarden.vue';
 import OnboardingText from './OnboardingText.vue';
 import PlantCreator from './PlantCreator.vue';
@@ -20,8 +17,8 @@ import ToolSlider from './ToolSlider.vue';
 import ReferenceLine from './ReferenceLine.vue';
 
 import { useCameraStore } from './useCameraStore';
-import { useSceneMousePositionStore } from './useSceneMousePositionStore';
-import { useSceneMousePosition } from './useSceneMousePosition';
+import { useScene } from './useScene';
+import { useMapScaleStore } from './useMapScaleStore';
 
 const {
   setupBackgroundImagePaste,
@@ -35,7 +32,7 @@ onMounted(() => setupBackgroundImagePaste());
 onBeforeUnmount(() => teardownBackgroundImagePaste());
 watch(bgImageReady, (ready) => ready && fitToViewPort());
 
-const store = useStore();
+const garden = useGardenStore();
 
 const container = ref<SVGElement>();
 
@@ -74,36 +71,9 @@ const center = computed(() => {
   };
 });
 
-const { isDrawing, drawingBbox, startDraw } = useDrawBox(
-  computed(() => !!store.plant),
-  container,
-  () => newShape.value && store.gardenThings.push({ ...newShape.value }),
-);
-
-const newShape = computed<GardenThing | void>(() => {
-  if (!isDrawing.value || !store.plant || !container.value) {
-    return;
-  }
-
-  const x = Math.min(drawingBbox.value.x, drawingBbox.value.x + drawingBbox.value.width);
-  const y = Math.min(drawingBbox.value.y, drawingBbox.value.y + drawingBbox.value.height);
-  const width = Math.abs(drawingBbox.value.width);
-  const height = Math.abs(drawingBbox.value.height);
-
-  return {
-    id: uuidV4(),
-    type: 'plant',
-    plantId: store.plant.id,
-    x: (x + camera.x) / camera.scale,
-    y: (y + camera.y) / camera.scale,
-    width: width / camera.scale,
-    height: height / camera.scale,
-  };
-});
-
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'z' && e.metaKey) {
-    store.gardenThings.pop();
+    garden.gardenThings.pop();
   }
 };
 
@@ -112,36 +82,19 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown));
 
 const bgImage = ref<SVGImageElement>();
 
-const {
-  mapScaleReferenceLine,
-  mapScaleReferenceLineRealLength,
-  mapScaleUnitLengthPx,
-  startMoveScaleStart,
-  startMoveScaleEnd,
-  onboardingState,
-} = useMapScale(camera);
+const { startMoveScaleStart, startMoveScaleEnd, onboardingState } = useMapScale();
+
+const mapScale = useMapScaleStore();
 
 const bgOpacity = useStorage('bgOpacity', 0.4);
 
-const newBed = ref<GardenBedType>();
+useScene(container);
 
-const startDrawBed = () => {
+const startDrawBed = () =>
   nextTick(() => {
-    newBed.value = {
-      id: uuidV4(),
-      points: [],
-    };
-    store.plant = undefined;
+    garden.newBed = { id: uuidV4(), points: [] };
+    garden.plant = undefined;
   });
-};
-
-const addNewBed = (bed: GardenBedType) => {
-  store.gardenBeds.push(bed);
-  newBed.value = undefined;
-};
-
-useSceneMousePosition(container);
-const sceneMouse = useSceneMousePositionStore();
 </script>
 
 <template>
@@ -152,7 +105,7 @@ const sceneMouse = useSceneMousePositionStore();
       <PlantCreator />
       <button @click.stop="startDrawBed">bed</button>
       <ToolSlider
-        v-model:value="mapScaleReferenceLineRealLength"
+        v-model:value="mapScale.linePhysicalLength"
         label="Map scale"
         :min="1"
         :max="300"
@@ -172,17 +125,16 @@ const sceneMouse = useSceneMousePositionStore();
         ref="container"
         class="col-start-1 col-span-1 row-start-1 row-span-1 w-full h-full"
         :viewBox="svgViewbox"
-        @mousedown="startDraw"
       >
         <defs>
           <pattern
             id="grid"
-            :height="mapScaleUnitLengthPx"
-            :width="mapScaleUnitLengthPx"
+            :height="mapScale.unitLengthPx"
+            :width="mapScale.unitLengthPx"
             patternUnits="userSpaceOnUse"
           >
             <path
-              :d="`M ${mapScaleUnitLengthPx} 0 L 0 0 0 ${mapScaleUnitLengthPx}`"
+              :d="`M ${mapScale.unitLengthPx} 0 L 0 0 0 ${mapScale.unitLengthPx}`"
               fill="none"
               stroke="gray"
               stroke-width="0.5"
@@ -211,7 +163,7 @@ const sceneMouse = useSceneMousePositionStore();
           screenshot
         </text>
         <rect
-          v-if="mapScaleUnitLengthPx"
+          v-if="mapScale.unitLengthPx"
           x="0"
           y="0"
           :width="imgWidth"
@@ -220,24 +172,6 @@ const sceneMouse = useSceneMousePositionStore();
           class="pointer-events-none"
         />
         <TheGarden />
-        <GardenFeature
-          v-if="newShape && store.plant"
-          :thing="newShape"
-          :plant="store.plant"
-          active
-          :scale="camera.scale"
-        />
-
-        <GardenBed
-          v-if="newBed"
-          :mouse-x="sceneMouse.x"
-          :mouse-y="sceneMouse.y"
-          :bed="newBed"
-          hovered
-          selected
-          :scale="camera.scale"
-          @update="addNewBed"
-        />
 
         <OnboardingText
           v-if="imgSrc && onboardingState !== 'done'"
@@ -247,9 +181,9 @@ const sceneMouse = useSceneMousePositionStore();
         />
 
         <ReferenceLine
-          v-if="mapScaleReferenceLine"
-          :line="mapScaleReferenceLine"
-          :length="mapScaleReferenceLineRealLength"
+          v-if="mapScale.line"
+          :line="mapScale.line"
+          :length="mapScale.linePhysicalLength"
           @start-move-scale-start="startMoveScaleStart"
           @start-move-scale-end="startMoveScaleEnd"
         />

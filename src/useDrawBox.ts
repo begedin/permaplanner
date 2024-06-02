@@ -1,62 +1,70 @@
-import { computed, ref, type Ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
 
-export const useDrawBox = (
-  canDraw: Ref<boolean>,
-  container: Ref<SVGElement | undefined>,
-  onDrawEnd: () => void,
-) => {
-  const drawingBbox = ref<{ x: number; y: number; width: number; height: number }>({
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
+export const useDrawBox = (container: Ref<HTMLElement | SVGElement | undefined>) => {
+  const mouseCurrent = ref({ x: 0, y: 0 });
+  const mouseInitial = ref({ x: 0, y: 0 });
+
+  const x = computed(() => mouseCurrent.value.x);
+  const y = computed(() => mouseCurrent.value.y);
+
+  const box = computed(() => {
+    const offsetX = mouseCurrent.value.x - mouseInitial.value.x;
+    const offsetY = mouseCurrent.value.y - mouseInitial.value.y;
+
+    const width = Math.abs(offsetX);
+    const height = Math.abs(offsetY);
+
+    const x = Math.min(mouseInitial.value.x, mouseInitial.value.x + offsetX);
+    const y = Math.min(mouseInitial.value.y, mouseInitial.value.y + offsetY);
+
+    return { x, y, width, height };
   });
-  const isDrawing = computed(() => drawingBbox.value.width > 0 && drawingBbox.value.height > 0);
 
-  const startDraw = (e: MouseEvent) => {
-    if (!canDraw.value || e.button !== 0 || e.shiftKey || !container.value) {
-      return;
-    }
+  const isDrawing = ref(false);
 
-    const svgOffsetX = container.value.getBoundingClientRect().left;
-    const svgOffsetY = container.value.getBoundingClientRect().top;
+  let controller = new AbortController();
 
-    const x = e.clientX - svgOffsetX;
-    const y = e.clientY - svgOffsetY;
+  onMounted(() => {
+    controller = new AbortController();
 
-    drawingBbox.value = { x, y, width: 0, height: 0 };
+    container.value?.addEventListener(
+      'mousedown',
+      ((e: MouseEvent) => {
+        if (!container.value) {
+          return;
+        }
+        const svgOffsetX = container.value.getBoundingClientRect().left;
+        const svgOffsetY = container.value.getBoundingClientRect().top;
 
-    const controller = new AbortController();
+        mouseInitial.value = { x: e.clientX - svgOffsetX, y: e.clientY - svgOffsetY };
 
-    document.addEventListener(
-      'mousemove',
-      (moveE: MouseEvent) => {
-        const width = moveE.clientX - svgOffsetX - x;
-        const height = moveE.clientY - svgOffsetY - y;
-
-        drawingBbox.value = {
-          x: Math.min(x, x + width),
-          y: Math.min(y, y + height),
-          width: Math.abs(width),
-          height: Math.abs(height),
-        };
-      },
-
+        isDrawing.value = true;
+      }) as (e: Event) => void,
       { signal: controller.signal },
     );
 
-    document.addEventListener('mouseup', () => {
-      controller.abort();
+    document.addEventListener(
+      'mousemove',
+      (e) => {
+        if (!container.value) {
+          return;
+        }
+        const svgOffsetX = container.value.getBoundingClientRect().left;
+        const svgOffsetY = container.value.getBoundingClientRect().top;
 
-      if (drawingBbox.value.width < 0.01 || drawingBbox.value.height < 0.01) {
-        return;
-      }
+        mouseCurrent.value = { x: e.clientX - svgOffsetX, y: e.clientY - svgOffsetY };
+      },
+      { signal: controller.signal },
+    );
 
-      onDrawEnd();
-
-      drawingBbox.value = { x: 0, y: 0, width: 0, height: 0 };
+    document.addEventListener('mouseup', () => (isDrawing.value = false), {
+      signal: controller.signal,
     });
-  };
+  });
 
-  return { startDraw, drawingBbox, isDrawing };
+  onBeforeUnmount(() => {
+    controller.abort();
+  });
+
+  return { x, y, box, isDrawing };
 };
