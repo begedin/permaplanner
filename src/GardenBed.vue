@@ -3,12 +3,11 @@ import { computed, ref, watch } from 'vue';
 import type { GardenBed } from './useStore';
 
 const props = defineProps<{
+  mouseX: number;
+  mouseY: number;
   bed: GardenBed;
   hovered: boolean;
   selected: boolean;
-  scale: number;
-  mouseX: number;
-  mouseY: number;
 }>();
 
 const emit = defineEmits<{
@@ -77,41 +76,51 @@ const sortedPoints = computed(() => {
 });
 
 watch(
+  () => [props.mouseX, props.mouseY],
+  ([x, y]) => {
+    if (!props.selected) {
+      return;
+    }
+
+    if (!activePoint.value && !hoveredPoint.value) {
+      activePoint.value = { x, y };
+    }
+
+    if (!activePoint.value) {
+      return;
+    }
+
+    if (activePoint.value) {
+      activePoint.value.x = x;
+      activePoint.value.y = y;
+    }
+  },
+);
+
+watch(
   () => props.selected,
   (selected) => {
-    console.log('selected', selected);
-    if (selected) {
-      controller = new AbortController();
+    if (!selected) {
+      controller.abort();
+      return;
+    }
 
-      document.addEventListener(
-        'mousemove',
-        () => {
-          if (!activePoint.value && !hoveredPoint.value) {
-            activePoint.value = { x: props.mouseX / props.scale, y: props.mouseY / props.scale };
-          }
-          if (!activePoint.value) {
-            return;
-          }
+    controller = new AbortController();
 
-          activePoint.value.x = props.mouseX / props.scale;
-          activePoint.value.y = props.mouseY / props.scale;
-        },
-        { signal: controller.signal },
-      );
+    document.addEventListener(
+      'click',
+      () => {
+        if (!activePoint.value) {
+          return;
+        }
+        points.value.push({ x: activePoint.value.x, y: activePoint.value.y });
+      },
+      { signal: controller.signal },
+    );
 
-      document.addEventListener(
-        'click',
-        () => {
-          if (!activePoint.value) {
-            return;
-          }
-          points.value.push({ x: activePoint.value.x, y: activePoint.value.y });
-        },
-        { signal: controller.signal },
-      );
-
-      document.addEventListener('keydown', (e: KeyboardEvent) => {
-        console.log('keypress', e.key);
+    document.addEventListener(
+      'keydown',
+      (e: KeyboardEvent) => {
         if (e.key === 'Enter') {
           activePoint.value = undefined;
           emit('update', { ...props.bed, points: points.value });
@@ -125,10 +134,9 @@ watch(
           points.value = props.bed.points.map((point) => ({ x: point.x, y: point.y }));
           emit('cancel');
         }
-      });
-    } else {
-      controller.abort();
-    }
+      },
+      { signal: controller.signal },
+    );
   },
   { immediate: true },
 );
@@ -146,7 +154,7 @@ const setHoveredPoint = (point: { x: number; y: number }) => {
 
 const unsetHoveredPoint = () => {
   hoveredPoint.value = undefined;
-  activePoint.value = { x: props.mouseX / props.scale, y: props.mouseY / props.scale };
+  activePoint.value = { x: props.mouseX, y: props.mouseY };
 };
 
 const activatePoint = (point: { x: number; y: number }) => {
@@ -171,7 +179,7 @@ const activatePoint = (point: { x: number; y: number }) => {
         v-if="selected && point !== activePoint"
         :cx="point.x"
         :cy="point.y"
-        :r="3 / scale"
+        :r="3"
         fill="pink"
         :stroke="point === hoveredPoint ? 'black' : 'transparent'"
         @mouseenter="setHoveredPoint(point)"
@@ -182,7 +190,7 @@ const activatePoint = (point: { x: number; y: number }) => {
         v-else
         :cx="point.x"
         :cy="point.y"
-        :r="(point === hoveredPoint ? 5 : 3) / scale"
+        :r="point === hoveredPoint ? 5 : 3"
         fill="blue"
         class="pointer-events-none"
       />

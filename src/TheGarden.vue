@@ -80,9 +80,8 @@ watch(
     :selected="store.selectedId === bed.id"
     :hovered="store.hoveredId === bed.id"
     :bed="bed"
-    :scale="camera.scale"
-    :mouse-x="scene.x"
-    :mouse-y="scene.y"
+    :mouse-x="(scene.x + camera.x) / camera.scale"
+    :mouse-y="(scene.y + camera.y) / camera.scale"
     @cancel="store.deactivateAll"
     @click.exact="store.selectedId = bed.id"
     @click.shift="store.removeBed(bed.id)"
@@ -104,12 +103,11 @@ watch(
 
   <GardenBed
     v-if="store.newBed"
-    :mouse-x="scene.x"
-    :mouse-y="scene.y"
+    :mouse-x="(scene.x + camera.x) / camera.scale"
+    :mouse-y="(scene.y + camera.y) / camera.scale"
     :bed="store.newBed"
     hovered
     selected
-    :scale="camera.scale"
     @update="addNewBed"
   />
 
