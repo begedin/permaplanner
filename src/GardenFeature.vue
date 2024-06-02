@@ -11,7 +11,7 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'click' | 'delete'): void;
+  (e: 'click' | 'delete' | 'mouseenter' | 'mouseleave'): void;
   (e: 'update', shape: GardenThing): void;
 }>();
 </script>
@@ -33,6 +33,8 @@ const emit = defineEmits<{
       :plant="plant"
       @click.shift="$emit('delete')"
       @click.stop="emit('click')"
+      @mouseenter.stop="emit('mouseenter')"
+      @mouseleave.stop="emit('mouseleave')"
     />
   </MovableResizable>
 </template>

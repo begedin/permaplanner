@@ -77,24 +77,66 @@ watch(
     }
   },
 );
+
+const getBoundingBox = (bed: GardenBedType) => {
+  const [minX, maxX, minY, maxY] = bed.points.reduce(
+    (acc, point) => {
+      acc[0] = Math.min(acc[0], point.x);
+      acc[1] = Math.max(acc[1], point.x);
+      acc[2] = Math.min(acc[2], point.y);
+      acc[3] = Math.max(acc[3], point.y);
+      return acc;
+    },
+    [Infinity, -Infinity, Infinity, -Infinity],
+  );
+
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX,
+    height: maxY - minY,
+  };
+};
+
+const bedsWithBoundingBoxes = computed(() =>
+  garden.gardenBeds.map((bed) => ({
+    bed,
+    box: getBoundingBox(bed),
+  })),
+);
 </script>
 
 <template>
-  <GardenBed
-    v-for="bed in garden.gardenBeds"
+  <template
+    v-for="{ bed, box } in bedsWithBoundingBoxes"
     :key="bed.id"
-    :selected="garden.selectedId === bed.id"
-    :hovered="garden.hoveredId === bed.id"
-    :bed="bed"
-    :mouse-x="(scene.x + camera.x) / camera.scale"
-    :mouse-y="(scene.y + camera.y) / camera.scale"
-    @cancel="garden.deactivateAll"
-    @click.exact="garden.selectedId = bed.id"
-    @click.shift="garden.removeBed(bed.id)"
-    @mouseenter="garden.hoveredId = bed.id"
-    @mouseleave="garden.hoveredId = undefined"
-    @update="updateBed"
-  />
+  >
+    <GardenBed
+      :selected="garden.selectedId === bed.id"
+      :hovered="garden.hoveredId === bed.id"
+      :bed="bed"
+      :mouse-x="(scene.x + camera.x) / camera.scale"
+      :mouse-y="(scene.y + camera.y) / camera.scale"
+      @cancel="garden.deactivateAll"
+      @click.exact="garden.selectedId = bed.id"
+      @click.shift="garden.removeBed(bed.id)"
+      @mouseenter="garden.hoveredId = bed.id"
+      @mouseleave="garden.hoveredId = undefined"
+      @update="updateBed"
+    />
+    <text
+      v-if="garden.selectedId === bed.id || garden.hoveredId === bed.id"
+      :x="box.x"
+      :y="box.y + box.height + 14"
+      fill="red"
+    >
+      {{
+        `${(box.width / mapScale.unitLengthPx).toFixed(2)}x${(
+          box.height / mapScale.unitLengthPx
+        ).toFixed(2)}`
+      }}
+    </text>
+  </template>
   <template
     v-for="({ thing, plant }, index) in garden.gardenThingsWithPlants"
     :key="thing.id"
@@ -107,6 +149,8 @@ watch(
       @delete="garden.deleteFeature(thing.id)"
       @click="garden.selectedId = thing.id"
       @update="($event) => (garden.gardenThings[index] = $event)"
+      @mouseenter="garden.hoveredId = thing.id"
+      @mouseleave="garden.hoveredId = undefined"
     />
     <text
       v-if="garden.selectedId === thing.id || garden.hoveredId === thing.id"
