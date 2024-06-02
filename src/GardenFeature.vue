@@ -2,7 +2,7 @@
 import type { GardenThing, Plant } from './useGardenStore';
 import MovableResizable from './MovableResizable.vue';
 import PlantIcon from './PlantIcon.vue';
-
+import GardenMeasure from './GardenMeasure.vue';
 defineProps<{
   thing: GardenThing;
   plant: Plant;
@@ -38,12 +38,9 @@ const emit = defineEmits<{
       @mouseleave.stop="emit('mouseleave')"
     />
   </MovableResizable>
-  <text
-    v-if="thing.width > 0 && thing.height > 0 && active"
-    :x="thing.x"
-    :y="thing.y + thing.height + 14"
-    fill="red"
-  >
-    {{ `${(thing.width / unitLengthPx).toFixed(2)}x${(thing.height / unitLengthPx).toFixed(2)}` }}
-  </text>
+  <GardenMeasure
+    v-if="active"
+    :unit-length-px="unitLengthPx"
+    :box="thing"
+  />
 </template>

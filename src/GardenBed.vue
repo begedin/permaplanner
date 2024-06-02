@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue';
 import type { GardenBed } from './useGardenStore';
+import GardenMeasure from './GardenMeasure.vue';
 
 const props = defineProps<{
   mouseX: number;
@@ -219,12 +220,9 @@ const box = computed(() => {
       />
     </template>
   </template>
-  <text
-    v-if="box.width > 0 && box.height > 0 && (hovered || selected)"
-    :x="box.x"
-    :y="box.y + box.height + 14"
-    fill="red"
-  >
-    {{ `${(box.width / unitLengthPx).toFixed(2)}x${(box.height / unitLengthPx).toFixed(2)}` }}
-  </text>
+  <GardenMeasure
+    v-if="hovered || selected"
+    :unit-length-px="unitLengthPx"
+    :box="box"
+  />
 </template>
