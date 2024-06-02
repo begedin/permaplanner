@@ -15,6 +15,9 @@ const emit = defineEmits<{ (e: 'update:plant', plant: Plant): void }>();
 const selectedIndex = ref<number | null>(null);
 
 const createNewFeature = () => {
+  if (newPart.value.width === 0 || newPart.value.height === 0) {
+    return;
+  }
   const newFeatures = [...props.plant.features, newPart.value];
   console.log('createNewFeature', newFeatures.length);
   emit('update:plant', { ...props.plant, features: newFeatures });
