@@ -82,7 +82,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown));
 
 const bgImage = ref<SVGImageElement>();
 
-const { startMoveScaleStart, startMoveScaleEnd, onboardingState } = useMapScale(camera);
+const { startMoveScaleStart, startMoveScaleEnd, onboardingState } = useMapScale();
 
 const mapScale = useMapScaleStore();
 
@@ -183,7 +183,7 @@ const startDrawBed = () =>
         <ReferenceLine
           v-if="mapScale.line"
           :line="mapScale.line"
-          :length="mapScale.unitLengthPx"
+          :length="mapScale.linePhysicalLength"
           @start-move-scale-start="startMoveScaleStart"
           @start-move-scale-end="startMoveScaleEnd"
         />

@@ -2,9 +2,13 @@ import { useStorage } from '@vueuse/core';
 import { watch } from 'vue';
 
 import { useMapScaleStore } from './useMapScaleStore';
+import { useSceneStore } from './useSceneStore';
+import { useCameraStore } from './useCameraStore';
 
-export const useMapScale = (camera: { x: number; y: number; scale: number }) => {
+export const useMapScale = () => {
   const store = useMapScaleStore();
+  const scene = useSceneStore();
+  const camera = useCameraStore();
   const onboardingSteps = [
     'initial',
     'movingFirst',
@@ -30,33 +34,17 @@ export const useMapScale = (camera: { x: number; y: number; scale: number }) => 
     onboardingState.value = onboardingSteps[currentIndex + 1] || 'done';
   };
 
-  const startMoveScaleStart = (e: MouseEvent) => {
-    store.start.x = (e.offsetX + camera.x) / camera.scale;
-    store.start.y = (e.offsetY + camera.y) / camera.scale;
-
-    const { x, y } = store.start;
-
-    const startX = e.clientX;
-    const startY = e.clientY;
+  const startMoveScaleStart = () => {
+    store.start.x = (scene.x + camera.x) / camera.scale;
+    store.start.y = (scene.x + camera.y) / camera.scale;
 
     const controller = new AbortController();
 
     document.addEventListener(
       'mousemove',
-      (moveE: MouseEvent) => {
-        const dx = (moveE.clientX - startX) / camera.scale;
-        const dy = (moveE.clientY - startY) / camera.scale;
-        if (
-          dx > 0 &&
-          dy > 0 &&
-          onboardingState.value !== 'movingFirst' &&
-          onboardingState.value !== 'movingSecond'
-        ) {
-          advanceOnboarding();
-        }
-
-        store.start.x = x + dx;
-        store.start.y = y + dy;
+      () => {
+        store.start.x = (scene.x + camera.x) / camera.scale;
+        store.start.y = (scene.x + camera.y) / camera.scale;
       },
       { signal: controller.signal },
     );
@@ -73,34 +61,25 @@ export const useMapScale = (camera: { x: number; y: number; scale: number }) => 
     );
   };
 
-  const startMoveScaleEnd = (e: MouseEvent) => {
-    store.end.x = (e.offsetX + camera.x) / camera.scale;
-    store.end.y = (e.offsetY + camera.y) / camera.scale;
-
-    const { x, y } = store.end;
-
-    const startX = e.clientX;
-    const startY = e.clientY;
+  const startMoveScaleEnd = () => {
+    store.end.x = (scene.x + camera.x) / camera.scale;
+    store.end.y = (scene.y + camera.y) / camera.scale;
 
     const controller = new AbortController();
 
     document.addEventListener(
       'mousemove',
-      (moveE: MouseEvent) => {
-        const dx = (moveE.clientX - startX) / camera.scale;
-        const dy = (moveE.clientY - startY) / camera.scale;
+      () => {
+        store.end.x = (scene.x + camera.x) / camera.scale;
+        store.end.y = (scene.y + camera.y) / camera.scale;
 
         if (
-          dx > 0 &&
-          dy > 0 &&
+          (store.end.x !== store.start.x || store.end.y !== store.start.y) &&
           onboardingState.value !== 'movingFirst' &&
           onboardingState.value !== 'movingSecond'
         ) {
           advanceOnboarding();
         }
-
-        store.end.x = x + dx;
-        store.end.y = y + dy;
       },
       { signal: controller.signal },
     );
