@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue';
-import type { GardenBed } from './useStore';
+import type { GardenBed } from './useGardenStore';
 
 const props = defineProps<{
   mouseX: number;
@@ -128,7 +128,6 @@ watch(
         }
 
         if (e.key === 'Escape') {
-          console.log('Escape');
           controller.abort();
           activePoint.value = undefined;
           points.value = props.bed.points.map((point) => ({ x: point.x, y: point.y }));

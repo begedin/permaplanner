@@ -6,7 +6,7 @@ import { useBackgroundImage } from './useBackgroundImage';
 import { useCamera } from './useCamera';
 import { useElementSize, useStorage } from '@vueuse/core';
 import { useMapScale } from './useMapScale';
-import { useStore } from './useStore';
+import { useGardenStore } from './useGardenStore';
 import TheGarden from './TheGarden.vue';
 import OnboardingText from './OnboardingText.vue';
 import PlantCreator from './PlantCreator.vue';
@@ -31,7 +31,7 @@ onMounted(() => setupBackgroundImagePaste());
 onBeforeUnmount(() => teardownBackgroundImagePaste());
 watch(bgImageReady, (ready) => ready && fitToViewPort());
 
-const store = useStore();
+const garden = useGardenStore();
 
 const container = ref<SVGElement>();
 
@@ -72,7 +72,7 @@ const center = computed(() => {
 
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'z' && e.metaKey) {
-    store.gardenThings.pop();
+    garden.gardenThings.pop();
   }
 };
 
@@ -96,8 +96,8 @@ useScene(container);
 
 const startDrawBed = () => {
   nextTick(() => {
-    store.newBed = { id: uuidV4(), points: [] };
-    store.plant = undefined;
+    garden.newBed = { id: uuidV4(), points: [] };
+    garden.plant = undefined;
   });
 };
 </script>

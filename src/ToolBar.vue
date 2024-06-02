@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import ToolBarButton from './ToolBarButton.vue';
-import { useStore } from './useStore';
+import { useGardenStore } from './useGardenStore';
 
-const store = useStore();
+const garden = useGardenStore();
 </script>
 <template>
   <ToolBarButton
-    v-for="plant in store.plants"
+    v-for="plant in garden.plants"
     :key="plant.id"
     :plant="plant"
-    :active="store.plant === plant"
-    @click="store.plant = plant"
+    :active="garden.plant?.id === plant.id"
+    @click="garden.plant = plant"
   />
 </template>

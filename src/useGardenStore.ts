@@ -46,7 +46,7 @@ export const features = [
 
 export type Feature = (typeof features)[number];
 
-export const useStore = defineStore('store', () => {
+export const useGardenStore = defineStore('garden', () => {
   const plants = useStorage<Plant[]>('plants', []);
   const plant = ref<Plant>();
 

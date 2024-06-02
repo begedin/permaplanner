@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { GardenThing, Plant } from './useStore';
+import type { GardenThing, Plant } from './useGardenStore';
 import MovableResizable from './MovableResizable.vue';
 import PlantIcon from './PlantIcon.vue';
 

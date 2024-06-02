@@ -4,36 +4,40 @@ import { v4 as uuidV4 } from 'uuid';
 
 import GardenBed from './GardenBed.vue';
 import GardenFeature from './GardenFeature.vue';
-import { useStore, type GardenBed as GardenBedType, type GardenThing } from './useStore';
+import {
+  useGardenStore,
+  type GardenBed as GardenBedType,
+  type GardenThing,
+} from './useGardenStore';
 import { useCameraStore } from './useCameraStore';
 import { useSceneStore } from './useSceneStore';
 
 onMounted(() => {
   document.addEventListener('keydown', (e): void => {
-    if (e.key === 'Delete' && store.selectedId !== undefined) {
+    if (e.key === 'Delete' && garden.selectedId !== undefined) {
       e.preventDefault();
       e.stopPropagation();
-      store.deleteFeature(store.selectedId);
+      garden.deleteFeature(garden.selectedId);
     }
   });
 });
 
 const updateBed = (bed: GardenBedType) => {
-  const index = store.gardenBeds.findIndex((b) => b.id === bed.id);
-  store.gardenBeds[index] = bed;
-  store.selectedId = undefined;
-  store.hoveredId = undefined;
+  const index = garden.gardenBeds.findIndex((b) => b.id === bed.id);
+  garden.gardenBeds[index] = bed;
+  garden.selectedId = undefined;
+  garden.hoveredId = undefined;
 };
 
-const store = useStore();
+const garden = useGardenStore();
 const camera = useCameraStore();
 const scene = useSceneStore();
 
 // bed drawing
 
 const addNewBed = (bed: GardenBedType) => {
-  store.gardenBeds.push(bed);
-  store.newBed = undefined;
+  garden.gardenBeds.push(bed);
+  garden.newBed = undefined;
 };
 
 // feature drawing
@@ -56,65 +60,64 @@ const getNewShape = (plantId: string) => {
 };
 
 const newShape = computed<GardenThing | void>(() => {
-  if (!scene.isDrawing || !store.plant) {
+  if (!scene.isDrawing || !garden.plant) {
     return;
   }
 
-  return getNewShape(store.plant.id);
+  return getNewShape(garden.plant.id);
 });
 
 watch(
   () => scene.isDrawing,
   (isDrawing) => {
-    if (!isDrawing && store.plant) {
-      store.gardenThings.push(getNewShape(store.plant.id));
+    if (!isDrawing && garden.plant) {
+      garden.gardenThings.push(getNewShape(garden.plant.id));
     }
-    console.log('not applicable', isDrawing, store.plant);
   },
 );
 </script>
 <template>
   <GardenBed
-    v-for="bed in store.gardenBeds"
+    v-for="bed in garden.gardenBeds"
     :key="bed.id"
-    :selected="store.selectedId === bed.id"
-    :hovered="store.hoveredId === bed.id"
+    :selected="garden.selectedId === bed.id"
+    :hovered="garden.hoveredId === bed.id"
     :bed="bed"
     :mouse-x="(scene.x + camera.x) / camera.scale"
     :mouse-y="(scene.y + camera.y) / camera.scale"
-    @cancel="store.deactivateAll"
-    @click.exact="store.selectedId = bed.id"
-    @click.shift="store.removeBed(bed.id)"
-    @mouseenter="store.hoveredId = bed.id"
-    @mouseleave="store.hoveredId = undefined"
+    @cancel="garden.deactivateAll"
+    @click.exact="garden.selectedId = bed.id"
+    @click.shift="garden.removeBed(bed.id)"
+    @mouseenter="garden.hoveredId = bed.id"
+    @mouseleave="garden.hoveredId = undefined"
     @update="updateBed"
   />
   <GardenFeature
-    v-for="({ thing, plant }, index) in store.gardenThingsWithPlants"
+    v-for="({ thing, plant }, index) in garden.gardenThingsWithPlants"
     :key="thing.id"
     :thing="thing"
     :plant="plant"
-    :active="store.selectedId === thing.id || store.hoveredId === thing.id"
+    :active="garden.selectedId === thing.id || garden.hoveredId === thing.id"
     :scale="camera.scale"
-    @delete="store.deleteFeature(thing.id)"
-    @click="store.selectedId = thing.id"
-    @update="($event) => (store.gardenThings[index] = $event)"
+    @delete="garden.deleteFeature(thing.id)"
+    @click="garden.selectedId = thing.id"
+    @update="($event) => (garden.gardenThings[index] = $event)"
   />
 
   <GardenBed
-    v-if="store.newBed"
+    v-if="garden.newBed"
     :mouse-x="(scene.x + camera.x) / camera.scale"
     :mouse-y="(scene.y + camera.y) / camera.scale"
-    :bed="store.newBed"
+    :bed="garden.newBed"
     hovered
     selected
     @update="addNewBed"
   />
 
   <GardenFeature
-    v-if="newShape && store.plant"
+    v-if="newShape && garden.plant"
     :thing="newShape"
-    :plant="store.plant"
+    :plant="garden.plant"
     active
     :scale="camera.scale"
   />

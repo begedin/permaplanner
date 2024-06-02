@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { baseLayers, type BaseLayer } from './useStore';
+import { baseLayers, type BaseLayer } from './useGardenStore';
 
 defineProps<{ value: BaseLayer }>();
 defineEmits<{ (e: 'update:value', value: BaseLayer): void }>();

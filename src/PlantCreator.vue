@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { v4 as uuidV4 } from 'uuid';
-import { useStore, type Plant, type Feature } from './useStore';
+import { useGardenStore, type Plant, type Feature } from './useGardenStore';
 import PlantCreatorCanvas from './PlantCreatorCanvas.vue';
 import PlantCreatorFeatures from './PlantCreatorFeatures.vue';
 import PlantCreatorBases from './PlantCreatorBases.vue';
@@ -9,14 +9,14 @@ import PlantIcon from './PlantIcon.vue';
 
 const open = ref(false);
 
-const store = useStore();
+const garden = useGardenStore();
 
 const save = () => {
-  const index = store.plants.findIndex((p) => p.id === plantInEditing.value.id);
+  const index = garden.plants.findIndex((p) => p.id === plantInEditing.value.id);
   if (index === -1) {
-    store.plants.push(plantInEditing.value);
+    garden.plants.push(plantInEditing.value);
   } else {
-    store.plants.splice(index, 1, plantInEditing.value);
+    garden.plants.splice(index, 1, plantInEditing.value);
   }
   open.value = false;
 };
@@ -35,12 +35,12 @@ const newPlant = () => {
 };
 
 const remove = (plant: Plant) => {
-  store.plants = store.plants.filter((p) => p.id !== plant.id);
-  store.gardenThings = store.gardenThings.filter((p) => p.plantId !== plant.id);
+  garden.plants = garden.plants.filter((p) => p.id !== plant.id);
+  garden.gardenThings = garden.gardenThings.filter((p) => p.plantId !== plant.id);
 };
 
 const isNew = computed(
-  () => store.plants.findIndex((p) => p.id === plantInEditing.value.id) === -1,
+  () => garden.plants.findIndex((p) => p.id === plantInEditing.value.id) === -1,
 );
 
 const currentFeature = ref<Feature>('apple');
@@ -67,7 +67,7 @@ const plantInEditing = ref<Plant>({
     <div class="bg-white p-4 grid grid-flow-col items-start gap-8 rounded-md">
       <div class="flex flex-col gap-1">
         <button
-          v-for="plant in store.plants"
+          v-for="plant in garden.plants"
           :key="plant.name"
           class="flex flex-row items-center gap-1 bg-slate-200 rounded-md p-1 hover:bg-slate-300 text-slate-900"
           :class="{ 'bg-slate-400': plant.id === plantInEditing.id }"
@@ -123,7 +123,7 @@ const plantInEditing = ref<Plant>({
           <input
             v-model="plantInEditing.name"
             class="p-1 border border-slate-300 rounded-md text-slate-800"
-          >
+          />
         </label>
         <button
           class="px-2 py-1 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"

@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import MovableResizable from './MovableResizable.vue';
 import { useDrawBox } from './useDrawBox';
-import type { Feature, Plant } from './useStore';
+import type { Feature, Plant } from './useGardenStore';
 
 const props = defineProps<{
   plant: Plant;
@@ -19,7 +19,6 @@ const createNewFeature = () => {
     return;
   }
   const newFeatures = [...props.plant.features, newPart.value];
-  console.log('createNewFeature', newFeatures.length);
   emit('update:plant', { ...props.plant, features: newFeatures });
 };
 
@@ -53,12 +52,7 @@ const replaceFeature = (
   const newFeatures = [...props.plant.features];
   newFeatures.splice(index, 1, newFeature);
 
-  console.log('replaceFeature', props.plant.features.length, newFeatures.length);
-
-  emit('update:plant', {
-    ...props.plant,
-    features: newFeatures,
-  });
+  emit('update:plant', { ...props.plant, features: newFeatures });
 };
 
 const removeFeature = (index: number) => {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { features, type Feature } from './useStore';
+import { features, type Feature } from './useGardenStore';
 
 defineProps<{ value: Feature }>();
 defineEmits<{ (e: 'update:value', value: Feature): void }>();
