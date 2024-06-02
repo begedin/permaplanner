@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import MovableResizable from './MovableResizable.vue';
 import { useDrawBox } from './useDrawBox';
 import type { Feature, Plant } from './useStore';
@@ -21,17 +21,21 @@ const createNewFeature = () => {
 };
 
 const container = ref<SVGElement>();
-const { startDraw, drawingBbox } = useDrawBox(ref(true), container, createNewFeature);
+
+const { box, isDrawing } = useDrawBox(container);
+watch(isDrawing, (isDrawing) => {
+  if (!isDrawing) {
+    createNewFeature();
+  }
+});
 
 const newPart = computed(() => ({
-  x: drawingBbox.value.x * props.scale,
-  y: drawingBbox.value.y * props.scale,
-  width: drawingBbox.value.width * props.scale,
-  height: drawingBbox.value.height * props.scale,
+  x: box.value.x * props.scale,
+  y: box.value.y * props.scale,
+  width: box.value.width * props.scale,
+  height: box.value.height * props.scale,
   feature: props.currentFeature,
 }));
-
-const isDrawing = computed(() => newPart.value.width > 0 && newPart.value.height > 0);
 
 const replaceFeature = (
   index: number,
@@ -78,7 +82,6 @@ const removeFeature = (index: number) => {
       y="0"
       width="100%"
       height="100%"
-      @mousedown.stop="startDraw"
     />
     <MovableResizable
       v-for="(part, index) in plant.features"

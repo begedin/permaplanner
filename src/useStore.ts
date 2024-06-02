@@ -82,12 +82,18 @@ export const useStore = defineStore('store', () => {
     hoveredId.value = undefined;
   };
 
+  const newBed = ref<GardenBed>();
+
+  const newFeature = ref<GardenThing>();
+
   return {
     plants,
     plant,
     gardenThings,
-    gardenThingsWithPlants,
     deleteFeature,
+    newFeature,
+
+    gardenThingsWithPlants,
 
     deactivateAll,
     selectedId,
@@ -95,5 +101,6 @@ export const useStore = defineStore('store', () => {
 
     gardenBeds,
     removeBed,
+    newBed,
   };
 });

@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch, nextTick } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { v4 as uuidV4 } from 'uuid';
 
 import { useBackgroundImage } from './useBackgroundImage';
 import { useCamera } from './useCamera';
-import { useDrawBox } from './useDrawBox';
 import { useElementSize, useStorage } from '@vueuse/core';
 import { useMapScale } from './useMapScale';
-import { type GardenBed as GardenBedType, useStore, type GardenThing } from './useStore';
-import GardenBed from './GardenBed.vue';
-import GardenFeature from './GardenFeature.vue';
+import { useStore } from './useStore';
 import TheGarden from './TheGarden.vue';
 import OnboardingText from './OnboardingText.vue';
 import PlantCreator from './PlantCreator.vue';
@@ -20,8 +17,7 @@ import ToolSlider from './ToolSlider.vue';
 import ReferenceLine from './ReferenceLine.vue';
 
 import { useCameraStore } from './useCameraStore';
-import { useSceneMousePositionStore } from './useSceneMousePositionStore';
-import { useSceneMousePosition } from './useSceneMousePosition';
+import { useScene } from './useScene';
 
 const {
   setupBackgroundImagePaste,
@@ -74,33 +70,6 @@ const center = computed(() => {
   };
 });
 
-const { isDrawing, drawingBbox, startDraw } = useDrawBox(
-  computed(() => !!store.plant),
-  container,
-  () => newShape.value && store.gardenThings.push({ ...newShape.value }),
-);
-
-const newShape = computed<GardenThing | void>(() => {
-  if (!isDrawing.value || !store.plant || !container.value) {
-    return;
-  }
-
-  const x = Math.min(drawingBbox.value.x, drawingBbox.value.x + drawingBbox.value.width);
-  const y = Math.min(drawingBbox.value.y, drawingBbox.value.y + drawingBbox.value.height);
-  const width = Math.abs(drawingBbox.value.width);
-  const height = Math.abs(drawingBbox.value.height);
-
-  return {
-    id: uuidV4(),
-    type: 'plant',
-    plantId: store.plant.id,
-    x: (x + camera.x) / camera.scale,
-    y: (y + camera.y) / camera.scale,
-    width: width / camera.scale,
-    height: height / camera.scale,
-  };
-});
-
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'z' && e.metaKey) {
     store.gardenThings.pop();
@@ -123,25 +92,14 @@ const {
 
 const bgOpacity = useStorage('bgOpacity', 0.4);
 
-const newBed = ref<GardenBedType>();
+useScene(container);
 
 const startDrawBed = () => {
   nextTick(() => {
-    newBed.value = {
-      id: uuidV4(),
-      points: [],
-    };
+    store.newBed = { id: uuidV4(), points: [] };
     store.plant = undefined;
   });
 };
-
-const addNewBed = (bed: GardenBedType) => {
-  store.gardenBeds.push(bed);
-  newBed.value = undefined;
-};
-
-useSceneMousePosition(container);
-const sceneMouse = useSceneMousePositionStore();
 </script>
 
 <template>
@@ -172,7 +130,6 @@ const sceneMouse = useSceneMousePositionStore();
         ref="container"
         class="col-start-1 col-span-1 row-start-1 row-span-1 w-full h-full"
         :viewBox="svgViewbox"
-        @mousedown="startDraw"
       >
         <defs>
           <pattern
@@ -220,24 +177,6 @@ const sceneMouse = useSceneMousePositionStore();
           class="pointer-events-none"
         />
         <TheGarden />
-        <GardenFeature
-          v-if="newShape && store.plant"
-          :thing="newShape"
-          :plant="store.plant"
-          active
-          :scale="camera.scale"
-        />
-
-        <GardenBed
-          v-if="newBed"
-          :mouse-x="sceneMouse.x"
-          :mouse-y="sceneMouse.y"
-          :bed="newBed"
-          hovered
-          selected
-          :scale="camera.scale"
-          @update="addNewBed"
-        />
 
         <OnboardingText
           v-if="imgSrc && onboardingState !== 'done'"
