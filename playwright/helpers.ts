@@ -20,6 +20,7 @@ export const pasteImage = async (page: Page): Promise<void> => {
 export const onboard = async (page: Page): Promise<void> => {
   await pasteImage(page);
   await page.keyboard.press('Meta+v');
+  await page.waitForSelector('image');
 
   const bbox = await page.locator('image').boundingBox();
 

@@ -10,7 +10,7 @@ test('onboards', async ({ browser }) => {
 
   await pasteImage(page);
   await page.keyboard.press('Meta+v');
-  expect(page.locator('image')).toBeVisible();
+  await expect(page.locator('image')).toBeVisible();
 
   await expect(page.locator('[data-onboarding-text]')).toHaveText(/set the scale of the map/);
 
