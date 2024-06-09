@@ -7,6 +7,7 @@ defineProps<{ plant: Plant }>();
     width="100%"
     height="100%"
     viewBox="0 0 100 100"
+    data-garden-plant
   >
     <use
       :xlink:href="'#' + plant.background"

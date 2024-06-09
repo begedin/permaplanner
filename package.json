@@ -24,6 +24,7 @@
     "@codecov/vite-plugin": "^0.0.1-beta.8",
     "@flydotio/dockerfile": "^0.5.7",
     "@pinia/testing": "^0.1.3",
+    "@playwright/test": "^1.44.1",
     "@tsconfig/node22": "^22.0.0",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^20.13.0",

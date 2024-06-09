@@ -59,7 +59,7 @@ export const useCamera = (
 
   const setupKeyBindings = () => {
     document.addEventListener(
-      'keydown',
+      'keypress',
       (e) => {
         if (e.key === 'ArrowLeft' || e.key === 'A') camera.x += 10;
         if (e.key === 'ArrowRight' || e.key === 'D') camera.x -= 10;

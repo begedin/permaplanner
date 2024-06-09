@@ -12,7 +12,10 @@ const setName = (thing: GardenThing, event: Event) => {
 const mode = useStorage<'plant' | 'icon'>('thingBarMode', 'icon');
 </script>
 <template>
-  <div class="p-2 flex flex-col gap-1">
+  <div
+    class="p-2 flex flex-col gap-1"
+    data-thing-bar
+  >
     <div class="grid grid-cols-2 gap-1 pb-2">
       <button
         class="hover:bg-emerald-200 p-1 text-slate-600 rounded-md"

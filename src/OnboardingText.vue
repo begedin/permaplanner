@@ -8,6 +8,7 @@ defineProps<{ x: number; y: number; onboardingState: string }>();
     fill="red"
     text-anchor="middle"
     dominant-baseline="middle"
+    data-onboarding-text
   >
     <template v-if="onboardingState === 'initial'">
       Great. You have your plot of land. Now, let's set the scale of the map. Drag one of the two
@@ -21,16 +22,9 @@ defineProps<{ x: number; y: number; onboardingState: string }>();
       Great! Now go move the other point.
     </template>
 
-    <template v-if="onboardingState === 'movingSecond'">
-      Getting there...
-    </template>
+    <template v-if="onboardingState === 'movingSecond'"> Getting there... </template>
 
-    <template v-if="onboardingState === 'movedSecond'">
-      Awesome! Now, set the length of that line using the slider. The choice of unit is yours. Feet,
-      inches, meters, doesn't matter.
-    </template>
-
-    <template v-if="onboardingState === 'settingLength'">
+    <template v-if="onboardingState === 'movedSecond' || onboardingState === 'settingLength'">
       Awesome! Now, set the length of that line using the slider. The choice of unit is yours. Feet,
       inches, meters, doesn't matter.
     </template>

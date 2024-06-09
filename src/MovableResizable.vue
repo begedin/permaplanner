@@ -108,13 +108,14 @@ const hover = ref(false);
 <template>
   <rect
     v-if="active || hover"
+    data-move-box
+    fill="transparent"
+    stroke="fuchsia"
     :x="x"
     :y="y"
     :width="width"
     :height="height"
-    fill="transparent"
     :stroke-width="1 / scale"
-    stroke="fuchsia"
     @click="emit('click')"
     @mousedown.stop="startMove($event, 'whole')"
   />

@@ -34,6 +34,7 @@ const centroid = computed(() => {
     r="5"
     class="hover:[r:8]"
     fill="red"
+    data-ref-line-start
     @mousedown.stop="($event) => $emit('start-move-scale-start', $event)"
   />
 
@@ -43,6 +44,7 @@ const centroid = computed(() => {
     r="5"
     class="hover:[r:8]"
     fill="red"
+    data-ref-line-end
     @mousedown.stop="($event) => $emit('start-move-scale-end', $event)"
   />
 
