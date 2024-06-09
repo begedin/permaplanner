@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 
-export const pasteImage = async (page: Page): Promise<void> => {
+export const putImageIntoClipboard = async (page: Page): Promise<void> => {
   await page.evaluate(async () => {
     const dataURLtoFile = async (dataurl: string): Promise<File> => {
       const result = await fetch(dataurl);
@@ -18,8 +18,8 @@ export const pasteImage = async (page: Page): Promise<void> => {
 };
 
 export const onboard = async (page: Page): Promise<void> => {
-  await pasteImage(page);
-  await page.keyboard.press('Meta+v');
+  await putImageIntoClipboard(page);
+  await page.keyboard.press('ControlOrMeta+v');
   await page.waitForSelector('image');
 
   const bbox = await page.locator('image').boundingBox();

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { pasteImage } from './helpers';
+import { putImageIntoClipboard } from './helpers';
 
 test('onboards', async ({ browser }) => {
   const context = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
@@ -8,8 +8,9 @@ test('onboards', async ({ browser }) => {
 
   await expect(page.locator('[data-onboarding-text]')).toHaveText(/Paste an aerial photo/);
 
-  await pasteImage(page);
-  await page.keyboard.press('Meta+v');
+  await putImageIntoClipboard(page);
+  await page.keyboard.press('ControlOrMeta+v');
+
   await expect(page.locator('image')).toBeVisible();
 
   await expect(page.locator('[data-onboarding-text]')).toHaveText(/set the scale of the map/);
