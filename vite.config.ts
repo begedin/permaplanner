@@ -19,6 +19,7 @@ export default defineConfig({
     },
   },
   test: {
+    include: ['src/**/*.test.ts'],
     coverage: {
       reporter: ['text', 'json', 'json-summary', 'html', 'clover'],
       reportOnFailure: true,

@@ -96,6 +96,7 @@ const plantInEditing = ref<Plant>({
             height="20"
             width="20"
             viewBox="0 0 20 20"
+            data-plant-creator-canvas
           >
             <use
               xlink:href="#bg_1"

@@ -125,6 +125,7 @@ const startDrawBed = () =>
         ref="container"
         class="col-start-1 col-span-1 row-start-1 row-span-1 w-full h-full"
         :viewBox="svgViewbox"
+        data-main-svg
       >
         <defs>
           <pattern
@@ -158,6 +159,7 @@ const startDrawBed = () =>
           fill="red"
           text-anchor="middle"
           dominant-baseline="middle"
+          data-onboarding-text
         >
           Paste an aerial photo of your plot of land here. You can use Google Maps to take a
           screenshot

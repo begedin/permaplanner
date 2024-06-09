@@ -36,7 +36,7 @@ export const useMapScale = () => {
 
   const startMoveScaleStart = () => {
     store.start.x = (scene.x + camera.x) / camera.scale;
-    store.start.y = (scene.x + camera.y) / camera.scale;
+    store.start.y = (scene.y + camera.y) / camera.scale;
 
     const controller = new AbortController();
 
@@ -44,7 +44,10 @@ export const useMapScale = () => {
       'mousemove',
       () => {
         store.start.x = (scene.x + camera.x) / camera.scale;
-        store.start.y = (scene.x + camera.y) / camera.scale;
+        store.start.y = (scene.y + camera.y) / camera.scale;
+        if (onboardingState.value === 'initial') {
+          advanceOnboarding();
+        }
       },
       { signal: controller.signal },
     );
