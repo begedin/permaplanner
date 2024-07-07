@@ -119,7 +119,7 @@ watch(
 );
 
 const box = computed(() => {
-  if (!path.value) {
+  if (path.value.length === 0) {
     return null;
   }
   const minX = Math.min(...path.value.map(({ x }) => x));
