@@ -47,3 +47,30 @@ it('draws a bed', async () => {
     },
   ]);
 });
+
+it('cancells drawing a bed', async () => {
+  const wrapper = mount(GardenBed, {
+    props: {
+      bed: { id: 'bed', path: [] },
+      unitLengthPx: 5,
+      mouseX: 3,
+      mouseY: 4,
+      hovered: false,
+      selected: false,
+    },
+    attachTo: document.body,
+  });
+
+  await wrapper.setProps({ selected: true });
+
+  document.dispatchEvent(new MouseEvent('mousedown', {}));
+  await wrapper.setProps({ mouseX: 5, mouseY: 6 });
+  document.dispatchEvent(new MouseEvent('mousemove', {}));
+  await wrapper.setProps({ mouseX: 7, mouseY: 8 });
+  document.dispatchEvent(new MouseEvent('mousemove', {}));
+  document.dispatchEvent(new MouseEvent('mouseup', {}));
+
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+
+  expect(wrapper.emitted('update')).toBeUndefined();
+});
