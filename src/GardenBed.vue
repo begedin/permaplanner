@@ -1,7 +1,11 @@
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeMount, onMounted, ref, watch } from 'vue';
 import type { GardenBed } from './useGardenStore';
 import GardenMeasure from './GardenMeasure.vue';
+
+import paper, { Path, PathItem, Size } from 'paper/dist/paper-core';
+
+onBeforeMount(() => paper.setup(new Size(1, 1)));
 
 const props = defineProps<{
   mouseX: number;
@@ -14,214 +18,121 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update', bed: GardenBed): void;
-  (e: 'cancel'): void;
+  (e: 'cancel' | 'click' | 'mouseenter' | 'mouseleave'): void;
+  (e: 'click', evt: MouseEvent): void;
 }>();
 
-const less = (
-  a: { x: number; y: number },
-  b: { x: number; y: number },
-  center: { x: number; y: number },
-): boolean => {
-  if (a.x - center.x >= 0 && b.x - center.x < 0) {
-    return true;
-  }
-  if (a.x - center.x < 0 && b.x - center.x >= 0) {
-    return false;
-  }
-  if (a.x - center.x == 0 && b.x - center.x == 0) {
-    if (a.y - center.y >= 0 || b.y - center.y >= 0) {
-      return a.y > b.y;
-    }
-    return b.y > a.y;
-  }
-
-  // compute the cross product of vectors (center -> a) x (center -> b)
-  const det = (a.x - center.x) * (b.y - center.y) - (b.x - center.x) * (a.y - center.y);
-  if (det < 0) {
-    return true;
-  }
-  if (det > 0) {
-    return false;
-  }
-
-  // points a and b are on the same line from the center
-  // check which point is closer to the center
-  const d1 = (a.x - center.x) * (a.x - center.x) + (a.y - center.y) * (a.y - center.y);
-  const d2 = (b.x - center.x) * (b.x - center.x) + (b.y - center.y) * (b.y - center.y);
-  return d1 > d2;
+const resetPath = () => {
+  path.value = props.bed.d === '' ? '' : new Path(props.bed.d).pathData;
 };
 
-const getCentroid = (points: { x: number; y: number }[]): { x: number; y: number } => {
-  const x = points.reduce((acc, p) => acc + p.x, 0) / points.length;
-  const y = points.reduce((acc, p) => acc + p.y, 0) / points.length;
-  return { x, y };
-};
+onMounted(resetPath);
 
-const points = ref<{ x: number; y: number }[]>([]);
-watch(
-  () => props.bed.points,
-  (originalPoints) => {
-    points.value = originalPoints.map((point) => ({ x: point.x, y: point.y }));
-  },
-  { immediate: true },
-);
+const path = ref<string>('');
 
-let controller = new AbortController();
+watch(() => props.bed, resetPath);
 
-const activePoint = ref<{ x: number; y: number }>();
+const brushSize = ref(12);
 
-const sortedPoints = computed(() => {
-  const allPoints = activePoint.value ? [activePoint.value, ...points.value] : [...points.value];
-  const centroid = getCentroid(allPoints);
-  allPoints.sort((a, b) => (less(a, b, centroid) ? -1 : 1));
-  return allPoints;
+const brush = computed(() => {
+  return new Path.Circle({
+    center: new paper.Point(props.mouseX, props.mouseY),
+    radius: brushSize.value,
+  })
+    .toShape()
+    .toPath().pathData;
 });
 
-watch(
-  () => [props.mouseX, props.mouseY],
-  ([x, y]) => {
-    if (!props.selected) {
-      return;
-    }
+let editModeController = new AbortController();
 
-    if (!activePoint.value && !hoveredPoint.value) {
-      activePoint.value = { x, y };
-    }
-
-    if (!activePoint.value) {
-      return;
-    }
-
-    if (activePoint.value) {
-      activePoint.value.x = x;
-      activePoint.value.y = y;
-    }
-  },
-);
+const stroke = ref<string>();
 
 watch(
   () => props.selected,
   (selected) => {
     if (!selected) {
-      controller.abort();
+      editModeController.abort();
       return;
     }
 
-    controller = new AbortController();
+    editModeController = new AbortController();
 
-    document.addEventListener(
-      'click',
-      () => {
-        if (!activePoint.value) {
-          return;
-        }
-        points.value.push({ x: activePoint.value.x, y: activePoint.value.y });
-      },
-      { signal: controller.signal },
-    );
+    document.addEventListener('mousedown', () => {
+      let brushStroke: InstanceType<typeof PathItem> = new Path(brush.value);
+
+      const controller = new AbortController();
+      document.addEventListener(
+        'mousemove',
+        () => {
+          brushStroke = brushStroke.unite(new Path(brush.value));
+          stroke.value = brushStroke.pathData;
+        },
+        { signal: controller.signal },
+      );
+      document.addEventListener(
+        'mouseup',
+        () => {
+          brushStroke.simplify();
+          const paperPath = new Path(path.value).unite(brushStroke);
+
+          path.value = paperPath.pathData;
+          stroke.value = undefined;
+          controller.abort();
+        },
+        { signal: controller.signal },
+      );
+    });
 
     document.addEventListener(
       'keydown',
       (e: KeyboardEvent) => {
         if (e.key === 'Enter') {
-          activePoint.value = undefined;
-          emit('update', { ...props.bed, points: points.value });
-          controller.abort();
+          editModeController.abort();
+          emit('update', { ...props.bed, d: path.value });
         }
 
         if (e.key === 'Escape') {
-          controller.abort();
-          activePoint.value = undefined;
-          points.value = props.bed.points.map((point) => ({ x: point.x, y: point.y }));
+          editModeController.abort();
+          resetPath();
           emit('cancel');
         }
       },
-      { signal: controller.signal },
+      { signal: editModeController.signal },
     );
   },
   { immediate: true },
 );
 
-const polygonPoints = computed(() =>
-  sortedPoints.value.map((point) => `${point.x},${point.y}`).join(' '),
-);
-
-const hoveredPoint = ref<{ x: number; y: number }>();
-
-const setHoveredPoint = (point: { x: number; y: number }) => {
-  hoveredPoint.value = point;
-  activePoint.value = undefined;
-};
-
-const unsetHoveredPoint = () => {
-  hoveredPoint.value = undefined;
-  activePoint.value = { x: props.mouseX, y: props.mouseY };
-};
-
-const activatePoint = (point: { x: number; y: number }) => {
-  points.value = points.value.filter((p) => p !== point);
-  activePoint.value = point;
-  hoveredPoint.value = undefined;
-};
-
 const box = computed(() => {
-  if (!sortedPoints.value.length) {
-    return { x: 0, y: 0, width: 0, height: 0 };
+  if (!path.value) {
+    return null;
   }
-  const [minX, maxX, minY, maxY] = sortedPoints.value.reduce(
-    (acc, point) => {
-      acc[0] = Math.min(acc[0], point.x);
-      acc[1] = Math.max(acc[1], point.x);
-      acc[2] = Math.min(acc[2], point.y);
-      acc[3] = Math.max(acc[3], point.y);
-      return acc;
-    },
-    [Infinity, -Infinity, Infinity, -Infinity],
-  );
-
-  return {
-    x: minX,
-    y: minY,
-    width: maxX - minX,
-    height: maxY - minY,
-  };
+  const bedPath = new Path(path.value);
+  const box = bedPath.bounds;
+  return { x: box.x, y: box.y, width: box.width, height: box.height };
 });
 </script>
 <template>
-  <polygon
-    v-bind="$attrs"
-    :points="polygonPoints"
-    fill="brown"
-    opacity="0.5"
+  <path
+    v-if="stroke"
+    :d="stroke"
+    fill="rgba(0, 0, 0, 0.1)"
+    class="pointer-events-none"
   />
-  <template v-if="hovered || selected">
-    <template
-      v-for="point in sortedPoints"
-      :key="`${point.x};${point.y}`"
-    >
-      <circle
-        v-if="selected && point !== activePoint"
-        :cx="point.x"
-        :cy="point.y"
-        :r="3"
-        fill="pink"
-        :stroke="point === hoveredPoint ? 'black' : 'transparent'"
-        @mouseenter="setHoveredPoint(point)"
-        @mouseleave="unsetHoveredPoint"
-        @click.stop="activatePoint(point)"
-      />
-      <circle
-        v-else
-        :cx="point.x"
-        :cy="point.y"
-        :r="point === hoveredPoint ? 5 : 3"
-        fill="blue"
-        class="pointer-events-none"
-      />
-    </template>
-  </template>
+  <path
+    v-if="path"
+    ref="pathEl"
+    :d="path"
+    :fill="
+      selected ? 'rgba(0, 100, 0, 0.6)' : hovered ? 'rgba(0, 100, 0, 0.3)' : 'rgba(0, 100, 0, 0.2)'
+    "
+    class="pointer-events-fill"
+    @mouseenter="emit('mouseenter')"
+    @mouseleave="emit('mouseleave')"
+    @click="emit('click', $event)"
+  />
   <GardenMeasure
-    v-if="hovered || selected"
+    v-if="box && (hovered || selected)"
     :unit-length-px="unitLengthPx"
     :box="box"
   />
