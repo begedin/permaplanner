@@ -29,7 +29,7 @@ export type GardenThing = {
   height: number;
 };
 
-export type GardenBed = { id: string; d: string };
+export type GardenBed = { id: string; path: { x: number; y: number }[] };
 
 export const features = [
   'apple',
@@ -80,7 +80,7 @@ export const useGardenStore = defineStore('garden', () => {
   const newBed = ref<GardenBed>();
   const startDrawBed = () =>
     nextTick(() => {
-      newBed.value = { id: uuid(), d: '' };
+      newBed.value = { id: uuid(), path: [] };
       plant.value = undefined;
     });
 

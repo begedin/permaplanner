@@ -1,11 +1,10 @@
 <script lang="ts" setup>
-import { computed, onBeforeMount, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import type { GardenBed } from './useGardenStore';
 import GardenMeasure from './GardenMeasure.vue';
 
-import paper, { Path, PathItem, Size } from 'paper/dist/paper-core';
-
-onBeforeMount(() => paper.setup(new Size(1, 1)));
+import simplify from 'simplify-js';
+import clipping from 'polygon-clipping';
 
 const props = defineProps<{
   mouseX: number;
@@ -23,29 +22,48 @@ const emit = defineEmits<{
 }>();
 
 const resetPath = () => {
-  path.value = props.bed.d === '' ? '' : new Path(props.bed.d).pathData;
+  path.value = props.bed.path;
 };
 
 onMounted(resetPath);
 
-const path = ref<string>('');
+const path = ref<{ x: number; y: number }[]>([]);
 
 watch(() => props.bed, resetPath);
 
 const brushSize = ref(12);
 
 const brush = computed(() => {
-  return new Path.Circle({
-    center: new paper.Point(props.mouseX, props.mouseY),
-    radius: brushSize.value,
-  })
-    .toShape()
-    .toPath().pathData;
+  const x = props.mouseX;
+  const y = props.mouseY;
+  const totalPoints = 20;
+  const theta = (Math.PI * 2) / totalPoints;
+  const points: { x: number; y: number }[] = [];
+  const r = brushSize.value;
+  for (let i = 0; i < totalPoints; i++) {
+    const angle = theta * i;
+    points.push({ x: x + r * Math.cos(angle), y: y + r * Math.sin(angle) });
+  }
+
+  return points;
 });
 
 let editModeController = new AbortController();
 
-const stroke = ref<string>();
+const stroke = ref<{ x: number; y: number }[]>([]);
+
+const joinPaths = (a: { x: number; y: number }[], b: { x: number; y: number }[]) => {
+  return a.length > 0
+    ? clipping
+        .union(
+          [a.map(({ x, y }) => [x, y] as [number, number])],
+          [b.map(({ x, y }) => [x, y] as [number, number])],
+        )
+        .map((polygon) => polygon.map((path) => path.map(([x, y]) => ({ x, y }))))
+        .flat()
+        .flat()
+    : b;
+};
 
 watch(
   () => props.selected,
@@ -58,25 +76,21 @@ watch(
     editModeController = new AbortController();
 
     document.addEventListener('mousedown', () => {
-      let brushStroke: InstanceType<typeof PathItem> = new Path(brush.value);
+      stroke.value = [];
 
       const controller = new AbortController();
       document.addEventListener(
         'mousemove',
         () => {
-          brushStroke = brushStroke.unite(new Path(brush.value));
-          stroke.value = brushStroke.pathData;
+          stroke.value = simplify(joinPaths(stroke.value, brush.value));
         },
         { signal: controller.signal },
       );
       document.addEventListener(
         'mouseup',
         () => {
-          brushStroke.simplify();
-          const paperPath = new Path(path.value).unite(brushStroke);
-
-          path.value = paperPath.pathData;
-          stroke.value = undefined;
+          path.value = simplify(joinPaths(path.value, stroke.value));
+          stroke.value = [];
           controller.abort();
         },
         { signal: controller.signal },
@@ -88,7 +102,8 @@ watch(
       (e: KeyboardEvent) => {
         if (e.key === 'Enter') {
           editModeController.abort();
-          emit('update', { ...props.bed, d: path.value });
+          console.log('emitting');
+          emit('update', { ...props.bed, path: path.value });
         }
 
         if (e.key === 'Escape') {
@@ -107,22 +122,25 @@ const box = computed(() => {
   if (!path.value) {
     return null;
   }
-  const bedPath = new Path(path.value);
-  const box = bedPath.bounds;
-  return { x: box.x, y: box.y, width: box.width, height: box.height };
+  const minX = Math.min(...path.value.map(({ x }) => x));
+  const minY = Math.min(...path.value.map(({ y }) => y));
+  const maxX = Math.max(...path.value.map(({ x }) => x));
+  const maxY = Math.max(...path.value.map(({ y }) => y));
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 });
 </script>
 <template>
-  <path
-    v-if="stroke"
-    :d="stroke"
+  <polygon
+    v-if="stroke.length > 0"
+    :points="stroke.map(({ x, y }) => `${x},${y}`).join(' ')"
     fill="rgba(0, 0, 0, 0.1)"
     class="pointer-events-none"
   />
-  <path
+
+  <polygon
     v-if="path"
     ref="pathEl"
-    :d="path"
+    :points="path.map(({ x, y }) => `${x},${y}`).join(' ')"
     :fill="
       selected ? 'rgba(0, 100, 0, 0.6)' : hovered ? 'rgba(0, 100, 0, 0.3)' : 'rgba(0, 100, 0, 0.2)'
     "

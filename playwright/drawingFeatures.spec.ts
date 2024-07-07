@@ -62,3 +62,45 @@ test('creates a plant', async ({ browser }) => {
     y: expect.closeTo(491.1, 1),
   });
 });
+
+test('creates a bed', async ({ browser }) => {
+  const context = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
+  const page = await context.newPage();
+  await page.goto('');
+  await onboard(page);
+
+  await page.getByRole('button', { name: 'bed' }).click();
+
+  // draw a single stroke and save
+  await page.mouse.move(400, 200);
+  await page.mouse.down();
+  await page.mouse.move(600, 400, { steps: 10 });
+  await page.mouse.up();
+  await page.keyboard.press('Enter');
+
+  await expect(page.locator('[data-main-svg] polygon')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Bed 0' })).toBeVisible();
+
+  const currentPoints = await page.locator('[data-main-svg] polygon').getAttribute('points');
+
+  // select bed, draw a new stroke, and save
+  await page.getByRole('button', { name: 'Bed 0' }).click();
+  await page.mouse.move(600, 400);
+  await page.mouse.down();
+  await page.mouse.move(400, 500, { steps: 10 });
+  await page.mouse.up();
+  await page.keyboard.press('Enter');
+
+  await expect(page.locator('[data-main-svg] polygon')).toHaveCount(1);
+  await expect(page.locator('[data-main-svg] polygon').getAttribute('points')).not.toEqual(
+    currentPoints,
+  );
+
+  // shift delete bed
+  await page.keyboard.down('Shift');
+  await page.getByRole('button', { name: 'Bed 0' }).click();
+  await page.keyboard.up('Shift');
+
+  await expect(page.locator('[data-main-svg] polygon')).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Bed 0' })).toBeHidden();
+});

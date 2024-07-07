@@ -16,8 +16,9 @@
   },
   "dependencies": {
     "@vueuse/core": "^10.10.0",
-    "paper": "^0.12.17",
     "pinia": "^2.1.7",
+    "polygon-clipping": "^0.15.7",
+    "simplify-js": "^1.2.4",
     "svg-path-commander": "^2.0.9",
     "uuid": "^9.0.1",
     "vue": "^3.4.21"
