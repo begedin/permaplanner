@@ -74,3 +74,61 @@ it('cancells drawing a bed', async () => {
 
   expect(wrapper.emitted('update')).toBeUndefined();
 });
+
+it('changes brush size', async () => {
+  const wrapper = mount(GardenBed, {
+    props: {
+      bed: { id: 'bed', path: [] },
+      unitLengthPx: 5,
+      mouseX: 3,
+      mouseY: 4,
+      hovered: false,
+      selected: true,
+    },
+    attachTo: document.body,
+  });
+
+  expect(wrapper.get('polygon').attributes('points')).toBeDefined();
+  const pointsAtDefaultSize = wrapper.get('polygon').attributes('points');
+
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: '+' }));
+  await wrapper.vm.$nextTick();
+  expect(wrapper.get('polygon').attributes('points')).not.toEqual(pointsAtDefaultSize);
+  const pointsAtLargerSize = wrapper.get('polygon').attributes('points');
+
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: '-' }));
+  await wrapper.vm.$nextTick();
+  expect(wrapper.get('polygon').attributes('points')).toEqual(pointsAtDefaultSize);
+
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: '-' }));
+  await wrapper.vm.$nextTick();
+  expect(wrapper.get('polygon').attributes('points')).not.toEqual(pointsAtDefaultSize);
+  expect(wrapper.get('polygon').attributes('points')).not.toEqual(pointsAtLargerSize);
+});
+
+it('cancels stroke on mouseleave', async () => {
+  const wrapper = mount(GardenBed, {
+    props: {
+      bed: { id: 'bed', path: [] },
+      unitLengthPx: 5,
+      mouseX: 3,
+      mouseY: 4,
+      hovered: false,
+      selected: true,
+    },
+    attachTo: document.body,
+  });
+
+  const originalBrushPoints = wrapper.get('polygon').attributes('points');
+  expect(originalBrushPoints).toBeDefined();
+
+  document.dispatchEvent(new MouseEvent('mousedown', {}));
+  document.dispatchEvent(new MouseEvent('mousemove', {}));
+  await wrapper.vm.$nextTick();
+
+  expect(wrapper.get('polygon').attributes('points')).not.toEqual(originalBrushPoints);
+
+  document.body.dispatchEvent(new MouseEvent('mouseleave', {}));
+  await wrapper.vm.$nextTick();
+  expect(wrapper.get('polygon').attributes('points')).toEqual(originalBrushPoints);
+});

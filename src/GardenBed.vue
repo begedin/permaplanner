@@ -34,8 +34,8 @@ watch(() => props.bed, resetPath);
 const brushSize = ref(12);
 
 const brush = computed(() => {
-  const x = props.mouseX;
-  const y = props.mouseY;
+  const x = Math.max(props.mouseX, 0);
+  const y = Math.max(props.mouseY, 0);
   const totalPoints = 20;
   const theta = (Math.PI * 2) / totalPoints;
   const points: { x: number; y: number }[] = [];
@@ -79,6 +79,7 @@ watch(
       stroke.value = [];
 
       const controller = new AbortController();
+
       document.addEventListener(
         'mousemove',
         () => {
@@ -86,10 +87,20 @@ watch(
         },
         { signal: controller.signal },
       );
+
       document.addEventListener(
         'mouseup',
         () => {
           path.value = simplify(joinPaths(path.value, stroke.value));
+          stroke.value = [];
+          controller.abort();
+        },
+        { signal: controller.signal },
+      );
+
+      document.body.addEventListener(
+        'mouseleave',
+        () => {
           stroke.value = [];
           controller.abort();
         },
@@ -101,15 +112,26 @@ watch(
       'keydown',
       (e: KeyboardEvent) => {
         if (e.key === 'Enter') {
+          e.preventDefault();
           editModeController.abort();
-          console.log('emitting');
           emit('update', { ...props.bed, path: path.value });
         }
 
         if (e.key === 'Escape') {
+          e.preventDefault();
           editModeController.abort();
           resetPath();
           emit('cancel');
+        }
+
+        if (e.key === '+') {
+          e.preventDefault();
+          Math.min((brushSize.value += 1), 50);
+        }
+
+        if (e.key === '-') {
+          e.preventDefault();
+          Math.max((brushSize.value -= 1), 1);
         }
       },
       { signal: editModeController.signal },
@@ -133,6 +155,12 @@ const box = computed(() => {
   <polygon
     v-if="stroke.length > 0"
     :points="stroke.map(({ x, y }) => `${x},${y}`).join(' ')"
+    fill="rgba(0, 0, 0, 0.1)"
+    class="pointer-events-none"
+  />
+  <polygon
+    v-else-if="selected || hovered"
+    :points="brush.map(({ x, y }) => `${x},${y}`).join(' ')"
     fill="rgba(0, 0, 0, 0.1)"
     class="pointer-events-none"
   />

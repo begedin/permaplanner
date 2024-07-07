@@ -78,10 +78,10 @@ test('creates a bed', async ({ browser }) => {
   await page.mouse.up();
   await page.keyboard.press('Enter');
 
-  await expect(page.locator('[data-main-svg] polygon')).toBeVisible();
+  await expect(page.locator('[data-main-svg] polygon')).toHaveCount(2); // brush and bed;
   await expect(page.getByRole('button', { name: 'Bed 0' })).toBeVisible();
 
-  const currentPoints = await page.locator('[data-main-svg] polygon').getAttribute('points');
+  const currentPoints = await page.locator('[data-main-svg] polygon').last().getAttribute('points');
 
   // select bed, draw a new stroke, and save
   await page.getByRole('button', { name: 'Bed 0' }).click();
@@ -91,8 +91,8 @@ test('creates a bed', async ({ browser }) => {
   await page.mouse.up();
   await page.keyboard.press('Enter');
 
-  await expect(page.locator('[data-main-svg] polygon')).toHaveCount(1);
-  await expect(page.locator('[data-main-svg] polygon').getAttribute('points')).not.toEqual(
+  await expect(page.locator('[data-main-svg] polygon')).toHaveCount(2); // brush and bed;
+  await expect(page.locator('[data-main-svg] polygon').last().getAttribute('points')).not.toEqual(
     currentPoints,
   );
 
@@ -101,6 +101,6 @@ test('creates a bed', async ({ browser }) => {
   await page.getByRole('button', { name: 'Bed 0' }).click();
   await page.keyboard.up('Shift');
 
-  await expect(page.locator('[data-main-svg] polygon')).toBeHidden();
+  await expect(page.locator('[data-main-svg] polygon')).toHaveCount(0); // unselected, so no brush either
   await expect(page.getByRole('button', { name: 'Bed 0' })).toBeHidden();
 });
