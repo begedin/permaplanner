@@ -1,6 +1,7 @@
 import { useStorage } from '@vueuse/core';
 import { defineStore } from 'pinia';
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
+import { uuid } from './utils';
 
 export const baseLayers = ['bg_1', 'bg_2', 'bg_3', 'bg_4', 'bg_5', 'bg_6', 'bg_7', 'bg_8'] as const;
 export type BaseLayer = (typeof baseLayers)[number];
@@ -28,10 +29,7 @@ export type GardenThing = {
   height: number;
 };
 
-export type GardenBed = {
-  id: string;
-  points: { x: number; y: number }[];
-};
+export type GardenBed = { id: string; path: { x: number; y: number }[] };
 
 export const features = [
   'apple',
@@ -71,20 +69,33 @@ export const useGardenStore = defineStore('garden', () => {
     return data;
   });
 
-  const gardenBeds = useStorage<GardenBed[]>('gardenBeds', []);
-
-  const removeBed = (id: string) => {
-    gardenBeds.value = gardenBeds.value.filter((bed) => bed.id !== id);
-  };
-
   const deactivateAll = () => {
     selectedId.value = undefined;
     hoveredId.value = undefined;
   };
 
-  const newBed = ref<GardenBed>();
-
   const newFeature = ref<GardenThing>();
+
+  const gardenBeds = useStorage<GardenBed[]>('gardenBeds', []);
+  const newBed = ref<GardenBed>();
+  const startDrawBed = () =>
+    nextTick(() => {
+      newBed.value = { id: uuid(), path: [] };
+      plant.value = undefined;
+    });
+
+  const editBed = (id: string) => {
+    const bed = gardenBeds.value.find((b) => b.id === id);
+    if (bed) {
+      newBed.value = undefined;
+      selectedId.value = id;
+      hoveredId.value = id;
+    }
+  };
+
+  const removeBed = (id: string) => {
+    gardenBeds.value = gardenBeds.value.filter((bed) => bed.id !== id);
+  };
 
   return {
     plants,
@@ -102,5 +113,7 @@ export const useGardenStore = defineStore('garden', () => {
     gardenBeds,
     removeBed,
     newBed,
+    editBed,
+    startDrawBed,
   };
 });

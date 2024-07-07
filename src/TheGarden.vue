@@ -90,7 +90,7 @@ watch(
     :mouse-y="(scene.y + camera.y) / camera.scale"
     :unit-length-px="mapScale.unitLengthPx"
     @cancel="garden.deactivateAll"
-    @click.exact="garden.selectedId = bed.id"
+    @click.exact="garden.editBed(bed.id)"
     @click.shift="garden.removeBed(bed.id)"
     @mouseenter="garden.hoveredId = bed.id"
     @mouseleave="garden.hoveredId = undefined"
@@ -121,6 +121,7 @@ watch(
     hovered
     selected
     @update="addNewBed"
+    @cancel="garden.newBed = undefined"
   />
 
   <GardenFeature

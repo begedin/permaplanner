@@ -2,6 +2,7 @@ import { onMounted, ref, watch } from 'vue';
 
 export const useBackgroundImage = () => {
   let db: IDBDatabase;
+
   onMounted(async () => {
     navigator.storage.persist();
     const request = indexedDB.open('permaplanner', 1);

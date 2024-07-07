@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { v4 as uuidV4 } from 'uuid';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import { useBackgroundImage } from './useBackgroundImage';
 import { useCamera } from './useCamera';
@@ -90,11 +89,7 @@ const bgOpacity = useStorage('bgOpacity', 0.4);
 
 useScene(container);
 
-const startDrawBed = () =>
-  nextTick(() => {
-    garden.newBed = { id: uuidV4(), points: [] };
-    garden.plant = undefined;
-  });
+const gardenStore = useGardenStore();
 </script>
 
 <template>
@@ -103,7 +98,7 @@ const startDrawBed = () =>
     <div class="p-2 flex flex-grow flex-col items-stretch gap-1 text-sky-200">
       <ToolBar />
       <PlantCreator />
-      <button @click.stop="startDrawBed">bed</button>
+      <button @click.stop="gardenStore.startDrawBed">bed</button>
       <ToolSlider
         v-model:value="mapScale.linePhysicalLength"
         label="Map scale"
