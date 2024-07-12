@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import PlantIcon from './PlantIcon.vue';
 import { useGardenStore, type GardenThing } from './useGardenStore';
-import { useStorage } from '@vueuse/core';
 
 const garden = useGardenStore();
 
@@ -9,29 +8,12 @@ const setName = (thing: GardenThing, event: Event) => {
   const target = event.target as HTMLInputElement;
   thing.name = target.value;
 };
-const mode = useStorage<'plant' | 'icon'>('thingBarMode', 'icon');
 </script>
 <template>
   <div
-    class="p-2 flex flex-col gap-1"
+    class="p-2 flex flex-col gap-1 bg-emerald-50"
     data-thing-bar
   >
-    <div class="grid grid-cols-2 gap-1 pb-2">
-      <button
-        class="hover:bg-emerald-200 p-1 text-slate-600 rounded-md"
-        :class="mode === 'plant' ? 'bg-emerald-300' : 'bg-emerald-100'"
-        @click="mode = 'plant'"
-      >
-        Plant
-      </button>
-      <button
-        class="hover:bg-emerald-200 p-1 text-slate-600 rounded-md"
-        :class="mode === 'icon' ? 'bg-emerald-300' : 'bg-emerald-100'"
-        @click="mode = 'icon'"
-      >
-        Icon
-      </button>
-    </div>
     <label>Plants</label>
     <button
       v-for="{ thing, plant } in garden.gardenThingsWithPlants"
@@ -45,22 +27,9 @@ const mode = useStorage<'plant' | 'icon'>('thingBarMode', 'icon');
     >
       <div class="bg-sky-200 p-1 rounded-md">
         <PlantIcon
-          v-if="mode === 'plant'"
           class="h-8 w-8"
           :plant="plant"
         />
-        <svg
-          v-else
-          class="h-8 w-8"
-        >
-          <use
-            :xlink:href="'#' + plant.features[0]?.feature || plant.background"
-            x="0"
-            y="0"
-            width="100%"
-            height="100%"
-          />
-        </svg>
       </div>
 
       <input
