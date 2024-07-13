@@ -1,13 +1,13 @@
-import { beforeEach, it, vi } from 'vitest';
+import { render, screen, cleanup, fireEvent } from '@testing-library/vue';
+import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
-import { mount } from '@vue/test-utils';
+import { flushPromises } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 
 import App from './App.vue';
+import { useGardenStore } from './useGardenStore';
 
-beforeEach(() => {
-  setActivePinia(createTestingPinia({ createSpy: vi.fn }));
-
+beforeAll(() => {
   Object.defineProperties(window.navigator, {
     storage: {
       get: () => ({ persist: vi.fn }),
@@ -19,6 +19,42 @@ beforeEach(() => {
   });
 });
 
+beforeEach(() => {
+  setActivePinia(createTestingPinia({ stubActions: false, createSpy: vi.fn }));
+});
+
+afterEach(() => {
+  cleanup();
+});
+
 it('renders', () => {
-  mount(App);
+  render(App);
+});
+
+it('changes color of garden bed button when drawing new bed', async () => {
+  render(App);
+
+  const button = screen.getByRole('button', { name: 'Bed' });
+  const classesBefore = button.classList.value;
+
+  useGardenStore().startDrawBed();
+  await flushPromises();
+
+  const classesAfter = button.classList.value;
+
+  expect(classesBefore).not.toEqual(classesAfter);
+});
+
+it('starts drawing new bed', async () => {
+  render(App);
+
+  const store = useGardenStore();
+  expect(store.newBed).toBeFalsy();
+
+  const button = screen.getByRole('button', { name: 'Bed' });
+  fireEvent.click(button);
+
+  await flushPromises();
+
+  expect(useGardenStore().newBed).toBeTruthy();
 });

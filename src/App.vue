@@ -95,10 +95,20 @@ const gardenStore = useGardenStore();
 <template>
   <PlantParts />
   <div class="grid grid-cols-[200px_1fr_250px] w-full h-full justify-stretch">
-    <div class="p-2 flex flex-grow flex-col items-stretch gap-1 text-sky-200">
+    <div class="p-2 flex flex-grow flex-col items-stretch gap-1 bg-gray-50">
       <ToolBar />
+      <button
+        class="p-1 rounded"
+        :class="
+          (gardenStore.newBed && ['bg-green-400 hover:bg-green-500']) || [
+            'bg-green-200 hover:bg-green-300',
+          ]
+        "
+        @click.stop="gardenStore.startDrawBed"
+      >
+        Bed
+      </button>
       <PlantCreator />
-      <button @click.stop="gardenStore.startDrawBed">bed</button>
       <ToolSlider
         v-model:value="mapScale.linePhysicalLength"
         label="Map scale"
