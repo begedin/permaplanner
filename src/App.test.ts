@@ -1,4 +1,4 @@
-import { render, screen, cleanup } from '@testing-library/vue';
+import { render, screen, cleanup, fireEvent } from '@testing-library/vue';
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
 import { flushPromises } from '@vue/test-utils';
@@ -43,4 +43,18 @@ it('changes color of garden bed button when drawing new bed', async () => {
   const classesAfter = button.classList.value;
 
   expect(classesBefore).not.toEqual(classesAfter);
+});
+
+it('starts drawing new bed', async () => {
+  render(App);
+
+  const store = useGardenStore();
+  expect(store.newBed).toBeFalsy();
+
+  const button = screen.getByRole('button', { name: 'Bed' });
+  fireEvent.click(button);
+
+  await flushPromises();
+
+  expect(useGardenStore().newBed).toBeTruthy();
 });
