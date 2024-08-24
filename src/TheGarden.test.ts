@@ -13,7 +13,7 @@ beforeEach(() => {
 it('unsets new bed on cancel', async () => {
   const wrapper = mount(TheGarden);
   const store = useGardenStore();
-  store.newBed = { id: 'bed', path: [] };
+  store.newBed = { id: 'bed', path: [], name: 'Bed', plantIds: [] };
   await wrapper.vm.$nextTick();
   await wrapper.findAllComponents(GardenBed).at(-1)?.vm.$emit('cancel');
   expect(store.newBed).toBeUndefined();
