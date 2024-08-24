@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import { onboard } from './helpers';
 
 test('creates a plant', async ({ browser }) => {
@@ -63,11 +63,23 @@ test('creates a plant', async ({ browser }) => {
   });
 });
 
+const createPlant = async (page: Page, name: string) => {
+  await page.getByRole('button', { name: 'Plant Creator' }).click();
+  await page.getByRole('button', { name: 'New' }).click();
+  await page.getByRole('button', { name: 'bg_2' }).click();
+  await page.getByRole('button', { name: 'apple', exact: true }).click();
+  await page.getByLabel('Name').click();
+  await page.getByLabel('Name').fill(name);
+  await page.getByRole('button', { name: 'Create' }).click();
+};
+
 test('creates a bed', async ({ browser }) => {
   const context = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
   const page = await context.newPage();
   await page.goto('');
   await onboard(page);
+  await createPlant(page, 'Test apple');
+  await createPlant(page, 'Test banana');
 
   await page.getByRole('button', { name: 'bed' }).click();
 
@@ -79,12 +91,12 @@ test('creates a bed', async ({ browser }) => {
   await page.keyboard.press('Enter');
 
   await expect(page.locator('[data-main-svg] polygon')).toHaveCount(2); // brush and bed;
-  await expect(page.getByRole('button', { name: 'Bed 0' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'New bed' })).toBeVisible();
 
   const currentPoints = await page.locator('[data-main-svg] polygon').last().getAttribute('points');
 
   // select bed, draw a new stroke, and save
-  await page.getByRole('button', { name: 'Bed 0' }).click();
+  await page.getByRole('button', { name: 'New bed' }).click();
   await page.mouse.move(600, 400);
   await page.mouse.down();
   await page.mouse.move(400, 500, { steps: 10 });
@@ -96,11 +108,19 @@ test('creates a bed', async ({ browser }) => {
     currentPoints,
   );
 
+  // add 2 plants to the bed
+
+  await page.getByRole('button', { name: 'New bed' }).click();
+  await page.getByRole('button', { name: 'Test apple' }).last().click();
+  await page.getByRole('button', { name: 'Test banana' }).last().click();
+  await expect(page.getByTestId('bed-plants').getByTitle('Test apple')).toHaveCount(1);
+  await expect(page.getByTestId('bed-plants').getByTitle('Test banana')).toHaveCount(1);
+
   // shift delete bed
   await page.keyboard.down('Shift');
-  await page.getByRole('button', { name: 'Bed 0' }).click();
+  await page.getByRole('button', { name: 'New bed' }).click();
   await page.keyboard.up('Shift');
 
   await expect(page.locator('[data-main-svg] polygon')).toHaveCount(0); // unselected, so no brush either
-  await expect(page.getByRole('button', { name: 'Bed 0' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'New bed' })).toBeHidden();
 });

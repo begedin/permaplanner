@@ -29,7 +29,12 @@ export type GardenThing = {
   height: number;
 };
 
-export type GardenBed = { id: string; path: { x: number; y: number }[] };
+export type GardenBed = {
+  id: string;
+  name: string;
+  path: { x: number; y: number }[];
+  plantIds: string[];
+};
 
 export const features = [
   'apple',
@@ -77,10 +82,24 @@ export const useGardenStore = defineStore('garden', () => {
   const newFeature = ref<GardenThing>();
 
   const gardenBeds = useStorage<GardenBed[]>('gardenBeds', []);
+
+  const gardenBedsWithPlants = computed(() => {
+    const data = <{ bed: GardenBed; plants: Plant[] }[]>[];
+    gardenBeds.value.forEach((bed) => {
+      data.push({
+        bed,
+        plants: (bed.plantIds || [])
+          .map((id) => plants.value.find((p) => p.id === id))
+          .filter(Boolean) as Plant[],
+      });
+    });
+    return data;
+  });
+
   const newBed = ref<GardenBed>();
   const startDrawBed = () =>
     nextTick(() => {
-      newBed.value = { id: uuid(), path: [] };
+      newBed.value = { id: uuid(), name: 'New bed', path: [], plantIds: [] };
       plant.value = undefined;
     });
 
@@ -111,6 +130,7 @@ export const useGardenStore = defineStore('garden', () => {
     hoveredId,
 
     gardenBeds,
+    gardenBedsWithPlants,
     removeBed,
     newBed,
     editBed,

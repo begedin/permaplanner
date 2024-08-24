@@ -30,7 +30,7 @@ export const useDrawBox = (container: Ref<HTMLElement | SVGElement | undefined>)
     container.value?.addEventListener(
       'mousedown',
       ((e: MouseEvent) => {
-        if (!container.value) {
+        if (!container.value || e.button !== 0) {
           return;
         }
         const svgOffsetX = container.value.getBoundingClientRect().left;
@@ -58,6 +58,10 @@ export const useDrawBox = (container: Ref<HTMLElement | SVGElement | undefined>)
     );
 
     document.addEventListener('mouseup', () => (isDrawing.value = false), {
+      signal: controller.signal,
+    });
+
+    container.value?.addEventListener('mouseleave', () => (isDrawing.value = false), {
       signal: controller.signal,
     });
   });

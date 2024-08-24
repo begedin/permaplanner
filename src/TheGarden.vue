@@ -45,20 +45,12 @@ const addNewBed = (bed: GardenBedType) => {
 // feature drawing
 
 const getNewShape = (plantId: string) => {
-  const x = Math.min(scene.box.x, scene.box.x + scene.box.width);
-  const y = Math.min(scene.box.y, scene.box.y + scene.box.height);
-  const width = Math.abs(scene.box.width);
-  const height = Math.abs(scene.box.height);
+  const x = Math.min(scene.cameraBox.x, scene.cameraBox.x + scene.cameraBox.width);
+  const y = Math.min(scene.cameraBox.y, scene.cameraBox.y + scene.cameraBox.height);
+  const width = Math.abs(scene.cameraBox.width);
+  const height = Math.abs(scene.cameraBox.height);
 
-  return {
-    id: uuidV4(),
-    type: 'plant',
-    plantId,
-    x: (x + camera.x) / camera.scale,
-    y: (y + camera.y) / camera.scale,
-    width: width / camera.scale,
-    height: height / camera.scale,
-  };
+  return { id: uuidV4(), type: 'plant', plantId, x, y, width, height };
 };
 
 const newShape = computed<GardenThing | void>(() => {
@@ -86,8 +78,6 @@ watch(
     :selected="garden.selectedId === bed.id"
     :hovered="garden.hoveredId === bed.id"
     :bed="bed"
-    :mouse-x="(scene.x + camera.x) / camera.scale"
-    :mouse-y="(scene.y + camera.y) / camera.scale"
     :unit-length-px="mapScale.unitLengthPx"
     @cancel="garden.deactivateAll"
     @click.exact="garden.editBed(bed.id)"
@@ -114,8 +104,6 @@ watch(
 
   <GardenBed
     v-if="garden.newBed"
-    :mouse-x="(scene.x + camera.x) / camera.scale"
-    :mouse-y="(scene.y + camera.y) / camera.scale"
     :bed="garden.newBed"
     :unit-length-px="mapScale.unitLengthPx"
     hovered

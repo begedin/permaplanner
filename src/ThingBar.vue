@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import PlantIcon from './PlantIcon.vue';
+import ThingBarBed from './ThingBarBed.vue';
 import { useGardenStore, type GardenThing } from './useGardenStore';
 
 const garden = useGardenStore();
@@ -41,17 +42,10 @@ const setName = (thing: GardenThing, event: Event) => {
       <span v-else>{{ thing.name || plant.name }}</span>
     </button>
     <label>Beds</label>
-    <button
-      v-for="(bed, index) in garden.gardenBeds"
+    <ThingBarBed
+      v-for="bed in garden.gardenBeds"
+      :id="bed.id"
       :key="bed.id"
-      class="flex flex-row gap-1 items-center justify-start hover:bg-emerald-300 transition-colors p-2 rounded text-slate-600"
-      :class="garden.selectedId === bed.id ? 'bg-emerald-500' : 'bg-emerald-200'"
-      @click.exact="garden.selectedId = bed.id"
-      @click.shift="garden.deleteFeature(bed.id)"
-      @mouseenter="garden.hoveredId = bed.id"
-      @mouseleave="garden.hoveredId = undefined"
-    >
-      Bed {{ index }}
-    </button>
+    />
   </div>
 </template>

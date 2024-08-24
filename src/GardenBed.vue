@@ -1,14 +1,13 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref, watch } from 'vue';
-import type { GardenBed } from './useGardenStore';
-import GardenMeasure from './GardenMeasure.vue';
-
 import simplify from 'simplify-js';
 import clipping from 'polygon-clipping';
 
+import type { GardenBed } from './useGardenStore';
+import GardenMeasure from './GardenMeasure.vue';
+import { useSceneStore } from './useSceneStore';
+
 const props = defineProps<{
-  mouseX: number;
-  mouseY: number;
   unitLengthPx: number;
   bed: GardenBed;
   hovered: boolean;
@@ -34,8 +33,8 @@ watch(() => props.bed, resetPath);
 const brushSize = ref(12);
 
 const brush = computed(() => {
-  const x = Math.max(props.mouseX, 0);
-  const y = Math.max(props.mouseY, 0);
+  const x = Math.max(scene.cameraX, 0);
+  const y = Math.max(scene.cameraY, 0);
   const totalPoints = 20;
   const theta = (Math.PI * 2) / totalPoints;
   const points: { x: number; y: number }[] = [];
@@ -65,6 +64,39 @@ const joinPaths = (a: { x: number; y: number }[], b: { x: number; y: number }[])
     : b;
 };
 
+const scene = useSceneStore();
+
+watch(
+  () => scene.isDrawing,
+  (isDrawing) => {
+    if (!props.selected) {
+      return;
+    }
+
+    if (isDrawing) {
+      stroke.value = simplify(joinPaths(stroke.value, brush.value));
+      return;
+    }
+
+    if (!isDrawing) {
+      path.value = simplify(joinPaths(path.value, stroke.value));
+      stroke.value = [];
+      return;
+    }
+  },
+);
+
+watch(
+  () => [scene.cameraX, scene.cameraY],
+  () => {
+    if (!props.selected || !scene.isDrawing) {
+      return;
+    }
+
+    stroke.value = simplify(joinPaths(stroke.value, brush.value));
+  },
+);
+
 watch(
   () => props.selected,
   (selected) => {
@@ -74,39 +106,6 @@ watch(
     }
 
     editModeController = new AbortController();
-
-    document.addEventListener('mousedown', () => {
-      stroke.value = [];
-
-      const controller = new AbortController();
-
-      document.addEventListener(
-        'mousemove',
-        () => {
-          stroke.value = simplify(joinPaths(stroke.value, brush.value));
-        },
-        { signal: controller.signal },
-      );
-
-      document.addEventListener(
-        'mouseup',
-        () => {
-          path.value = simplify(joinPaths(path.value, stroke.value));
-          stroke.value = [];
-          controller.abort();
-        },
-        { signal: controller.signal },
-      );
-
-      document.body.addEventListener(
-        'mouseleave',
-        () => {
-          stroke.value = [];
-          controller.abort();
-        },
-        { signal: controller.signal },
-      );
-    });
 
     document.addEventListener(
       'keydown',

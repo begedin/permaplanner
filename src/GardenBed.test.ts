@@ -1,14 +1,24 @@
 import { mount } from '@vue/test-utils';
-import { expect, it } from 'vitest';
+import { beforeEach, expect, it, vi } from 'vitest';
 import GardenBed from './GardenBed.vue';
+import { setActivePinia } from 'pinia';
+import { createTestingPinia } from '@pinia/testing';
+import { useSceneStore } from './useSceneStore';
+
+beforeEach(() => {
+  setActivePinia(createTestingPinia({ createSpy: vi.fn }));
+});
 
 it('draws a bed', async () => {
+  const scene = useSceneStore();
+  scene.x = 3;
+  scene.y = 4;
+  scene.isDrawing = false;
+
   const wrapper = mount(GardenBed, {
     props: {
-      bed: { id: 'bed', path: [] },
+      bed: { id: 'bed', path: [], plantIds: [], name: 'A bed' },
       unitLengthPx: 5,
-      mouseX: 3,
-      mouseY: 4,
       hovered: false,
       selected: false,
     },
@@ -17,32 +27,41 @@ it('draws a bed', async () => {
 
   await wrapper.setProps({ selected: true });
 
-  document.dispatchEvent(new MouseEvent('mousedown', {}));
-  await wrapper.setProps({ mouseX: 5, mouseY: 6 });
-  document.dispatchEvent(new MouseEvent('mousemove', {}));
-  await wrapper.setProps({ mouseX: 7, mouseY: 8 });
-  document.dispatchEvent(new MouseEvent('mousemove', {}));
-  document.dispatchEvent(new MouseEvent('mouseup', {}));
+  scene.isDrawing = true;
+  await wrapper.vm.$nextTick();
+
+  scene.x = 5;
+  scene.y = 6;
+  await wrapper.vm.$nextTick();
+
+  scene.x = 7;
+  scene.y = 8;
+  await wrapper.vm.$nextTick();
+
+  scene.isDrawing = false;
+  await wrapper.vm.$nextTick();
 
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
 
   expect(wrapper.emitted('update')?.at(0)).toEqual([
     {
       id: 'bed',
+      name: 'A bed',
+      plantIds: [],
       path: [
-        { x: -6.412678195541844, y: 2.2917960675006324 },
-        { x: -4.708203932499369, y: -1.0534230275096768 },
-        { x: 1.2917960675006293, y: -5.412678195541842 },
-        { x: 4.999999999999998, y: -6 },
-        { x: 12.053423027509675, y: -3.708203932499371 },
+        { x: -8.412678195541842, y: 0.29179606750063236 },
+        { x: -6.708203932499369, y: -3.0534230275096768 },
+        { x: -0.7082039324993707, y: -7.412678195541842 },
+        { x: 6.708203932499367, y: -7.412678195541844 },
+        { x: 16.70820393249937, y: 0.9465769724903197 },
         { x: 18.412678195541844, y: 4.291796067500629 },
         { x: 18.412678195541844, y: 11.70820393249937 },
         { x: 16.70820393249937, y: 15.053423027509677 },
         { x: 10.70820393249937, y: 19.412678195541844 },
         { x: 3.291796067500632, y: 19.412678195541844 },
-        { x: -4.708203932499368, y: 13.053423027509677 },
-        { x: -6.412678195541842, y: 9.70820393249937 },
-        { x: -6.412678195541844, y: 2.2917960675006324 },
+        { x: -0.05342302750967676, y: 17.70820393249937 },
+        { x: -8.412678195541842, y: 7.70820393249937 },
+        { x: -8.412678195541842, y: 0.29179606750063236 },
       ],
     },
   ]);
@@ -51,26 +70,26 @@ it('draws a bed', async () => {
 it('cancells drawing a bed', async () => {
   const wrapper = mount(GardenBed, {
     props: {
-      bed: { id: 'bed', path: [] },
+      bed: { id: 'bed', path: [], plantIds: [], name: 'A bed' },
       unitLengthPx: 5,
-      mouseX: 3,
-      mouseY: 4,
       hovered: false,
       selected: false,
     },
     attachTo: document.body,
   });
 
+  const scene = useSceneStore();
+
   await wrapper.setProps({ selected: true });
 
-  document.dispatchEvent(new MouseEvent('mousedown', {}));
-  await wrapper.setProps({ mouseX: 5, mouseY: 6 });
-  document.dispatchEvent(new MouseEvent('mousemove', {}));
-  await wrapper.setProps({ mouseX: 7, mouseY: 8 });
-  document.dispatchEvent(new MouseEvent('mousemove', {}));
-  document.dispatchEvent(new MouseEvent('mouseup', {}));
+  scene.isDrawing = true;
+  scene.x = 5;
+  scene.y = 6;
+  scene.x = 7;
+  scene.y = 8;
 
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  scene.isDrawing = false;
 
   expect(wrapper.emitted('update')).toBeUndefined();
 });
@@ -78,10 +97,8 @@ it('cancells drawing a bed', async () => {
 it('changes brush size', async () => {
   const wrapper = mount(GardenBed, {
     props: {
-      bed: { id: 'bed', path: [] },
+      bed: { id: 'bed', path: [], plantIds: [], name: 'A bed' },
       unitLengthPx: 5,
-      mouseX: 3,
-      mouseY: 4,
       hovered: false,
       selected: true,
     },
@@ -104,31 +121,4 @@ it('changes brush size', async () => {
   await wrapper.vm.$nextTick();
   expect(wrapper.get('polygon').attributes('points')).not.toEqual(pointsAtDefaultSize);
   expect(wrapper.get('polygon').attributes('points')).not.toEqual(pointsAtLargerSize);
-});
-
-it('cancels stroke on mouseleave', async () => {
-  const wrapper = mount(GardenBed, {
-    props: {
-      bed: { id: 'bed', path: [] },
-      unitLengthPx: 5,
-      mouseX: 3,
-      mouseY: 4,
-      hovered: false,
-      selected: true,
-    },
-    attachTo: document.body,
-  });
-
-  const originalBrushPoints = wrapper.get('polygon').attributes('points');
-  expect(originalBrushPoints).toBeDefined();
-
-  document.dispatchEvent(new MouseEvent('mousedown', {}));
-  document.dispatchEvent(new MouseEvent('mousemove', {}));
-  await wrapper.vm.$nextTick();
-
-  expect(wrapper.get('polygon').attributes('points')).not.toEqual(originalBrushPoints);
-
-  document.body.dispatchEvent(new MouseEvent('mouseleave', {}));
-  await wrapper.vm.$nextTick();
-  expect(wrapper.get('polygon').attributes('points')).toEqual(originalBrushPoints);
 });

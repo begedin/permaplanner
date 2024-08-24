@@ -79,7 +79,7 @@ export const useCamera = (
       (e) => {
         const wheelPanController = new AbortController();
 
-        if (e.buttons !== 4) {
+        if (e.button !== 4) {
           return;
         }
 
