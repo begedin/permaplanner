@@ -10,25 +10,25 @@ const props = defineProps<{
   id: string;
 }>();
 
-const bedWithPlants = computed(() =>
-  garden.gardenBedsWithPlants.find(({ bed }) => bed.id === props.id),
+const guildWithPlants = computed(() =>
+  garden.guildsWithPlants.find(({ guild }) => guild.id === props.id),
 );
 
 const setName = (e: Event) => {
-  if (!bedWithPlants.value) {
+  if (!guildWithPlants.value) {
     return;
   }
-  bedWithPlants.value.bed.name = (e.target as HTMLInputElement)?.value || '';
+  guildWithPlants.value.guild.name = (e.target as HTMLInputElement)?.value || '';
 };
 
 const addPlant = (plantId: string) => {
-  bedWithPlants.value?.bed.plantIds.push(plantId);
+  guildWithPlants.value?.guild.plantIds.push(plantId);
 };
-const removePlant = (index: number) => bedWithPlants.value?.bed.plantIds.splice(index, 1);
+const removePlant = (index: number) => guildWithPlants.value?.guild.plantIds.splice(index, 1);
 </script>
 <template>
   <button
-    v-if="bedWithPlants"
+    v-if="guildWithPlants"
     class="flex flex-col gap-1 items-start justify-start hover:bg-emerald-300 transition-colors p-2 rounded text-slate-600"
     :class="garden.selectedId === id ? 'bg-emerald-500' : 'bg-emerald-200'"
     @click.exact="garden.selectedId = id"
@@ -38,7 +38,7 @@ const removePlant = (index: number) => bedWithPlants.value?.bed.plantIds.splice(
   >
     <input
       class="appearance-none bg-transparent border-none focus:outline-none text-slate-600 w-full truncate"
-      :value="bedWithPlants.bed.name"
+      :value="guildWithPlants.guild.name"
       @input="setName"
     />
     <div
@@ -47,7 +47,7 @@ const removePlant = (index: number) => bedWithPlants.value?.bed.plantIds.splice(
     >
       <h3 class="w-full text-left">Plants</h3>
       <div
-        v-for="(plant, index) in bedWithPlants.plants"
+        v-for="(plant, index) in guildWithPlants.plants"
         :key="plant.id"
         class="group grid grid-cols-1 grid-rows-1 p-1 bg-sky-200 h-7 w-7 rounded-md drop-shadow place-items-center"
       >

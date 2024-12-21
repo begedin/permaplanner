@@ -81,7 +81,7 @@ test('creates a bed', async ({ browser }) => {
   await createPlant(page, 'Test apple');
   await createPlant(page, 'Test banana');
 
-  await page.getByRole('button', { name: 'bed' }).click();
+  await page.getByRole('button', { name: 'Guild' }).click();
 
   // draw a single stroke and save
   await page.mouse.move(400, 200);
@@ -91,12 +91,12 @@ test('creates a bed', async ({ browser }) => {
   await page.keyboard.press('Enter');
 
   await expect(page.locator('[data-main-svg] polygon')).toHaveCount(2); // brush and bed;
-  await expect(page.getByRole('button', { name: 'New bed' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'New guild' })).toBeVisible();
 
   const currentPoints = await page.locator('[data-main-svg] polygon').last().getAttribute('points');
 
   // select bed, draw a new stroke, and save
-  await page.getByRole('button', { name: 'New bed' }).click();
+  await page.getByRole('button', { name: 'New guild' }).click();
   await page.mouse.move(600, 400);
   await page.mouse.down();
   await page.mouse.move(400, 500, { steps: 10 });
@@ -110,7 +110,7 @@ test('creates a bed', async ({ browser }) => {
 
   // add 2 plants to the bed
 
-  await page.getByRole('button', { name: 'New bed' }).click();
+  await page.getByRole('button', { name: 'New guild' }).click();
   await page.getByRole('button', { name: 'Test apple' }).last().click();
   await page.getByRole('button', { name: 'Test banana' }).last().click();
   await expect(page.getByTestId('bed-plants').getByTitle('Test apple')).toHaveCount(1);
@@ -118,9 +118,9 @@ test('creates a bed', async ({ browser }) => {
 
   // shift delete bed
   await page.keyboard.down('Shift');
-  await page.getByRole('button', { name: 'New bed' }).click();
+  await page.getByRole('button', { name: 'New guild' }).click();
   await page.keyboard.up('Shift');
 
   await expect(page.locator('[data-main-svg] polygon')).toHaveCount(0); // unselected, so no brush either
-  await expect(page.getByRole('button', { name: 'New bed' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'New guild' })).toBeHidden();
 });

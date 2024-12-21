@@ -8,65 +8,65 @@ beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
 });
 
-describe('startDrawBed', () => {
-  it('sets new bed on next tick', async () => {
+describe('startDrawGuild', () => {
+  it('sets new guild on next tick', async () => {
     const store = useGardenStore();
-    expect(store.newBed).toBeUndefined();
+    expect(store.newGuild).toBeUndefined();
 
-    store.startDrawBed();
-    expect(store.newBed).toBeUndefined();
+    store.startDrawGuild();
+    expect(store.newGuild).toBeUndefined();
 
     await nextTick();
 
-    expect(store.newBed).toBeDefined();
+    expect(store.newGuild).toBeDefined();
   });
 });
 
-describe('editBed', () => {
-  it('sets edited, hovered and selected bed', async () => {
+describe('editGuild', () => {
+  it('sets edited, hovered and selected guild', async () => {
     const store = useGardenStore();
-    store.gardenBeds = [
-      { id: 'bed', path: [], name: 'Bed', plantIds: [] },
-      { id: 'bed2', path: [], name: 'Bed', plantIds: [] },
+    store.guilds = [
+      { id: 'guild', path: [], name: 'Guild', plantIds: [] },
+      { id: 'guild2', path: [], name: 'Guild', plantIds: [] },
     ];
 
-    await store.editBed('bed');
+    await store.editGuild('guild');
 
-    expect(store.hoveredId).toEqual('bed');
-    expect(store.selectedId).toEqual('bed');
+    expect(store.hoveredId).toEqual('guild');
+    expect(store.selectedId).toEqual('guild');
   });
 
-  it('unsets new bed', () => {
+  it('unsets new guild', () => {
     const store = useGardenStore();
-    store.gardenBeds = [{ id: 'bed', path: [], name: 'Bed', plantIds: [] }];
-    store.newBed = { id: 'bed', path: [], name: 'Bed', plantIds: [] };
+    store.guilds = [{ id: 'guild', path: [], name: 'Guild', plantIds: [] }];
+    store.newGuild = { id: 'guild', path: [], name: 'Guild', plantIds: [] };
 
-    store.editBed('bed');
+    store.editGuild('guild');
 
-    expect(store.newBed).toBeUndefined();
+    expect(store.newGuild).toBeUndefined();
   });
 });
 
-describe('removeBed', () => {
-  it('removes bed', () => {
+describe('removeGuild', () => {
+  it('removes guild', () => {
     const store = useGardenStore();
-    store.gardenBeds = [
-      { id: 'bed', path: [], name: 'Bed', plantIds: [] },
-      { id: 'bed2', path: [], name: 'Bed', plantIds: [] },
+    store.guilds = [
+      { id: 'guild', path: [], name: 'Guild', plantIds: [] },
+      { id: 'guild2', path: [], name: 'Guild', plantIds: [] },
     ];
 
-    store.removeBed('bed');
+    store.removeGuild('guild');
 
-    expect(store.gardenBeds).toEqual([{ id: 'bed2', name: 'Bed', path: [], plantIds: [] }]);
+    expect(store.guilds).toEqual([{ id: 'guild2', name: 'Guild', path: [], plantIds: [] }]);
   });
 
-  it('does nothing if bed not found', () => {
+  it('does nothing if guild not found', () => {
     const store = useGardenStore();
-    store.gardenBeds = [{ id: 'bed', path: [], name: 'Bed', plantIds: [] }];
+    store.guilds = [{ id: 'guild', path: [], name: 'Guild', plantIds: [] }];
 
-    store.removeBed('bed2');
+    store.removeGuild('guild2');
 
-    expect(store.gardenBeds).toEqual([{ id: 'bed', name: 'Bed', path: [], plantIds: [] }]);
+    expect(store.guilds).toEqual([{ id: 'guild', name: 'Guild', path: [], plantIds: [] }]);
   });
 });
 

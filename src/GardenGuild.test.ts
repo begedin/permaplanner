@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { beforeEach, expect, it, vi } from 'vitest';
-import GardenBed from './GardenBed.vue';
+import GardenGuild from './GardenGuild.vue';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
 import { useSceneStore } from './useSceneStore';
@@ -15,9 +15,9 @@ it('draws a bed', async () => {
   scene.y = 4;
   scene.isDrawing = false;
 
-  const wrapper = mount(GardenBed, {
+  const wrapper = mount(GardenGuild, {
     props: {
-      bed: { id: 'bed', path: [], plantIds: [], name: 'A bed' },
+      bed: { id: 'guild', path: [], plantIds: [], name: 'A guild' },
       unitLengthPx: 5,
       hovered: false,
       selected: false,
@@ -45,8 +45,8 @@ it('draws a bed', async () => {
 
   expect(wrapper.emitted('update')?.at(0)).toEqual([
     {
-      id: 'bed',
-      name: 'A bed',
+      id: 'guild',
+      name: 'A guild',
       plantIds: [],
       path: [
         { x: -8.412678195541842, y: 0.29179606750063236 },
@@ -68,9 +68,9 @@ it('draws a bed', async () => {
 });
 
 it('cancells drawing a bed', async () => {
-  const wrapper = mount(GardenBed, {
+  const wrapper = mount(GardenGuild, {
     props: {
-      bed: { id: 'bed', path: [], plantIds: [], name: 'A bed' },
+      bed: { id: 'guild', path: [], plantIds: [], name: 'A guild' },
       unitLengthPx: 5,
       hovered: false,
       selected: false,
@@ -95,9 +95,9 @@ it('cancells drawing a bed', async () => {
 });
 
 it('changes brush size', async () => {
-  const wrapper = mount(GardenBed, {
+  const wrapper = mount(GardenGuild, {
     props: {
-      bed: { id: 'bed', path: [], plantIds: [], name: 'A bed' },
+      bed: { id: 'guild', path: [], plantIds: [], name: 'A bed' },
       unitLengthPx: 5,
       hovered: false,
       selected: true,

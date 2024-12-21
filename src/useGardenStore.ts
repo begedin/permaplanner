@@ -29,7 +29,7 @@ export type GardenThing = {
   height: number;
 };
 
-export type GardenBed = {
+export type GardenGuild = {
   id: string;
   name: string;
   path: { x: number; y: number }[];
@@ -57,7 +57,7 @@ export const useGardenStore = defineStore('garden', () => {
 
   const deleteFeature = (id: string) => {
     gardenThings.value = gardenThings.value.filter((thing) => thing.id !== id);
-    gardenBeds.value = gardenBeds.value.filter((bed) => bed.id !== id);
+    guilds.value = guilds.value.filter((guild) => guild.id !== id);
   };
 
   const selectedId = ref<string>();
@@ -81,14 +81,14 @@ export const useGardenStore = defineStore('garden', () => {
 
   const newFeature = ref<GardenThing>();
 
-  const gardenBeds = useStorage<GardenBed[]>('gardenBeds', []);
+  const guilds = useStorage<GardenGuild[]>('guilds', []);
 
-  const gardenBedsWithPlants = computed(() => {
-    const data = <{ bed: GardenBed; plants: Plant[] }[]>[];
-    gardenBeds.value.forEach((bed) => {
+  const guildsWithPlants = computed(() => {
+    const data = <{ guild: GardenGuild; plants: Plant[] }[]>[];
+    guilds.value.forEach((guild) => {
       data.push({
-        bed,
-        plants: (bed.plantIds || [])
+        guild,
+        plants: (guild.plantIds || [])
           .map((id) => plants.value.find((p) => p.id === id))
           .filter(Boolean) as Plant[],
       });
@@ -96,24 +96,24 @@ export const useGardenStore = defineStore('garden', () => {
     return data;
   });
 
-  const newBed = ref<GardenBed>();
-  const startDrawBed = () =>
+  const newGuild = ref<GardenGuild>();
+  const startDrawGuild = () =>
     nextTick(() => {
-      newBed.value = { id: uuid(), name: 'New bed', path: [], plantIds: [] };
+      newGuild.value = { id: uuid(), name: 'New guild', path: [], plantIds: [] };
       plant.value = undefined;
     });
 
-  const editBed = (id: string) => {
-    const bed = gardenBeds.value.find((b) => b.id === id);
-    if (bed) {
-      newBed.value = undefined;
+  const editGuild = (id: string) => {
+    const guild = guilds.value.find((g) => g.id === id);
+    if (guild) {
+      newGuild.value = undefined;
       selectedId.value = id;
       hoveredId.value = id;
     }
   };
 
-  const removeBed = (id: string) => {
-    gardenBeds.value = gardenBeds.value.filter((bed) => bed.id !== id);
+  const removeGuild = (id: string) => {
+    guilds.value = guilds.value.filter((guild) => guild.id !== id);
   };
 
   return {
@@ -129,11 +129,11 @@ export const useGardenStore = defineStore('garden', () => {
     selectedId,
     hoveredId,
 
-    gardenBeds,
-    gardenBedsWithPlants,
-    removeBed,
-    newBed,
-    editBed,
-    startDrawBed,
+    guilds,
+    guildsWithPlants,
+    removeGuild,
+    newGuild,
+    editGuild,
+    startDrawGuild,
   };
 });

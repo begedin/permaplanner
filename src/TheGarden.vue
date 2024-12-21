@@ -2,11 +2,11 @@
 import { computed, onMounted, watch } from 'vue';
 import { v4 as uuidV4 } from 'uuid';
 
-import GardenBed from './GardenBed.vue';
+import GardenGuild from './GardenGuild.vue';
 import GardenFeature from './GardenFeature.vue';
 import {
   useGardenStore,
-  type GardenBed as GardenBedType,
+  type GardenGuild as GardenGuildType,
   type GardenThing,
 } from './useGardenStore';
 import { useCameraStore } from './useCameraStore';
@@ -23,9 +23,9 @@ onMounted(() => {
   });
 });
 
-const updateBed = (bed: GardenBedType) => {
-  const index = garden.gardenBeds.findIndex((b) => b.id === bed.id);
-  garden.gardenBeds[index] = bed;
+const updateGuild = (guild: GardenGuildType) => {
+  const index = garden.guilds.findIndex((g) => g.id === guild.id);
+  garden.guilds[index] = guild;
   garden.selectedId = undefined;
   garden.hoveredId = undefined;
 };
@@ -37,9 +37,9 @@ const mapScale = useMapScaleStore();
 
 // bed drawing
 
-const addNewBed = (bed: GardenBedType) => {
-  garden.gardenBeds.push(bed);
-  garden.newBed = undefined;
+const addNewGuild = (guild: GardenGuildType) => {
+  garden.guilds.push(guild);
+  garden.newGuild = undefined;
 };
 
 // feature drawing
@@ -72,19 +72,19 @@ watch(
 </script>
 
 <template>
-  <GardenBed
-    v-for="bed in garden.gardenBeds"
-    :key="bed.id"
-    :selected="garden.selectedId === bed.id"
-    :hovered="garden.hoveredId === bed.id"
-    :bed="bed"
+  <GardenGuild
+    v-for="guild in garden.guilds"
+    :key="guild.id"
+    :selected="garden.selectedId === guild.id"
+    :hovered="garden.hoveredId === guild.id"
+    :bed="guild"
     :unit-length-px="mapScale.unitLengthPx"
     @cancel="garden.deactivateAll"
-    @click.exact="garden.editBed(bed.id)"
-    @click.shift="garden.removeBed(bed.id)"
-    @mouseenter="garden.hoveredId = bed.id"
+    @click.exact="garden.editGuild(guild.id)"
+    @click.shift="garden.removeGuild(guild.id)"
+    @mouseenter="garden.hoveredId = guild.id"
     @mouseleave="garden.hoveredId = undefined"
-    @update="updateBed"
+    @update="updateGuild"
   />
 
   <GardenFeature
@@ -102,14 +102,14 @@ watch(
     @mouseleave="garden.hoveredId = undefined"
   />
 
-  <GardenBed
-    v-if="garden.newBed"
-    :bed="garden.newBed"
+  <GardenGuild
+    v-if="garden.newGuild"
+    :bed="garden.newGuild"
     :unit-length-px="mapScale.unitLengthPx"
     hovered
     selected
-    @update="addNewBed"
-    @cancel="garden.newBed = undefined"
+    @update="addNewGuild"
+    @cancel="garden.newGuild = undefined"
   />
 
   <GardenFeature

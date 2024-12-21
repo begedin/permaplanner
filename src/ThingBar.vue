@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import PlantIcon from './PlantIcon.vue';
-import ThingBarBed from './ThingBarBed.vue';
+import ThingBarGuild from './ThingBarGuild.vue';
 import { useGardenStore, type GardenThing } from './useGardenStore';
 
 const garden = useGardenStore();
@@ -41,11 +41,11 @@ const setName = (thing: GardenThing, event: Event) => {
       />
       <span v-else>{{ thing.name || plant.name }}</span>
     </button>
-    <label>Beds</label>
-    <ThingBarBed
-      v-for="bed in garden.gardenBeds"
-      :id="bed.id"
-      :key="bed.id"
+    <label>Guilds</label>
+    <ThingBarGuild
+      v-for="guild in garden.guilds"
+      :id="guild.id"
+      :key="guild.id"
     />
   </div>
 </template>

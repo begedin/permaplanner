@@ -31,13 +31,13 @@ it('renders', () => {
   render(App);
 });
 
-it('changes color of garden bed button when drawing new bed', async () => {
+it('changes color of garden bed button when drawing new guild', async () => {
   render(App);
 
-  const button = screen.getByRole('button', { name: 'Bed' });
+  const button = screen.getByRole('button', { name: 'Guild' });
   const classesBefore = button.classList.value;
 
-  useGardenStore().startDrawBed();
+  useGardenStore().startDrawGuild();
   await flushPromises();
 
   const classesAfter = button.classList.value;
@@ -45,16 +45,16 @@ it('changes color of garden bed button when drawing new bed', async () => {
   expect(classesBefore).not.toEqual(classesAfter);
 });
 
-it('starts drawing new bed', async () => {
+it('starts drawing new guild', async () => {
   render(App);
 
   const store = useGardenStore();
-  expect(store.newBed).toBeFalsy();
+  expect(store.newGuild).toBeFalsy();
 
-  const button = screen.getByRole('button', { name: 'Bed' });
+  const button = screen.getByRole('button', { name: 'Guild' });
   fireEvent.click(button);
 
   await flushPromises();
 
-  expect(useGardenStore().newBed).toBeTruthy();
+  expect(useGardenStore().newGuild).toBeTruthy();
 });

@@ -100,13 +100,13 @@ const gardenStore = useGardenStore();
       <button
         class="p-1 rounded"
         :class="
-          (gardenStore.newBed && ['bg-green-400 hover:bg-green-500']) || [
+          (gardenStore.newGuild && ['bg-green-400 hover:bg-green-500']) || [
             'bg-green-200 hover:bg-green-300',
           ]
         "
-        @click.stop="gardenStore.startDrawBed"
+        @click.stop="gardenStore.startDrawGuild"
       >
-        Bed
+        Guild
       </button>
       <PlantCreator />
       <ToolSlider

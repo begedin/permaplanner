@@ -3,18 +3,18 @@ import { beforeEach, expect, it, vi } from 'vitest';
 import TheGarden from './TheGarden.vue';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
-import GardenBed from './GardenBed.vue';
+import GardenGuild from './GardenGuild.vue';
 import { useGardenStore } from './useGardenStore';
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn }));
 });
 
-it('unsets new bed on cancel', async () => {
+it('unsets new guild on cancel', async () => {
   const wrapper = mount(TheGarden);
   const store = useGardenStore();
-  store.newBed = { id: 'bed', path: [], name: 'Bed', plantIds: [] };
+  store.newGuild = { id: 'guild', path: [], name: 'Guild', plantIds: [] };
   await wrapper.vm.$nextTick();
-  await wrapper.findAllComponents(GardenBed).at(-1)?.vm.$emit('cancel');
-  expect(store.newBed).toBeUndefined();
+  await wrapper.findAllComponents(GardenGuild).at(-1)?.vm.$emit('cancel');
+  expect(store.newGuild).toBeUndefined();
 });

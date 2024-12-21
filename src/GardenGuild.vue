@@ -3,19 +3,19 @@ import { computed, onMounted, ref, watch } from 'vue';
 import simplify from 'simplify-js';
 import clipping from 'polygon-clipping';
 
-import type { GardenBed } from './useGardenStore';
+import type { GardenGuild } from './useGardenStore';
 import GardenMeasure from './GardenMeasure.vue';
 import { useSceneStore } from './useSceneStore';
 
 const props = defineProps<{
   unitLengthPx: number;
-  bed: GardenBed;
+  bed: GardenGuild;
   hovered: boolean;
   selected: boolean;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update', bed: GardenBed): void;
+  (e: 'update', bed: GardenGuild): void;
   (e: 'cancel' | 'click' | 'mouseenter' | 'mouseleave'): void;
   (e: 'click', evt: MouseEvent): void;
 }>();

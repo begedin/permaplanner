@@ -11,16 +11,16 @@ beforeEach(() => {
 
 afterEach(() => cleanup());
 
-it('renders beds', async () => {
+it('renders guilds', async () => {
   const store = useGardenStore();
-  store.gardenBeds = [
-    { id: 'bed', name: 'A bed', plantIds: [], path: [] },
-    { id: 'bed-2', name: 'Another bed', plantIds: [], path: [] },
+  store.guilds = [
+    { id: 'guild', name: 'A guild', plantIds: [], path: [] },
+    { id: 'guild-2', name: 'Another guild', plantIds: [], path: [] },
   ];
   const wrapper = render(ThingBar);
 
-  expect(await wrapper.findAllByDisplayValue('A bed')).toHaveLength(1);
-  expect(await wrapper.findAllByDisplayValue('Another bed')).toHaveLength(1);
+  expect(await wrapper.findAllByDisplayValue('A guild')).toHaveLength(1);
+  expect(await wrapper.findAllByDisplayValue('Another guild')).toHaveLength(1);
 });
 
 it('renders plants', async () => {
