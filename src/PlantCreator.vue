@@ -66,9 +66,10 @@ const plantInEditing = ref<Plant>({
   >
     <div class="bg-white p-4 grid grid-flow-col items-start gap-8 rounded-md">
       <div class="flex flex-col gap-1">
-        <button
+        <div
           v-for="plant in garden.plants"
           :key="plant.name"
+          role="button"
           class="flex flex-row items-center gap-1 bg-slate-200 rounded-md p-1 hover:bg-slate-300 text-slate-900"
           :class="{ 'bg-slate-400': plant.id === plantInEditing.id }"
           :title="plant.name"
@@ -85,7 +86,7 @@ const plantInEditing = ref<Plant>({
           >
             🗑️
           </button>
-        </button>
+        </div>
         <button
           class="flex flex-row items-center gap-1 bg-slate-200 rounded-md p-1 hover:bg-slate-300 text-slate-900"
           :class="{ 'bg-slate-400': isNew }"

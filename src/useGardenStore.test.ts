@@ -26,8 +26,8 @@ describe('editBed', () => {
   it('sets edited, hovered and selected bed', async () => {
     const store = useGardenStore();
     store.gardenBeds = [
-      { id: 'bed', path: [] },
-      { id: 'bed2', path: [] },
+      { id: 'bed', path: [], name: 'Bed', plantIds: [] },
+      { id: 'bed2', path: [], name: 'Bed', plantIds: [] },
     ];
 
     await store.editBed('bed');
@@ -38,8 +38,8 @@ describe('editBed', () => {
 
   it('unsets new bed', () => {
     const store = useGardenStore();
-    store.gardenBeds = [{ id: 'bed', path: [] }];
-    store.newBed = { id: 'bed', path: [] };
+    store.gardenBeds = [{ id: 'bed', path: [], name: 'Bed', plantIds: [] }];
+    store.newBed = { id: 'bed', path: [], name: 'Bed', plantIds: [] };
 
     store.editBed('bed');
 
@@ -51,22 +51,22 @@ describe('removeBed', () => {
   it('removes bed', () => {
     const store = useGardenStore();
     store.gardenBeds = [
-      { id: 'bed', path: [] },
-      { id: 'bed2', path: [] },
+      { id: 'bed', path: [], name: 'Bed', plantIds: [] },
+      { id: 'bed2', path: [], name: 'Bed', plantIds: [] },
     ];
 
     store.removeBed('bed');
 
-    expect(store.gardenBeds).toEqual([{ id: 'bed2', path: [] }]);
+    expect(store.gardenBeds).toEqual([{ id: 'bed2', name: 'Bed', path: [], plantIds: [] }]);
   });
 
   it('does nothing if bed not found', () => {
     const store = useGardenStore();
-    store.gardenBeds = [{ id: 'bed', path: [] }];
+    store.gardenBeds = [{ id: 'bed', path: [], name: 'Bed', plantIds: [] }];
 
     store.removeBed('bed2');
 
-    expect(store.gardenBeds).toEqual([{ id: 'bed', path: [] }]);
+    expect(store.gardenBeds).toEqual([{ id: 'bed', name: 'Bed', path: [], plantIds: [] }]);
   });
 });
 
