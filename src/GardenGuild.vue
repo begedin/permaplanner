@@ -3,32 +3,32 @@ import { computed, onMounted, ref, watch } from 'vue';
 import simplify from 'simplify-js';
 import clipping from 'polygon-clipping';
 
-import type { GardenGuild } from './useGardenStore';
+import type { Guild } from './useGardenStore';
 import GardenMeasure from './GardenMeasure.vue';
 import { useSceneStore } from './useSceneStore';
 
 const props = defineProps<{
   unitLengthPx: number;
-  bed: GardenGuild;
+  guild: Guild;
   hovered: boolean;
   selected: boolean;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update', bed: GardenGuild): void;
+  (e: 'update', guild: Guild): void;
   (e: 'cancel' | 'click' | 'mouseenter' | 'mouseleave'): void;
   (e: 'click', evt: MouseEvent): void;
 }>();
 
 const resetPath = () => {
-  path.value = props.bed.path;
+  path.value = props.guild.path;
 };
 
 onMounted(resetPath);
 
 const path = ref<{ x: number; y: number }[]>([]);
 
-watch(() => props.bed, resetPath);
+watch(() => props.guild, resetPath);
 
 const brushSize = ref(12);
 
@@ -113,7 +113,7 @@ watch(
         if (e.key === 'Enter') {
           e.preventDefault();
           editModeController.abort();
-          emit('update', { ...props.bed, path: path.value });
+          emit('update', { ...props.guild, path: path.value });
         }
 
         if (e.key === 'Escape') {

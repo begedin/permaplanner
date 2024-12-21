@@ -29,7 +29,7 @@ export type GardenThing = {
   height: number;
 };
 
-export type GardenGuild = {
+export type Guild = {
   id: string;
   name: string;
   path: { x: number; y: number }[];
@@ -81,10 +81,10 @@ export const useGardenStore = defineStore('garden', () => {
 
   const newFeature = ref<GardenThing>();
 
-  const guilds = useStorage<GardenGuild[]>('guilds', []);
+  const guilds = useStorage<Guild[]>('guilds', []);
 
   const guildsWithPlants = computed(() => {
-    const data = <{ guild: GardenGuild; plants: Plant[] }[]>[];
+    const data = <{ guild: Guild; plants: Plant[] }[]>[];
     guilds.value.forEach((guild) => {
       data.push({
         guild,
@@ -96,7 +96,7 @@ export const useGardenStore = defineStore('garden', () => {
     return data;
   });
 
-  const newGuild = ref<GardenGuild>();
+  const newGuild = ref<Guild>();
   const startDrawGuild = () =>
     nextTick(() => {
       newGuild.value = { id: uuid(), name: 'New guild', path: [], plantIds: [] };

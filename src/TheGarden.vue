@@ -4,11 +4,7 @@ import { v4 as uuidV4 } from 'uuid';
 
 import GardenGuild from './GardenGuild.vue';
 import GardenFeature from './GardenFeature.vue';
-import {
-  useGardenStore,
-  type GardenGuild as GardenGuildType,
-  type GardenThing,
-} from './useGardenStore';
+import { useGardenStore, type Guild, type GardenThing } from './useGardenStore';
 import { useCameraStore } from './useCameraStore';
 import { useSceneStore } from './useSceneStore';
 import { useMapScaleStore } from './useMapScaleStore';
@@ -23,7 +19,7 @@ onMounted(() => {
   });
 });
 
-const updateGuild = (guild: GardenGuildType) => {
+const updateGuild = (guild: Guild) => {
   const index = garden.guilds.findIndex((g) => g.id === guild.id);
   garden.guilds[index] = guild;
   garden.selectedId = undefined;
@@ -37,7 +33,7 @@ const mapScale = useMapScaleStore();
 
 // bed drawing
 
-const addNewGuild = (guild: GardenGuildType) => {
+const addNewGuild = (guild: Guild) => {
   garden.guilds.push(guild);
   garden.newGuild = undefined;
 };
@@ -77,7 +73,7 @@ watch(
     :key="guild.id"
     :selected="garden.selectedId === guild.id"
     :hovered="garden.hoveredId === guild.id"
-    :bed="guild"
+    :guild="guild"
     :unit-length-px="mapScale.unitLengthPx"
     @cancel="garden.deactivateAll"
     @click.exact="garden.editGuild(guild.id)"
@@ -104,7 +100,7 @@ watch(
 
   <GardenGuild
     v-if="garden.newGuild"
-    :bed="garden.newGuild"
+    :guild="garden.newGuild"
     :unit-length-px="mapScale.unitLengthPx"
     hovered
     selected
