@@ -14,8 +14,8 @@ afterEach(() => cleanup());
 it('renders guilds', async () => {
   const store = useGardenStore();
   store.guilds = [
-    { id: 'guild', name: 'A guild', plantIds: [], path: [] },
-    { id: 'guild-2', name: 'Another guild', plantIds: [], path: [] },
+    { id: 'guild', name: 'A guild', plants: [], path: [] },
+    { id: 'guild-2', name: 'Another guild', plants: [], path: [] },
   ];
   const wrapper = render(ThingBar);
 

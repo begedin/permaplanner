@@ -24,7 +24,7 @@ it('adds and removes plants', async () => {
     { id: 'plant', name: 'A plant', background: 'bg_1', features: [] },
     { id: 'plant-2', name: 'Another plant', background: 'bg_2', features: [] },
   ];
-  store.guilds = [{ id: 'guild', name: 'A guild', plantIds: [], path: [] }];
+  store.guilds = [{ id: 'guild', name: 'A guild', plants: [], path: [] }];
   const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });
 
   store.selectedId = 'guild';
@@ -33,17 +33,37 @@ it('adds and removes plants', async () => {
   await fireEvent.click(wrapper.getByRole('button', { name: 'A plant' }));
   await fireEvent.click(wrapper.getByRole('button', { name: 'Another plant' }));
 
-  expect(store.guilds[0].plantIds).toEqual(['plant', 'plant-2']);
+  expect(store.guilds[0].plants).toEqual([
+    expect.objectContaining({
+      id: expect.any(String),
+      plant: { id: 'plant', name: 'A plant', background: 'bg_1', features: [] },
+      x: 0,
+      y: 0,
+    }),
+    expect.objectContaining({
+      id: expect.any(String),
+      plant: { id: 'plant-2', name: 'Another plant', background: 'bg_2', features: [] },
+      x: 0,
+      y: 0,
+    }),
+  ]);
 
   const removeButtons = await within(wrapper.getByTestId('bed-plants')).findAllByRole('button');
   expect(removeButtons).toHaveLength(2);
   await fireEvent.click(removeButtons[0]);
-  expect(store.guilds[0].plantIds).toEqual(['plant-2']);
+  expect(store.guilds[0].plants).toEqual([
+    expect.objectContaining({
+      id: expect.any(String),
+      plant: { id: 'plant-2', name: 'Another plant', background: 'bg_2', features: [] },
+      x: 0,
+      y: 0,
+    }),
+  ]);
 });
 
 it('renames', () => {
   const store = useGardenStore();
-  store.guilds = [{ id: 'guild', name: 'A guild', plantIds: [], path: [] }];
+  store.guilds = [{ id: 'guild', name: 'A guild', plants: [], path: [] }];
   store.selectedId = 'guild';
 
   const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });

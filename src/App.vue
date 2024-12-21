@@ -64,10 +64,7 @@ const center = computed(() => {
   const y = camera.y / camera.scale;
   const width = containerWidth.value / camera.scale;
   const height = containerHeight.value / camera.scale;
-  return {
-    x: x + width / 2,
-    y: y + height / 2,
-  };
+  return { x: x + width / 2, y: y + height / 2 };
 });
 
 const handleKeydown = (e: KeyboardEvent) => {

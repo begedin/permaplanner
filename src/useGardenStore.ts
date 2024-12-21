@@ -33,7 +33,7 @@ export type Guild = {
   id: string;
   name: string;
   path: { x: number; y: number }[];
-  plantIds: string[];
+  plants: { id: string; x: number; y: number; plant: Plant }[];
 };
 
 export const features = [
@@ -83,23 +83,10 @@ export const useGardenStore = defineStore('garden', () => {
 
   const guilds = useStorage<Guild[]>('guilds', []);
 
-  const guildsWithPlants = computed(() => {
-    const data = <{ guild: Guild; plants: Plant[] }[]>[];
-    guilds.value.forEach((guild) => {
-      data.push({
-        guild,
-        plants: (guild.plantIds || [])
-          .map((id) => plants.value.find((p) => p.id === id))
-          .filter(Boolean) as Plant[],
-      });
-    });
-    return data;
-  });
-
   const newGuild = ref<Guild>();
   const startDrawGuild = () =>
     nextTick(() => {
-      newGuild.value = { id: uuid(), name: 'New guild', path: [], plantIds: [] };
+      newGuild.value = { id: uuid(), name: 'New guild', path: [], plants: [] };
       plant.value = undefined;
     });
 
@@ -130,7 +117,6 @@ export const useGardenStore = defineStore('garden', () => {
     hoveredId,
 
     guilds,
-    guildsWithPlants,
     removeGuild,
     newGuild,
     editGuild,
