@@ -61,7 +61,14 @@ watch(
   () => scene.isDrawing,
   (isDrawing) => {
     if (!isDrawing && garden.plant) {
-      garden.gardenThings.push(getNewShape(garden.plant.id));
+      const shape = getNewShape(garden.plant.id);
+      const overlappingGuild = garden.getOverlappingGuild(shape);
+
+      if (!overlappingGuild) {
+        return;
+      }
+
+      overlappingGuild.plants.push({ ...shape, x: shape.x, y: shape.y });
     }
   },
 );
@@ -81,19 +88,20 @@ watch(
     @mouseenter="garden.hoveredId = guild.id"
     @mouseleave="garden.hoveredId = undefined"
     @update="updateGuild"
-  />
+  >
+  </GardenGuild>
 
   <GardenFeature
-    v-for="({ thing, plant }, index) in garden.gardenThingsWithPlants"
+    v-for="thing in garden.allGardenPlants"
     :key="thing.id"
     :thing="thing"
-    :plant="plant"
+    :plant="garden.plantsById[thing.plantId]"
     :active="garden.selectedId === thing.id || garden.hoveredId === thing.id"
     :scale="camera.scale"
     :unit-length-px="mapScale.unitLengthPx"
     @delete="garden.deleteFeature(thing.id)"
     @click="garden.selectedId = thing.id"
-    @update="($event) => (garden.gardenThings[index] = $event)"
+    @update="($event) => garden.updateFeature(thing.guildId, thing.id, $event)"
     @mouseenter="garden.hoveredId = thing.id"
     @mouseleave="garden.hoveredId = undefined"
   />

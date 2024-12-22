@@ -26,8 +26,8 @@ describe('editGuild', () => {
   it('sets edited, hovered and selected guild', async () => {
     const store = useGardenStore();
     store.guilds = [
-      { id: 'guild', path: [], name: 'Guild', plantIds: [] },
-      { id: 'guild2', path: [], name: 'Guild', plantIds: [] },
+      { id: 'guild', path: [], name: 'Guild', plants: [] },
+      { id: 'guild2', path: [], name: 'Guild', plants: [] },
     ];
 
     await store.editGuild('guild');
@@ -38,8 +38,8 @@ describe('editGuild', () => {
 
   it('unsets new guild', () => {
     const store = useGardenStore();
-    store.guilds = [{ id: 'guild', path: [], name: 'Guild', plantIds: [] }];
-    store.newGuild = { id: 'guild', path: [], name: 'Guild', plantIds: [] };
+    store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [] }];
+    store.newGuild = { id: 'guild', path: [], name: 'Guild', plants: [] };
 
     store.editGuild('guild');
 
@@ -51,22 +51,22 @@ describe('removeGuild', () => {
   it('removes guild', () => {
     const store = useGardenStore();
     store.guilds = [
-      { id: 'guild', path: [], name: 'Guild', plantIds: [] },
-      { id: 'guild2', path: [], name: 'Guild', plantIds: [] },
+      { id: 'guild', path: [], name: 'Guild', plants: [] },
+      { id: 'guild2', path: [], name: 'Guild', plants: [] },
     ];
 
     store.removeGuild('guild');
 
-    expect(store.guilds).toEqual([{ id: 'guild2', name: 'Guild', path: [], plantIds: [] }]);
+    expect(store.guilds).toEqual([{ id: 'guild2', name: 'Guild', path: [], plants: [] }]);
   });
 
   it('does nothing if guild not found', () => {
     const store = useGardenStore();
-    store.guilds = [{ id: 'guild', path: [], name: 'Guild', plantIds: [] }];
+    store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [] }];
 
     store.removeGuild('guild2');
 
-    expect(store.guilds).toEqual([{ id: 'guild', name: 'Guild', path: [], plantIds: [] }]);
+    expect(store.guilds).toEqual([{ id: 'guild', name: 'Guild', path: [], plants: [] }]);
   });
 });
 

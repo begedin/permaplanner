@@ -8,7 +8,7 @@ import { useGardenStore } from './useGardenStore';
 import { flushPromises } from '@vue/test-utils';
 
 beforeEach(() => {
-  setActivePinia(createTestingPinia({ createSpy: vi.fn }));
+  setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
 });
 
 afterEach(() => cleanup());
@@ -24,26 +24,37 @@ it('adds and removes plants', async () => {
     { id: 'plant', name: 'A plant', background: 'bg_1', features: [] },
     { id: 'plant-2', name: 'Another plant', background: 'bg_2', features: [] },
   ];
-  store.guilds = [{ id: 'guild', name: 'A guild', plantIds: [], path: [] }];
+  store.guilds = [{ id: 'guild', name: 'A guild', plants: [], path: [] }];
   const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });
 
   store.selectedId = 'guild';
   await flushPromises();
 
-  await fireEvent.click(wrapper.getByRole('button', { name: 'A plant' }));
-  await fireEvent.click(wrapper.getByRole('button', { name: 'Another plant' }));
+  const plantsNotInGuild = wrapper.getByLabelText('Plants not in this guild');
+  await fireEvent.click(within(plantsNotInGuild).getByRole('button', { name: 'A plant' }));
+  await fireEvent.click(within(plantsNotInGuild).getByRole('button', { name: 'Another plant' }));
 
-  expect(store.guilds[0].plantIds).toEqual(['plant', 'plant-2']);
+  expect(store.guilds[0].plants).toEqual([
+    expect.objectContaining({ plantId: 'plant' }),
+    expect.objectContaining({ plantId: 'plant-2' }),
+  ]);
 
-  const removeButtons = await within(wrapper.getByTestId('bed-plants')).findAllByRole('button');
-  expect(removeButtons).toHaveLength(2);
-  await fireEvent.click(removeButtons[0]);
-  expect(store.guilds[0].plantIds).toEqual(['plant-2']);
+  const plantsInGuild = wrapper.getByLabelText('Plants in this guild');
+  const plant1Button = await within(plantsInGuild).findByLabelText('A plant');
+  expect(plant1Button).toBeTruthy();
+
+  const plant2Button = await within(plantsInGuild).findByLabelText('Another plant');
+  expect(plant2Button).toBeTruthy();
+
+  await fireEvent.click(
+    within(plant1Button).getByRole('button', { name: 'Remove plant from bed' }),
+  );
+  expect(store.guilds[0].plants).toEqual([expect.objectContaining({ plantId: 'plant-2' })]);
 });
 
 it('renames', () => {
   const store = useGardenStore();
-  store.guilds = [{ id: 'guild', name: 'A guild', plantIds: [], path: [] }];
+  store.guilds = [{ id: 'guild', name: 'A guild', plants: [], path: [] }];
   store.selectedId = 'guild';
 
   const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });

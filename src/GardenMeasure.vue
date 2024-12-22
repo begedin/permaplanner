@@ -8,7 +8,7 @@ defineProps<{
   <text
     v-if="box.width > 0 && box.height > 0"
     :x="box.x"
-    :y="box.y + box.height + 14"
+    :y="box.y + box.height + 18"
     fill="red"
   >
     {{ `${(box.width / unitLengthPx).toFixed(2)}x${(box.height / unitLengthPx).toFixed(2)}` }}

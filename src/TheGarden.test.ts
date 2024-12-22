@@ -13,7 +13,7 @@ beforeEach(() => {
 it('unsets new guild on cancel', async () => {
   const wrapper = mount(TheGarden);
   const store = useGardenStore();
-  store.newGuild = { id: 'guild', path: [], name: 'Guild', plantIds: [] };
+  store.newGuild = { id: 'guild', path: [], name: 'Guild', plants: [] };
   await wrapper.vm.$nextTick();
   await wrapper.findAllComponents(GardenGuild).at(-1)?.vm.$emit('cancel');
   expect(store.newGuild).toBeUndefined();
