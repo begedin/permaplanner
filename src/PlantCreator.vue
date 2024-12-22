@@ -36,7 +36,6 @@ const newPlant = () => {
 
 const remove = (plant: Plant) => {
   garden.plants = garden.plants.filter((p) => p.id !== plant.id);
-  garden.gardenThings = garden.gardenThings.filter((p) => p.plantId !== plant.id);
 };
 
 const isNew = computed(
