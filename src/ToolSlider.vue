@@ -23,7 +23,7 @@ const emit = defineEmits<{ (e: 'update:value', value: number): void }>();
         :step="step"
         :value="value"
         class="flex-grow flex-shrink w-3/4"
-        @input="emit('update:value', parseInt(($event.target as HTMLInputElement).value))"
+        @input="emit('update:value', parseFloat(($event.target as HTMLInputElement).value))"
       />
       <div class="w-8">{{ value }}</div>
     </div>

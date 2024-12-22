@@ -31,8 +31,6 @@ onMounted(() => setupBackgroundImagePaste());
 onBeforeUnmount(() => teardownBackgroundImagePaste());
 watch(bgImageReady, (ready) => ready && fitToViewPort());
 
-const garden = useGardenStore();
-
 const container = ref<SVGElement>();
 
 const { setupCamera, teardownCamera, fitToViewPort } = useCamera(
@@ -68,9 +66,7 @@ const center = computed(() => {
 });
 
 const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'z' && e.metaKey) {
-    garden.gardenThings.pop();
-  }
+  console.log('key', e.key);
 };
 
 onMounted(() => document.addEventListener('keydown', handleKeydown));

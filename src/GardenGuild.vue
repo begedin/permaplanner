@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import simplify from 'simplify-js';
 import clipping from 'polygon-clipping';
 
-import type { Guild } from './useGardenStore';
+import { type Guild } from './useGardenStore';
 import GardenMeasure from './GardenMeasure.vue';
 import { useSceneStore } from './useSceneStore';
 
@@ -24,15 +24,17 @@ const resetPath = () => {
   path.value = props.guild.path;
 };
 
-onMounted(resetPath);
-
 const path = ref<{ x: number; y: number }[]>([]);
 
-watch(() => props.guild, resetPath);
+watch(() => props.guild, resetPath, { immediate: true });
 
 const brushSize = ref(12);
 
 const brush = computed(() => {
+  if (!props.selected) {
+    return [];
+  }
+
   const x = Math.max(scene.cameraX, 0);
   const y = Math.max(scene.cameraY, 0);
   const totalPoints = 20;
@@ -89,11 +91,13 @@ watch(
 watch(
   () => [scene.cameraX, scene.cameraY],
   () => {
-    if (!props.selected || !scene.isDrawing) {
+    if (!props.selected) {
       return;
     }
 
-    stroke.value = simplify(joinPaths(stroke.value, brush.value));
+    if (scene.isDrawing) {
+      stroke.value = simplify(joinPaths(stroke.value, brush.value));
+    }
   },
 );
 
@@ -172,7 +176,7 @@ const box = computed(() => {
       selected ? 'rgba(0, 100, 0, 0.6)' : hovered ? 'rgba(0, 100, 0, 0.3)' : 'rgba(0, 100, 0, 0.2)'
     "
     class="pointer-events-fill"
-    @mouseenter="emit('mouseenter')"
+    @mouseenter.="emit('mouseenter')"
     @mouseleave="emit('mouseleave')"
     @click="emit('click', $event)"
   />
@@ -181,4 +185,6 @@ const box = computed(() => {
     :unit-length-px="unitLengthPx"
     :box="box"
   />
+
+  <slot name="features" />
 </template>
