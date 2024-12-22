@@ -6,6 +6,7 @@ import clipping from 'polygon-clipping';
 import { type Guild } from './useGardenStore';
 import GardenMeasure from './GardenMeasure.vue';
 import { useSceneStore } from './useSceneStore';
+import { useMagicKeys } from '@vueuse/core';
 
 const props = defineProps<{
   unitLengthPx: number;
@@ -66,7 +67,21 @@ const joinPaths = (a: { x: number; y: number }[], b: { x: number; y: number }[])
     : b;
 };
 
+const subtractPaths = (a: { x: number; y: number }[], b: { x: number; y: number }[]) => {
+  return a.length > 0
+    ? clipping
+        .difference(
+          [a.map(({ x, y }) => [x, y] as [number, number])],
+          [b.map(({ x, y }) => [x, y] as [number, number])],
+        )
+        .map((polygon) => polygon.map((path) => path.map(([x, y]) => ({ x, y }))))
+        .flat()
+        .flat()
+    : a;
+};
+
 const scene = useSceneStore();
+const { meta } = useMagicKeys();
 
 watch(
   () => scene.isDrawing,
@@ -81,7 +96,9 @@ watch(
     }
 
     if (!isDrawing) {
-      path.value = simplify(joinPaths(path.value, stroke.value));
+      path.value = simplify(
+        meta.value ? subtractPaths(path.value, stroke.value) : joinPaths(path.value, stroke.value),
+      );
       stroke.value = [];
       return;
     }

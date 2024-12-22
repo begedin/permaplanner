@@ -65,13 +65,6 @@ const center = computed(() => {
   return { x: x + width / 2, y: y + height / 2 };
 });
 
-const handleKeydown = (e: KeyboardEvent) => {
-  console.log('key', e.key);
-};
-
-onMounted(() => document.addEventListener('keydown', handleKeydown));
-onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown));
-
 const bgImage = ref<SVGImageElement>();
 
 const { startMoveScaleStart, startMoveScaleEnd, onboardingState } = useMapScale();
