@@ -180,6 +180,14 @@ export const useGardenStore = defineStore('garden', () => {
     });
   };
 
+  const selectGuild = (id: string) => {
+    selectedId.value = id;
+    hoveredId.value = id;
+    newGuild.value = undefined;
+    newFeature.value = undefined;
+    plant.value = undefined;
+  };
+
   return {
     plants,
     plant,
@@ -203,5 +211,6 @@ export const useGardenStore = defineStore('garden', () => {
 
     addPlantToGuild,
     getOverlappingGuild,
+    selectGuild,
   };
 });

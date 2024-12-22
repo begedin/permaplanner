@@ -28,7 +28,7 @@ const removePlant = (index: number) => guild.value?.plants.splice(index, 1);
     class="flex flex-col gap-1 items-start justify-start hover:bg-emerald-300 transition-colors p-2 rounded text-slate-600"
     :aria-label="guild.name"
     :class="garden.selectedId === id ? 'bg-emerald-500' : 'bg-emerald-200'"
-    @click.exact="garden.selectedId = id"
+    @click.exact="garden.selectGuild(id)"
     @click.shift="garden.deleteFeature(id)"
     @mouseenter="garden.hoveredId = id"
     @mouseleave="garden.hoveredId = undefined"
