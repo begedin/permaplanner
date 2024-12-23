@@ -52,16 +52,16 @@ test('onboards', async ({ browser }) => {
     throw new Error('No grid pattern');
   }
 
-  await expect(await gridPattern.getAttribute('width')).toMatch(/2\.346/);
-  await expect(await gridPattern.getAttribute('height')).toMatch(/2\.346/);
+  await expect(await gridPattern.getAttribute('width')).toMatch(/2\.33/);
+  await expect(await gridPattern.getAttribute('height')).toMatch(/2\.33/);
 
   await expect(page.locator('line')).toBeAttached();
   const line = await page.locator('line').elementHandle();
   if (!line) {
     throw new Error('No line element');
   }
-  await expect(await line.getAttribute('x1')).toMatch(/10\.666/);
-  await expect(await line.getAttribute('y1')).toMatch(/10\.666/);
-  await expect(await line.getAttribute('x2')).toMatch(/245\.33/);
-  await expect(await line.getAttribute('y2')).toMatch(/10\.666/);
+  await expect(await line.getAttribute('x1')).toMatch(/11\.16/);
+  await expect(await line.getAttribute('y1')).toMatch(/11\.16/);
+  await expect(await line.getAttribute('x2')).toMatch(/244\.46/);
+  await expect(await line.getAttribute('y2')).toMatch(/11\.16/);
 });

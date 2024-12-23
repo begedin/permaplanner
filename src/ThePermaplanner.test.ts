@@ -4,7 +4,7 @@ import { setActivePinia } from 'pinia';
 import { flushPromises } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 
-import App from './App.vue';
+import ThePermaplanner from './ThePermaplanner.vue';
 import { useGardenStore } from './useGardenStore';
 
 beforeAll(() => {
@@ -27,12 +27,8 @@ afterEach(() => {
   cleanup();
 });
 
-it('renders', () => {
-  render(App);
-});
-
 it('changes color of garden bed button when drawing new guild', async () => {
-  render(App);
+  render(ThePermaplanner);
 
   const button = screen.getByRole('button', { name: 'Guild' });
   const classesBefore = button.classList.value;
@@ -46,7 +42,7 @@ it('changes color of garden bed button when drawing new guild', async () => {
 });
 
 it('starts drawing new guild', async () => {
-  render(App);
+  render(ThePermaplanner);
 
   const store = useGardenStore();
   expect(store.newGuild).toBeFalsy();

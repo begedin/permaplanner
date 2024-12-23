@@ -3,11 +3,11 @@ import { computed, ref, watch } from 'vue';
 import MovableResizable from './MovableResizable.vue';
 import { useDrawBox } from './useDrawBox';
 import type { Feature, Plant } from './useGardenStore';
+import { useElementSize } from '@vueuse/core';
 
 const props = defineProps<{
   plant: Plant;
   currentFeature: Feature;
-  scale: number;
 }>();
 
 const emit = defineEmits<{ (e: 'update:plant', plant: Plant): void }>();
@@ -24,6 +24,9 @@ const createNewFeature = () => {
 
 const container = ref<SVGElement>();
 
+const { width } = useElementSize(container);
+const scale = computed(() => 100 / width.value);
+
 const { box, isDrawing } = useDrawBox(container);
 watch(isDrawing, (isDrawing) => {
   if (!isDrawing) {
@@ -32,10 +35,10 @@ watch(isDrawing, (isDrawing) => {
 });
 
 const newPart = computed(() => ({
-  x: box.value.x * props.scale,
-  y: box.value.y * props.scale,
-  width: box.value.width * props.scale,
-  height: box.value.height * props.scale,
+  x: box.value.x * scale.value,
+  y: box.value.y * scale.value,
+  width: box.value.width * scale.value,
+  height: box.value.height * scale.value,
   feature: props.currentFeature,
 }));
 
@@ -64,6 +67,10 @@ const removeFeature = (index: number) => {
     features: newFeatures,
   });
 };
+
+watch(box, () => {
+  console.log(box.value);
+});
 </script>
 <template>
   <svg
