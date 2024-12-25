@@ -14,6 +14,32 @@ const getPathBounds = (path: { x: number; y: number }[]) => {
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 };
 
+const GuildFunction = {
+  nitrogen_fixer: 'nitrogen_fixer',
+  dynamic_accumulator: 'dynamic_accumulator',
+  pollinator_attractor: 'pollinator_attractor',
+  pest_repellent: 'pest_repellent',
+  ground_cover: 'ground_cover',
+  wildfire_suppressor: 'wildfire_suppressor',
+  mulcher: 'mulcher',
+  edible: 'edible',
+  medicinal: 'medicinal',
+} as const;
+
+type GuildFunction = (typeof GuildFunction)[keyof typeof GuildFunction];
+
+const GuildLayer = {
+  overstory: 'overstory',
+  understory: 'understory',
+  shrub: 'shrub',
+  ground_cover: 'ground_cover',
+  vine: 'vine',
+  herb: 'herb',
+  root: 'root',
+} as const;
+
+type GuildLayer = (typeof GuildLayer)[keyof typeof GuildLayer];
+
 export type Plant = {
   id: string;
   name: string;
@@ -25,6 +51,8 @@ export type Plant = {
     width: number;
     height: number;
   }[];
+  functions: GuildFunction[];
+  layers: GuildLayer[];
 };
 
 export type GardenThing = {

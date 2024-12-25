@@ -28,6 +28,8 @@ const newPlant = () => {
     background: 'bg_1',
     features: [],
     name: '',
+    functions: [],
+    layers: [],
   };
 };
 
@@ -46,6 +48,8 @@ const plantInEditing = ref<Plant>({
   background: 'bg_1',
   features: [],
   name: '',
+  functions: [],
+  layers: [],
 });
 </script>
 <template>

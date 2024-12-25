@@ -11,6 +11,8 @@ it('renders without crashing', () => {
         name: 'Base 1',
         background: 'bg_1',
         features: [],
+        functions: [],
+        layers: [],
       },
       scale: 1,
       currentFeature: 'apple',

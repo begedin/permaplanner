@@ -21,8 +21,15 @@ it('renders nothing if no bed in store', async () => {
 it('adds and removes plants', async () => {
   const store = useGardenStore();
   store.plants = [
-    { id: 'plant', name: 'A plant', background: 'bg_1', features: [] },
-    { id: 'plant-2', name: 'Another plant', background: 'bg_2', features: [] },
+    { id: 'plant', name: 'A plant', background: 'bg_1', features: [], functions: [], layers: [] },
+    {
+      id: 'plant-2',
+      name: 'Another plant',
+      background: 'bg_2',
+      features: [],
+      functions: [],
+      layers: [],
+    },
   ];
   store.guilds = [{ id: 'guild', name: 'A guild', plants: [], path: [] }];
   const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });

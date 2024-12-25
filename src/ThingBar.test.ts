@@ -14,8 +14,15 @@ afterEach(() => cleanup());
 it('renders guilds', async () => {
   const store = useGardenStore();
   store.plants = [
-    { id: 'plant-1', name: 'A plant', background: 'bg_1', features: [] },
-    { id: 'plant-2', name: 'Another plant', background: 'bg_2', features: [] },
+    { id: 'plant-1', name: 'A plant', background: 'bg_1', features: [], functions: [], layers: [] },
+    {
+      id: 'plant-2',
+      name: 'Another plant',
+      background: 'bg_2',
+      features: [],
+      functions: [],
+      layers: [],
+    },
   ];
   store.guilds = [
     {
