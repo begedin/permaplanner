@@ -37,7 +37,7 @@ export const GuildFunction = {
 
 export type GuildFunction = (typeof GuildFunction)[keyof typeof GuildFunction];
 
-const GuildLayer = {
+export const GuildLayer = {
   overstory: 'overstory',
   understory: 'understory',
   shrub: 'shrub',
@@ -47,7 +47,7 @@ const GuildLayer = {
   root: 'root',
 } as const;
 
-type GuildLayer = (typeof GuildLayer)[keyof typeof GuildLayer];
+export type GuildLayer = (typeof GuildLayer)[keyof typeof GuildLayer];
 
 export type Plant = {
   id: string;

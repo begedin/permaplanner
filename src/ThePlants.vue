@@ -6,6 +6,7 @@ import PlantCanvas from './PlantCanvas.vue';
 import PlantFeatures from './PlantFeatures.vue';
 import PlantBases from './PlantBases.vue';
 import PlantFunctions from './PlantFunctions.vue';
+import PlantLayers from './PlantLayers.vue';
 import PlantIcon from './PlantIcon.vue';
 
 const garden = useGardenStore();
@@ -112,6 +113,7 @@ const plantInEditing = ref<Plant>({
       <PlantBases v-model:value="plantInEditing.background" />
       <PlantFeatures v-model:value="currentFeature" />
       <PlantFunctions v-model:value="plantInEditing.functions" />
+      <PlantLayers v-model:value="plantInEditing.layers" />
       <label class="flex flex-col gap-1">
         <span class="text-slate-800">Name</span>
         <input
