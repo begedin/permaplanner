@@ -4,8 +4,8 @@ import './main.css';
 import { createApp } from 'vue';
 
 import App from './App.vue';
-import ThePermaplanner from './ThePermaplanner.vue';
-import ThePlantCreator from './ThePlantCreator.vue';
+import TheGarden from './TheGarden.vue';
+import ThePlants from './ThePlants.vue';
 import { createPinia } from 'pinia';
 
 const app = createApp(App);
@@ -14,8 +14,9 @@ app.use(
   createRouter({
     history: createWebHistory(),
     routes: [
-      { path: '/', component: ThePermaplanner },
-      { path: '/plants', component: ThePlantCreator },
+      { path: '/', redirect: '/garden' },
+      { path: '/garden', component: TheGarden },
+      { path: '/plants', component: ThePlants },
     ],
   }),
 );

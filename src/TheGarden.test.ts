@@ -1,13 +1,59 @@
-import { mount } from '@vue/test-utils';
-import { beforeEach, expect, it, vi } from 'vitest';
-import TheGarden from './TheGarden.vue';
+import { render, screen, cleanup, fireEvent } from '@testing-library/vue';
+import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
+import { flushPromises, mount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
-import GardenGuild from './GardenGuild.vue';
+
+import TheGarden from './TheGarden.vue';
 import { useGardenStore } from './useGardenStore';
+import GardenGuild from './GardenGuild.vue';
+
+beforeAll(() => {
+  Object.defineProperties(window.navigator, {
+    storage: {
+      get: () => ({ persist: vi.fn }),
+    },
+  });
+
+  Object.defineProperty(global, 'indexedDB', {
+    get: () => ({ open: vi.fn().mockReturnValue({ transaction: vi.fn() }) }),
+  });
+});
 
 beforeEach(() => {
-  setActivePinia(createTestingPinia({ createSpy: vi.fn }));
+  setActivePinia(createTestingPinia({ stubActions: false, createSpy: vi.fn }));
+});
+
+afterEach(() => {
+  cleanup();
+});
+
+it('changes color of garden bed button when drawing new guild', async () => {
+  render(TheGarden);
+
+  const button = screen.getByRole('button', { name: 'Guild' });
+  const classesBefore = button.classList.value;
+
+  useGardenStore().startDrawGuild();
+  await flushPromises();
+
+  const classesAfter = button.classList.value;
+
+  expect(classesBefore).not.toEqual(classesAfter);
+});
+
+it('starts drawing new guild', async () => {
+  render(TheGarden);
+
+  const store = useGardenStore();
+  expect(store.newGuild).toBeFalsy();
+
+  const button = screen.getByRole('button', { name: 'Guild' });
+  fireEvent.click(button);
+
+  await flushPromises();
+
+  expect(useGardenStore().newGuild).toBeTruthy();
 });
 
 it('unsets new guild on cancel', async () => {
