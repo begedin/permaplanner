@@ -1,10 +1,10 @@
 import { mount } from '@vue/test-utils';
 import { it } from 'vitest';
 
-import PlantCreatorCanvas from './PlantCreatorCanvas.vue';
+import PlantCanvas from './PlantCanvas.vue';
 
 it('renders without crashing', () => {
-  mount(PlantCreatorCanvas, {
+  mount(PlantCanvas, {
     props: {
       plant: {
         id: '1',

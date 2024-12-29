@@ -2,9 +2,10 @@
 import { computed, ref } from 'vue';
 import { v4 as uuidV4 } from 'uuid';
 import { useGardenStore, type Plant, type Feature } from './useGardenStore';
-import PlantCreatorCanvas from './PlantCreatorCanvas.vue';
-import PlantCreatorFeatures from './PlantCreatorFeatures.vue';
-import PlantCreatorBases from './PlantCreatorBases.vue';
+import PlantCanvas from './PlantCanvas.vue';
+import PlantFeatures from './PlantFeatures.vue';
+import PlantBases from './PlantBases.vue';
+import PlantFunctions from './PlantFunctions.vue';
 import PlantIcon from './PlantIcon.vue';
 
 const garden = useGardenStore();
@@ -101,15 +102,16 @@ const plantInEditing = ref<Plant>({
       </button>
     </div>
     <div>
-      <PlantCreatorCanvas
+      <PlantCanvas
         v-model:plant="plantInEditing"
         :current-feature="currentFeature"
         :scale="1"
       />
     </div>
     <div class="flex flex-col gap-2 p-2">
-      <PlantCreatorBases v-model:value="plantInEditing.background" />
-      <PlantCreatorFeatures v-model:value="currentFeature" />
+      <PlantBases v-model:value="plantInEditing.background" />
+      <PlantFeatures v-model:value="currentFeature" />
+      <PlantFunctions v-model:value="plantInEditing.functions" />
       <label class="flex flex-col gap-1">
         <span class="text-slate-800">Name</span>
         <input

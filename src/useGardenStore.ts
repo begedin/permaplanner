@@ -3,7 +3,16 @@ import { defineStore } from 'pinia';
 import { computed, nextTick, ref } from 'vue';
 import { uuid } from './utils';
 
-export const baseLayers = ['bg_1', 'bg_2', 'bg_3', 'bg_4', 'bg_5', 'bg_6', 'bg_7', 'bg_8'] as const;
+export const baseLayers = [
+  'bg_1',
+  'bg_2',
+  'bg_3',
+  'bg_4',
+  'bg_5',
+  'bg_6',
+  'bg_7',
+  'bg_8',
+] as const;
 export type BaseLayer = (typeof baseLayers)[number];
 
 const getPathBounds = (path: { x: number; y: number }[]) => {
@@ -14,7 +23,7 @@ const getPathBounds = (path: { x: number; y: number }[]) => {
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 };
 
-const GuildFunction = {
+export const GuildFunction = {
   nitrogen_fixer: 'nitrogen_fixer',
   dynamic_accumulator: 'dynamic_accumulator',
   pollinator_attractor: 'pollinator_attractor',
@@ -26,7 +35,7 @@ const GuildFunction = {
   medicinal: 'medicinal',
 } as const;
 
-type GuildFunction = (typeof GuildFunction)[keyof typeof GuildFunction];
+export type GuildFunction = (typeof GuildFunction)[keyof typeof GuildFunction];
 
 const GuildLayer = {
   overstory: 'overstory',
@@ -105,12 +114,16 @@ export const useGardenStore = defineStore('garden', () => {
   const plants = useStorage<Plant[]>('plants', []);
   const plant = ref<Plant>();
 
-  const plantsById = computed(() => Object.fromEntries(plants.value.map((p) => [p.id, p])));
+  const plantsById = computed(() =>
+    Object.fromEntries(plants.value.map((p) => [p.id, p])),
+  );
 
   const guilds = useStorage<Guild[]>('guilds', []);
 
   const guildBoundsById = computed(() =>
-    Object.fromEntries(guilds.value.map((guild) => [guild.id, getPathBounds(guild.path)])),
+    Object.fromEntries(
+      guilds.value.map((guild) => [guild.id, getPathBounds(guild.path)]),
+    ),
   );
 
   const updateFeature = (guildId: string, thingId: string, thing: GardenThing) => {
@@ -177,8 +190,15 @@ export const useGardenStore = defineStore('garden', () => {
     guilds.value = guilds.value.filter((guild) => guild.id !== id);
   };
 
-  const getOverlappingGuild = (thing: { x: number; y: number; width: number; height: number }) => {
-    return guilds.value.find((guild) => isOverlapping(guildBoundsById.value[guild.id], thing));
+  const getOverlappingGuild = (thing: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }) => {
+    return guilds.value.find((guild) =>
+      isOverlapping(guildBoundsById.value[guild.id], thing),
+    );
   };
 
   const allGardenPlants = computed(() => {
