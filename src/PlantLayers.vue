@@ -2,7 +2,9 @@
 import { computed } from 'vue';
 import { GuildLayer } from './useGardenStore';
 
-const props = defineProps<{ value: GuildLayer[] }>();
+const props = withDefaults(defineProps<{ value: GuildLayer[] }>(), {
+  value: () => [] as GuildLayer[],
+});
 const emit = defineEmits<{ (e: 'update:value', value: GuildLayer[]): void }>();
 
 const layers = computed(() =>

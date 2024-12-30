@@ -2,7 +2,9 @@
 import { computed } from 'vue';
 import { GuildFunction } from './useGardenStore';
 
-const props = defineProps<{ value: GuildFunction[] }>();
+const props = withDefaults(defineProps<{ value: GuildFunction[] }>(), {
+  value: () => [],
+});
 const emit = defineEmits<{ (e: 'update:value', value: GuildFunction[]): void }>();
 
 const functions = computed(() =>

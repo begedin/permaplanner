@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router';
 
 import './main.css';
 import { createApp } from 'vue';
@@ -12,7 +12,7 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(
   createRouter({
-    history: createWebHistory(),
+    history: createWebHashHistory(),
     routes: [
       { path: '/', redirect: '/garden' },
       { path: '/garden', component: TheGarden },

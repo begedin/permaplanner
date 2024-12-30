@@ -21,7 +21,14 @@ it('renders nothing if no bed in store', async () => {
 it('adds and removes plants', async () => {
   const store = useGardenStore();
   store.plants = [
-    { id: 'plant', name: 'A plant', background: 'bg_1', features: [], functions: [], layers: [] },
+    {
+      id: 'plant',
+      name: 'A plant',
+      background: 'bg_1',
+      features: [],
+      functions: [],
+      layers: [],
+    },
     {
       id: 'plant-2',
       name: 'Another plant',
@@ -38,8 +45,12 @@ it('adds and removes plants', async () => {
   await flushPromises();
 
   const plantsNotInGuild = wrapper.getByLabelText('Plants not in this guild');
-  await fireEvent.click(within(plantsNotInGuild).getByRole('button', { name: 'A plant' }));
-  await fireEvent.click(within(plantsNotInGuild).getByRole('button', { name: 'Another plant' }));
+  await fireEvent.click(
+    within(plantsNotInGuild).getByRole('button', { name: 'A plant' }),
+  );
+  await fireEvent.click(
+    within(plantsNotInGuild).getByRole('button', { name: 'Another plant' }),
+  );
 
   expect(store.guilds[0].plants).toEqual([
     expect.objectContaining({ plantId: 'plant' }),
@@ -56,7 +67,9 @@ it('adds and removes plants', async () => {
   await fireEvent.click(
     within(plant1Button).getByRole('button', { name: 'Remove plant from bed' }),
   );
-  expect(store.guilds[0].plants).toEqual([expect.objectContaining({ plantId: 'plant-2' })]);
+  expect(store.guilds[0].plants).toEqual([
+    expect.objectContaining({ plantId: 'plant-2' }),
+  ]);
 });
 
 it('renames', () => {
@@ -68,4 +81,81 @@ it('renames', () => {
   fireEvent.update(wrapper.getByRole('textbox'), 'New name');
 
   expect(store.guilds[0].name).toEqual('New name');
+});
+
+it('shows layers', () => {
+  const store = useGardenStore();
+  store.plants = [
+    {
+      id: 'plant',
+      name: 'A tree',
+      background: 'bg_1',
+      features: [],
+      functions: [],
+      layers: ['overstory', 'understory'],
+    },
+    {
+      id: 'plant-2',
+      name: 'A small tree',
+      background: 'bg_2',
+      features: [],
+      functions: [],
+      layers: ['understory'],
+    },
+  ];
+  store.guilds = [
+    {
+      id: 'guild',
+      name: 'A guild',
+      plants: [
+        { plantId: 'plant', height: 10, width: 10, x: 0, y: 0, id: '1' },
+        { plantId: 'plant-2', height: 10, width: 10, x: 0, y: 0, id: ' 2' },
+      ],
+      path: [],
+    },
+  ];
+  store.selectedId = 'guild';
+
+  const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });
+  expect(wrapper.getAllByLabelText('Overstory')).toHaveLength(1);
+  expect(wrapper.getAllByLabelText('Understory')).toHaveLength(1);
+  expect(wrapper.getByLabelText('Understory').textContent).toContain('2');
+});
+
+it('shows functions', () => {
+  const store = useGardenStore();
+  store.plants = [
+    {
+      id: 'apple',
+      name: 'Apple',
+      background: 'bg_1',
+      features: [],
+      functions: ['edible', 'medicinal'],
+      layers: [],
+    },
+    {
+      id: 'parsley',
+      name: 'Parsley',
+      background: 'bg_2',
+      features: [],
+      functions: ['edible', 'medicinal'],
+      layers: [],
+    },
+  ];
+  store.guilds = [
+    {
+      id: 'guild',
+      name: 'A guild',
+      plants: [
+        { plantId: 'apple', height: 10, width: 10, x: 0, y: 0, id: '1' },
+        { plantId: 'parsley', height: 10, width: 10, x: 0, y: 0, id: '2' },
+      ],
+      path: [],
+    },
+  ];
+
+  const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });
+  expect(wrapper.getAllByLabelText('Edible')).toHaveLength(1);
+  expect(wrapper.getAllByLabelText('Medicinal')).toHaveLength(1);
+  expect(wrapper.getByLabelText('Edible').textContent).toContain('2');
 });

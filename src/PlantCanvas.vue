@@ -67,10 +67,6 @@ const removeFeature = (index: number) => {
     features: newFeatures,
   });
 };
-
-watch(box, () => {
-  console.log(box.value);
-});
 </script>
 <template>
   <svg
