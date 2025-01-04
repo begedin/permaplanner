@@ -27,6 +27,7 @@ const {
   imgWidth,
   imgHeight,
   imgSrc,
+  ready,
 } = useBackgroundImage();
 onMounted(() => setupBackgroundImagePaste());
 onBeforeUnmount(() => teardownBackgroundImagePaste());
@@ -44,6 +45,21 @@ const { setupCamera, teardownCamera, fitToViewPort } = useCamera(
     backgroundNaturalWidth: imgWidth.value,
   })),
 );
+
+const disabled = ref(true);
+
+watch(ready, async () => {
+  if (ready.value) {
+    fitToViewPort();
+    await new Promise((resolve) =>
+      setTimeout(() => {
+        fitToViewPort();
+        resolve(undefined);
+      }, 200),
+    );
+    disabled.value = false;
+  }
+});
 
 const camera = useCameraStore();
 
@@ -67,15 +83,6 @@ const center = computed(() => {
 });
 
 const bgImage = ref<SVGImageElement>();
-const { width: imgElementWidth, height: imgElementHeight } = useElementSize(bgImage);
-
-const bgImageLoaded = computed(
-  () =>
-    imgElementWidth.value === imgWidth.value &&
-    imgElementHeight.value === imgHeight.value,
-);
-
-watch(bgImageLoaded, (loaded) => loaded && fitToViewPort(), { immediate: true });
 
 const onboarding = useOnboardingStore();
 
@@ -157,7 +164,7 @@ watch(
         :key="plant.id"
         :plant="plant"
         :active="garden.plant?.id === plant.id"
-        :disabled="!bgImageLoaded"
+        :disabled="disabled"
         @click="garden.plant = plant"
       />
       <button
@@ -167,7 +174,7 @@ watch(
             'bg-green-200 hover:bg-green-300',
           ]
         "
-        :disabled="!bgImageLoaded"
+        :disabled="disabled"
         @click.stop="garden.startDrawGuild"
       >
         Guild
@@ -194,7 +201,7 @@ watch(
         class="col-start-1 col-span-1 row-start-1 row-span-1 w-full h-full"
         :viewBox="svgViewbox"
         data-main-svg
-        :disabled="!bgImageLoaded"
+        :disabled="disabled"
         preserveAspectRatio="xMinYMin meet"
       >
         <defs>
