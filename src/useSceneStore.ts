@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import { useCameraStore } from './useCameraStore';
 
-export const useSceneStore = defineStore('sceneMousePosition', () => {
+export const useSceneStore = defineStore('scene', () => {
   const x = ref(0);
   const y = ref(0);
 
@@ -10,15 +10,31 @@ export const useSceneStore = defineStore('sceneMousePosition', () => {
   const box = ref({ x: 0, y: 0, width: 0, height: 0 });
 
   const camera = useCameraStore();
-  const cameraX = computed(() => (x.value + camera.x) / camera.scale);
-  const cameraY = computed(() => (y.value + camera.y) / camera.scale);
 
-  const cameraBox = computed(() => ({
-    x: (box.value.x + camera.x) / camera.scale,
-    y: (box.value.y + camera.y) / camera.scale,
-    width: box.value.width / camera.scale,
-    height: box.value.height / camera.scale,
-  }));
+  const worldBox = computed(() => {
+    return {
+      x: camera.cameraToWorld(box.value.x),
+      y: camera.cameraToWorld(box.value.y),
+      width: camera.cameraToWorld(box.value.width),
+      height: camera.cameraToWorld(box.value.height),
+    };
+  });
 
-  return { x, y, cameraX, cameraY, cameraBox, box, isDrawing };
+  const worldX = computed(() => camera.cameraToWorld(x.value));
+  const worldY = computed(() => camera.cameraToWorld(y.value));
+
+  return {
+    x,
+    y,
+    // represents the current X position in the world (image) space
+    worldX,
+    // represents the current Y position in the world (image) space
+    worldY,
+    // represents the box being drawn in the world (image) space
+    worldBox,
+    // represents the current box in the  space
+    box,
+    // represents the current drawing state
+    isDrawing,
+  };
 });

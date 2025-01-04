@@ -1,5 +1,6 @@
 import { ref, type Ref } from 'vue';
 import { useCameraStore } from './useCameraStore';
+import { useSceneStore } from './useSceneStore';
 
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 10;
@@ -7,33 +8,36 @@ const MAX_ZOOM = 10;
 export const useCamera = (
   element: Ref<SVGElement | undefined>,
   dimensions: Ref<{
-    viewportWidth: number;
-    viewportHeight: number;
-    contentWidth: number;
-    contentHeight: number;
+    containerWidth: number;
+    containerHeight: number;
+    backgroundNaturalWidth: number;
+    backgroundNaturalHeight: number;
   }>,
 ) => {
   const camera = useCameraStore();
   const mouse = ref({ x: 0, y: 0 });
 
+  const scene = useSceneStore();
+
   const zoomBy = (factor: number) => {
-    // this is the mouse cursor position in the unscaled image
-    const originalPosition = {
-      x: (camera.x + mouse.value.x) / camera.scale,
-      y: (camera.y + mouse.value.y) / camera.scale,
-    };
+    const { backgroundNaturalWidth, backgroundNaturalHeight } = dimensions.value;
 
-    const newScale =
+    const newZoom =
       factor > 0
-        ? Math.min(camera.scale + factor, MAX_ZOOM)
-        : Math.max(camera.scale + factor, MIN_ZOOM);
+        ? Math.min(camera.zoom + factor, MAX_ZOOM)
+        : Math.max(camera.zoom + factor, MIN_ZOOM);
 
-    const newOffsetX = originalPosition.x * (newScale - 1) + (originalPosition.x - mouse.value.x);
-    const newOffsetY = originalPosition.y * (newScale - 1) + (originalPosition.y - mouse.value.y);
+    const newWidth = backgroundNaturalWidth / newZoom;
+    const newHeight = backgroundNaturalHeight / newZoom;
 
-    camera.scale = newScale;
-    camera.x = newOffsetX;
-    camera.y = newOffsetY;
+    const atX = scene.worldX;
+    const atY = scene.worldY;
+
+    camera.zoom = newZoom;
+    camera.x = atX - newWidth / 2;
+    camera.y = atY - newHeight / 2;
+    camera.width = newWidth;
+    camera.height = newHeight;
   };
 
   const teardownController = new AbortController();
@@ -79,7 +83,7 @@ export const useCamera = (
       (e) => {
         const wheelPanController = new AbortController();
 
-        if (e.button !== 4) {
+        if (e.button !== 1) {
           return;
         }
 
@@ -88,30 +92,39 @@ export const useCamera = (
         document.addEventListener(
           'mousemove',
           (moveE) => {
-            camera.x -= moveE.movementX;
-            camera.y -= moveE.movementY;
+            camera.x -= moveE.movementX / camera.scale;
+            camera.y -= moveE.movementY / camera.scale;
           },
           { signal: wheelPanController.signal },
         );
 
-        document.addEventListener(
-          'mouseup',
-          () => {
-            wheelPanController.abort();
-          },
-          { signal: wheelPanController.signal },
-        );
+        document.addEventListener('mouseup', () => wheelPanController.abort(), {
+          signal: wheelPanController.signal,
+        });
       },
       { signal: teardownController.signal },
     );
   };
 
   const fitToViewPort = () => {
-    const { viewportWidth, viewportHeight, contentWidth, contentHeight } = dimensions.value;
-    const scale = Math.min(viewportWidth / contentWidth, viewportHeight / contentHeight);
+    const {
+      containerWidth,
+      containerHeight,
+      backgroundNaturalWidth,
+      backgroundNaturalHeight,
+    } = dimensions.value;
 
-    camera.x = -(viewportWidth - contentWidth * scale) / 2;
-    camera.y = -(viewportHeight - contentHeight * scale) / 2;
+    camera.zoom = 1;
+
+    camera.width = backgroundNaturalWidth;
+    camera.height = backgroundNaturalHeight;
+
+    camera.x = 0;
+    camera.y = 0;
+
+    const scaleX = containerWidth / backgroundNaturalWidth;
+    const scaleY = containerHeight / backgroundNaturalHeight;
+    const scale = Math.min(scaleX, scaleY);
     camera.scale = scale;
   };
 

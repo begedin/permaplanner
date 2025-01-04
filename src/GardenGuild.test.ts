@@ -6,7 +6,7 @@ import { createTestingPinia } from '@pinia/testing';
 import { useSceneStore } from './useSceneStore';
 
 beforeEach(() => {
-  setActivePinia(createTestingPinia({ createSpy: vi.fn }));
+  setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
 });
 
 it('draws a bed', async () => {

@@ -14,12 +14,12 @@ import { useScene } from './useScene';
 import { useBackgroundImage } from './useBackgroundImage';
 import { useCamera } from './useCamera';
 import { useElementSize, useStorage } from '@vueuse/core';
-import { useMapScale } from './useMapScale';
 import OnboardingText from './OnboardingText.vue';
 import ThingBar from './ThingBar.vue';
 import ToolBarButton from './ToolBarButton.vue';
 import ToolSlider from './ToolSlider.vue';
 import ReferenceLine from './ReferenceLine.vue';
+import { useOnboardingStore } from './useOnboardingStore';
 
 const {
   setupBackgroundImagePaste,
@@ -33,27 +33,28 @@ onBeforeUnmount(() => teardownBackgroundImagePaste());
 
 const container = ref<SVGElement>();
 
+const { width: containerWidth, height: containerHeight } = useElementSize(container);
+
 const { setupCamera, teardownCamera, fitToViewPort } = useCamera(
   container,
   computed(() => ({
-    viewportHeight: containerHeight.value,
-    viewportWidth: containerWidth.value,
-    contentHeight: imgHeight.value,
-    contentWidth: imgWidth.value,
+    containerHeight: containerHeight.value,
+    containerWidth: containerWidth.value,
+    backgroundNaturalHeight: imgHeight.value,
+    backgroundNaturalWidth: imgWidth.value,
   })),
 );
 
 const camera = useCameraStore();
 
-const { width: containerWidth, height: containerHeight } = useElementSize(container);
 onMounted(() => setupCamera());
 onBeforeUnmount(() => teardownCamera());
 
 const svgViewbox = computed(() => {
-  const x = (camera.x / camera.scale).toFixed(2);
-  const y = (camera.y / camera.scale).toFixed(2);
-  const width = (containerWidth.value / camera.scale).toFixed(2);
-  const height = (containerHeight.value / camera.scale).toFixed(2);
+  const x = camera.x.toFixed(2);
+  const y = camera.y.toFixed(2);
+  const width = camera.width.toFixed(2);
+  const height = camera.height.toFixed(2);
   return `${x} ${y} ${width} ${height}`;
 });
 
@@ -76,13 +77,13 @@ const bgImageLoaded = computed(
 
 watch(bgImageLoaded, (loaded) => loaded && fitToViewPort(), { immediate: true });
 
-const { startMoveScaleStart, startMoveScaleEnd, onboardingState } = useMapScale();
+const onboarding = useOnboardingStore();
 
 const mapScale = useMapScaleStore();
 
 const bgOpacity = useStorage('bgOpacity', 0.4);
 
-useScene(container);
+useScene(container, bgImage);
 
 const garden = useGardenStore();
 
@@ -115,10 +116,10 @@ const addNewGuild = (guild: Guild) => {
 // feature drawing
 
 const getNewShape = (plantId: string) => {
-  const x = Math.min(scene.cameraBox.x, scene.cameraBox.x + scene.cameraBox.width);
-  const y = Math.min(scene.cameraBox.y, scene.cameraBox.y + scene.cameraBox.height);
-  const width = Math.abs(scene.cameraBox.width);
-  const height = Math.abs(scene.cameraBox.height);
+  const x = Math.min(scene.worldBox.x, scene.worldBox.x + scene.worldBox.width);
+  const y = Math.min(scene.worldBox.y, scene.worldBox.y + scene.worldBox.height);
+  const width = Math.abs(scene.worldBox.width);
+  const height = Math.abs(scene.worldBox.height);
 
   return { id: uuidV4(), type: 'plant', plantId, x, y, width, height };
 };
@@ -194,6 +195,7 @@ watch(
         :viewBox="svgViewbox"
         data-main-svg
         :disabled="!bgImageLoaded"
+        preserveAspectRatio="xMinYMin meet"
       >
         <defs>
           <pattern
@@ -291,19 +293,13 @@ watch(
         />
 
         <OnboardingText
-          v-if="imgSrc && onboardingState !== 'done'"
+          v-if="imgSrc && onboarding.onboardingState !== 'done'"
           :x="center.x"
           :y="center.y"
-          :onboarding-state="onboardingState"
+          :onboarding-state="onboarding.onboardingState"
         />
 
-        <ReferenceLine
-          v-if="mapScale.line"
-          :line="mapScale.line"
-          :length="mapScale.linePhysicalLength"
-          @start-move-scale-start="startMoveScaleStart"
-          @start-move-scale-end="startMoveScaleEnd"
-        />
+        <ReferenceLine />
       </svg>
     </div>
 

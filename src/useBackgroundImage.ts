@@ -33,8 +33,8 @@ export const useBackgroundImage = () => {
   const imgHeight = ref(0);
 
   const setDimensions = (img: HTMLImageElement): void => {
-    imgWidth.value = img.width;
-    imgHeight.value = img.height;
+    imgWidth.value = img.naturalWidth;
+    imgHeight.value = img.naturalHeight;
     ready.value = true;
   };
 

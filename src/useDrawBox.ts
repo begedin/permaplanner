@@ -1,6 +1,9 @@
 import { computed, onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
 
-export const useDrawBox = (container: Ref<HTMLElement | SVGElement | undefined>) => {
+export const useDrawBox = (
+  mouseEventReceiver: Ref<HTMLElement | SVGElement | undefined>,
+  stageElement: Ref<HTMLElement | SVGElement | undefined> = mouseEventReceiver,
+) => {
   const mouseCurrent = ref({ x: 0, y: 0 });
   const mouseInitial = ref({ x: 0, y: 0 });
 
@@ -27,14 +30,14 @@ export const useDrawBox = (container: Ref<HTMLElement | SVGElement | undefined>)
   onMounted(() => {
     controller = new AbortController();
 
-    container.value?.addEventListener(
+    mouseEventReceiver.value?.addEventListener(
       'mousedown',
       ((e: MouseEvent) => {
-        if (!container.value || e.button !== 0) {
+        if (!stageElement.value || e.button !== 0) {
           return;
         }
-        const svgOffsetX = container.value.getBoundingClientRect().left;
-        const svgOffsetY = container.value.getBoundingClientRect().top;
+        const svgOffsetX = stageElement.value.getBoundingClientRect().left;
+        const svgOffsetY = stageElement.value.getBoundingClientRect().top;
 
         mouseInitial.value = { x: e.clientX - svgOffsetX, y: e.clientY - svgOffsetY };
 
@@ -46,11 +49,11 @@ export const useDrawBox = (container: Ref<HTMLElement | SVGElement | undefined>)
     document.addEventListener(
       'mousemove',
       (e) => {
-        if (!container.value) {
+        if (!stageElement.value) {
           return;
         }
-        const svgOffsetX = container.value.getBoundingClientRect().left;
-        const svgOffsetY = container.value.getBoundingClientRect().top;
+        const svgOffsetX = stageElement.value.getBoundingClientRect().left;
+        const svgOffsetY = stageElement.value.getBoundingClientRect().top;
 
         mouseCurrent.value = { x: e.clientX - svgOffsetX, y: e.clientY - svgOffsetY };
       },
@@ -61,7 +64,7 @@ export const useDrawBox = (container: Ref<HTMLElement | SVGElement | undefined>)
       signal: controller.signal,
     });
 
-    container.value?.addEventListener('mouseleave', () => (isDrawing.value = false), {
+    stageElement.value?.addEventListener('mouseleave', () => (isDrawing.value = false), {
       signal: controller.signal,
     });
   });

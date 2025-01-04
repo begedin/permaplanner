@@ -2,18 +2,24 @@ import { test, expect } from '@playwright/test';
 import { putImageIntoClipboard } from './helpers';
 
 test('onboards', async ({ browser }) => {
-  const context = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
+  const context = await browser.newContext({
+    permissions: ['clipboard-read', 'clipboard-write'],
+  });
   const page = await context.newPage();
   await page.goto('');
 
-  await expect(page.locator('[data-onboarding-text]')).toHaveText(/Paste an aerial photo/);
+  await expect(page.locator('[data-onboarding-text]')).toHaveText(
+    /Paste an aerial photo/,
+  );
 
   await putImageIntoClipboard(page);
   await page.keyboard.press('ControlOrMeta+v');
 
   await expect(page.locator('image')).toBeVisible();
 
-  await expect(page.locator('[data-onboarding-text]')).toHaveText(/set the scale of the map/);
+  await expect(page.locator('[data-onboarding-text]')).toHaveText(
+    /set the scale of the map/,
+  );
 
   const bbox = await page.locator('image').boundingBox();
 
@@ -52,8 +58,8 @@ test('onboards', async ({ browser }) => {
     throw new Error('No grid pattern');
   }
 
-  await expect(await gridPattern.getAttribute('width')).toMatch(/2\.33/);
-  await expect(await gridPattern.getAttribute('height')).toMatch(/2\.33/);
+  await expect(await gridPattern.getAttribute('width')).toMatch(/2\.86/);
+  await expect(await gridPattern.getAttribute('height')).toMatch(/2\.86/);
 
   await expect(page.locator('line')).toBeAttached();
   const line = await page.locator('line').elementHandle();
@@ -62,6 +68,6 @@ test('onboards', async ({ browser }) => {
   }
   await expect(await line.getAttribute('x1')).toMatch(/11\.16/);
   await expect(await line.getAttribute('y1')).toMatch(/11\.16/);
-  await expect(await line.getAttribute('x2')).toMatch(/244\.46/);
+  await expect(await line.getAttribute('x2')).toMatch(/297\.67/);
   await expect(await line.getAttribute('y2')).toMatch(/11\.16/);
 });

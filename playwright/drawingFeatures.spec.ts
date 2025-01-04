@@ -65,35 +65,51 @@ test.describe('drawing features', () => {
 
     await expect(page.locator('[data-main-svg] [data-garden-plant]')).toHaveCount(1);
 
-    const apple = await page.locator('[data-main-svg] [data-garden-plant]').elementHandle();
+    const apple = await page
+      .locator('[data-main-svg] [data-garden-plant]')
+      .elementHandle();
     if (!apple) {
       throw new Error('No apple on canvas');
     }
 
     const mainSvg = page.locator('[data-main-svg]');
 
-    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute('x', /49\.86/);
+    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute('x', /76\.27/);
     await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute('y', /64\.37/);
-    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute('height', /9\.30/);
-    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute('width', /9\.30/);
+    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute(
+      'height',
+      /9\.30/,
+    );
+    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute(
+      'width',
+      /9\.30/,
+    );
     await expect(await mainSvg.locator('[data-garden-plant]').boundingBox()).toEqual({
-      height: expect.closeTo(25, 1),
-      width: expect.closeTo(25, 1),
-      x: expect.closeTo(405, 1),
-      y: expect.closeTo(205, 1),
+      height: expect.closeTo(30, 0),
+      width: expect.closeTo(30, 0),
+      x: expect.closeTo(447, 0),
+      y: expect.closeTo(241, 0),
     });
 
     await page.keyboard.press('+++++++++');
 
-    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute('x', /49\.86/);
+    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute('x', /76\.27/);
     await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute('y', /64\.37/);
-    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute('height', /9\.30/);
-    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute('width', /9\.30/);
-    await expect(await mainSvg.locator('[data-garden-plant]').boundingBox()).toMatchObject({
-      height: expect.closeTo(29.6, 1),
-      width: expect.closeTo(29.7, 1),
-      x: expect.closeTo(400.3, 1),
-      y: expect.closeTo(200.3, 1),
+    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute(
+      'height',
+      /9\.30/,
+    );
+    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute(
+      'width',
+      /9\.30/,
+    );
+    await expect(
+      await mainSvg.locator('[data-garden-plant]').boundingBox(),
+    ).toMatchObject({
+      height: expect.closeTo(45.2, 1),
+      width: expect.closeTo(45.2, 1),
+      x: expect.closeTo(688.6, 1),
+      y: expect.closeTo(504.1, 1),
     });
 
     const currentPoints = await page
@@ -115,9 +131,9 @@ test.describe('drawing features', () => {
     await page.getByRole('button', { name: 'New guild' }).click();
 
     await expect(page.locator('[data-main-svg] polygon')).toHaveCount(2); // brush and bed;
-    await expect(page.locator('[data-main-svg] polygon').last().getAttribute('points')).not.toEqual(
-      currentPoints,
-    );
+    await expect(
+      page.locator('[data-main-svg] polygon').last().getAttribute('points'),
+    ).not.toEqual(currentPoints);
   });
 
   test('creates a bed and adds plants from sidebar', async ({ page }) => {
@@ -140,10 +156,16 @@ test.describe('drawing features', () => {
     await page.getByLabel('Plants not in this guild').getByTitle('Test apple').click();
     await page.getByLabel('Plants not in this guild').getByTitle('Test banana').click();
     await expect(
-      page.getByLabel('New guild').getByLabel('Plants in this guild').getByLabel('Test apple'),
+      page
+        .getByLabel('New guild')
+        .getByLabel('Plants in this guild')
+        .getByLabel('Test apple'),
     ).toHaveCount(1);
     await expect(
-      page.getByLabel('New guild').getByLabel('Plants in this guild').getByLabel('Test banana'),
+      page
+        .getByLabel('New guild')
+        .getByLabel('Plants in this guild')
+        .getByLabel('Test banana'),
     ).toHaveCount(1);
 
     // shift delete bed

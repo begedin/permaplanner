@@ -22,7 +22,7 @@ const emit = defineEmits<{
 }>();
 
 const resetPath = () => {
-  path.value = props.guild.path;
+  path.value = [...props.guild.path];
 };
 
 const path = ref<{ x: number; y: number }[]>([]);
@@ -36,8 +36,8 @@ const brush = computed(() => {
     return [];
   }
 
-  const x = Math.max(scene.cameraX, 0);
-  const y = Math.max(scene.cameraY, 0);
+  const x = Math.max(scene.worldX, 0);
+  const y = Math.max(scene.worldY, 0);
   const totalPoints = 20;
   const theta = (Math.PI * 2) / totalPoints;
   const points: { x: number; y: number }[] = [];
@@ -96,9 +96,9 @@ watch(
     }
 
     if (!isDrawing) {
-      path.value = simplify(
-        meta.value ? subtractPaths(path.value, stroke.value) : joinPaths(path.value, stroke.value),
-      );
+      path.value = meta.value
+        ? subtractPaths(path.value, stroke.value)
+        : simplify(joinPaths(path.value, stroke.value));
       stroke.value = [];
       return;
     }
@@ -106,7 +106,7 @@ watch(
 );
 
 watch(
-  () => [scene.cameraX, scene.cameraY],
+  () => [scene.worldX, scene.worldY],
   () => {
     if (!props.selected) {
       return;
@@ -134,7 +134,10 @@ watch(
         if (e.key === 'Enter') {
           e.preventDefault();
           editModeController.abort();
-          emit('update', { ...props.guild, path: path.value });
+          emit('update', {
+            ...props.guild,
+            path: [...path.value],
+          });
         }
 
         if (e.key === 'Escape') {
@@ -190,7 +193,11 @@ const box = computed(() => {
     ref="pathEl"
     :points="path.map(({ x, y }) => `${x},${y}`).join(' ')"
     :fill="
-      selected ? 'rgba(0, 100, 0, 0.6)' : hovered ? 'rgba(0, 100, 0, 0.3)' : 'rgba(0, 100, 0, 0.2)'
+      selected
+        ? 'rgba(0, 100, 0, 0.6)'
+        : hovered
+          ? 'rgba(0, 100, 0, 0.3)'
+          : 'rgba(0, 100, 0, 0.2)'
     "
     class="pointer-events-fill"
     @mouseenter.="emit('mouseenter')"
