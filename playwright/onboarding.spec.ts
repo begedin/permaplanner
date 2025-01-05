@@ -52,22 +52,12 @@ test('onboards', async ({ browser }) => {
   await expect(page.locator('text', { hasText: '100' })).toBeVisible();
 
   await expect(page.locator('rect[fill="url(#grid)"]')).toBeVisible();
-  await expect(page.locator('pattern#grid')).toBeAttached();
-  const gridPattern = await page.locator('pattern#grid').elementHandle();
-  if (!gridPattern) {
-    throw new Error('No grid pattern');
-  }
+  const gridPattern = page.locator('pattern#grid');
+  await expect(gridPattern).toHaveAttribute('width', new RegExp('2.37'));
+  await expect(gridPattern).toHaveAttribute('height', new RegExp('2.37'));
 
-  await expect(await gridPattern.getAttribute('width')).toMatch(/2\.86/);
-  await expect(await gridPattern.getAttribute('height')).toMatch(/2\.86/);
-
-  await expect(page.locator('line')).toBeAttached();
-  const line = await page.locator('line').elementHandle();
-  if (!line) {
-    throw new Error('No line element');
-  }
-  await expect(await line.getAttribute('x1')).toMatch(/11\.16/);
-  await expect(await line.getAttribute('y1')).toMatch(/11\.16/);
-  await expect(await line.getAttribute('x2')).toMatch(/297\.67/);
-  await expect(await line.getAttribute('y2')).toMatch(/11\.16/);
+  await expect(page.locator('line')).toHaveAttribute('x1', new RegExp('9.25'));
+  await expect(page.locator('line')).toHaveAttribute('y1', new RegExp('9.25'));
+  await expect(page.locator('line')).toHaveAttribute('x2', new RegExp('246.74'));
+  await expect(page.locator('line')).toHaveAttribute('y2', new RegExp('9.25'));
 });

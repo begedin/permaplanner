@@ -51,13 +51,11 @@ const disabled = ref(true);
 watch(ready, async () => {
   if (ready.value) {
     fitToViewPort();
-    await new Promise((resolve) =>
-      setTimeout(() => {
-        fitToViewPort();
-        resolve(undefined);
-      }, 200),
-    );
-    disabled.value = false;
+
+    setTimeout(() => {
+      fitToViewPort();
+      disabled.value = false;
+    }, 1000);
   }
 });
 

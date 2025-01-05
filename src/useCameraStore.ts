@@ -6,8 +6,8 @@ export const useCameraStore = defineStore('camera', () => {
   const zoom = ref(1.0);
   const x = ref(0);
   const y = ref(0);
-  const width = ref(0);
-  const height = ref(0);
+  const width = ref(1);
+  const height = ref(1);
 
   const cameraToWorld = (value: number) => value / scale.value / zoom.value;
 

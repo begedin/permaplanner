@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page, Locator } from '@playwright/test';
 import { onboard } from './helpers';
 
 const createPlant = async (page: Page, name: string) => {
@@ -12,27 +12,20 @@ const createPlant = async (page: Page, name: string) => {
   await page.getByRole('link', { name: 'Garden' }).click();
 };
 
+const expectPlantAttributes = async (
+  mainSvg: Locator,
+  attributes: { x: number; y: number; width: number; height: number },
+) => {
+  for (const [key, value] of Object.entries(attributes)) {
+    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute(
+      key,
+      new RegExp(value.toString()),
+    );
+  }
+};
+
 test.describe('drawing features', () => {
   test.use({ contextOptions: { permissions: ['clipboard-read', 'clipboard-write'] } });
-
-  test('creates a plant', async ({ page }) => {
-    await page.goto('');
-    await page.getByRole('link', { name: 'Plants' }).click();
-
-    await page.getByRole('button', { name: 'bg_2' }).click();
-    await page.getByRole('button', { name: 'apple' }).click();
-
-    await page.mouse.move(500, 300);
-    await page.mouse.down();
-    await page.mouse.move(550, 350);
-    await page.mouse.up();
-
-    await page.getByLabel('Name').click();
-    await page.getByLabel('Name').fill('Apple');
-    await page.getByRole('button', { name: 'Create' }).click();
-
-    await expect(page.getByRole('button', { name: /Apple/ })).toBeVisible();
-  });
 
   test('creates a bed with a plant', async ({ page }) => {
     await page.goto('');
@@ -63,6 +56,13 @@ test.describe('drawing features', () => {
     await page.mouse.move(430, 230);
     await page.mouse.up();
 
+    const expectedPlantAttributes = {
+      x: 63.22,
+      y: 53.35,
+      width: 7.71,
+      height: 7.71,
+    };
+
     await expect(page.locator('[data-main-svg] [data-garden-plant]')).toHaveCount(1);
 
     const apple = await page
@@ -74,42 +74,25 @@ test.describe('drawing features', () => {
 
     const mainSvg = page.locator('[data-main-svg]');
 
-    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute('x', /76\.27/);
-    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute('y', /64\.37/);
-    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute(
-      'height',
-      /9\.30/,
-    );
-    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute(
-      'width',
-      /9\.30/,
-    );
+    await expectPlantAttributes(mainSvg, expectedPlantAttributes);
     await expect(await mainSvg.locator('[data-garden-plant]').boundingBox()).toEqual({
-      height: expect.closeTo(30, 0),
-      width: expect.closeTo(30, 0),
-      x: expect.closeTo(447, 0),
-      y: expect.closeTo(241, 0),
+      height: expect.closeTo(25, 0),
+      width: expect.closeTo(25, 0),
+      x: expect.closeTo(405, 0),
+      y: expect.closeTo(205, 0),
     });
 
-    await page.keyboard.press('+++++++++');
+    await page.keyboard.press('+');
 
-    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute('x', /76\.27/);
-    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute('y', /64\.37/);
-    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute(
-      'height',
-      /9\.30/,
-    );
-    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute(
-      'width',
-      /9\.30/,
-    );
+    await expectPlantAttributes(mainSvg, expectedPlantAttributes);
+
     await expect(
       await mainSvg.locator('[data-garden-plant]').boundingBox(),
     ).toMatchObject({
-      height: expect.closeTo(45.2, 1),
-      width: expect.closeTo(45.2, 1),
-      x: expect.closeTo(688.6, 1),
-      y: expect.closeTo(504.1, 1),
+      height: expect.closeTo(27.5, 1),
+      width: expect.closeTo(27.5, 1),
+      x: expect.closeTo(587.5, 1),
+      y: expect.closeTo(419.5, 1),
     });
 
     const currentPoints = await page

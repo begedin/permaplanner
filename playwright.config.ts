@@ -34,6 +34,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         launchOptions: {
+          // headless: false,
           // slowMo: 100,
         },
       },

@@ -173,18 +173,26 @@ const box = computed(() => {
   const maxY = Math.max(...path.value.map(({ y }) => y));
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 });
+
+const brushColor = computed(() =>
+  meta.value ? 'rgba(100, 0, 0, 0.1)' : 'rgba(0, 100, 0, 0.3)',
+);
+
+const strokeColor = computed(() =>
+  meta.value ? 'rgba(100, 0, 0, 0.3)' : 'rgba(0, 100, 0, 0.6)',
+);
 </script>
 <template>
   <polygon
     v-if="stroke.length > 0"
     :points="stroke.map(({ x, y }) => `${x},${y}`).join(' ')"
-    fill="rgba(0, 0, 0, 0.1)"
+    :fill="strokeColor"
     class="pointer-events-none"
   />
   <polygon
     v-else-if="selected || hovered"
     :points="brush.map(({ x, y }) => `${x},${y}`).join(' ')"
-    fill="rgba(0, 0, 0, 0.1)"
+    :fill="brushColor"
     class="pointer-events-none"
   />
 
