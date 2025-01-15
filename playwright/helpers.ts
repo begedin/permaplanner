@@ -1,3 +1,5 @@
+import path from 'path';
+import fs from 'fs';
 import { Page } from '@playwright/test';
 
 export const putImageIntoClipboard = async (page: Page): Promise<void> => {
@@ -18,6 +20,8 @@ export const putImageIntoClipboard = async (page: Page): Promise<void> => {
 };
 
 export const onboard = async (page: Page): Promise<void> => {
+  await stubSaveFilePicker(page, 'new.json');
+  await page.getByRole('button', { name: 'New plan' }).click();
   await putImageIntoClipboard(page);
   await page.keyboard.press('ControlOrMeta+v');
   await page.waitForSelector('image');
@@ -39,4 +43,21 @@ export const onboard = async (page: Page): Promise<void> => {
   await page.mouse.up();
 
   await page.getByLabel('Map scale').fill('100');
+};
+
+export const stubSaveFilePicker = async (page: Page, fileName: string) => {
+  const newPath = path.join(process.cwd(), 'playwright', 'fixtures', fileName);
+  const blob = fs.openAsBlob(newPath);
+  await page.evaluate(async (blob) => {
+    window.showSaveFilePicker = () =>
+      Promise.resolve({
+        name: 'new.json',
+        getFile: () => Promise.resolve(blob),
+        createWritable: () =>
+          Promise.resolve({
+            write: () => Promise.resolve(),
+            close: () => Promise.resolve(),
+          } as unknown as FileSystemWritableFileStream),
+      } as unknown as FileSystemFileHandle);
+  }, blob);
 };

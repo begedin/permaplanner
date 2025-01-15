@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { putImageIntoClipboard } from './helpers';
+import { putImageIntoClipboard, stubSaveFilePicker } from './helpers';
 
 test('onboards', async ({ browser }) => {
   const context = await browser.newContext({
@@ -7,6 +7,10 @@ test('onboards', async ({ browser }) => {
   });
   const page = await context.newPage();
   await page.goto('');
+
+  stubSaveFilePicker(page, 'new.json');
+
+  await page.getByRole('button', { name: 'New plan' }).click();
 
   await expect(page.locator('[data-onboarding-text]')).toHaveText(
     /Paste an aerial photo/,
@@ -53,11 +57,11 @@ test('onboards', async ({ browser }) => {
 
   await expect(page.locator('rect[fill="url(#grid)"]')).toBeVisible();
   const gridPattern = page.locator('pattern#grid');
-  await expect(gridPattern).toHaveAttribute('width', new RegExp('2.37'));
-  await expect(gridPattern).toHaveAttribute('height', new RegExp('2.37'));
+  await expect(gridPattern).toHaveAttribute('width', new RegExp('2.33'));
+  await expect(gridPattern).toHaveAttribute('height', new RegExp('2.33'));
 
-  await expect(page.locator('line')).toHaveAttribute('x1', new RegExp('9.25'));
-  await expect(page.locator('line')).toHaveAttribute('y1', new RegExp('9.25'));
-  await expect(page.locator('line')).toHaveAttribute('x2', new RegExp('246.74'));
-  await expect(page.locator('line')).toHaveAttribute('y2', new RegExp('9.25'));
+  await expect(page.locator('line')).toHaveAttribute('x1', new RegExp('11.16'));
+  await expect(page.locator('line')).toHaveAttribute('y1', new RegExp('11.16'));
+  await expect(page.locator('line')).toHaveAttribute('x2', new RegExp('244.83'));
+  await expect(page.locator('line')).toHaveAttribute('y2', new RegExp('11.16'));
 });

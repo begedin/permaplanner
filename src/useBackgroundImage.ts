@@ -1,36 +1,14 @@
-import { onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { usePermaplannerStore } from './usePermaplannerStore';
 
 export const useBackgroundImage = () => {
-  let db: IDBDatabase;
-
-  onMounted(async () => {
-    navigator.storage.persist();
-    const request = indexedDB.open('permaplanner', 1);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      db.createObjectStore('backgrounds', { keyPath: 'id' });
-    };
-
-    request.onsuccess = () => {
-      db = request.result;
-      const tx = db.transaction('backgrounds');
-      const store = tx.objectStore('backgrounds');
-      const bgRequest = store.get('background');
-      bgRequest.onsuccess = () => {
-        const bg = bgRequest.result;
-        if (bg) {
-          imgSrc.value = URL.createObjectURL(bg.file);
-        }
-      };
-    };
-  });
-
+  const permaplannerStore = usePermaplannerStore();
   const ready = ref(false);
-
-  const imgSrc = ref<string>();
 
   const imgWidth = ref(0);
   const imgHeight = ref(0);
+
+  const imgDataUrl = computed(() => permaplannerStore.backgroundImageDataUrl);
 
   const setDimensions = (img: HTMLImageElement): void => {
     imgWidth.value = img.naturalWidth;
@@ -38,10 +16,10 @@ export const useBackgroundImage = () => {
     ready.value = true;
   };
 
-  const setImageSrc = async (src: string) => {
+  const setImage = async (dataUrl: string) => {
     ready.value = false;
     const img = document.createElement('img');
-    img.src = src;
+    img.src = dataUrl;
 
     document.body.appendChild(img);
     return new Promise((resolve) => {
@@ -59,7 +37,11 @@ export const useBackgroundImage = () => {
     });
   };
 
-  watch(imgSrc, () => imgSrc.value && setImageSrc(imgSrc.value), { immediate: true });
+  watch(
+    () => permaplannerStore.backgroundImageDataUrl,
+    (dataUrl) => dataUrl && setImage(dataUrl),
+    { immediate: true },
+  );
 
   let pasteController: AbortController | null = null;
 
@@ -75,12 +57,13 @@ export const useBackgroundImage = () => {
           return;
         }
 
-        const tx = db.transaction('backgrounds', 'readwrite');
-        const store = tx.objectStore('backgrounds');
-        store.put({ id: 'background', file });
-
-        imgSrc.value = URL.createObjectURL(file);
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          permaplannerStore.backgroundImageDataUrl = reader.result as string;
+        };
       },
+
       { signal: pasteController.signal },
     );
   };
@@ -88,12 +71,12 @@ export const useBackgroundImage = () => {
   const teardownBackgroundImagePaste = () => pasteController?.abort();
 
   return {
-    setImageSrc,
+    setImage,
     setupBackgroundImagePaste,
     teardownBackgroundImagePaste,
     imgWidth,
     imgHeight,
-    imgSrc,
+    imgDataUrl,
     ready,
   };
 };

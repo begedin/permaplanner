@@ -29,9 +29,9 @@ test.describe('drawing features', () => {
 
   test('creates a bed with a plant', async ({ page }) => {
     await page.goto('');
-    await onboard(page);
     await createPlant(page, 'Test apple');
     await createPlant(page, 'Test banana');
+    await onboard(page);
 
     await page.getByRole('button', { name: 'Guild' }).click();
 
@@ -57,10 +57,10 @@ test.describe('drawing features', () => {
     await page.mouse.up();
 
     const expectedPlantAttributes = {
-      x: 63.22,
-      y: 53.35,
-      width: 7.71,
-      height: 7.71,
+      x: 76.27,
+      y: 64.37,
+      width: 9.302,
+      height: 9.302,
     };
 
     await expect(page.locator('[data-main-svg] [data-garden-plant]')).toHaveCount(1);
@@ -91,8 +91,8 @@ test.describe('drawing features', () => {
     ).toMatchObject({
       height: expect.closeTo(27.5, 1),
       width: expect.closeTo(27.5, 1),
-      x: expect.closeTo(587.5, 1),
-      y: expect.closeTo(419.5, 1),
+      x: expect.closeTo(516.48, 1),
+      y: expect.closeTo(348.5, 1),
     });
 
     const currentPoints = await page
@@ -121,9 +121,9 @@ test.describe('drawing features', () => {
 
   test('creates a bed and adds plants from sidebar', async ({ page }) => {
     await page.goto('');
-    await onboard(page);
     await createPlant(page, 'Test apple');
     await createPlant(page, 'Test banana');
+    await onboard(page);
 
     await page.getByRole('button', { name: 'Guild' }).click();
 

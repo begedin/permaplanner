@@ -1,4 +1,4 @@
-import { computed, onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
+import { computed, onBeforeUnmount, ref, watch, type Ref } from 'vue';
 
 export const useDrawBox = (
   mouseEventReceiver: Ref<HTMLElement | SVGElement | undefined>,
@@ -27,47 +27,58 @@ export const useDrawBox = (
 
   let controller = new AbortController();
 
-  onMounted(() => {
-    controller = new AbortController();
+  watch(
+    mouseEventReceiver,
+    () => {
+      controller = new AbortController();
 
-    mouseEventReceiver.value?.addEventListener(
-      'mousedown',
-      ((e: MouseEvent) => {
-        if (!stageElement.value || e.button !== 0) {
-          return;
-        }
-        const svgOffsetX = stageElement.value.getBoundingClientRect().left;
-        const svgOffsetY = stageElement.value.getBoundingClientRect().top;
+      if (!mouseEventReceiver.value) {
+        controller.abort();
+        return;
+      }
 
-        mouseInitial.value = { x: e.clientX - svgOffsetX, y: e.clientY - svgOffsetY };
+      mouseEventReceiver.value.addEventListener(
+        'mousedown',
+        ((e: MouseEvent) => {
+          if (!stageElement.value || e.button !== 0) {
+            return;
+          }
+          const svgOffsetX = stageElement.value.getBoundingClientRect().left;
+          const svgOffsetY = stageElement.value.getBoundingClientRect().top;
 
-        isDrawing.value = true;
-      }) as (e: Event) => void,
-      { signal: controller.signal },
-    );
+          mouseInitial.value = { x: e.clientX - svgOffsetX, y: e.clientY - svgOffsetY };
 
-    document.addEventListener(
-      'mousemove',
-      (e) => {
-        if (!stageElement.value) {
-          return;
-        }
-        const svgOffsetX = stageElement.value.getBoundingClientRect().left;
-        const svgOffsetY = stageElement.value.getBoundingClientRect().top;
+          isDrawing.value = true;
+        }) as (e: Event) => void,
+        { signal: controller.signal },
+      );
 
-        mouseCurrent.value = { x: e.clientX - svgOffsetX, y: e.clientY - svgOffsetY };
-      },
-      { signal: controller.signal },
-    );
+      document.addEventListener(
+        'mousemove',
+        (e) => {
+          if (!stageElement.value) {
+            return;
+          }
+          const svgOffsetX = stageElement.value.getBoundingClientRect().left;
+          const svgOffsetY = stageElement.value.getBoundingClientRect().top;
 
-    document.addEventListener('mouseup', () => (isDrawing.value = false), {
-      signal: controller.signal,
-    });
+          mouseCurrent.value = { x: e.clientX - svgOffsetX, y: e.clientY - svgOffsetY };
+        },
+        { signal: controller.signal },
+      );
 
-    stageElement.value?.addEventListener('mouseleave', () => (isDrawing.value = false), {
-      signal: controller.signal,
-    });
-  });
+      document.addEventListener('mouseup', () => (isDrawing.value = false), {
+        signal: controller.signal,
+      });
+
+      stageElement.value?.addEventListener(
+        'mouseleave',
+        () => (isDrawing.value = false),
+        { signal: controller.signal },
+      );
+    },
+    { immediate: true },
+  );
 
   onBeforeUnmount(() => {
     controller.abort();

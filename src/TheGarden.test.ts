@@ -7,6 +7,7 @@ import { createTestingPinia } from '@pinia/testing';
 import TheGarden from './TheGarden.vue';
 import { useGardenStore } from './useGardenStore';
 import GardenGuild from './GardenGuild.vue';
+import { usePermaplannerStore } from './usePermaplannerStore';
 
 beforeAll(() => {
   Object.defineProperties(window.navigator, {
@@ -22,6 +23,8 @@ beforeAll(() => {
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ stubActions: false, createSpy: vi.fn }));
+  const store = usePermaplannerStore();
+  store.fileName = 'test';
 });
 
 afterEach(() => {
