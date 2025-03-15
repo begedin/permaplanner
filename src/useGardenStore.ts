@@ -2,6 +2,7 @@ import { useStorage } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { computed, nextTick, ref } from 'vue';
 import { uuid } from './utils';
+import { plants as plantsData } from './plants';
 
 export const baseLayers = [
   'bg_1',
@@ -52,21 +53,17 @@ export type GuildLayer = (typeof GuildLayer)[keyof typeof GuildLayer];
 export type Plant = {
   id: string;
   name: string;
+  cultivar: string | null;
   background: BaseLayer;
-  features: {
-    feature: Feature;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  }[];
+  feature: Feature | null;
+  feature_tint: string | null;
   functions: GuildFunction[];
   layers: GuildLayer[];
 };
 
 export type GardenThing = {
   id: string;
-  name?: string;
+  nameOrCultivar: string;
   plantId: string;
   x: number;
   y: number;
@@ -111,7 +108,7 @@ const isOverlapping = (bounds: Bounds, thing: Bounds) => {
 };
 
 export const useGardenStore = defineStore('garden', () => {
-  const plants = useStorage<Plant[]>('plants', []);
+  const plants = ref(plantsData);
   const plant = ref<Plant>();
 
   const plantsById = computed(() =>
@@ -225,6 +222,8 @@ export const useGardenStore = defineStore('garden', () => {
       y: bounds.y + 5,
       width: 16,
       height: 16,
+      nameOrCultivar:
+        plantsById.value[plantId].cultivar || plantsById.value[plantId].name,
     });
   };
 

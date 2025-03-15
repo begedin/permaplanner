@@ -129,13 +129,22 @@ const addNewGuild = (guild: Guild) => {
 
 // feature drawing
 
-const getNewShape = (plantId: string) => {
+const getNewShape = (plantId: string): GardenThing => {
   const x = Math.min(scene.worldBox.x, scene.worldBox.x + scene.worldBox.width);
   const y = Math.min(scene.worldBox.y, scene.worldBox.y + scene.worldBox.height);
   const width = Math.abs(scene.worldBox.width);
   const height = Math.abs(scene.worldBox.height);
 
-  return { id: uuidV4(), type: 'plant', plantId, x, y, width, height };
+  return {
+    id: uuidV4(),
+    plantId,
+    x,
+    y,
+    width,
+    height,
+    nameOrCultivar:
+      garden.plantsById[plantId].cultivar || garden.plantsById[plantId].name,
+  };
 };
 
 const newShape = computed<GardenThing | void>(() => {
@@ -150,6 +159,7 @@ watch(
   () => scene.isDrawing,
   (isDrawing) => {
     if (!isDrawing && garden.plant) {
+      // just finished drawing
       const shape = getNewShape(garden.plant.id);
       const overlappingGuild = garden.getOverlappingGuild(shape);
 
@@ -157,7 +167,12 @@ watch(
         return;
       }
 
-      overlappingGuild.plants.push({ ...shape, x: shape.x, y: shape.y });
+      overlappingGuild.plants.push({
+        ...shape,
+        x: shape.x,
+        y: shape.y,
+        nameOrCultivar: garden.plant.cultivar || garden.plant.name,
+      });
     }
   },
 );
@@ -355,7 +370,7 @@ const saveAs = async () => {
           v-for="thing in garden.allGardenPlants"
           :key="thing.id"
           :thing="thing"
-          :plant="garden.plantsById[thing.plantId]"
+          :plant="garden.plantsById[thing.plantId] || garden.plantsById['default']"
           :active="garden.selectedId === thing.id || garden.hoveredId === thing.id"
           :scale="camera.scale"
           :unit-length-px="mapScale.unitLengthPx"

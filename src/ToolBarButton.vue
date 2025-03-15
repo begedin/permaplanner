@@ -17,6 +17,6 @@ defineProps<{
       class="w-8 h-8"
       :plant="plant"
     />
-    <span class="truncate">{{ plant.name }}</span>
+    <span class="truncate">{{ plant.cultivar || plant.name }}</span>
   </button>
 </template>

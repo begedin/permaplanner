@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@vueuse/core": "^12.1.0",
+    "css-filter-converter": "^1.0.110",
     "pinia": "^2.1.7",
     "polygon-clipping": "^0.15.7",
     "simplify-js": "^1.2.4",

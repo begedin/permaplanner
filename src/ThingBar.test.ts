@@ -14,12 +14,23 @@ afterEach(() => cleanup());
 it('renders guilds', async () => {
   const store = useGardenStore();
   store.plants = [
-    { id: 'plant-1', name: 'A plant', background: 'bg_1', features: [], functions: [], layers: [] },
+    {
+      id: 'plant-1',
+      name: 'A plant',
+      background: 'bg_1',
+      feature: 'apple',
+      feature_tint: 'green',
+      cultivar: 'Granny Smith',
+      functions: [],
+      layers: [],
+    },
     {
       id: 'plant-2',
       name: 'Another plant',
       background: 'bg_2',
-      features: [],
+      feature: 'apple',
+      feature_tint: 'red',
+      cultivar: 'Fuji',
       functions: [],
       layers: [],
     },
@@ -28,13 +39,33 @@ it('renders guilds', async () => {
     {
       id: 'guild',
       name: 'A guild',
-      plants: [{ id: 'plant-1', plantId: 'plant-1', x: 0, y: 0, width: 0, height: 0 }],
+      plants: [
+        {
+          id: 'plant-1',
+          plantId: 'plant-1',
+          x: 0,
+          y: 0,
+          width: 0,
+          height: 0,
+          nameOrCultivar: 'Apple',
+        },
+      ],
       path: [],
     },
     {
       id: 'guild-2',
       name: 'Another guild',
-      plants: [{ id: 'plant-2', plantId: 'plant-2', x: 0, y: 0, width: 0, height: 0 }],
+      plants: [
+        {
+          id: 'plant-2',
+          plantId: 'plant-2',
+          x: 0,
+          y: 0,
+          width: 0,
+          height: 0,
+          nameOrCultivar: 'Granny Smith',
+        },
+      ],
       path: [],
     },
   ];

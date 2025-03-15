@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { v4 as uuidV4 } from 'uuid';
-import { useGardenStore, type Plant, type Feature } from './useGardenStore';
+import { useGardenStore, type Plant } from './useGardenStore';
 import PlantCanvas from './PlantCanvas.vue';
 import PlantFeatures from './PlantFeatures.vue';
 import PlantBases from './PlantBases.vue';
@@ -28,7 +28,9 @@ const newPlant = () => {
   plantInEditing.value = {
     id: uuidV4(),
     background: 'bg_1',
-    features: [],
+    feature: null,
+    feature_tint: null,
+    cultivar: null,
     name: '',
     functions: [],
     layers: [],
@@ -43,12 +45,12 @@ const isNew = computed(
   () => garden.plants.findIndex((p) => p.id === plantInEditing.value.id) === -1,
 );
 
-const currentFeature = ref<Feature>('apple');
-
 const plantInEditing = ref<Plant>({
   id: uuidV4(),
   background: 'bg_1',
-  features: [],
+  feature: null,
+  feature_tint: null,
+  cultivar: null,
   name: '',
   functions: [],
   layers: [],
@@ -105,13 +107,13 @@ const plantInEditing = ref<Plant>({
     <div>
       <PlantCanvas
         v-model:plant="plantInEditing"
-        :current-feature="currentFeature"
+        :current-feature="plantInEditing.feature"
         :scale="1"
       />
     </div>
     <div class="flex flex-col gap-2 p-2">
       <PlantBases v-model:value="plantInEditing.background" />
-      <PlantFeatures v-model:value="currentFeature" />
+      <PlantFeatures v-model:value="plantInEditing.feature" />
       <PlantFunctions v-model:value="plantInEditing.functions" />
       <PlantLayers v-model:value="plantInEditing.layers" />
       <label class="flex flex-col gap-1">

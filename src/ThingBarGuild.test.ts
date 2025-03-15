@@ -25,7 +25,9 @@ it('adds and removes plants', async () => {
       id: 'plant',
       name: 'A plant',
       background: 'bg_1',
-      features: [],
+      feature: null,
+      feature_tint: null,
+      cultivar: null,
       functions: [],
       layers: [],
     },
@@ -33,43 +35,38 @@ it('adds and removes plants', async () => {
       id: 'plant-2',
       name: 'Another plant',
       background: 'bg_2',
-      features: [],
+      feature: null,
+      feature_tint: null,
+      cultivar: null,
       functions: [],
       layers: [],
     },
   ];
-  store.guilds = [{ id: 'guild', name: 'A guild', plants: [], path: [] }];
+  store.guilds = [
+    {
+      id: 'guild',
+      name: 'A guild',
+      plants: [
+        {
+          plantId: 'plant',
+          height: 10,
+          width: 10,
+          x: 0,
+          y: 0,
+          id: '1',
+          nameOrCultivar: 'A plant',
+        },
+      ],
+      path: [],
+    },
+  ];
   const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });
 
   store.selectedId = 'guild';
   await flushPromises();
 
-  const plantsNotInGuild = wrapper.getByLabelText('Plants not in this guild');
-  await fireEvent.click(
-    within(plantsNotInGuild).getByRole('button', { name: 'A plant' }),
-  );
-  await fireEvent.click(
-    within(plantsNotInGuild).getByRole('button', { name: 'Another plant' }),
-  );
-
-  expect(store.guilds[0].plants).toEqual([
-    expect.objectContaining({ plantId: 'plant' }),
-    expect.objectContaining({ plantId: 'plant-2' }),
-  ]);
-
-  const plantsInGuild = wrapper.getByLabelText('Plants in this guild');
-  const plant1Button = await within(plantsInGuild).findByLabelText('A plant');
-  expect(plant1Button).toBeTruthy();
-
-  const plant2Button = await within(plantsInGuild).findByLabelText('Another plant');
-  expect(plant2Button).toBeTruthy();
-
-  await fireEvent.click(
-    within(plant1Button).getByRole('button', { name: 'Remove plant from bed' }),
-  );
-  expect(store.guilds[0].plants).toEqual([
-    expect.objectContaining({ plantId: 'plant-2' }),
-  ]);
+  await fireEvent.click(wrapper.getByRole('button', { name: 'Remove plant from bed' }));
+  expect(store.guilds[0].plants).toEqual([]);
 });
 
 it('renames', () => {
@@ -90,7 +87,9 @@ it('shows layers', () => {
       id: 'plant',
       name: 'A tree',
       background: 'bg_1',
-      features: [],
+      feature: null,
+      feature_tint: null,
+      cultivar: null,
       functions: [],
       layers: ['overstory', 'understory'],
     },
@@ -98,7 +97,9 @@ it('shows layers', () => {
       id: 'plant-2',
       name: 'A small tree',
       background: 'bg_2',
-      features: [],
+      feature: null,
+      feature_tint: null,
+      cultivar: null,
       functions: [],
       layers: ['understory'],
     },
@@ -108,8 +109,24 @@ it('shows layers', () => {
       id: 'guild',
       name: 'A guild',
       plants: [
-        { plantId: 'plant', height: 10, width: 10, x: 0, y: 0, id: '1' },
-        { plantId: 'plant-2', height: 10, width: 10, x: 0, y: 0, id: ' 2' },
+        {
+          plantId: 'plant',
+          height: 10,
+          width: 10,
+          x: 0,
+          y: 0,
+          id: '1',
+          nameOrCultivar: 'A tree',
+        },
+        {
+          plantId: 'plant-2',
+          height: 10,
+          width: 10,
+          x: 0,
+          y: 0,
+          id: '2',
+          nameOrCultivar: 'A small tree',
+        },
       ],
       path: [],
     },
@@ -129,7 +146,9 @@ it('shows functions', () => {
       id: 'apple',
       name: 'Apple',
       background: 'bg_1',
-      features: [],
+      feature: 'apple',
+      feature_tint: null,
+      cultivar: null,
       functions: ['edible', 'medicinal'],
       layers: [],
     },
@@ -137,7 +156,9 @@ it('shows functions', () => {
       id: 'parsley',
       name: 'Parsley',
       background: 'bg_2',
-      features: [],
+      feature: null,
+      feature_tint: null,
+      cultivar: null,
       functions: ['edible', 'medicinal'],
       layers: [],
     },
@@ -147,8 +168,24 @@ it('shows functions', () => {
       id: 'guild',
       name: 'A guild',
       plants: [
-        { plantId: 'apple', height: 10, width: 10, x: 0, y: 0, id: '1' },
-        { plantId: 'parsley', height: 10, width: 10, x: 0, y: 0, id: '2' },
+        {
+          plantId: 'apple',
+          height: 10,
+          width: 10,
+          x: 0,
+          y: 0,
+          id: '1',
+          nameOrCultivar: 'Apple',
+        },
+        {
+          plantId: 'parsley',
+          height: 10,
+          width: 10,
+          x: 0,
+          y: 0,
+          id: '2',
+          nameOrCultivar: 'Parsley',
+        },
       ],
       path: [],
     },

@@ -1,6 +1,11 @@
 <script lang="ts" setup>
+import { computed } from 'vue';
 import { type Plant } from './useGardenStore';
-defineProps<{ plant: Plant }>();
+import { usePlantFeatures } from './usePlantFeatures';
+
+const props = defineProps<{ plant: Plant }>();
+
+const { features, filter } = usePlantFeatures(computed(() => props.plant));
 </script>
 <template>
   <svg
@@ -15,13 +20,14 @@ defineProps<{ plant: Plant }>();
       height="100%"
     />
     <use
-      v-for="feature in plant.features"
-      :key="feature.feature"
+      v-for="feature in features"
+      :key="`${feature.feature}-${feature.x}-${feature.y}`"
       :xlink:href="'#' + feature.feature"
       :width="feature.width"
       :height="feature.height"
       :x="feature.x"
       :y="feature.y"
+      :filter="filter"
     />
   </svg>
 </template>

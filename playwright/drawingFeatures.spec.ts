@@ -118,45 +118,4 @@ test.describe('drawing features', () => {
       page.locator('[data-main-svg] polygon').last().getAttribute('points'),
     ).not.toEqual(currentPoints);
   });
-
-  test('creates a bed and adds plants from sidebar', async ({ page }) => {
-    await page.goto('');
-    await createPlant(page, 'Test apple');
-    await createPlant(page, 'Test banana');
-    await onboard(page);
-
-    await page.getByRole('button', { name: 'Guild' }).click();
-
-    await page.mouse.move(600, 400);
-    await page.mouse.down();
-    await page.mouse.move(400, 500, { steps: 10 });
-    await page.mouse.up();
-    await page.keyboard.press('Enter');
-
-    // add 2 plants to the bed via sidebar
-
-    await page.getByRole('button', { name: 'New guild' }).click();
-    await page.getByLabel('Plants not in this guild').getByTitle('Test apple').click();
-    await page.getByLabel('Plants not in this guild').getByTitle('Test banana').click();
-    await expect(
-      page
-        .getByLabel('New guild')
-        .getByLabel('Plants in this guild')
-        .getByLabel('Test apple'),
-    ).toHaveCount(1);
-    await expect(
-      page
-        .getByLabel('New guild')
-        .getByLabel('Plants in this guild')
-        .getByLabel('Test banana'),
-    ).toHaveCount(1);
-
-    // shift delete bed
-    await page.keyboard.down('Shift');
-    await page.getByRole('button', { name: 'New guild' }).click();
-    await page.keyboard.up('Shift');
-
-    await expect(page.locator('[data-main-svg] polygon')).toHaveCount(0); // unselected, so no brush either
-    await expect(page.getByRole('button', { name: 'New guild' })).toBeHidden();
-  });
 });

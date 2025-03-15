@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { features, type Feature } from './useGardenStore';
 
-defineProps<{ value: Feature }>();
-defineEmits<{ (e: 'update:value', value: Feature): void }>();
+defineProps<{ value: Feature | null }>();
+defineEmits<{ (e: 'update:value', value: Feature | null): void }>();
 </script>
 <template>
   <div class="flex flex-col gap-1">
@@ -26,6 +26,12 @@ defineEmits<{ (e: 'update:value', value: Feature): void }>();
           />
         </svg>
       </button>
+      <button
+        title="none"
+        class="w-8 h-8 p-1 border rounded-md hover:bg-fuchsia-100"
+        :class="{ 'bg-fuchsia-200': value === null }"
+        @click="$emit('update:value', null)"
+      ></button>
     </div>
   </div>
 </template>

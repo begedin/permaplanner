@@ -33,7 +33,7 @@ const guildFunctions = computed(() => {
   );
 
   guild.value?.plants.forEach((thing) => {
-    const plant = garden.plantsById[thing.plantId];
+    const plant = garden.plantsById[thing.plantId] || garden.plantsById.default;
     plant.functions.forEach((f) => {
       functionsByName[f].count++;
     });
@@ -54,7 +54,7 @@ const guildLayers = computed(() => {
   );
 
   guild.value?.plants.forEach((thing) => {
-    const plant = garden.plantsById[thing.plantId];
+    const plant = garden.plantsById[thing.plantId] || garden.plantsById.default;
     plant.layers.forEach((l) => {
       layersByName[l].count++;
     });
@@ -67,7 +67,7 @@ const guildLayers = computed(() => {
 <template>
   <button
     v-if="guild"
-    class="flex flex-col gap-2 items-start justify-start hover:bg-emerald-300 transition-colors p-2 rounded text-slate-600"
+    class="flex flex-col gap-1 items-start justify-start hover:bg-emerald-300 transition-colors p-2 rounded text-slate-600"
     :aria-label="guild.name"
     :class="{
       'bg-emerald-100': garden.selectedId === id,
@@ -84,29 +84,31 @@ const guildLayers = computed(() => {
       @input="setName"
     />
     <div
-      class="flex flex-row flex-wrap gap-1 w-full"
+      class="flex flex-col gap-1 w-full"
       aria-label="Plants in this guild"
     >
       <h3 class="w-full text-left bg-sky-200 -mx-2 px-2">Plants</h3>
       <div
         v-for="(plant, index) in guild.plants"
         :key="plant.id"
-        :aria-label="garden.plantsById[plant.plantId].name"
-        class="group grid grid-cols-1 grid-rows-1 p-1 bg-sky-200 h-7 w-7 rounded-md drop-shadow place-items-center"
+        :aria-label="plant.nameOrCultivar"
+        class="pl-1 flex flex-row items-center justify-start w-full gap-1 border-b border-sky-300"
       >
         <PlantIcon
-          :title="plant.name"
-          class="h-6 w-6 col-start-1 col-end-1 row-start-1 row-end-1"
-          :plant="garden.plantsById[plant.plantId]"
+          :title="plant.nameOrCultivar"
+          class="h-4 w-4"
+          :plant="garden.plantsById[plant.plantId] || garden.plantsById.default"
         />
+
+        <span class="truncate text-left flex-grow">{{ plant.nameOrCultivar }}</span>
 
         <button
           title="Remove plant from bed"
           aria-label="Remove plant from bed"
-          class="hidden group-hover:grid text-sky-900 h-full w-full col-start-1 col-end-1 row-start-1 row-end-1 content-center"
+          class="bg-transparent hover:bg-red-200 rounded-md p-1/2 px-1 transition-colors"
           @click="removePlant(index)"
         >
-          x
+          ✖️
         </button>
       </div>
     </div>
@@ -121,13 +123,13 @@ const guildLayers = computed(() => {
           'bg-green-200': f.count == 1,
           'bg-green-500': f.count > 1,
         }"
-        class="rounded-md p-1"
+        class="rounded-md p-1/2 px-1 text-xs"
         :aria-label="`${f.label}`"
       >
         {{ f.label }}
         <span
           v-if="f.count > 1"
-          class="text-xs text-slate-500 bg-slate-200 rounded-md px-1"
+          class="text-slate-500 bg-slate-200 rounded-md px-1 text-xs"
         >
           {{ f.count }}
         </span>
@@ -135,7 +137,7 @@ const guildLayers = computed(() => {
     </div>
 
     <div class="flex flex-row flex-wrap gap-1 w-full">
-      <h3 class="w-full text-left bg-sky-200 -mx-2 px-2">Layers</h3>
+      <h3 class="w-full text-left bg-sky-200 -mx-2 px-1">Layers</h3>
       <div
         v-for="(l, i) in guildLayers"
         :key="i"
@@ -144,7 +146,7 @@ const guildLayers = computed(() => {
           'bg-green-200': l.count == 1,
           'bg-green-500': l.count > 1,
         }"
-        class="rounded-md p-1"
+        class="rounded-md p-1/2 px-1 text-xs"
         :aria-label="`${l.label}`"
       >
         {{ l.label }}
@@ -155,27 +157,6 @@ const guildLayers = computed(() => {
           {{ l.count }}
         </span>
       </div>
-    </div>
-
-    <div
-      v-if="garden.selectedId === id"
-      class="flex flex-col gap-1"
-      aria-label="Plants not in this guild"
-    >
-      <h3 class="w-full">Add a plant to this guild</h3>
-      <button
-        v-for="plant in garden.plants"
-        :key="plant.id"
-        class="flex flex-row gap-1 items-center bg-sky-50 rounded-md p-1"
-        @click="garden.addPlantToGuild(guild.id, plant.id)"
-      >
-        <PlantIcon
-          class="h-6 w-6"
-          :plant="plant"
-          :title="plant.name"
-        />
-        <div>{{ plant.name }}</div>
-      </button>
     </div>
   </button>
 </template>
