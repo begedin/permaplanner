@@ -1,6 +1,10 @@
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { Page } from '@playwright/test';
+
+const helpersDir = path.dirname(fileURLToPath(import.meta.url));
+const emptyPlanPath = path.join(helpersDir, 'fixtures', 'emptyPlan.json');
 
 export const putImageIntoClipboard = async (page: Page): Promise<void> => {
   await page.evaluate(async () => {
@@ -46,7 +50,7 @@ export const onboard = async (page: Page): Promise<void> => {
 };
 
 export const stubSaveFilePicker = async (page: Page, fileName: string) => {
-  const newPath = path.join(process.cwd(), 'playwright', 'fixtures', fileName);
+  const newPath = path.join(helpersDir, 'fixtures', fileName);
   const blob = fs.openAsBlob(newPath);
   await page.evaluate(async (blob) => {
     window.showSaveFilePicker = () =>
@@ -60,4 +64,51 @@ export const stubSaveFilePicker = async (page: Page, fileName: string) => {
           } as unknown as FileSystemWritableFileStream),
       } as unknown as FileSystemFileHandle);
   }, blob);
+};
+
+const readEmptyPlan = (): string => fs.readFileSync(emptyPlanPath, 'utf-8');
+
+/**
+ * Seeds Origin Private File System with a real FileSystemFileHandle and stubs the
+ * picker APIs to return it. Chromium can persist that handle in IndexedDB, so save →
+ * reload → auto-restore behaves like a user-chosen file.
+ *
+ * addInitScript runs on every navigation; we only write the fixture once per tab
+ * (sessionStorage) so a reload does not clobber saved JSON before restore runs.
+ *
+ * Important: the callback body is serialized for the browser — only locals and the
+ * injected argument exist there; do not reference outer-scope variables.
+ */
+export const installOpfsPlanFileHandleE2E = async (page: Page) => {
+  const initial = readEmptyPlan();
+  await page.addInitScript((minText: string) => {
+    const fileName = 'e2e-plan.json';
+    const seededKey = 'permaplanner:e2e:opfs-seeded';
+
+    const win = window as Window & {
+      __permaplannerE2eOpfsReady: Promise<FileSystemFileHandle>;
+    };
+
+    win.__permaplannerE2eOpfsReady = (async () => {
+      const root = await navigator.storage.getDirectory();
+
+      if (!sessionStorage.getItem(seededKey)) {
+        try {
+          await root.removeEntry(fileName);
+        } catch {
+          // not present
+        }
+        const created = await root.getFileHandle(fileName, { create: true });
+        const stream = await created.createWritable();
+        await stream.write(minText);
+        await stream.close();
+        sessionStorage.setItem(seededKey, '1');
+      }
+
+      return root.getFileHandle(fileName, { create: true });
+    })();
+
+    window.showSaveFilePicker = () => win.__permaplannerE2eOpfsReady;
+    window.showOpenFilePicker = async () => [await win.__permaplannerE2eOpfsReady];
+  }, initial);
 };

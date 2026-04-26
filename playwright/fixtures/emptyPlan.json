@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "backgroundOpacity": 0.4,
+  "plants": [
+    {
+      "id": "apple_granny_smith",
+      "name": "Apple",
+      "cultivar": "Granny Smith",
+      "background": "bg_1",
+      "feature": "apple",
+      "feature_tint": "#00DD00",
+      "functions": [],
+      "layers": []
+    }
+  ],
+  "guilds": [],
+  "mapScale": {
+    "start": { "x": 20, "y": 20 },
+    "end": { "x": 150, "y": 20 },
+    "linePhysicalLength": 1
+  }
+}
