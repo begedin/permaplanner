@@ -1,4 +1,4 @@
-import type { Plant } from './useGardenStore';
+import type { Plant } from './gardenTypes';
 
 export const plants: Plant[] = [
   {

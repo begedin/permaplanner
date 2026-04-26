@@ -207,6 +207,7 @@ const strokeColor = computed(() =>
           ? 'rgba(0, 100, 0, 0.3)'
           : 'rgba(0, 100, 0, 0.2)'
     "
+    stroke="black"
     class="pointer-events-fill"
     @mouseenter.="emit('mouseenter')"
     @mouseleave="emit('mouseleave')"

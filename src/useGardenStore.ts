@@ -1,20 +1,10 @@
-import { useStorage } from '@vueuse/core';
-import { defineStore } from 'pinia';
+import { defineStore, storeToRefs } from 'pinia';
 import { computed, nextTick, ref } from 'vue';
 import { uuid } from './utils';
-import { plants as plantsData } from './plants';
+import { usePermaplannerStore } from './usePermaplannerStore';
+import type { GardenThing, Guild, Plant } from './gardenTypes';
 
-export const baseLayers = [
-  'bg_1',
-  'bg_2',
-  'bg_3',
-  'bg_4',
-  'bg_5',
-  'bg_6',
-  'bg_7',
-  'bg_8',
-] as const;
-export type BaseLayer = (typeof baseLayers)[number];
+export * from './gardenTypes';
 
 const getPathBounds = (path: { x: number; y: number }[]) => {
   const minX = Math.min(...path.map((p) => p.x));
@@ -23,73 +13,6 @@ const getPathBounds = (path: { x: number; y: number }[]) => {
   const maxY = Math.max(...path.map((p) => p.y));
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 };
-
-export const GuildFunction = {
-  nitrogen_fixer: 'nitrogen_fixer',
-  dynamic_accumulator: 'dynamic_accumulator',
-  pollinator_attractor: 'pollinator_attractor',
-  pest_repellent: 'pest_repellent',
-  ground_cover: 'ground_cover',
-  wildfire_suppressor: 'wildfire_suppressor',
-  mulcher: 'mulcher',
-  edible: 'edible',
-  medicinal: 'medicinal',
-} as const;
-
-export type GuildFunction = (typeof GuildFunction)[keyof typeof GuildFunction];
-
-export const GuildLayer = {
-  overstory: 'overstory',
-  understory: 'understory',
-  shrub: 'shrub',
-  ground_cover: 'ground_cover',
-  vine: 'vine',
-  herb: 'herb',
-  root: 'root',
-} as const;
-
-export type GuildLayer = (typeof GuildLayer)[keyof typeof GuildLayer];
-
-export type Plant = {
-  id: string;
-  name: string;
-  cultivar: string | null;
-  background: BaseLayer;
-  feature: Feature | null;
-  feature_tint: string | null;
-  functions: GuildFunction[];
-  layers: GuildLayer[];
-};
-
-export type GardenThing = {
-  id: string;
-  nameOrCultivar: string;
-  plantId: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
-export type Guild = {
-  id: string;
-  name: string;
-  path: { x: number; y: number }[];
-  plants: GardenThing[];
-};
-
-export const features = [
-  'apple',
-  'banana',
-  'blueberry',
-  'cherry',
-  'lemon',
-  'orange',
-  'pear',
-  'strawberry',
-] as const;
-
-export type Feature = (typeof features)[number];
 
 type Bounds = {
   x: number;
@@ -108,14 +31,14 @@ const isOverlapping = (bounds: Bounds, thing: Bounds) => {
 };
 
 export const useGardenStore = defineStore('garden', () => {
-  const plants = ref(plantsData);
+  const permaplanner = usePermaplannerStore();
+  const { plants, guilds } = storeToRefs(permaplanner);
+
   const plant = ref<Plant>();
 
   const plantsById = computed(() =>
     Object.fromEntries(plants.value.map((p) => [p.id, p])),
   );
-
-  const guilds = useStorage<Guild[]>('guilds', []);
 
   const guildBoundsById = computed(() =>
     Object.fromEntries(
@@ -124,7 +47,7 @@ export const useGardenStore = defineStore('garden', () => {
   );
 
   const updateFeature = (guildId: string, thingId: string, thing: GardenThing) => {
-    const guild = guilds.value.find((guild) => guild.id === guildId);
+    const guild = guilds.value.find((g) => g.id === guildId);
     if (!guild) {
       return;
     }
@@ -135,25 +58,23 @@ export const useGardenStore = defineStore('garden', () => {
     });
 
     if (overlappingGuild && overlappingGuild !== guild) {
-      guild.plants = guild.plants.filter((plant) => plant.id !== thingId);
+      guild.plants = guild.plants.filter((p) => p.id !== thingId);
       overlappingGuild.plants.push(thing);
     } else {
-      guild.plants = guild.plants.map((plant) => (plant.id === thingId ? thing : plant));
+      guild.plants = guild.plants.map((p) => (p.id === thingId ? thing : p));
     }
   };
 
   const deleteFeature = (id: string) => {
-    const guildById = guilds.value.find((guild) => guild.id === id);
+    const guildById = guilds.value.find((g) => g.id === id);
     if (guildById) {
-      guilds.value = guilds.value.filter((guild) => guild.id !== id);
+      guilds.value = guilds.value.filter((g) => g.id !== id);
     }
 
-    const guildByPlantId = guilds.value.find((guild) =>
-      guild.plants.some((plant) => plant.id === id),
-    );
+    const guildByPlantId = guilds.value.find((g) => g.plants.some((p) => p.id === id));
 
     if (guildByPlantId) {
-      guildByPlantId.plants = guildByPlantId.plants.filter((plant) => plant.id !== id);
+      guildByPlantId.plants = guildByPlantId.plants.filter((p) => p.id !== id);
     }
   };
 
@@ -175,8 +96,8 @@ export const useGardenStore = defineStore('garden', () => {
     });
 
   const editGuild = (id: string) => {
-    const guild = guilds.value.find((g) => g.id === id);
-    if (guild) {
+    const g = guilds.value.find((g) => g.id === id);
+    if (g) {
       newGuild.value = undefined;
       selectedId.value = id;
       hoveredId.value = id;
@@ -184,7 +105,7 @@ export const useGardenStore = defineStore('garden', () => {
   };
 
   const removeGuild = (id: string) => {
-    guilds.value = guilds.value.filter((guild) => guild.id !== id);
+    guilds.value = guilds.value.filter((g) => g.id !== id);
   };
 
   const getOverlappingGuild = (thing: {
@@ -193,23 +114,21 @@ export const useGardenStore = defineStore('garden', () => {
     width: number;
     height: number;
   }) => {
-    return guilds.value.find((guild) =>
-      isOverlapping(guildBoundsById.value[guild.id], thing),
-    );
+    return guilds.value.find((g) => isOverlapping(guildBoundsById.value[g.id], thing));
   };
 
   const allGardenPlants = computed(() => {
     const things: (GardenThing & { guildId: string })[] = [];
     guilds.value.forEach((guild) =>
-      guild.plants.forEach((plant) => {
-        things.push({ ...plant, guildId: guild.id });
+      guild.plants.forEach((p) => {
+        things.push({ ...p, guildId: guild.id });
       }),
     );
     return things;
   });
 
   const addPlantToGuild = (guildId: string, plantId: string) => {
-    const guild = guilds.value.find((guild) => guild.id === guildId);
+    const guild = guilds.value.find((g) => g.id === guildId);
     if (!guild) {
       return;
     }
@@ -222,8 +141,7 @@ export const useGardenStore = defineStore('garden', () => {
       y: bounds.y + 5,
       width: 16,
       height: 16,
-      nameOrCultivar:
-        plantsById.value[plantId].cultivar || plantsById.value[plantId].name,
+      nameOrCultivar: plantsById.value[plantId].cultivar || plantsById.value[plantId].name,
     });
   };
 

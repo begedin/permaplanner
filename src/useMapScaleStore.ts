@@ -1,15 +1,20 @@
-import { useStorage } from '@vueuse/core';
+import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
-import { computed } from 'vue';
 
 const DEFAULT_START = { x: 20, y: 20 };
 const DEFAULT_END = { x: 150, y: 20 };
 
 export const useMapScaleStore = defineStore('mapScale', () => {
-  const start = useStorage<{ x: number; y: number }>('mapScaleStart', DEFAULT_START);
-  const end = useStorage<{ x: number; y: number }>('mapScaleEnd', DEFAULT_END);
+  const start = ref({ ...DEFAULT_START });
+  const end = ref({ ...DEFAULT_END });
 
-  const linePhysicalLength = useStorage<number>('mapScaleReferenceLineRealLength', 1);
+  const linePhysicalLength = ref(1);
+
+  const resetToDefaults = () => {
+    start.value = { ...DEFAULT_START };
+    end.value = { ...DEFAULT_END };
+    linePhysicalLength.value = 1;
+  };
 
   const line = computed(() => {
     return {
@@ -36,5 +41,6 @@ export const useMapScaleStore = defineStore('mapScale', () => {
     line,
     linePhysicalLength,
     unitLengthPx,
+    resetToDefaults,
   };
 });

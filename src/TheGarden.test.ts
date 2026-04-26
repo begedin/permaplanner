@@ -15,10 +15,6 @@ beforeAll(() => {
       get: () => ({ persist: vi.fn }),
     },
   });
-
-  Object.defineProperty(global, 'indexedDB', {
-    get: () => ({ open: vi.fn().mockReturnValue({ transaction: vi.fn() }) }),
-  });
 });
 
 beforeEach(() => {
