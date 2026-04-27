@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 
 import {
   buildGithubAuthorizeUrl,
+  nextSyncRevisionForPush,
   planBackgroundMediaRepoPath,
   planGardenFolderSegment,
   planPathSegment,
@@ -33,4 +34,10 @@ it('planPathSegment sanitizes; repo paths use one folder per garden under plans/
   expect(planRepoGuildsPath('foo.bar')).toBe('plans/foo.bar/guilds.json');
   expect(planRepoConfigPath('foo.bar')).toBe('plans/foo.bar/config.json');
   expect(planBackgroundMediaRepoPath('foo.json', 'png')).toBe('plans/foo/background.png');
+});
+
+it('nextSyncRevisionForPush bumps above both local and remote', () => {
+  expect(nextSyncRevisionForPush(0, 0)).toBe(1);
+  expect(nextSyncRevisionForPush(3, 5)).toBe(6);
+  expect(nextSyncRevisionForPush(5, 3)).toBe(6);
 });

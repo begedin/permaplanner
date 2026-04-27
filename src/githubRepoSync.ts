@@ -1,4 +1,4 @@
-import type { PermaplannerFileV1 } from './usePermaplannerStore';
+import { parsePermaplannerDocument, usePermaplannerStore, type PermaplannerFileV1 } from './usePermaplannerStore';
 
 export const planRepoSyncUpdatedEventName = 'permaplanner:plan-repo-updated';
 
@@ -101,13 +101,14 @@ export const planRepoConfigPath = (fileName: string | undefined): string =>
 export const planBackgroundMediaRepoPath = (fileName: string | undefined, ext: string): string =>
   `${PLANS_DIR}/${planGardenFolderSegment(fileName)}/background.${ext}`;
 
-export const getPlanRepoBlobUrl = (fileName: string | undefined): string | undefined => {
+/** Web URL for the `plans/<garden>/` folder on GitHub (not a single file). */
+export const getPlanRepoGardenFolderUrl = (fileName: string | undefined): string | undefined => {
   const full = localStorage.getItem(LS_REPO_FULL_NAME);
   if (!full) {
     return undefined;
   }
-  const path = planRepoConfigPath(fileName);
-  return `https://github.com/${full}/blob/${DEFAULT_BRANCH}/${path}`;
+  const path = gardenDir(fileName);
+  return `https://github.com/${full}/tree/${DEFAULT_BRANCH}/${path}`;
 };
 
 export const clearGithubRepoSession = (): void => {
@@ -310,6 +311,58 @@ const ensurePlanRepo = async (token: string): Promise<string> => {
 
 type ContentGetResponse = { sha: string; type: string };
 
+type ContentFileApi = { type: string; content?: string; encoding?: string };
+
+const decodeGithubFileBase64 = (content: string): Uint8Array => {
+  const b64 = content.replace(/\s/g, '');
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) {
+    out[i] = bin.charCodeAt(i);
+  }
+  return out;
+};
+
+const decodeGithubFileUtf8 = (content: string): string =>
+  new TextDecoder().decode(decodeGithubFileBase64(content));
+
+const getRepoContentsFile = async (
+  token: string,
+  fullName: string,
+  path: string,
+): Promise<ContentFileApi | undefined> => {
+  const url = `https://api.github.com/repos/${fullName}/contents/${path}?ref=${DEFAULT_BRANCH}`;
+  const res = await fetch(url, { headers: githubHeaders(token) });
+  if (res.status === 404) {
+    return undefined;
+  }
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`GitHub read ${path}: ${res.status} ${t}`);
+  }
+  const body = (await res.json()) as ContentFileApi;
+  if (body.type !== 'file' || body.encoding !== 'base64' || typeof body.content !== 'string') {
+    throw new Error(`GitHub read ${path}: unexpected response shape`);
+  }
+  return body;
+};
+
+const getRepoJsonIfExists = async (
+  token: string,
+  fullName: string,
+  path: string,
+): Promise<unknown | undefined> => {
+  const file = await getRepoContentsFile(token, fullName, path);
+  if (!file?.content) {
+    return undefined;
+  }
+  return JSON.parse(decodeGithubFileUtf8(file.content)) as unknown;
+};
+
+/** Next sync revision after a successful push (always strictly greater than local and remote). */
+export const nextSyncRevisionForPush = (local: number, remote: number): number =>
+  Math.max(Math.max(0, Math.floor(local)), Math.max(0, Math.floor(remote))) + 1;
+
 /**
  * Creates or updates a single file via the Contents API (normal git blob).
  * Git LFS is not supported here — LFS uses a separate upload + pointer-file flow.
@@ -354,13 +407,91 @@ const putRepoContents = async (
   }
 };
 
+const dataUrlMimeForRepoPath = (repoPath: string): string => {
+  const ext = repoPath.split('.').pop()?.toLowerCase() ?? 'png';
+  if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
+  if (ext === 'webp') return 'image/webp';
+  if (ext === 'gif') return 'image/gif';
+  return 'image/png';
+};
+
+const readSyncRevisionFromConfigJson = (raw: unknown): number => {
+  if (!raw || typeof raw !== 'object') {
+    return 0;
+  }
+  const sr = (raw as Record<string, unknown>).syncRevision;
+  return typeof sr === 'number' && Number.isFinite(sr) ? Math.max(0, Math.floor(sr)) : 0;
+};
+
+export const fetchRemotePlanSyncRevision = async (
+  token: string,
+  sourceFileName: string | undefined,
+): Promise<number | undefined> => {
+  const fullName = await ensurePlanRepo(token);
+  const raw = await getRepoJsonIfExists(token, fullName, planRepoConfigPath(sourceFileName));
+  if (raw === undefined) {
+    return undefined;
+  }
+  const rev = readSyncRevisionFromConfigJson(raw);
+  return rev;
+};
+
+export const pullPlanJsonFromGithubRepo = async (
+  token: string,
+  sourceFileName: string | undefined,
+): Promise<PermaplannerFileV1> => {
+  const fullName = await ensurePlanRepo(token);
+  const plantsPath = planRepoPlantsPath(sourceFileName);
+  const guildsPath = planRepoGuildsPath(sourceFileName);
+  const configPath = planRepoConfigPath(sourceFileName);
+
+  const plantsRaw = await getRepoJsonIfExists(token, fullName, plantsPath);
+  const guildsRaw = await getRepoJsonIfExists(token, fullName, guildsPath);
+  const configRaw = await getRepoJsonIfExists(token, fullName, configPath);
+  if (plantsRaw === undefined && guildsRaw === undefined && configRaw === undefined) {
+    throw new Error('No saved plan found in the GitHub repo for this garden.');
+  }
+
+  const cfg = (configRaw && typeof configRaw === 'object' ? configRaw : {}) as Record<string, unknown>;
+  let backgroundImage: string | undefined;
+  const bgPath = typeof cfg.backgroundImagePath === 'string' ? cfg.backgroundImagePath : undefined;
+  if (bgPath) {
+    const file = await getRepoContentsFile(token, fullName, bgPath);
+    if (file?.content) {
+      const mime = dataUrlMimeForRepoPath(bgPath);
+      const stripped = file.content.replace(/\s/g, '');
+      backgroundImage = `data:${mime};base64,${stripped}`;
+    }
+  }
+
+  const plantsWrap = plantsRaw as { plants?: unknown } | undefined;
+  const guildsWrap = guildsRaw as { guilds?: unknown } | undefined;
+
+  const merged: Record<string, unknown> = {
+    ...cfg,
+    plants: plantsWrap?.plants,
+    guilds: guildsWrap?.guilds,
+  };
+  if (backgroundImage !== undefined) {
+    merged.backgroundImage = backgroundImage;
+  }
+
+  return parsePermaplannerDocument(merged);
+};
+
 export const pushPlanJsonToGithubRepo = async (
   token: string,
   snapshot: PermaplannerFileV1,
   sourceFileName: string | undefined,
-): Promise<void> => {
+): Promise<{ syncRevision: number }> => {
   const fullName = await ensurePlanRepo(token);
-  const bg = snapshot.backgroundImage;
+  const configPath = planRepoConfigPath(sourceFileName);
+  const remoteConfig = await getRepoJsonIfExists(token, fullName, configPath);
+  const remoteRev = readSyncRevisionFromConfigJson(remoteConfig);
+  const nextRev = nextSyncRevisionForPush(snapshot.syncRevision, remoteRev);
+  const snapshotForPush: PermaplannerFileV1 = { ...snapshot, syncRevision: nextRev };
+
+  const bg = snapshotForPush.backgroundImage;
 
   let backgroundImagePath: string | undefined;
   if (typeof bg === 'string' && bg.startsWith('data:')) {
@@ -379,13 +510,14 @@ export const pushPlanJsonToGithubRepo = async (
   }
 
   const segment = planGardenFolderSegment(sourceFileName);
-  const plantsJson = JSON.stringify({ plants: snapshot.plants }, null, 2);
-  const guildsJson = JSON.stringify({ guilds: snapshot.guilds }, null, 2);
+  const plantsJson = JSON.stringify({ plants: snapshotForPush.plants }, null, 2);
+  const guildsJson = JSON.stringify({ guilds: snapshotForPush.guilds }, null, 2);
   const configJson = JSON.stringify(
     {
-      version: snapshot.version,
-      mapScale: snapshot.mapScale,
-      backgroundOpacity: snapshot.backgroundOpacity,
+      version: snapshotForPush.version,
+      syncRevision: snapshotForPush.syncRevision,
+      mapScale: snapshotForPush.mapScale,
+      backgroundOpacity: snapshotForPush.backgroundOpacity,
       ...(backgroundImagePath !== undefined ? { backgroundImagePath } : {}),
     },
     null,
@@ -394,7 +526,6 @@ export const pushPlanJsonToGithubRepo = async (
 
   const plantsPath = planRepoPlantsPath(sourceFileName);
   const guildsPath = planRepoGuildsPath(sourceFileName);
-  const configPath = planRepoConfigPath(sourceFileName);
 
   await putRepoContents(
     token,
@@ -417,6 +548,8 @@ export const pushPlanJsonToGithubRepo = async (
     utf8ToBase64(configJson),
     `Update plan config (${segment})`,
   );
+
+  return { syncRevision: nextRev };
 };
 
 export const syncIfRepoLinked = async (
@@ -431,7 +564,8 @@ export const syncIfRepoLinked = async (
     return;
   }
   try {
-    await pushPlanJsonToGithubRepo(token, snapshot, sourceFileName);
+    const { syncRevision } = await pushPlanJsonToGithubRepo(token, snapshot, sourceFileName);
+    usePermaplannerStore().setSyncRevision(syncRevision);
     window.dispatchEvent(new Event(planRepoSyncUpdatedEventName));
   } catch (e) {
     console.error('[permaplanner] GitHub repo sync failed:', e);

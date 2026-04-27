@@ -12,6 +12,8 @@ const FILE_VERSION = 1;
 
 export type PermaplannerFileV1 = {
   version: typeof FILE_VERSION;
+  /** Increments on each successful GitHub sync push; used to compare with remote. */
+  syncRevision: number;
   plants: Plant[];
   guilds: Guild[];
   mapScale: {
@@ -32,7 +34,7 @@ const defaultMapScaleSnapshot = (): PermaplannerFileV1['mapScale'] => ({
   linePhysicalLength: 1,
 });
 
-const parseDocument = (raw: unknown): PermaplannerFileV1 => {
+export const parsePermaplannerDocument = (raw: unknown): PermaplannerFileV1 => {
   const data = assert(raw) as Record<string, unknown> & { plants?: Plant[]; guilds?: Guild[] };
 
   const backgroundImageFromFile =
@@ -42,8 +44,14 @@ const parseDocument = (raw: unknown): PermaplannerFileV1 => {
         ? data.backgroundImageDataUrl
         : undefined;
 
+  const syncRevision =
+    typeof data.syncRevision === 'number' && Number.isFinite(data.syncRevision)
+      ? Math.max(0, Math.floor(data.syncRevision))
+      : 0;
+
   const base: PermaplannerFileV1 = {
     version: FILE_VERSION,
+    syncRevision,
     plants: (Array.isArray(data.plants) && data.plants.length ? data.plants : defaultPlants()) as Plant[],
     guilds: (Array.isArray(data.guilds) ? data.guilds : []) as Guild[],
     mapScale: defaultMapScaleSnapshot(),
@@ -99,12 +107,14 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
   const backgroundOpacity = ref(0.4);
   const plants = ref<Plant[]>(defaultPlants());
   const guilds = ref<Guild[]>([]);
+  const syncRevision = ref(0);
 
   const snapshot = (): PermaplannerFileV1 => {
     const mapScale = useMapScaleStore();
     const bg = backgroundImageDataUrl.value;
     const doc: PermaplannerFileV1 = {
       version: FILE_VERSION,
+      syncRevision: syncRevision.value,
       plants: plants.value,
       guilds: guilds.value,
       mapScale: {
@@ -134,12 +144,13 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       }
     }
 
-    const data = parseDocument(JSON.parse(text) as unknown);
+    const data = parsePermaplannerDocument(JSON.parse(text) as unknown);
 
     backgroundImageDataUrl.value = data.backgroundImage;
     backgroundOpacity.value = data.backgroundOpacity;
     plants.value = data.plants?.length ? data.plants : defaultPlants();
     guilds.value = data.guilds ?? [];
+    syncRevision.value = data.syncRevision;
     applyToMapScale(data);
 
     fileHandle.value = handle;
@@ -174,7 +185,23 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     backgroundOpacity.value = 0.4;
     plants.value = defaultPlants();
     guilds.value = [];
+    syncRevision.value = 0;
     useMapScaleStore().resetToDefaults();
+  };
+
+  const setSyncRevision = (n: number) => {
+    if (Number.isFinite(n) && n >= 0) {
+      syncRevision.value = Math.floor(n);
+    }
+  };
+
+  const applyRemoteRepoSnapshot = (doc: PermaplannerFileV1) => {
+    backgroundImageDataUrl.value = doc.backgroundImage;
+    backgroundOpacity.value = doc.backgroundOpacity;
+    plants.value = doc.plants?.length ? doc.plants : defaultPlants();
+    guilds.value = doc.guilds ?? [];
+    syncRevision.value = doc.syncRevision;
+    applyToMapScale(doc);
   };
 
   return {
@@ -189,5 +216,8 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     backgroundOpacity,
     plants,
     guilds,
+    syncRevision,
+    setSyncRevision,
+    applyRemoteRepoSnapshot,
   };
 });
