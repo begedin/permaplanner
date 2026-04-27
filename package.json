@@ -4,7 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "op run --env-file=.env.1password -- vite",
+    "dev:plain": "vite",
+    "gen:env:1password": "node scripts/gen-env-1password.mjs",
+    "deploy:fly": "bash scripts/fly-deploy-op.sh",
+    "start": "node server/static.mjs",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "test:unit": "vitest",

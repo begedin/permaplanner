@@ -1,6 +1,6 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
-import pluginVue from 'eslint-plugin-vue'
+import pluginVue from 'eslint-plugin-vue';
 
 export default tseslint.config(
   eslint.configs.recommended,
@@ -20,6 +20,17 @@ export default tseslint.config(
         extraFileExtensions: ['.vue'],
       },
     },
-    
-  }
+  },
+  {
+    files: ['server/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        Buffer: 'readonly',
+        URL: 'readonly',
+        console: 'readonly',
+        fetch: 'readonly',
+        process: 'readonly',
+      },
+    },
+  },
 );

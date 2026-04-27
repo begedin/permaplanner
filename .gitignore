@@ -14,6 +14,11 @@ dist-ssr
 coverage
 *.local
 
+# Plain env with real secrets (use .env.1password + op run for dev instead)
+.env
+.env.*
+!.env.1password.example
+
 /cypress/videos/
 /cypress/screenshots/
 

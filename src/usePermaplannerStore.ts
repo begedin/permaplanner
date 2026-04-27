@@ -12,7 +12,6 @@ const FILE_VERSION = 1;
 
 export type PermaplannerFileV1 = {
   version: typeof FILE_VERSION;
-  backgroundImage?: string;
   plants: Plant[];
   guilds: Guild[];
   mapScale: {
@@ -21,6 +20,10 @@ export type PermaplannerFileV1 = {
     linePhysicalLength: number;
   };
   backgroundOpacity: number;
+  /** Large base64 data URL — kept last in JSON for readability when opening the file. */
+  backgroundImage?: string;
+  /** Repo-relative image path (GitHub sync export only); local saves omit this. */
+  backgroundImagePath?: string;
 };
 
 const defaultMapScaleSnapshot = (): PermaplannerFileV1['mapScale'] => ({
@@ -41,12 +44,14 @@ const parseDocument = (raw: unknown): PermaplannerFileV1 => {
 
   const base: PermaplannerFileV1 = {
     version: FILE_VERSION,
-    backgroundImage: backgroundImageFromFile,
     plants: (Array.isArray(data.plants) && data.plants.length ? data.plants : defaultPlants()) as Plant[],
     guilds: (Array.isArray(data.guilds) ? data.guilds : []) as Guild[],
     mapScale: defaultMapScaleSnapshot(),
     backgroundOpacity: 0.4,
   };
+  if (backgroundImageFromFile !== undefined) {
+    base.backgroundImage = backgroundImageFromFile;
+  }
 
   if (data.mapScale && typeof data.mapScale === 'object' && data.mapScale !== null) {
     const ms = data.mapScale as Record<string, unknown>;
@@ -97,9 +102,9 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
 
   const snapshot = (): PermaplannerFileV1 => {
     const mapScale = useMapScaleStore();
-    return {
+    const bg = backgroundImageDataUrl.value;
+    const doc: PermaplannerFileV1 = {
       version: FILE_VERSION,
-      backgroundImage: backgroundImageDataUrl.value,
       plants: plants.value,
       guilds: guilds.value,
       mapScale: {
@@ -109,6 +114,10 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       },
       backgroundOpacity: backgroundOpacity.value,
     };
+    if (bg !== undefined) {
+      doc.backgroundImage = bg;
+    }
+    return doc;
   };
 
   type LoadOptions = { skipBindingPersist?: boolean };
@@ -172,6 +181,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     load,
     save,
     resetToNewPlan,
+    snapshot,
     fileName,
     fileHandle,
     needsFileRelink,

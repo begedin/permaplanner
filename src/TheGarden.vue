@@ -21,6 +21,8 @@ import ToolBarButton from './ToolBarButton.vue';
 import ToolSlider from './ToolSlider.vue';
 import ReferenceLine from './ReferenceLine.vue';
 import { useOnboardingStore } from './useOnboardingStore';
+import GithubRepoSyncPanel from './GithubRepoSyncPanel.vue';
+import { completeGithubAuthIfNeeded, syncIfRepoLinked } from './githubRepoSync';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import {
   ensureReadAccess,
@@ -29,6 +31,10 @@ import {
 } from './sessionFileHandle';
 
 const permaplannerStore = usePermaplannerStore();
+
+const syncRepoAfterLocalSave = () => {
+  void syncIfRepoLinked(permaplannerStore.snapshot(), permaplannerStore.fileName);
+};
 
 const {
   setupBackgroundImagePaste,
@@ -164,6 +170,7 @@ const continueReopenPersistedFile = async () => {
 onMounted(() => {
   void (async () => {
     try {
+      await completeGithubAuthIfNeeded();
       await tryRestorePersistedFile();
     } finally {
       isRestoringSession.value = false;
@@ -269,6 +276,7 @@ const newPlan = async () => {
     const fileHandle = await window.showSaveFilePicker(options);
     await permaplannerStore.resetToNewPlan();
     await permaplannerStore.save(fileHandle);
+    syncRepoAfterLocalSave();
     onboarding.onboardingState = 'initial';
   } catch (e) {
     console.error(e);
@@ -283,6 +291,7 @@ const save = async () => {
     permaplannerStore.fileHandle = fileHandle;
     permaplannerStore.fileName = fileHandle.name;
     await permaplannerStore.save(fileHandle);
+    syncRepoAfterLocalSave();
   } catch (e) {
     console.error(e);
   }
@@ -293,6 +302,7 @@ const saveAs = async () => {
     const options = fileOptions(permaplannerStore.fileName);
     const fileHandle = await window.showSaveFilePicker(options);
     await permaplannerStore.save(fileHandle);
+    syncRepoAfterLocalSave();
   } catch (e) {
     console.error(e);
   }
@@ -425,6 +435,7 @@ const saveAs = async () => {
       >
         New plan
       </button>
+      <GithubRepoSyncPanel v-if="!isRestoringSession" />
     </div>
 
     <div class="flex flex-col flex-1">

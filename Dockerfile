@@ -27,6 +27,10 @@ RUN npm ci --include=dev
 # Copy application code
 COPY --link . .
 
+# Public OAuth client id is baked into the client bundle (optional at build time).
+ARG VITE_GITHUB_CLIENT_ID
+ENV VITE_GITHUB_CLIENT_ID=$VITE_GITHUB_CLIENT_ID
+
 # Build application
 RUN npm run build
 
@@ -34,15 +38,20 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 
-# Final stage for app image
-FROM nginx
+# Serves dist/ with SPA fallback (see server/static.mjs).
+ARG NODE_VERSION=22.2.0
+FROM node:${NODE_VERSION}-slim AS final
 
-# Copy built application
-COPY --from=build /app/dist /usr/share/nginx/html
+WORKDIR /app
 
-RUN rm /etc/nginx/conf.d/default.conf
-COPY nginx.conf /etc/nginx/conf.d
+COPY --from=build /app/dist ./dist
+COPY --link server/static.mjs ./server/static.mjs
 
-# Start the server by default, this can be overwritten at runtime
+ENV NODE_ENV=production
+ENV PORT=8080
+
 EXPOSE 8080
-CMD [ "/usr/sbin/nginx", "-g", "daemon off;" ]
+
+USER node
+
+CMD ["node", "server/static.mjs"]
