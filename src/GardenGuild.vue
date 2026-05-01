@@ -209,7 +209,7 @@ const strokeColor = computed(() =>
     "
     stroke="black"
     class="pointer-events-fill"
-    @mouseenter.="emit('mouseenter')"
+    @mouseenter="emit('mouseenter')"
     @mouseleave="emit('mouseleave')"
     @click="emit('click', $event)"
   />
