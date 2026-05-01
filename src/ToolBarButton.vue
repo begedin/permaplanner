@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { Plant } from './useGardenStore';
+import { plantDisplayLabel } from './resolvePlant';
 import PlantIcon from './PlantIcon.vue';
 
 defineProps<{
@@ -9,7 +10,7 @@ defineProps<{
 </script>
 <template>
   <button
-    :title="plant.name"
+    :title="plantDisplayLabel(plant)"
     class="py-1 px-2 rounded bg-sky-200 hover:bg-sky-300 transition-colors flex flex-row gap-2 items-center text-slate-600"
     :class="active && 'bg-sky-400'"
   >
@@ -17,6 +18,6 @@ defineProps<{
       class="w-8 h-8"
       :plant="plant"
     />
-    <span class="truncate">{{ plant.cultivar || plant.name }}</span>
+    <span class="truncate">{{ plantDisplayLabel(plant) }}</span>
   </button>
 </template>

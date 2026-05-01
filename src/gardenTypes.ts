@@ -1,15 +1,3 @@
-export const baseLayers = [
-  'bg_1',
-  'bg_2',
-  'bg_3',
-  'bg_4',
-  'bg_5',
-  'bg_6',
-  'bg_7',
-  'bg_8',
-] as const;
-export type BaseLayer = (typeof baseLayers)[number];
-
 export const GuildFunction = {
   nitrogen_fixer: 'nitrogen_fixer',
   dynamic_accumulator: 'dynamic_accumulator',
@@ -36,26 +24,34 @@ export const GuildLayer = {
 
 export type GuildLayer = (typeof GuildLayer)[keyof typeof GuildLayer];
 
-export const features = [
-  'apple',
-  'banana',
-  'blueberry',
-  'cherry',
-  'lemon',
-  'orange',
-  'pear',
-  'strawberry',
-] as const;
+/** Partial fields a user may override (species slot or cultivar slot). */
+export type PlantOverrideFields = {
+  name?: string;
+  emoji?: string;
+  functions?: GuildFunction[];
+  layers?: GuildLayer[];
+};
 
-export type Feature = (typeof features)[number];
+/**
+ * A plant in the saved plan: references catalog species/cultivar plus optional overrides.
+ * Merge order when resolving: db species → speciesOverride → db cultivar → cultivarOverride.
+ */
+export type UserPlant = {
+  id: string;
+  speciesId: string;
+  cultivarId: string | null;
+  speciesOverride?: PlantOverrideFields;
+  cultivarOverride?: PlantOverrideFields;
+};
 
+/** Resolved plant for UI (catalog + user overrides merged). */
 export type Plant = {
   id: string;
+  speciesId: string;
+  cultivarId: string | null;
   name: string;
   cultivar: string | null;
-  background: BaseLayer;
-  feature: Feature | null;
-  feature_tint: string | null;
+  emoji: string;
   functions: GuildFunction[];
   layers: GuildLayer[];
 };

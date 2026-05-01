@@ -1,0 +1,1152 @@
+{
+  "species": [
+    {
+      "id": "unknown",
+      "name": "Plant",
+      "defaultEmoji": "🌱",
+      "functions": [],
+      "layers": [],
+      "cultivars": []
+    },
+    {
+      "id": "nashi_pear",
+      "name": "Nashi pear",
+      "defaultEmoji": "🍐",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "nijisseiki",
+          "name": "Nijisseiki (20th Century)"
+        },
+        {
+          "id": "hosui",
+          "name": "Hosui"
+        },
+        {
+          "id": "shinseiki",
+          "name": "Shinseiki"
+        },
+        {
+          "id": "chojuro",
+          "name": "Chojuro"
+        }
+      ]
+    },
+    {
+      "id": "nanking_cherry",
+      "name": "Nanking cherry",
+      "defaultEmoji": "🍒",
+      "functions": [
+        "edible",
+        "pollinator_attractor",
+        "pest_repellent"
+      ],
+      "layers": [
+        "shrub"
+      ],
+      "cultivars": [
+        {
+          "id": "oriental",
+          "name": "Oriental"
+        },
+        {
+          "id": "princess",
+          "name": "Princess"
+        },
+        {
+          "id": "white_nanking",
+          "name": "White Nanking"
+        }
+      ]
+    },
+    {
+      "id": "apple",
+      "name": "Apple",
+      "defaultEmoji": "🍎",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "granny_smith",
+          "name": "Granny Smith"
+        },
+        {
+          "id": "honeycrisp",
+          "name": "Honeycrisp"
+        },
+        {
+          "id": "fuji",
+          "name": "Fuji"
+        },
+        {
+          "id": "liberty",
+          "name": "Liberty"
+        },
+        {
+          "id": "cox_orange_pippin",
+          "name": "Cox's Orange Pippin"
+        }
+      ]
+    },
+    {
+      "id": "pear",
+      "name": "Pear",
+      "defaultEmoji": "🍐",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "bartlett",
+          "name": "Bartlett"
+        },
+        {
+          "id": "bosc",
+          "name": "Bosc"
+        },
+        {
+          "id": "anjou",
+          "name": "Anjou"
+        },
+        {
+          "id": "seckel",
+          "name": "Seckel"
+        }
+      ]
+    },
+    {
+      "id": "nasturtium",
+      "name": "Nasturtium",
+      "defaultEmoji": "🌼",
+      "functions": [
+        "edible",
+        "pest_repellent",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "ground_cover",
+        "herb"
+      ],
+      "cultivars": [
+        {
+          "id": "alaska",
+          "name": "Alaska"
+        },
+        {
+          "id": "empress_of_india",
+          "name": "Empress of India"
+        },
+        {
+          "id": "jewel_mix",
+          "name": "Jewel Mix"
+        }
+      ]
+    },
+    {
+      "id": "haskap",
+      "name": "Haskap",
+      "defaultEmoji": "🫐",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "shrub"
+      ],
+      "cultivars": [
+        {
+          "id": "borealis",
+          "name": "Borealis"
+        },
+        {
+          "id": "tundra",
+          "name": "Tundra"
+        },
+        {
+          "id": "berry_blue",
+          "name": "Berry Blue"
+        },
+        {
+          "id": "indigo_gem",
+          "name": "Indigo Gem"
+        }
+      ]
+    },
+    {
+      "id": "strawberry",
+      "name": "Strawberry",
+      "defaultEmoji": "🍓",
+      "functions": [
+        "edible",
+        "pollinator_attractor",
+        "ground_cover"
+      ],
+      "layers": [
+        "ground_cover"
+      ],
+      "cultivars": [
+        {
+          "id": "alpine_mignonette",
+          "name": "Alpine Mignonette"
+        },
+        {
+          "id": "seascape",
+          "name": "Seascape"
+        },
+        {
+          "id": "chandler",
+          "name": "Chandler"
+        },
+        {
+          "id": "honeoye",
+          "name": "Honeoye"
+        }
+      ]
+    },
+    {
+      "id": "basil",
+      "name": "Basil",
+      "defaultEmoji": "🌿",
+      "functions": [
+        "edible",
+        "medicinal",
+        "pest_repellent",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "herb"
+      ],
+      "cultivars": [
+        {
+          "id": "genovese",
+          "name": "Genovese"
+        },
+        {
+          "id": "thai",
+          "name": "Thai"
+        },
+        {
+          "id": "purple_ruffles",
+          "name": "Purple Ruffles"
+        },
+        {
+          "id": "lemon",
+          "name": "Lemon"
+        }
+      ]
+    },
+    {
+      "id": "daisy",
+      "name": "Daisy",
+      "defaultEmoji": "🌼",
+      "functions": [
+        "pollinator_attractor",
+        "medicinal"
+      ],
+      "layers": [
+        "herb",
+        "ground_cover"
+      ],
+      "cultivars": [
+        {
+          "id": "shasta",
+          "name": "Shasta"
+        },
+        {
+          "id": "oxeye",
+          "name": "Oxeye"
+        },
+        {
+          "id": "english",
+          "name": "English"
+        }
+      ]
+    },
+    {
+      "id": "jostaberry",
+      "name": "Jostaberry",
+      "defaultEmoji": "🫐",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "shrub"
+      ],
+      "cultivars": [
+        {
+          "id": "ymerina",
+          "name": "Ymerina"
+        },
+        {
+          "id": "standard",
+          "name": "Standard"
+        },
+        {
+          "id": "orus_8",
+          "name": "Orus 8"
+        }
+      ]
+    },
+    {
+      "id": "banana",
+      "name": "Banana",
+      "defaultEmoji": "🍌",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "cavendish",
+          "name": "Cavendish"
+        },
+        {
+          "id": "dwarf_cavendish",
+          "name": "Dwarf Cavendish"
+        }
+      ]
+    },
+    {
+      "id": "gooseberry",
+      "name": "Gooseberry",
+      "defaultEmoji": "🫛",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "shrub"
+      ],
+      "cultivars": [
+        {
+          "id": "invicta",
+          "name": "Invicta"
+        },
+        {
+          "id": "hinnonmaki_red",
+          "name": "Hinnonmäki Red"
+        },
+        {
+          "id": "pixwell",
+          "name": "Pixwell"
+        }
+      ]
+    },
+    {
+      "id": "comfrey",
+      "name": "Comfrey",
+      "defaultEmoji": "🪻",
+      "functions": [
+        "dynamic_accumulator",
+        "mulcher",
+        "medicinal",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "herb",
+        "root"
+      ],
+      "cultivars": [
+        {
+          "id": "bocking_14",
+          "name": "Bocking 14"
+        },
+        {
+          "id": "bocking_4",
+          "name": "Bocking 4"
+        },
+        {
+          "id": "common",
+          "name": "Common (wild type)"
+        }
+      ]
+    },
+    {
+      "id": "calendula",
+      "name": "Calendula",
+      "defaultEmoji": "🌼",
+      "functions": [
+        "edible",
+        "medicinal",
+        "pollinator_attractor",
+        "pest_repellent"
+      ],
+      "layers": [
+        "herb"
+      ],
+      "cultivars": [
+        {
+          "id": "radio_extra",
+          "name": "Radio Extra"
+        },
+        {
+          "id": "indian_prince",
+          "name": "Indian Prince"
+        },
+        {
+          "id": "zeolights",
+          "name": "Zeolights"
+        }
+      ]
+    },
+    {
+      "id": "dill",
+      "name": "Dill",
+      "defaultEmoji": "🌿",
+      "functions": [
+        "edible",
+        "pollinator_attractor",
+        "pest_repellent"
+      ],
+      "layers": [
+        "herb"
+      ],
+      "cultivars": [
+        {
+          "id": "bouquet",
+          "name": "Bouquet"
+        },
+        {
+          "id": "fernleaf",
+          "name": "Fernleaf"
+        },
+        {
+          "id": "mammoth",
+          "name": "Mammoth"
+        }
+      ]
+    },
+    {
+      "id": "che",
+      "name": "Che (mandarin melon berry)",
+      "defaultEmoji": "🫐",
+      "functions": [
+        "edible",
+        "medicinal",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "shrub",
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "seedless",
+          "name": "Seedless"
+        },
+        {
+          "id": "norris",
+          "name": "Norris #1"
+        }
+      ]
+    },
+    {
+      "id": "black_currant",
+      "name": "Black currant",
+      "defaultEmoji": "🫐",
+      "functions": [
+        "edible",
+        "pollinator_attractor",
+        "medicinal"
+      ],
+      "layers": [
+        "shrub"
+      ],
+      "cultivars": [
+        {
+          "id": "titania",
+          "name": "Titania"
+        },
+        {
+          "id": "consort",
+          "name": "Consort"
+        },
+        {
+          "id": "ben_lomond",
+          "name": "Ben Lomond"
+        }
+      ]
+    },
+    {
+      "id": "white_currant",
+      "name": "White currant",
+      "defaultEmoji": "🫐",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "shrub"
+      ],
+      "cultivars": [
+        {
+          "id": "white_grape",
+          "name": "White Grape"
+        },
+        {
+          "id": "blanka",
+          "name": "Blanka"
+        }
+      ]
+    },
+    {
+      "id": "red_currant",
+      "name": "Red currant",
+      "defaultEmoji": "🫐",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "shrub"
+      ],
+      "cultivars": [
+        {
+          "id": "jonkheer_van_tets",
+          "name": "Jonkheer van Tets"
+        },
+        {
+          "id": "roda",
+          "name": "Röda"
+        },
+        {
+          "id": "red_lake",
+          "name": "Red Lake"
+        }
+      ]
+    },
+    {
+      "id": "peach",
+      "name": "Peach",
+      "defaultEmoji": "🍑",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "elberta",
+          "name": "Elberta"
+        },
+        {
+          "id": "redhaven",
+          "name": "Redhaven"
+        },
+        {
+          "id": "contender",
+          "name": "Contender"
+        }
+      ]
+    },
+    {
+      "id": "nectarine",
+      "name": "Nectarine",
+      "defaultEmoji": "🍑",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "fantasia",
+          "name": "Fantasia"
+        },
+        {
+          "id": "hard_red",
+          "name": "Hard Red"
+        },
+        {
+          "id": "snow_queen",
+          "name": "Snow Queen"
+        }
+      ]
+    },
+    {
+      "id": "apricot",
+      "name": "Apricot",
+      "defaultEmoji": "🍑",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "moorpark",
+          "name": "Moorpark"
+        },
+        {
+          "id": "tilton",
+          "name": "Tilton"
+        },
+        {
+          "id": "goldcot",
+          "name": "Goldcot"
+        }
+      ]
+    },
+    {
+      "id": "plum",
+      "name": "Plum",
+      "defaultEmoji": "🟣",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "stanley",
+          "name": "Stanley"
+        },
+        {
+          "id": "shiro",
+          "name": "Shiro"
+        },
+        {
+          "id": "damson",
+          "name": "Damson"
+        },
+        {
+          "id": "greengage",
+          "name": "Greengage"
+        }
+      ]
+    },
+    {
+      "id": "sweet_cherry",
+      "name": "Sweet cherry",
+      "defaultEmoji": "🍒",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "overstory"
+      ],
+      "cultivars": [
+        {
+          "id": "bing",
+          "name": "Bing"
+        },
+        {
+          "id": "rainier",
+          "name": "Rainier"
+        },
+        {
+          "id": "stella",
+          "name": "Stella"
+        },
+        {
+          "id": "lapins",
+          "name": "Lapins"
+        }
+      ]
+    },
+    {
+      "id": "sour_cherry",
+      "name": "Sour cherry",
+      "defaultEmoji": "🍒",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "montmorency",
+          "name": "Montmorency"
+        },
+        {
+          "id": "north_star",
+          "name": "North Star"
+        },
+        {
+          "id": "morello",
+          "name": "Morello"
+        }
+      ]
+    },
+    {
+      "id": "hazelnut",
+      "name": "Hazelnut",
+      "defaultEmoji": "🌰",
+      "functions": [
+        "edible",
+        "pollinator_attractor",
+        "wildfire_suppressor"
+      ],
+      "layers": [
+        "shrub",
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "barcelona",
+          "name": "Barcelona"
+        },
+        {
+          "id": "jefferson",
+          "name": "Jefferson"
+        },
+        {
+          "id": "theta",
+          "name": "Theta"
+        }
+      ]
+    },
+    {
+      "id": "walnut",
+      "name": "Walnut",
+      "defaultEmoji": "🌰",
+      "functions": [
+        "edible",
+        "dynamic_accumulator",
+        "mulcher"
+      ],
+      "layers": [
+        "overstory"
+      ],
+      "cultivars": [
+        {
+          "id": "chandler",
+          "name": "Chandler"
+        },
+        {
+          "id": "carpathian",
+          "name": "Carpathian"
+        },
+        {
+          "id": "heartnut",
+          "name": "Heartnut"
+        }
+      ]
+    },
+    {
+      "id": "blueberry",
+      "name": "Blueberry",
+      "defaultEmoji": "🫐",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "shrub"
+      ],
+      "cultivars": [
+        {
+          "id": "bluecrop",
+          "name": "Bluecrop"
+        },
+        {
+          "id": "northland",
+          "name": "Northland"
+        },
+        {
+          "id": "pink_lemonade",
+          "name": "Pink Lemonade"
+        }
+      ]
+    },
+    {
+      "id": "raspberry",
+      "name": "Raspberry",
+      "defaultEmoji": "🫐",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "shrub"
+      ],
+      "cultivars": [
+        {
+          "id": "heritage",
+          "name": "Heritage"
+        },
+        {
+          "id": "fall_gold",
+          "name": "Fall Gold"
+        },
+        {
+          "id": "tulameen",
+          "name": "Tulameen"
+        }
+      ]
+    },
+    {
+      "id": "blackberry",
+      "name": "Blackberry",
+      "defaultEmoji": "🫐",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "shrub",
+        "vine"
+      ],
+      "cultivars": [
+        {
+          "id": "triple_crown",
+          "name": "Triple Crown"
+        },
+        {
+          "id": "chester",
+          "name": "Chester"
+        },
+        {
+          "id": "navaho",
+          "name": "Navaho"
+        }
+      ]
+    },
+    {
+      "id": "tayberry",
+      "name": "Tayberry",
+      "defaultEmoji": "🫐",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "shrub",
+        "vine"
+      ],
+      "cultivars": [
+        {
+          "id": "buckingham",
+          "name": "Buckingham"
+        },
+        {
+          "id": "medana",
+          "name": "Medana"
+        }
+      ]
+    },
+    {
+      "id": "lemon",
+      "name": "Lemon",
+      "defaultEmoji": "🍋",
+      "functions": [
+        "edible",
+        "pest_repellent",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "meyer",
+          "name": "Meyer"
+        },
+        {
+          "id": "eureka",
+          "name": "Eureka"
+        },
+        {
+          "id": "ponderosa",
+          "name": "Ponderosa"
+        }
+      ]
+    },
+    {
+      "id": "orange",
+      "name": "Orange",
+      "defaultEmoji": "🍊",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "valencia",
+          "name": "Valencia"
+        },
+        {
+          "id": "navel",
+          "name": "Navel"
+        },
+        {
+          "id": "blood_orange",
+          "name": "Blood orange"
+        }
+      ]
+    },
+    {
+      "id": "hardy_orange",
+      "name": "Hardy orange (trifoliate)",
+      "defaultEmoji": "🍋",
+      "functions": [
+        "edible",
+        "pest_repellent",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "shrub",
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "flying_dragon",
+          "name": "Flying Dragon"
+        },
+        {
+          "id": "standard",
+          "name": "Poncirus standard"
+        }
+      ]
+    },
+    {
+      "id": "goji",
+      "name": "Goji berry",
+      "defaultEmoji": "🫐",
+      "functions": [
+        "edible",
+        "medicinal",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "shrub"
+      ],
+      "cultivars": [
+        {
+          "id": "crimson_star",
+          "name": "Crimson Star"
+        },
+        {
+          "id": "sweet_lifeberry",
+          "name": "Sweet Lifeberry"
+        },
+        {
+          "id": "phoenix",
+          "name": "Phoenix"
+        }
+      ]
+    },
+    {
+      "id": "cornelian_cherry",
+      "name": "Cornelian cherry",
+      "defaultEmoji": "🍒",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "shrub",
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "jolico",
+          "name": "Jolico"
+        },
+        {
+          "id": "yellow",
+          "name": "Yellow"
+        },
+        {
+          "id": "podolski",
+          "name": "Podolski"
+        }
+      ]
+    },
+    {
+      "id": "chinese_chestnut",
+      "name": "Chinese chestnut",
+      "defaultEmoji": "🌰",
+      "functions": [
+        "edible",
+        "pollinator_attractor",
+        "mulcher"
+      ],
+      "layers": [
+        "overstory"
+      ],
+      "cultivars": [
+        {
+          "id": "qing",
+          "name": "Qing"
+        },
+        {
+          "id": "peiling",
+          "name": "Peiling"
+        },
+        {
+          "id": "sleeping_giant",
+          "name": "Sleeping Giant"
+        }
+      ]
+    },
+    {
+      "id": "yellowhorn",
+      "name": "Yellowhorn (shan li hong)",
+      "defaultEmoji": "🌼",
+      "functions": [
+        "edible",
+        "pollinator_attractor",
+        "medicinal"
+      ],
+      "layers": [
+        "shrub",
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "sinensis",
+          "name": "Sinensis"
+        },
+        {
+          "id": "golden_horn",
+          "name": "Golden Horn"
+        }
+      ]
+    },
+    {
+      "id": "rosemary",
+      "name": "Rosemary",
+      "defaultEmoji": "🌿",
+      "functions": [
+        "edible",
+        "medicinal",
+        "pest_repellent",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "shrub",
+        "herb"
+      ],
+      "cultivars": [
+        {
+          "id": "arp",
+          "name": "Arp"
+        },
+        {
+          "id": "tuscan_blue",
+          "name": "Tuscan Blue"
+        },
+        {
+          "id": "prostratus",
+          "name": "Prostratus"
+        }
+      ]
+    },
+    {
+      "id": "birch",
+      "name": "Birch",
+      "defaultEmoji": "🌳",
+      "functions": [
+        "dynamic_accumulator",
+        "mulcher",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "overstory"
+      ],
+      "cultivars": [
+        {
+          "id": "river",
+          "name": "River birch"
+        },
+        {
+          "id": "paper",
+          "name": "Paper birch"
+        },
+        {
+          "id": "sweet",
+          "name": "Sweet birch"
+        }
+      ]
+    },
+    {
+      "id": "hibiscus",
+      "name": "Hibiscus",
+      "defaultEmoji": "🌺",
+      "functions": [
+        "pollinator_attractor",
+        "medicinal",
+        "edible"
+      ],
+      "layers": [
+        "shrub",
+        "herb"
+      ],
+      "cultivars": [
+        {
+          "id": "cranberry",
+          "name": "Rose mallow Cranberry"
+        },
+        {
+          "id": "lord_baltimore",
+          "name": "Lord Baltimore"
+        },
+        {
+          "id": "moscheutos",
+          "name": "H. moscheutos mix"
+        }
+      ]
+    },
+    {
+      "id": "lilac",
+      "name": "Lilac",
+      "defaultEmoji": "🪻",
+      "functions": [
+        "pollinator_attractor",
+        "pest_repellent"
+      ],
+      "layers": [
+        "shrub",
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "common_purple",
+          "name": "Common purple"
+        },
+        {
+          "id": "miss_kim",
+          "name": "Miss Kim"
+        },
+        {
+          "id": "president_grevy",
+          "name": "President Grevy"
+        }
+      ]
+    }
+  ]
+}

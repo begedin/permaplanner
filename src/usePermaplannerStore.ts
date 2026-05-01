@@ -1,20 +1,19 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { Guild, Plant } from './gardenTypes';
+import type { Guild, UserPlant } from './gardenTypes';
 import { assert } from './utils';
-import { plants as defaultPlantsCatalog } from './plants';
+import { plantCatalog } from './plantCatalog';
+import { normalizePlantsFromFile } from './resolvePlant';
 import { useMapScaleStore } from './useMapScaleStore';
 import { clearFileBinding, persistFileBinding } from './sessionFileHandle';
 
-const defaultPlants = (): Plant[] => structuredClone(defaultPlantsCatalog);
-
-const FILE_VERSION = 1;
+const FILE_VERSION = 2 as const;
 
 export type PermaplannerFileV1 = {
-  version: typeof FILE_VERSION;
+  version: typeof FILE_VERSION | 1;
   /** Increments on each successful GitHub sync push; used to compare with remote. */
   syncRevision: number;
-  plants: Plant[];
+  plants: UserPlant[];
   guilds: Guild[];
   mapScale: {
     start: { x: number; y: number };
@@ -28,6 +27,8 @@ export type PermaplannerFileV1 = {
   backgroundImagePath?: string;
 };
 
+const defaultUserPlants = (): UserPlant[] => [];
+
 const defaultMapScaleSnapshot = (): PermaplannerFileV1['mapScale'] => ({
   start: { x: 20, y: 20 },
   end: { x: 150, y: 20 },
@@ -35,7 +36,7 @@ const defaultMapScaleSnapshot = (): PermaplannerFileV1['mapScale'] => ({
 });
 
 export const parsePermaplannerDocument = (raw: unknown): PermaplannerFileV1 => {
-  const data = assert(raw) as Record<string, unknown> & { plants?: Plant[]; guilds?: Guild[] };
+  const data = assert(raw) as Record<string, unknown> & { plants?: unknown; guilds?: Guild[] };
 
   const backgroundImageFromFile =
     typeof data.backgroundImage === 'string'
@@ -49,10 +50,12 @@ export const parsePermaplannerDocument = (raw: unknown): PermaplannerFileV1 => {
       ? Math.max(0, Math.floor(data.syncRevision))
       : 0;
 
+  const plants = normalizePlantsFromFile(data.plants ?? [], plantCatalog);
+
   const base: PermaplannerFileV1 = {
     version: FILE_VERSION,
     syncRevision,
-    plants: (Array.isArray(data.plants) && data.plants.length ? data.plants : defaultPlants()) as Plant[],
+    plants,
     guilds: (Array.isArray(data.guilds) ? data.guilds : []) as Guild[],
     mapScale: defaultMapScaleSnapshot(),
     backgroundOpacity: 0.4,
@@ -105,7 +108,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
 
   const backgroundImageDataUrl = ref<string | undefined>();
   const backgroundOpacity = ref(0.4);
-  const plants = ref<Plant[]>(defaultPlants());
+  const plants = ref<UserPlant[]>(defaultUserPlants());
   const guilds = ref<Guild[]>([]);
   const syncRevision = ref(0);
 
@@ -148,7 +151,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
 
     backgroundImageDataUrl.value = data.backgroundImage;
     backgroundOpacity.value = data.backgroundOpacity;
-    plants.value = data.plants?.length ? data.plants : defaultPlants();
+    plants.value = data.plants;
     guilds.value = data.guilds ?? [];
     syncRevision.value = data.syncRevision;
     applyToMapScale(data);
@@ -183,7 +186,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     await clearFileBinding();
     backgroundImageDataUrl.value = undefined;
     backgroundOpacity.value = 0.4;
-    plants.value = defaultPlants();
+    plants.value = defaultUserPlants();
     guilds.value = [];
     syncRevision.value = 0;
     useMapScaleStore().resetToDefaults();
@@ -198,7 +201,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
   const applyRemoteRepoSnapshot = (doc: PermaplannerFileV1) => {
     backgroundImageDataUrl.value = doc.backgroundImage;
     backgroundOpacity.value = doc.backgroundOpacity;
-    plants.value = doc.plants?.length ? doc.plants : defaultPlants();
+    plants.value = doc.plants ?? defaultUserPlants();
     guilds.value = doc.guilds ?? [];
     syncRevision.value = doc.syncRevision;
     applyToMapScale(doc);

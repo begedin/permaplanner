@@ -6,7 +6,7 @@ import ThingBar from './ThingBar.vue';
 import { useGardenStore } from './useGardenStore';
 
 beforeEach(() => {
-  setActivePinia(createTestingPinia({ createSpy: vi.fn }));
+  setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
 });
 
 afterEach(() => cleanup());
@@ -14,26 +14,8 @@ afterEach(() => cleanup());
 it('renders guilds', async () => {
   const store = useGardenStore();
   store.plants = [
-    {
-      id: 'plant-1',
-      name: 'A plant',
-      background: 'bg_1',
-      feature: 'apple',
-      feature_tint: 'green',
-      cultivar: 'Granny Smith',
-      functions: [],
-      layers: [],
-    },
-    {
-      id: 'plant-2',
-      name: 'Another plant',
-      background: 'bg_2',
-      feature: 'apple',
-      feature_tint: 'red',
-      cultivar: 'Fuji',
-      functions: [],
-      layers: [],
-    },
+    { id: 'plant-1', speciesId: 'apple', cultivarId: 'granny_smith' },
+    { id: 'plant-2', speciesId: 'apple', cultivarId: 'fuji' },
   ];
   store.guilds = [
     {

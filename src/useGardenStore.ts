@@ -3,8 +3,21 @@ import { computed, nextTick, ref } from 'vue';
 import { uuid } from './utils';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import type { GardenThing, Guild, Plant } from './gardenTypes';
+import { plantCatalog } from './plantCatalog';
+import { plantDisplayLabel, resolveUserPlant } from './resolvePlant';
 
 export * from './gardenTypes';
+
+const FALLBACK_PLANT: Plant = {
+  id: '__fallback__',
+  speciesId: 'unknown',
+  cultivarId: null,
+  name: 'Plant',
+  cultivar: null,
+  emoji: '🌱',
+  functions: [],
+  layers: [],
+};
 
 const getPathBounds = (path: { x: number; y: number }[]) => {
   const minX = Math.min(...path.map((p) => p.x));
@@ -36,9 +49,15 @@ export const useGardenStore = defineStore('garden', () => {
 
   const plant = ref<Plant>();
 
-  const plantsById = computed(() =>
-    Object.fromEntries(plants.value.map((p) => [p.id, p])),
-  );
+  const plantsById = computed(() => {
+    const m: Record<string, Plant> = {};
+    for (const up of plants.value) {
+      m[up.id] = resolveUserPlant(up, plantCatalog);
+    }
+    return m;
+  });
+
+  const resolvedPlant = (id: string): Plant => plantsById.value[id] ?? FALLBACK_PLANT;
 
   const guildBoundsById = computed(() =>
     Object.fromEntries(
@@ -133,6 +152,7 @@ export const useGardenStore = defineStore('garden', () => {
       return;
     }
     const bounds = guildBoundsById.value[guildId];
+    const rp = resolvedPlant(plantId);
 
     guild.plants.push({
       id: uuid(),
@@ -141,7 +161,7 @@ export const useGardenStore = defineStore('garden', () => {
       y: bounds.y + 5,
       width: 16,
       height: 16,
-      nameOrCultivar: plantsById.value[plantId].cultivar || plantsById.value[plantId].name,
+      nameOrCultivar: plantDisplayLabel(rp),
     });
   };
 
@@ -157,6 +177,7 @@ export const useGardenStore = defineStore('garden', () => {
     plants,
     plant,
     plantsById,
+    resolvedPlant,
     deleteFeature,
     updateFeature,
     newFeature,

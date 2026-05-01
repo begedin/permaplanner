@@ -33,7 +33,7 @@ const guildFunctions = computed(() => {
   );
 
   guild.value?.plants.forEach((thing) => {
-    const plant = garden.plantsById[thing.plantId] || garden.plantsById.default;
+    const plant = garden.resolvedPlant(thing.plantId);
     plant.functions.forEach((f) => {
       functionsByName[f].count++;
     });
@@ -54,7 +54,7 @@ const guildLayers = computed(() => {
   );
 
   guild.value?.plants.forEach((thing) => {
-    const plant = garden.plantsById[thing.plantId] || garden.plantsById.default;
+    const plant = garden.resolvedPlant(thing.plantId);
     plant.layers.forEach((l) => {
       layersByName[l].count++;
     });
@@ -97,7 +97,7 @@ const guildLayers = computed(() => {
         <PlantIcon
           :title="plant.nameOrCultivar"
           class="h-4 w-4"
-          :plant="garden.plantsById[plant.plantId] || garden.plantsById.default"
+          :plant="garden.resolvedPlant(plant.plantId)"
         />
 
         <span class="truncate text-left flex-grow">{{ plant.nameOrCultivar }}</span>

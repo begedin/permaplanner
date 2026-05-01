@@ -1,16 +1,11 @@
 {
-  "version": 1,
+  "version": 2,
   "backgroundOpacity": 0.4,
   "plants": [
     {
       "id": "apple_granny_smith",
-      "name": "Apple",
-      "cultivar": "Granny Smith",
-      "background": "bg_1",
-      "feature": "apple",
-      "feature_tint": "#00DD00",
-      "functions": [],
-      "layers": []
+      "speciesId": "apple",
+      "cultivarId": "granny_smith"
     }
   ],
   "guilds": [],

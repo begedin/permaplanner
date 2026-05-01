@@ -5,6 +5,8 @@ import { createTestingPinia } from '@pinia/testing';
 import ThePlants from './ThePlants.vue';
 import { setActivePinia } from 'pinia';
 import { useGardenStore } from './useGardenStore';
+import { plantCatalog } from './plantCatalog';
+import { resolveUserPlant } from './resolvePlant';
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
@@ -15,52 +17,34 @@ afterEach(() => {
   cleanup();
 });
 
-it('creates an edible plant', async () => {
+it('creates a plant from catalog defaults', async () => {
   render(ThePlants);
 
-  await fireEvent.click(screen.getByRole('button', { name: 'New' }));
-
-  await fireEvent.update(screen.getByLabelText('Name'), 'Apple');
-  await fireEvent.click(screen.getByRole('button', { name: 'apple' }));
-  await fireEvent.click(screen.getByRole('checkbox', { name: 'Edible' }));
   await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
   expect(useGardenStore().plants).toHaveLength(1);
-  expect(useGardenStore().plants[0].name).toBe('Apple');
-  expect(useGardenStore().plants[0].feature).toEqual('apple');
-  expect(useGardenStore().plants[0].functions).toEqual(['edible']);
-  expect(useGardenStore().plants[0].layers).toEqual([]);
+  const up = useGardenStore().plants[0];
+  expect(up.speciesId).toBe(plantCatalog.species.filter((s) => s.id !== 'unknown')[0]?.id);
+  const r = resolveUserPlant(up, plantCatalog);
+  expect(r.functions.length).toBeGreaterThan(0);
 });
 
-it('can create a plant with no feature', async () => {
+it('can override guild functions and save', async () => {
   render(ThePlants);
 
-  await fireEvent.update(screen.getByLabelText('Name'), 'Apple');
-  await fireEvent.click(screen.getByRole('button', { name: 'apple' }));
-  await fireEvent.click(screen.getByRole('button', { name: 'none' }));
   await fireEvent.click(screen.getByRole('checkbox', { name: 'Wildfire Suppressor' }));
   await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
   expect(useGardenStore().plants).toHaveLength(1);
-  expect(useGardenStore().plants[0].name).toBe('Apple');
-  expect(useGardenStore().plants[0].feature).toEqual(null);
-  expect(useGardenStore().plants[0].functions).toEqual(['wildfire_suppressor']);
-  expect(useGardenStore().plants[0].layers).toEqual([]);
+  const r = resolveUserPlant(useGardenStore().plants[0], plantCatalog);
+  expect(r.functions).toContain('wildfire_suppressor');
 });
 
-it('creates a medicinal herb plant', async () => {
+it('can set custom species name', async () => {
   render(ThePlants);
 
-  await fireEvent.click(screen.getByRole('button', { name: 'New' }));
-
-  await fireEvent.update(screen.getByLabelText('Name'), 'Herb');
-  await fireEvent.click(screen.getByRole('checkbox', { name: 'Edible' }));
-  await fireEvent.click(screen.getByRole('checkbox', { name: 'Medicinal' }));
-  await fireEvent.click(screen.getByRole('checkbox', { name: 'Herb' }));
+  await fireEvent.update(screen.getByPlaceholderText('Uses catalog name if empty'), 'Herb patch');
   await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
-  expect(useGardenStore().plants).toHaveLength(1);
-  expect(useGardenStore().plants[0].name).toBe('Herb');
-  expect(useGardenStore().plants[0].functions).toEqual(['edible', 'medicinal']);
-  expect(useGardenStore().plants[0].layers).toEqual(['herb']);
+  expect(resolveUserPlant(useGardenStore().plants[0], plantCatalog).name).toBe('Herb patch');
 });

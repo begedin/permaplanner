@@ -4,16 +4,8 @@ test.describe('plant creator', () => {
     await page.goto('');
     await page.getByRole('link', { name: 'Plants' }).click();
 
-    await page.getByRole('button', { name: 'bg_2' }).click();
-    await page.getByRole('button', { name: 'apple' }).click();
-
-    await page.mouse.move(500, 300);
-    await page.mouse.down();
-    await page.mouse.move(550, 350);
-    await page.mouse.up();
-
-    await page.getByLabel('Name').click();
-    await page.getByLabel('Name').fill('Apple');
+    await page.locator('select').first().selectOption('apple');
+    await page.getByPlaceholder('Uses catalog name if empty').fill('Apple');
     await page.getByRole('button', { name: 'Create' }).click();
 
     await expect(page.getByRole('button', { name: /Apple/ })).toBeVisible();

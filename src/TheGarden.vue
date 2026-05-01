@@ -7,6 +7,7 @@ import { v4 as uuidV4 } from 'uuid';
 import GardenGuild from './GardenGuild.vue';
 import GardenFeature from './GardenFeature.vue';
 import { useGardenStore, type Guild, type GardenThing } from './useGardenStore';
+import { plantDisplayLabel } from './resolvePlant';
 import { useCameraStore } from './useCameraStore';
 import { useSceneStore } from './useSceneStore';
 import { useMapScaleStore } from './useMapScaleStore';
@@ -217,8 +218,7 @@ const getNewShape = (plantId: string): GardenThing => {
     y,
     width,
     height,
-    nameOrCultivar:
-      garden.plantsById[plantId].cultivar || garden.plantsById[plantId].name,
+    nameOrCultivar: plantDisplayLabel(garden.resolvedPlant(plantId)),
   };
 };
 
@@ -246,7 +246,7 @@ watch(
         ...shape,
         x: shape.x,
         y: shape.y,
-        nameOrCultivar: garden.plant.cultivar || garden.plant.name,
+        nameOrCultivar: plantDisplayLabel(garden.plant),
       });
     }
   },
@@ -374,12 +374,12 @@ const saveAs = async () => {
       </div>
       <template v-if="permaplannerStore.fileName">
         <ToolBarButton
-          v-for="plant in garden.plants"
-          :key="plant.id"
-          :plant="plant"
-          :active="garden.plant?.id === plant.id"
+          v-for="up in garden.plants"
+          :key="up.id"
+          :plant="garden.resolvedPlant(up.id)"
+          :active="garden.plant?.id === up.id"
           :disabled="disabled"
-          @click="garden.plant = plant"
+          @click="garden.plant = garden.resolvedPlant(up.id)"
         />
         <button
           class="p-1 rounded"
@@ -608,7 +608,7 @@ const saveAs = async () => {
           v-for="thing in garden.allGardenPlants"
           :key="thing.id"
           :thing="thing"
-          :plant="garden.plantsById[thing.plantId] || garden.plantsById['default']"
+          :plant="garden.resolvedPlant(thing.plantId)"
           :active="garden.selectedId === thing.id || garden.hoveredId === thing.id"
           :scale="camera.scale"
           :unit-length-px="mapScale.unitLengthPx"

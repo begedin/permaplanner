@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, within } from '@testing-library/vue';
+import { cleanup, fireEvent, render } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
@@ -21,26 +21,8 @@ it('renders nothing if no bed in store', async () => {
 it('adds and removes plants', async () => {
   const store = useGardenStore();
   store.plants = [
-    {
-      id: 'plant',
-      name: 'A plant',
-      background: 'bg_1',
-      feature: null,
-      feature_tint: null,
-      cultivar: null,
-      functions: [],
-      layers: [],
-    },
-    {
-      id: 'plant-2',
-      name: 'Another plant',
-      background: 'bg_2',
-      feature: null,
-      feature_tint: null,
-      cultivar: null,
-      functions: [],
-      layers: [],
-    },
+    { id: 'plant', speciesId: 'comfrey', cultivarId: null },
+    { id: 'plant-2', speciesId: 'basil', cultivarId: 'genovese' },
   ];
   store.guilds = [
     {
@@ -54,7 +36,7 @@ it('adds and removes plants', async () => {
           x: 0,
           y: 0,
           id: '1',
-          nameOrCultivar: 'A plant',
+          nameOrCultivar: 'Comfrey',
         },
       ],
       path: [],
@@ -85,23 +67,15 @@ it('shows layers', () => {
   store.plants = [
     {
       id: 'plant',
-      name: 'A tree',
-      background: 'bg_1',
-      feature: null,
-      feature_tint: null,
-      cultivar: null,
-      functions: [],
-      layers: ['overstory', 'understory'],
+      speciesId: 'birch',
+      cultivarId: null,
+      speciesOverride: { layers: ['overstory', 'understory'] },
     },
     {
       id: 'plant-2',
-      name: 'A small tree',
-      background: 'bg_2',
-      feature: null,
-      feature_tint: null,
-      cultivar: null,
-      functions: [],
-      layers: ['understory'],
+      speciesId: 'birch',
+      cultivarId: null,
+      speciesOverride: { layers: ['understory'] },
     },
   ];
   store.guilds = [
@@ -144,23 +118,15 @@ it('shows functions', () => {
   store.plants = [
     {
       id: 'apple',
-      name: 'Apple',
-      background: 'bg_1',
-      feature: 'apple',
-      feature_tint: null,
-      cultivar: null,
-      functions: ['edible', 'medicinal'],
-      layers: [],
+      speciesId: 'dill',
+      cultivarId: null,
+      speciesOverride: { functions: ['edible', 'medicinal'] },
     },
     {
       id: 'parsley',
-      name: 'Parsley',
-      background: 'bg_2',
-      feature: null,
-      feature_tint: null,
-      cultivar: null,
-      functions: ['edible', 'medicinal'],
-      layers: [],
+      speciesId: 'basil',
+      cultivarId: null,
+      speciesOverride: { functions: ['edible', 'medicinal'] },
     },
   ];
   store.guilds = [
@@ -175,7 +141,7 @@ it('shows functions', () => {
           x: 0,
           y: 0,
           id: '1',
-          nameOrCultivar: 'Apple',
+          nameOrCultivar: 'Dill',
         },
         {
           plantId: 'parsley',
@@ -184,7 +150,7 @@ it('shows functions', () => {
           x: 0,
           y: 0,
           id: '2',
-          nameOrCultivar: 'Parsley',
+          nameOrCultivar: 'Basil',
         },
       ],
       path: [],

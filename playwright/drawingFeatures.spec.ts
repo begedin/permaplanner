@@ -1,13 +1,11 @@
 import { test, expect, Page, Locator } from '@playwright/test';
 import { onboard } from './helpers';
 
-const createPlant = async (page: Page, name: string) => {
+const createPlant = async (page: Page, speciesValue: string, displayName: string) => {
   await page.getByRole('link', { name: 'Plants' }).click();
-  await page.getByRole('button', { name: 'New' }).click();
-  await page.getByRole('button', { name: 'bg_2' }).click();
-  await page.getByRole('button', { name: 'apple', exact: true }).click();
-  await page.getByLabel('Name').click();
-  await page.getByLabel('Name').fill(name);
+  await page.getByRole('button', { name: 'New plant' }).click();
+  await page.locator('select').first().selectOption(speciesValue);
+  await page.getByPlaceholder('Uses catalog name if empty').fill(displayName);
   await page.getByRole('button', { name: 'Create' }).click();
   await page.getByRole('link', { name: 'Garden' }).click();
 };
@@ -29,8 +27,8 @@ test.describe('drawing features', () => {
 
   test('creates a bed with a plant', async ({ page }) => {
     await page.goto('');
-    await createPlant(page, 'Test apple');
-    await createPlant(page, 'Test banana');
+    await createPlant(page, 'apple', 'Test apple');
+    await createPlant(page, 'banana', 'Test banana');
     await onboard(page);
 
     await page.getByRole('button', { name: 'Guild' }).click();
@@ -46,7 +44,7 @@ test.describe('drawing features', () => {
     await page.mouse.up();
     await page.keyboard.press('Enter');
 
-    await await expect(page.locator('[data-main-svg] polygon')).toHaveCount(2); // brush and bed;
+    await expect(page.locator('[data-main-svg] polygon')).toHaveCount(2); // brush and bed;
     await expect(page.getByRole('button', { name: 'New guild' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Test apple' }).click();
