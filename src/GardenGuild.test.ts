@@ -17,7 +17,7 @@ it('draws a bed', async () => {
 
   const wrapper = mount(GardenGuild, {
     props: {
-      guild: { id: 'guild', path: [], plants: [], name: 'A guild' },
+      guild: { id: 'guild', path: [], plants: [], name: 'A guild', mulchLevel: 1 },
       unitLengthPx: 5,
       hovered: false,
       selected: false,
@@ -48,6 +48,7 @@ it('draws a bed', async () => {
       id: 'guild',
       name: 'A guild',
       plants: [],
+      mulchLevel: 1,
       path: [
         { x: 12, y: 0 },
         { x: 9.70820393249937, y: 7.053423027509678 },
@@ -69,7 +70,7 @@ it('draws a bed', async () => {
 it('cancells drawing a bed', async () => {
   const wrapper = mount(GardenGuild, {
     props: {
-      guild: { id: 'guild', path: [], plants: [], name: 'A guild' },
+      guild: { id: 'guild', path: [], plants: [], name: 'A guild', mulchLevel: 1 },
       unitLengthPx: 5,
       hovered: false,
       selected: false,
@@ -96,7 +97,7 @@ it('cancells drawing a bed', async () => {
 it('changes brush size', async () => {
   const wrapper = mount(GardenGuild, {
     props: {
-      guild: { id: 'guild', path: [], plants: [], name: 'A guild' },
+      guild: { id: 'guild', path: [], plants: [], name: 'A guild', mulchLevel: 1 },
       unitLengthPx: 5,
       hovered: false,
       selected: true,

@@ -197,7 +197,7 @@ const strokeColor = computed(() =>
   />
 
   <polygon
-    v-if="path"
+    v-if="path.length > 0"
     ref="pathEl"
     :points="path.map(({ x, y }) => `${x},${y}`).join(' ')"
     :fill="

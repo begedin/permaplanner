@@ -1,6 +1,7 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import type { Guild, UserPlant } from './gardenTypes';
+import { watchDebounced } from '@vueuse/core';
+import { defineStore, storeToRefs } from 'pinia';
+import { nextTick, ref } from 'vue';
+import { coerceMulchLevel, type Guild, type UserPlant } from './gardenTypes';
 import { assert } from './utils';
 import { plantCatalog } from './plantCatalog';
 import { normalizePlantsFromFile } from './resolvePlant';
@@ -56,7 +57,10 @@ export const parsePermaplannerDocument = (raw: unknown): PermaplannerFileV1 => {
     version: FILE_VERSION,
     syncRevision,
     plants,
-    guilds: (Array.isArray(data.guilds) ? data.guilds : []) as Guild[],
+    guilds: (Array.isArray(data.guilds) ? data.guilds : []).map((g) => ({
+      ...(g as Guild),
+      mulchLevel: coerceMulchLevel((g as Record<string, unknown>).mulchLevel),
+    })),
     mapScale: defaultMapScaleSnapshot(),
     backgroundOpacity: 0.4,
   };
@@ -112,6 +116,9 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
   const guilds = ref<Guild[]>([]);
   const syncRevision = ref(0);
 
+  /** Skip auto-save while hydrating from disk or similar bulk updates. */
+  const suppressAutosaveDepth = ref(0);
+
   const snapshot = (): PermaplannerFileV1 => {
     const mapScale = useMapScaleStore();
     const bg = backgroundImageDataUrl.value;
@@ -133,50 +140,90 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     return doc;
   };
 
-  type LoadOptions = { skipBindingPersist?: boolean };
-
-  const load = async (handle: FileSystemFileHandle, options?: LoadOptions) => {
-    const file = await handle.getFile();
-    const text = await file.text();
-
-    if (!options?.skipBindingPersist) {
-      try {
-        await persistFileBinding(handle);
-      } catch (e) {
-        console.error('Could not store file link for next visit:', e);
-      }
-    }
-
-    const data = parsePermaplannerDocument(JSON.parse(text) as unknown);
-
-    backgroundImageDataUrl.value = data.backgroundImage;
-    backgroundOpacity.value = data.backgroundOpacity;
-    plants.value = data.plants;
-    guilds.value = data.guilds ?? [];
-    syncRevision.value = data.syncRevision;
-    applyToMapScale(data);
-
-    fileHandle.value = handle;
-    fileName.value = file.name;
-    needsFileRelink.value = false;
-  };
-
-  const save = async (handle: FileSystemFileHandle) => {
+  const writePlanToHandle = async (handle: FileSystemFileHandle) => {
     const text = JSON.stringify(snapshot(), null, 2);
-
     const writable = await handle.createWritable();
     await writable.write(text);
     await writable.close();
-
-    fileHandle.value = handle;
-    fileName.value = handle.name;
-    needsFileRelink.value = false;
-
     try {
       await persistFileBinding(handle);
     } catch (e) {
       console.error('Could not store file link for next visit:', e);
     }
+  };
+
+  const flushAutosave = async () => {
+    const h = fileHandle.value;
+    if (!h || suppressAutosaveDepth.value > 0) {
+      return;
+    }
+    try {
+      await writePlanToHandle(h);
+    } catch (e) {
+      console.error('[permaplanner] Auto-save failed:', e);
+    }
+  };
+
+  const mapScaleStore = useMapScaleStore();
+  const { start: mapStart, end: mapEnd, linePhysicalLength: mapLinePhysicalLength } =
+    storeToRefs(mapScaleStore);
+
+  watchDebounced(
+    [
+      guilds,
+      plants,
+      backgroundOpacity,
+      backgroundImageDataUrl,
+      syncRevision,
+      mapStart,
+      mapEnd,
+      mapLinePhysicalLength,
+    ],
+    () => {
+      void flushAutosave();
+    },
+    { deep: true, debounce: 300, maxWait: 2000, flush: 'post' },
+  );
+
+  type LoadOptions = { skipBindingPersist?: boolean };
+
+  const load = async (handle: FileSystemFileHandle, options?: LoadOptions) => {
+    suppressAutosaveDepth.value += 1;
+    try {
+      const file = await handle.getFile();
+      const text = await file.text();
+
+      if (!options?.skipBindingPersist) {
+        try {
+          await persistFileBinding(handle);
+        } catch (e) {
+          console.error('Could not store file link for next visit:', e);
+        }
+      }
+
+      const data = parsePermaplannerDocument(JSON.parse(text) as unknown);
+
+      backgroundImageDataUrl.value = data.backgroundImage;
+      backgroundOpacity.value = data.backgroundOpacity;
+      plants.value = data.plants;
+      guilds.value = data.guilds ?? [];
+      syncRevision.value = data.syncRevision;
+      applyToMapScale(data);
+
+      fileHandle.value = handle;
+      fileName.value = file.name;
+      needsFileRelink.value = false;
+    } finally {
+      await nextTick();
+      suppressAutosaveDepth.value -= 1;
+    }
+  };
+
+  const save = async (handle: FileSystemFileHandle) => {
+    await writePlanToHandle(handle);
+    fileHandle.value = handle;
+    fileName.value = handle.name;
+    needsFileRelink.value = false;
   };
 
   const resetToNewPlan = async () => {
@@ -199,12 +246,17 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
   };
 
   const applyRemoteRepoSnapshot = (doc: PermaplannerFileV1) => {
-    backgroundImageDataUrl.value = doc.backgroundImage;
-    backgroundOpacity.value = doc.backgroundOpacity;
-    plants.value = doc.plants ?? defaultUserPlants();
-    guilds.value = doc.guilds ?? [];
-    syncRevision.value = doc.syncRevision;
-    applyToMapScale(doc);
+    suppressAutosaveDepth.value += 1;
+    try {
+      backgroundImageDataUrl.value = doc.backgroundImage;
+      backgroundOpacity.value = doc.backgroundOpacity;
+      plants.value = doc.plants ?? defaultUserPlants();
+      guilds.value = doc.guilds ?? [];
+      syncRevision.value = doc.syncRevision;
+      applyToMapScale(doc);
+    } finally {
+      suppressAutosaveDepth.value -= 1;
+    }
   };
 
   return {

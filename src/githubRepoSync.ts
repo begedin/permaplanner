@@ -1,6 +1,11 @@
+import { ref } from 'vue';
+
 import { parsePermaplannerDocument, usePermaplannerStore, type PermaplannerFileV1 } from './usePermaplannerStore';
 
 export const planRepoSyncUpdatedEventName = 'permaplanner:plan-repo-updated';
+
+/** Incremented around `pushPlanJsonToGithubRepo` (manual push + `syncIfRepoLinked` after save). */
+export const githubRepoPushInFlightCount = ref(0);
 
 /** Normalizes Vite env (trim + strip wrapping quotes from dotenv / 1Password). */
 export const readGithubClientIdConfig = (): string | undefined => {
@@ -24,7 +29,7 @@ const LS_REPO_FULL_NAME = 'permaplanner.github.planRepoFullName';
 const GITHUB_AUTH = 'https://github.com/login/oauth/authorize';
 const githubOAuthTokenPath = () => '/api/github/oauth/access_token';
 
-export const githubRepoRedirectPath = () => '/garden';
+export const githubRepoRedirectPath = () => '/guilds';
 
 const redirectUri = () => `${window.location.origin}${githubRepoRedirectPath()}`;
 
@@ -311,7 +316,12 @@ const ensurePlanRepo = async (token: string): Promise<string> => {
 
 type ContentGetResponse = { sha: string; type: string };
 
-type ContentFileApi = { type: string; content?: string; encoding?: string };
+type ContentFileApi = {
+  type: string;
+  sha?: string;
+  content?: string | null;
+  encoding?: string;
+};
 
 const decodeGithubFileBase64 = (content: string): Uint8Array => {
   const b64 = content.replace(/\s/g, '');
@@ -323,8 +333,45 @@ const decodeGithubFileBase64 = (content: string): Uint8Array => {
   return out;
 };
 
-const decodeGithubFileUtf8 = (content: string): string =>
-  new TextDecoder().decode(decodeGithubFileBase64(content));
+/**
+ * GitHub omits inline `content` for files above ~1 MB. `raw.githubusercontent.com` URLs are not
+ * fetchable from the browser (no CORS), so large files are loaded via the Git Blobs API instead.
+ */
+const fetchGithubRepoFileBytes = async (
+  token: string,
+  fullName: string,
+  file: ContentFileApi,
+): Promise<Uint8Array> => {
+  if (file.encoding === 'base64' && typeof file.content === 'string') {
+    return decodeGithubFileBase64(file.content);
+  }
+  const sha = typeof file.sha === 'string' ? file.sha : '';
+  if (!sha) {
+    throw new Error('GitHub file response has no base64 content and no blob sha');
+  }
+  const url = `https://api.github.com/repos/${fullName}/git/blobs/${sha}`;
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github.raw',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`GitHub blob read: ${res.status} ${t}`);
+  }
+  return new Uint8Array(await res.arrayBuffer());
+};
+
+const uint8ArrayToStandardBase64 = (bytes: Uint8Array): string => {
+  let bin = '';
+  const chunk = 8192;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(bin);
+};
 
 const getRepoContentsFile = async (
   token: string,
@@ -341,7 +388,13 @@ const getRepoContentsFile = async (
     throw new Error(`GitHub read ${path}: ${res.status} ${t}`);
   }
   const body = (await res.json()) as ContentFileApi;
-  if (body.type !== 'file' || body.encoding !== 'base64' || typeof body.content !== 'string') {
+  if (body.type !== 'file') {
+    throw new Error(`GitHub read ${path}: unexpected response shape`);
+  }
+  const hasInlineBase64 =
+    body.encoding === 'base64' && typeof body.content === 'string';
+  const hasBlobSha = typeof body.sha === 'string' && body.sha.length > 0;
+  if (!hasInlineBase64 && !hasBlobSha) {
     throw new Error(`GitHub read ${path}: unexpected response shape`);
   }
   return body;
@@ -353,10 +406,14 @@ const getRepoJsonIfExists = async (
   path: string,
 ): Promise<unknown | undefined> => {
   const file = await getRepoContentsFile(token, fullName, path);
-  if (!file?.content) {
+  if (!file) {
     return undefined;
   }
-  return JSON.parse(decodeGithubFileUtf8(file.content)) as unknown;
+  const bytes = await fetchGithubRepoFileBytes(token, fullName, file);
+  if (bytes.length === 0) {
+    return undefined;
+  }
+  return JSON.parse(new TextDecoder().decode(bytes)) as unknown;
 };
 
 /** Next sync revision after a successful push (always strictly greater than local and remote). */
@@ -366,6 +423,8 @@ export const nextSyncRevisionForPush = (local: number, remote: number): number =
 /**
  * Creates or updates a single file via the Contents API (normal git blob).
  * Git LFS is not supported here — LFS uses a separate upload + pointer-file flow.
+ *
+ * Retries on 409 when the blob SHA from GET is stale (concurrent syncs or other writers).
  */
 const putRepoContents = async (
   token: string,
@@ -375,34 +434,44 @@ const putRepoContents = async (
   message: string,
 ): Promise<void> => {
   const url = `https://api.github.com/repos/${fullName}/contents/${path}`;
-  const getRes = await fetch(`${url}?ref=${DEFAULT_BRANCH}`, { headers: githubHeaders(token) });
-  let sha: string | undefined;
-  if (getRes.ok) {
-    const meta = (await getRes.json()) as ContentGetResponse;
-    if (meta.type === 'file' && meta.sha) {
-      sha = meta.sha;
+  const maxAttempts = 4;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const getRes = await fetch(`${url}?ref=${DEFAULT_BRANCH}`, { headers: githubHeaders(token) });
+    let sha: string | undefined;
+    if (getRes.ok) {
+      const meta = (await getRes.json()) as ContentGetResponse;
+      if (meta.type === 'file' && meta.sha) {
+        sha = meta.sha;
+      }
+    } else if (getRes.status === 404) {
+      sha = undefined;
+    } else {
+      const t = await getRes.text();
+      throw new Error(`GitHub read ${path}: ${getRes.status} ${t}`);
     }
-  } else if (getRes.status !== 404) {
-    const t = await getRes.text();
-    throw new Error(`GitHub read ${path}: ${getRes.status} ${t}`);
-  }
 
-  const body: { message: string; content: string; branch: string; sha?: string } = {
-    message,
-    content: contentBase64,
-    branch: DEFAULT_BRANCH,
-  };
-  if (sha) {
-    body.sha = sha;
-  }
+    const body: { message: string; content: string; branch: string; sha?: string } = {
+      message,
+      content: contentBase64,
+      branch: DEFAULT_BRANCH,
+    };
+    if (sha) {
+      body.sha = sha;
+    }
 
-  const putRes = await fetch(url, {
-    method: 'PUT',
-    headers: { ...githubHeaders(token), 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!putRes.ok) {
+    const putRes = await fetch(url, {
+      method: 'PUT',
+      headers: { ...githubHeaders(token), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (putRes.ok) {
+      return;
+    }
     const errText = await putRes.text();
+    if (putRes.status === 409 && attempt < maxAttempts - 1) {
+      continue;
+    }
     throw new Error(`GitHub write ${path}: ${putRes.status} ${errText}`);
   }
 };
@@ -457,10 +526,12 @@ export const pullPlanJsonFromGithubRepo = async (
   const bgPath = typeof cfg.backgroundImagePath === 'string' ? cfg.backgroundImagePath : undefined;
   if (bgPath) {
     const file = await getRepoContentsFile(token, fullName, bgPath);
-    if (file?.content) {
+    if (file) {
       const mime = dataUrlMimeForRepoPath(bgPath);
-      const stripped = file.content.replace(/\s/g, '');
-      backgroundImage = `data:${mime};base64,${stripped}`;
+      const bytes = await fetchGithubRepoFileBytes(token, fullName, file);
+      if (bytes.length > 0) {
+        backgroundImage = `data:${mime};base64,${uint8ArrayToStandardBase64(bytes)}`;
+      }
     }
   }
 
@@ -484,72 +555,77 @@ export const pushPlanJsonToGithubRepo = async (
   snapshot: PermaplannerFileV1,
   sourceFileName: string | undefined,
 ): Promise<{ syncRevision: number }> => {
-  const fullName = await ensurePlanRepo(token);
-  const configPath = planRepoConfigPath(sourceFileName);
-  const remoteConfig = await getRepoJsonIfExists(token, fullName, configPath);
-  const remoteRev = readSyncRevisionFromConfigJson(remoteConfig);
-  const nextRev = nextSyncRevisionForPush(snapshot.syncRevision, remoteRev);
-  const snapshotForPush: PermaplannerFileV1 = { ...snapshot, syncRevision: nextRev };
+  githubRepoPushInFlightCount.value += 1;
+  try {
+    const fullName = await ensurePlanRepo(token);
+    const configPath = planRepoConfigPath(sourceFileName);
+    const remoteConfig = await getRepoJsonIfExists(token, fullName, configPath);
+    const remoteRev = readSyncRevisionFromConfigJson(remoteConfig);
+    const nextRev = nextSyncRevisionForPush(snapshot.syncRevision, remoteRev);
+    const snapshotForPush: PermaplannerFileV1 = { ...snapshot, syncRevision: nextRev };
 
-  const bg = snapshotForPush.backgroundImage;
+    const bg = snapshotForPush.backgroundImage;
 
-  let backgroundImagePath: string | undefined;
-  if (typeof bg === 'string' && bg.startsWith('data:')) {
-    const img = decodeDataUrlImageForRepo(bg);
-    if (img) {
-      const mediaPath = planBackgroundMediaRepoPath(sourceFileName, img.ext);
-      await putRepoContents(
-        token,
-        fullName,
-        mediaPath,
-        img.standardBase64,
-        `Update plan background (${mediaPath})`,
-      );
-      backgroundImagePath = mediaPath;
+    let backgroundImagePath: string | undefined;
+    if (typeof bg === 'string' && bg.startsWith('data:')) {
+      const img = decodeDataUrlImageForRepo(bg);
+      if (img) {
+        const mediaPath = planBackgroundMediaRepoPath(sourceFileName, img.ext);
+        await putRepoContents(
+          token,
+          fullName,
+          mediaPath,
+          img.standardBase64,
+          `Update plan background (${mediaPath})`,
+        );
+        backgroundImagePath = mediaPath;
+      }
     }
+
+    const segment = planGardenFolderSegment(sourceFileName);
+    const plantsJson = JSON.stringify({ plants: snapshotForPush.plants }, null, 2);
+    const guildsJson = JSON.stringify({ guilds: snapshotForPush.guilds }, null, 2);
+    const configJson = JSON.stringify(
+      {
+        version: snapshotForPush.version,
+        syncRevision: snapshotForPush.syncRevision,
+        mapScale: snapshotForPush.mapScale,
+        backgroundOpacity: snapshotForPush.backgroundOpacity,
+        ...(backgroundImagePath !== undefined ? { backgroundImagePath } : {}),
+      },
+      null,
+      2,
+    );
+
+    const plantsPath = planRepoPlantsPath(sourceFileName);
+    const guildsPath = planRepoGuildsPath(sourceFileName);
+
+    await putRepoContents(
+      token,
+      fullName,
+      plantsPath,
+      utf8ToBase64(plantsJson),
+      `Update plan plants (${segment})`,
+    );
+    await putRepoContents(
+      token,
+      fullName,
+      guildsPath,
+      utf8ToBase64(guildsJson),
+      `Update plan guilds (${segment})`,
+    );
+    await putRepoContents(
+      token,
+      fullName,
+      configPath,
+      utf8ToBase64(configJson),
+      `Update plan config (${segment})`,
+    );
+
+    return { syncRevision: nextRev };
+  } finally {
+    githubRepoPushInFlightCount.value -= 1;
   }
-
-  const segment = planGardenFolderSegment(sourceFileName);
-  const plantsJson = JSON.stringify({ plants: snapshotForPush.plants }, null, 2);
-  const guildsJson = JSON.stringify({ guilds: snapshotForPush.guilds }, null, 2);
-  const configJson = JSON.stringify(
-    {
-      version: snapshotForPush.version,
-      syncRevision: snapshotForPush.syncRevision,
-      mapScale: snapshotForPush.mapScale,
-      backgroundOpacity: snapshotForPush.backgroundOpacity,
-      ...(backgroundImagePath !== undefined ? { backgroundImagePath } : {}),
-    },
-    null,
-    2,
-  );
-
-  const plantsPath = planRepoPlantsPath(sourceFileName);
-  const guildsPath = planRepoGuildsPath(sourceFileName);
-
-  await putRepoContents(
-    token,
-    fullName,
-    plantsPath,
-    utf8ToBase64(plantsJson),
-    `Update plan plants (${segment})`,
-  );
-  await putRepoContents(
-    token,
-    fullName,
-    guildsPath,
-    utf8ToBase64(guildsJson),
-    `Update plan guilds (${segment})`,
-  );
-  await putRepoContents(
-    token,
-    fullName,
-    configPath,
-    utf8ToBase64(configJson),
-    `Update plan config (${segment})`,
-  );
-
-  return { syncRevision: nextRev };
 };
 
 export const syncIfRepoLinked = async (

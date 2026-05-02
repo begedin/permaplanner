@@ -1,39 +1,19 @@
-import { test, expect, Page, Locator } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { onboard } from './helpers';
-
-const createPlant = async (page: Page, speciesValue: string, displayName: string) => {
-  await page.getByRole('link', { name: 'Plants' }).click();
-  await page.getByRole('button', { name: 'New plant' }).click();
-  await page.locator('select').first().selectOption(speciesValue);
-  await page.getByPlaceholder('Uses catalog name if empty').fill(displayName);
-  await page.getByRole('button', { name: 'Create' }).click();
-  await page.getByRole('link', { name: 'Garden' }).click();
-};
-
-const expectPlantAttributes = async (
-  mainSvg: Locator,
-  attributes: { x: number; y: number; width: number; height: number },
-) => {
-  for (const [key, value] of Object.entries(attributes)) {
-    await expect(mainSvg.locator('[data-garden-plant]')).toHaveAttribute(
-      key,
-      new RegExp(value.toString()),
-    );
-  }
-};
 
 test.describe('drawing features', () => {
   test.use({ contextOptions: { permissions: ['clipboard-read', 'clipboard-write'] } });
 
-  test('creates a bed with a plant', async ({ page }) => {
+  test('creates and edits guild beds on the aerial map', async ({ page }) => {
     await page.goto('');
-    await createPlant(page, 'apple', 'Test apple');
-    await createPlant(page, 'banana', 'Test banana');
     await onboard(page);
 
-    await page.getByRole('button', { name: 'Guild' }).click();
+    await page.getByRole('link', { name: 'Guilds' }).click();
+    await page.getByRole('button', { name: 'Add guild' }).click();
+    await page.getByRole('link', { name: 'Aerial' }).click();
 
-    // draw a single stroke and save
+    await page.getByRole('button', { name: 'Select on aerial map' }).click();
+
     await page.mouse.move(400, 200);
     await page.mouse.down();
     await page.mouse.move(400, 400, { steps: 10 });
@@ -44,64 +24,12 @@ test.describe('drawing features', () => {
     await page.mouse.up();
     await page.keyboard.press('Enter');
 
-    await expect(page.locator('[data-main-svg] polygon')).toHaveCount(2); // brush and bed;
-    await expect(page.getByRole('button', { name: 'New guild' })).toBeVisible();
-
-    await page.getByRole('button', { name: 'Test apple' }).click();
-
-    await page.mouse.move(405, 205);
-    await page.mouse.down();
-    await page.mouse.move(430, 230);
-    await page.mouse.up();
-
-    const expectedPlantAttributes = {
-      x: 76.27,
-      y: 64.37,
-      width: 9.302,
-      height: 9.302,
-    };
-
-    await expect(page.locator('[data-main-svg] [data-garden-plant]')).toHaveCount(1);
-
-    const apple = await page
-      .locator('[data-main-svg] [data-garden-plant]')
-      .elementHandle();
-    if (!apple) {
-      throw new Error('No apple on canvas');
-    }
-
-    const mainSvg = page.locator('[data-main-svg]');
-
-    await expectPlantAttributes(mainSvg, expectedPlantAttributes);
-    await expect(await mainSvg.locator('[data-garden-plant]').boundingBox()).toEqual({
-      height: expect.closeTo(25, 0),
-      width: expect.closeTo(25, 0),
-      x: expect.closeTo(405, 0),
-      y: expect.closeTo(205, 0),
-    });
-
-    await page.keyboard.press('+');
-
-    await expectPlantAttributes(mainSvg, expectedPlantAttributes);
-
-    await expect(
-      await mainSvg.locator('[data-garden-plant]').boundingBox(),
-    ).toMatchObject({
-      height: expect.closeTo(27.5, 1),
-      width: expect.closeTo(27.5, 1),
-      x: expect.closeTo(516.48, 1),
-      y: expect.closeTo(348.5, 1),
-    });
-
-    const currentPoints = await page
-      .locator('[data-main-svg] polygon')
-      .last()
-      .getAttribute('points');
+    await expect(page.locator('[data-main-svg] polygon')).toHaveCount(2);
+    await expect(page.getByRole('article', { name: 'New guild' }).first()).toBeVisible();
 
     await page.keyboard.press('Escape');
 
-    // select bed, draw a new stroke, and save
-    await page.getByRole('button', { name: 'New guild' }).click();
+    await page.getByRole('button', { name: 'Select on aerial map' }).click();
 
     await page.mouse.move(600, 400);
     await page.mouse.down();
@@ -109,9 +37,24 @@ test.describe('drawing features', () => {
     await page.mouse.up();
     await page.keyboard.press('Enter');
 
-    await page.getByRole('button', { name: 'New guild' }).click();
+    await page.getByRole('link', { name: 'Guilds' }).click();
+    await page.getByRole('button', { name: 'Add guild' }).click();
+    await page.getByRole('link', { name: 'Aerial' }).click();
 
-    await expect(page.locator('[data-main-svg] polygon')).toHaveCount(2); // brush and bed;
+    await page.getByRole('button', { name: 'Select on aerial map' }).nth(1).click();
+
+    const currentPoints = await page
+      .locator('[data-main-svg] polygon')
+      .last()
+      .getAttribute('points');
+
+    await page.mouse.move(500, 300);
+    await page.mouse.down();
+    await page.mouse.move(520, 350, { steps: 8 });
+    await page.mouse.up();
+    await page.keyboard.press('Enter');
+
+    await expect(page.locator('[data-main-svg] polygon')).toHaveCount(2);
     await expect(
       page.locator('[data-main-svg] polygon').last().getAttribute('points'),
     ).not.toEqual(currentPoints);

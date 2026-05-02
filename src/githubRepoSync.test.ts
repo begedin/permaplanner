@@ -14,7 +14,7 @@ import {
 it('buildGithubAuthorizeUrl uses repo scope for private repo + Contents API', () => {
   const url = buildGithubAuthorizeUrl({
     clientId: 'abc',
-    redirectUri: 'http://localhost:5173/garden',
+    redirectUri: 'http://localhost:5173/guilds',
     state: 'state-token',
     codeChallenge: 'challenge',
   });

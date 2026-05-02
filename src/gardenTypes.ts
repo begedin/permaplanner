@@ -66,9 +66,23 @@ export type GardenThing = {
   height: number;
 };
 
+/** Guild bed mulch coverage / depth (1 = light, 5 = heavy). */
+export type MulchLevel = 1 | 2 | 3 | 4 | 5;
+
+export const coerceMulchLevel = (v: unknown): MulchLevel => {
+  if (typeof v === 'number' && Number.isFinite(v)) {
+    const r = Math.round(v);
+    if (r >= 1 && r <= 5) {
+      return r as MulchLevel;
+    }
+  }
+  return 1;
+};
+
 export type Guild = {
   id: string;
   name: string;
   path: { x: number; y: number }[];
   plants: GardenThing[];
+  mulchLevel: MulchLevel;
 };

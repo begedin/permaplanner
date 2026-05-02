@@ -28,6 +28,7 @@ it('adds and removes plants', async () => {
     {
       id: 'guild',
       name: 'A guild',
+      mulchLevel: 1,
       plants: [
         {
           plantId: 'plant',
@@ -53,7 +54,7 @@ it('adds and removes plants', async () => {
 
 it('renames', () => {
   const store = useGardenStore();
-  store.guilds = [{ id: 'guild', name: 'A guild', plants: [], path: [] }];
+  store.guilds = [{ id: 'guild', name: 'A guild', plants: [], path: [], mulchLevel: 1 }];
   store.selectedId = 'guild';
 
   const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });
@@ -82,6 +83,7 @@ it('shows layers', () => {
     {
       id: 'guild',
       name: 'A guild',
+      mulchLevel: 1,
       plants: [
         {
           plantId: 'plant',
@@ -133,6 +135,7 @@ it('shows functions', () => {
     {
       id: 'guild',
       name: 'A guild',
+      mulchLevel: 1,
       plants: [
         {
           plantId: 'apple',

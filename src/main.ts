@@ -5,6 +5,7 @@ import { createApp } from 'vue';
 
 import App from './App.vue';
 import TheGarden from './TheGarden.vue';
+import TheGuilds from './TheGuilds.vue';
 import ThePlants from './ThePlants.vue';
 import { createPinia } from 'pinia';
 
@@ -14,10 +15,12 @@ app.use(
   createRouter({
     history: createWebHistory(),
     routes: [
-      { path: '/', redirect: '/garden' },
-      { path: '/garden', component: TheGarden },
+      { path: '/', redirect: '/guilds' },
+      { path: '/guilds', component: TheGuilds },
+      { path: '/aerial', component: TheGarden },
+      { path: '/garden', redirect: '/aerial' },
       { path: '/plants', component: ThePlants },
-      { path: '/:pathMatch(.*)*', redirect: '/garden' },
+      { path: '/:pathMatch(.*)*', redirect: '/guilds' },
     ],
   }),
 );

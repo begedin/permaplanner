@@ -1,7 +1,7 @@
-import { render, screen, cleanup, fireEvent } from '@testing-library/vue';
+import { cleanup } from '@testing-library/vue';
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
-import { flushPromises, mount } from '@vue/test-utils';
+import { mount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 
 import TheGarden from './TheGarden.vue';
@@ -27,39 +27,16 @@ afterEach(() => {
   cleanup();
 });
 
-it('changes color of garden bed button when drawing new guild', async () => {
-  render(TheGarden);
-
-  const button = screen.getByRole('button', { name: 'Guild' });
-  const classesBefore = button.classList.value;
-
-  useGardenStore().startDrawGuild();
-  await flushPromises();
-
-  const classesAfter = button.classList.value;
-
-  expect(classesBefore).not.toEqual(classesAfter);
-});
-
-it('starts drawing new guild', async () => {
-  render(TheGarden);
-
-  const store = useGardenStore();
-  expect(store.newGuild).toBeFalsy();
-
-  const button = screen.getByRole('button', { name: 'Guild' });
-  fireEvent.click(button);
-
-  await flushPromises();
-
-  expect(useGardenStore().newGuild).toBeTruthy();
-});
-
-it('unsets new guild on cancel', async () => {
+it('deselects when placement is cancelled', async () => {
   const wrapper = mount(TheGarden);
   const store = useGardenStore();
-  store.newGuild = { id: 'guild', path: [], name: 'Guild', plants: [] };
+  store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 }];
+  store.selectedId = 'guild';
+  store.hoveredId = 'guild';
   await wrapper.vm.$nextTick();
-  await wrapper.findAllComponents(GardenGuild).at(-1)?.vm.$emit('cancel');
-  expect(store.newGuild).toBeUndefined();
+  const guildComponents = wrapper.findAllComponents(GardenGuild);
+  const placement = guildComponents.find((c) => c.props('guild')?.id === 'guild');
+  await placement?.vm.$emit('cancel');
+  expect(store.selectedId).toBeUndefined();
+  expect(store.hoveredId).toBeUndefined();
 });

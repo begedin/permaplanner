@@ -7,7 +7,7 @@ const waitForGardenReady = async (page: Page) => {
 
 test('new plan, edit map scale, save, reload — plan and map scale restore', async ({ page }) => {
   await installOpfsPlanFileHandleE2E(page);
-  await page.goto('/garden');
+  await page.goto('/aerial');
   await waitForGardenReady(page);
 
   await page.getByRole('button', { name: 'New plan' }).click();

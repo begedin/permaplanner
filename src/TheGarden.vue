@@ -1,15 +1,9 @@
 <script setup lang="ts">
-/* global FileSystemFileHandle */
 import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
-import { v4 as uuidV4 } from 'uuid';
-
 import GardenGuild from './GardenGuild.vue';
-import GardenFeature from './GardenFeature.vue';
-import { useGardenStore, type Guild, type GardenThing } from './useGardenStore';
-import { plantDisplayLabel } from './resolvePlant';
+import { useGardenStore, type Guild } from './useGardenStore';
 import { useCameraStore } from './useCameraStore';
-import { useSceneStore } from './useSceneStore';
 import { useMapScaleStore } from './useMapScaleStore';
 import { useScene } from './useScene';
 
@@ -18,24 +12,25 @@ import { useCamera } from './useCamera';
 import { useElementSize } from '@vueuse/core';
 import OnboardingText from './OnboardingText.vue';
 import ThingBar from './ThingBar.vue';
-import ToolBarButton from './ToolBarButton.vue';
 import ToolSlider from './ToolSlider.vue';
 import ReferenceLine from './ReferenceLine.vue';
 import { useOnboardingStore } from './useOnboardingStore';
 import GithubRepoSyncPanel from './GithubRepoSyncPanel.vue';
-import { completeGithubAuthIfNeeded, syncIfRepoLinked } from './githubRepoSync';
 import { usePermaplannerStore } from './usePermaplannerStore';
-import {
-  ensureReadAccess,
-  getFileHandle,
-  getPersistedBoundFileName,
-} from './sessionFileHandle';
+import { usePlanSession } from './usePlanSession';
 
 const permaplannerStore = usePermaplannerStore();
 
-const syncRepoAfterLocalSave = () => {
-  void syncIfRepoLinked(permaplannerStore.snapshot(), permaplannerStore.fileName);
-};
+const {
+  isRestoringSession,
+  awaitingReopenFileClick,
+  expectedRelinkName,
+  continueReopenPersistedFile,
+  load,
+  newPlan,
+  save,
+  saveAs,
+} = usePlanSession();
 
 const {
   setupBackgroundImagePaste,
@@ -111,73 +106,21 @@ useScene(container, bgImage);
 
 const garden = useGardenStore();
 
-const expectedRelinkName = computed(() => getPersistedBoundFileName());
+const placedGuilds = computed(() => garden.guilds.filter((g) => g.path.length > 0));
 
-const isRestoringSession = ref(true);
-
-const pendingReopenFileHandle = ref<FileSystemFileHandle | null>(null);
-const awaitingReopenFileClick = ref(false);
-
-const clearReopenFileUi = () => {
-  pendingReopenFileHandle.value = null;
-  awaitingReopenFileClick.value = false;
-};
-
-const isFilePermissionError = (e: unknown): boolean =>
-  e instanceof DOMException && (e.name === 'NotAllowedError' || e.name === 'SecurityError');
-
-const tryRestorePersistedFile = async () => {
-  const handle = await getFileHandle();
-  if (!handle) {
-    if (getPersistedBoundFileName()) {
-      permaplannerStore.needsFileRelink = true;
-    }
-    return;
+const placementGuildDraft = computed(() => {
+  const id = garden.selectedId;
+  if (!id) {
+    return undefined;
   }
-  try {
-    await permaplannerStore.load(handle, { skipBindingPersist: true });
-  } catch (e) {
-    if (isFilePermissionError(e)) {
-      pendingReopenFileHandle.value = handle;
-      awaitingReopenFileClick.value = true;
-      return;
-    }
-    console.error('[permaplanner] Could not open restored file handle:', e);
-    permaplannerStore.needsFileRelink = true;
+  const g = garden.guilds.find((x) => x.id === id);
+  if (!g || g.path.length > 0) {
+    return undefined;
   }
-};
-
-const continueReopenPersistedFile = async () => {
-  const h = pendingReopenFileHandle.value ?? (await getFileHandle());
-  if (!h) {
-    clearReopenFileUi();
-    return;
-  }
-  try {
-    if (!(await ensureReadAccess(h))) {
-      permaplannerStore.needsFileRelink = true;
-      clearReopenFileUi();
-      return;
-    }
-    await permaplannerStore.load(h, { skipBindingPersist: true });
-  } catch (e) {
-    console.error('[permaplanner] Could not open file after permission grant:', e);
-    permaplannerStore.needsFileRelink = true;
-  } finally {
-    clearReopenFileUi();
-  }
-};
+  return g;
+});
 
 onMounted(() => {
-  void (async () => {
-    try {
-      await completeGithubAuthIfNeeded();
-      await tryRestorePersistedFile();
-    } finally {
-      isRestoringSession.value = false;
-    }
-  })();
-
   document.addEventListener('keydown', (e): void => {
     if (e.key === 'Delete' && garden.selectedId !== undefined) {
       e.preventDefault();
@@ -189,124 +132,14 @@ onMounted(() => {
 
 const updateGuild = (guild: Guild) => {
   const index = garden.guilds.findIndex((g) => g.id === guild.id);
+  if (index === -1) {
+    return;
+  }
   garden.guilds[index] = guild;
   garden.selectedId = undefined;
   garden.hoveredId = undefined;
 };
 
-const scene = useSceneStore();
-
-// bed drawing
-
-const addNewGuild = (guild: Guild) => {
-  garden.guilds.push(guild);
-  garden.newGuild = undefined;
-};
-
-// feature drawing
-
-const getNewShape = (plantId: string): GardenThing => {
-  const x = Math.min(scene.worldBox.x, scene.worldBox.x + scene.worldBox.width);
-  const y = Math.min(scene.worldBox.y, scene.worldBox.y + scene.worldBox.height);
-  const width = Math.abs(scene.worldBox.width);
-  const height = Math.abs(scene.worldBox.height);
-
-  return {
-    id: uuidV4(),
-    plantId,
-    x,
-    y,
-    width,
-    height,
-    nameOrCultivar: plantDisplayLabel(garden.resolvedPlant(plantId)),
-  };
-};
-
-const newShape = computed<GardenThing | void>(() => {
-  if (!scene.isDrawing || !garden.plant) {
-    return;
-  }
-
-  return getNewShape(garden.plant.id);
-});
-
-watch(
-  () => scene.isDrawing,
-  (isDrawing) => {
-    if (!isDrawing && garden.plant) {
-      // just finished drawing
-      const shape = getNewShape(garden.plant.id);
-      const overlappingGuild = garden.getOverlappingGuild(shape);
-
-      if (!overlappingGuild) {
-        return;
-      }
-
-      overlappingGuild.plants.push({
-        ...shape,
-        x: shape.x,
-        y: shape.y,
-        nameOrCultivar: plantDisplayLabel(garden.plant),
-      });
-    }
-  },
-);
-
-const fileOptions = (fileName: string = 'myNewPlan.json') => ({
-  types: [{ accept: { 'application/json': ['.json' as const] } }],
-  suggestedName: fileName,
-  startIn: 'documents' as const,
-});
-
-const load = async () => {
-  clearReopenFileUi();
-  const options = fileOptions();
-  try {
-    const [fileHandle] = await window.showOpenFilePicker(options);
-    await permaplannerStore.load(fileHandle);
-  } catch (e) {
-    console.error(e);
-  }
-};
-
-const newPlan = async () => {
-  try {
-    clearReopenFileUi();
-    const options = fileOptions('myNewPlan.json');
-    const fileHandle = await window.showSaveFilePicker(options);
-    await permaplannerStore.resetToNewPlan();
-    await permaplannerStore.save(fileHandle);
-    syncRepoAfterLocalSave();
-    onboarding.onboardingState = 'initial';
-  } catch (e) {
-    console.error(e);
-  }
-};
-
-const save = async () => {
-  try {
-    const fileHandle =
-      permaplannerStore.fileHandle ||
-      (await window.showSaveFilePicker(fileOptions(permaplannerStore.fileName)));
-    permaplannerStore.fileHandle = fileHandle;
-    permaplannerStore.fileName = fileHandle.name;
-    await permaplannerStore.save(fileHandle);
-    syncRepoAfterLocalSave();
-  } catch (e) {
-    console.error(e);
-  }
-};
-
-const saveAs = async () => {
-  try {
-    const options = fileOptions(permaplannerStore.fileName);
-    const fileHandle = await window.showSaveFilePicker(options);
-    await permaplannerStore.save(fileHandle);
-    syncRepoAfterLocalSave();
-  } catch (e) {
-    console.error(e);
-  }
-};
 </script>
 
 <template>
@@ -373,26 +206,6 @@ const saveAs = async () => {
         </button>
       </div>
       <template v-if="permaplannerStore.fileName">
-        <ToolBarButton
-          v-for="up in garden.plants"
-          :key="up.id"
-          :plant="garden.resolvedPlant(up.id)"
-          :active="garden.plant?.id === up.id"
-          :disabled="disabled"
-          @click="garden.plant = garden.resolvedPlant(up.id)"
-        />
-        <button
-          class="p-1 rounded"
-          :class="
-            (garden.newGuild && ['bg-green-400 hover:bg-green-500']) || [
-              'bg-green-200 hover:bg-green-300 disabled:opacity-50',
-            ]
-          "
-          :disabled="disabled"
-          @click.stop="garden.startDrawGuild"
-        >
-          Guild
-        </button>
         <ToolSlider
           v-model:value="mapScale.linePhysicalLength"
           label="Map scale"
@@ -590,7 +403,7 @@ const saveAs = async () => {
           class="pointer-events-none"
         />
         <GardenGuild
-          v-for="guild in garden.guilds"
+          v-for="guild in placedGuilds"
           :key="guild.id"
           :selected="garden.selectedId === guild.id"
           :hovered="garden.hoveredId === guild.id"
@@ -604,38 +417,14 @@ const saveAs = async () => {
           @update="updateGuild"
         ></GardenGuild>
 
-        <GardenFeature
-          v-for="thing in garden.allGardenPlants"
-          :key="thing.id"
-          :thing="thing"
-          :plant="garden.resolvedPlant(thing.plantId)"
-          :active="garden.selectedId === thing.id || garden.hoveredId === thing.id"
-          :scale="camera.scale"
-          :unit-length-px="mapScale.unitLengthPx"
-          @delete="garden.deleteFeature(thing.id)"
-          @click="garden.selectedId = thing.id"
-          @update="($event) => garden.updateFeature(thing.guildId, thing.id, $event)"
-          @mouseenter="garden.hoveredId = thing.id"
-          @mouseleave="garden.hoveredId = undefined"
-        />
-
         <GardenGuild
-          v-if="garden.newGuild"
-          :guild="garden.newGuild"
+          v-if="placementGuildDraft"
+          :guild="placementGuildDraft"
           :unit-length-px="mapScale.unitLengthPx"
           hovered
           selected
-          @update="addNewGuild"
-          @cancel="garden.newGuild = undefined"
-        />
-
-        <GardenFeature
-          v-if="newShape && garden.plant"
-          :thing="newShape"
-          :plant="garden.plant"
-          active
-          :scale="camera.scale"
-          :unit-length-px="mapScale.unitLengthPx"
+          @update="updateGuild"
+          @cancel="garden.deactivateAll"
         />
 
         <OnboardingText

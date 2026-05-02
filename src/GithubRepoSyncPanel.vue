@@ -9,6 +9,7 @@ import {
   fetchRemotePlanSyncRevision,
   getGithubAccessToken,
   getPlanRepoGardenFolderUrl,
+  githubRepoPushInFlightCount,
   planRepoSyncUpdatedEventName,
   pullPlanJsonFromGithubRepo,
   pushPlanJsonToGithubRepo,
@@ -17,6 +18,8 @@ import {
 import { usePermaplannerStore } from './usePermaplannerStore';
 
 const clientId = computed(() => readGithubClientIdConfig());
+
+const repoPushBusy = computed(() => githubRepoPushInFlightCount.value > 0);
 
 const permaplannerStore = usePermaplannerStore();
 const { syncRevision } = storeToRefs(permaplannerStore);
@@ -167,7 +170,10 @@ const pullRemote = async () => {
           Connect GitHub
         </button>
         <template v-else>
-          <div class="flex flex-wrap gap-x-3 gap-y-1 text-slate-600">
+          <div
+            class="flex flex-wrap gap-x-3 gap-y-1 text-slate-600"
+            :aria-busy="repoPushBusy || syncing || pulling || remoteLoading"
+          >
             <span>Local sync: <strong class="text-slate-800">{{ syncRevision }}</strong></span>
             <span>
               Remote:
@@ -187,17 +193,24 @@ const pullRemote = async () => {
             <button
               type="button"
               class="text-slate-500 hover:text-slate-800 underline"
-              :disabled="remoteLoading || syncing || pulling"
+              :disabled="remoteLoading || syncing || pulling || repoPushBusy"
               @click="refreshRemoteRevision"
             >
               Refresh remote
             </button>
           </div>
+          <p
+            v-if="repoPushBusy && !syncing"
+            class="text-slate-500"
+            role="status"
+          >
+            Saving backup to GitHub…
+          </p>
           <div class="flex flex-col gap-1">
             <button
               type="button"
               class="bg-slate-200 hover:bg-slate-300 rounded p-1.5 text-left disabled:opacity-50"
-              :disabled="syncing || pulling"
+              :disabled="syncing || pulling || repoPushBusy"
               @click="pushCurrent"
             >
               {{ syncing ? 'Pushing…' : 'Push current' }}
@@ -205,14 +218,15 @@ const pullRemote = async () => {
             <button
               type="button"
               class="bg-slate-200 hover:bg-slate-300 rounded p-1.5 text-left disabled:opacity-50"
-              :disabled="syncing || pulling"
+              :disabled="syncing || pulling || repoPushBusy"
               @click="pullRemote"
             >
               {{ pulling ? 'Pulling…' : 'Pull remote' }}
             </button>
             <button
               type="button"
-              class="bg-slate-100 hover:bg-slate-200 rounded p-1.5 text-left"
+              class="bg-slate-100 hover:bg-slate-200 rounded p-1.5 text-left disabled:opacity-50"
+              :disabled="syncing || pulling || repoPushBusy || remoteLoading"
               @click="disconnect"
             >
               Disconnect

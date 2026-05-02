@@ -21,6 +21,7 @@ it('renders guilds', async () => {
     {
       id: 'guild',
       name: 'A guild',
+      mulchLevel: 1,
       plants: [
         {
           id: 'plant-1',
@@ -37,6 +38,7 @@ it('renders guilds', async () => {
     {
       id: 'guild-2',
       name: 'Another guild',
+      mulchLevel: 1,
       plants: [
         {
           id: 'plant-2',

@@ -6,7 +6,7 @@ test('onboards', async ({ browser }) => {
     permissions: ['clipboard-read', 'clipboard-write'],
   });
   const page = await context.newPage();
-  await page.goto('');
+  await page.goto('/aerial');
 
   stubSaveFilePicker(page, 'new.json');
 
