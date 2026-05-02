@@ -51,30 +51,61 @@ const container = ref<SVGElement>();
 
 const { width: containerWidth, height: containerHeight } = useElementSize(container);
 
+const PLACEHOLDER_WORLD_BASE = 1000;
+
+const worldBounds = computed(() => {
+  if (ready.value && imgWidth.value > 0 && imgHeight.value > 0) {
+    return { width: imgWidth.value, height: imgHeight.value };
+  }
+  const cw = containerWidth.value;
+  const ch = containerHeight.value;
+  if (cw <= 0 || ch <= 0) {
+    return { width: PLACEHOLDER_WORLD_BASE, height: PLACEHOLDER_WORLD_BASE };
+  }
+  return { width: PLACEHOLDER_WORLD_BASE, height: (PLACEHOLDER_WORLD_BASE * ch) / cw };
+});
+
 const cameraParams = computed(() => ({
   containerHeight: containerHeight.value,
   containerWidth: containerWidth.value,
-  backgroundNaturalHeight: imgHeight.value,
-  backgroundNaturalWidth: imgWidth.value,
+  worldWidth: worldBounds.value.width,
+  worldHeight: worldBounds.value.height,
 }));
 
 const { setupCamera, teardownCamera, fitToViewPort } = useCamera(container, cameraParams);
 
-const disabled = ref(true);
+const cameraInitialized = ref(false);
 
-watch(ready, async () => {
-  if (!ready.value) {
-    return;
-  }
-
-  fitToViewPort();
-  setupCamera();
-
-  setTimeout(() => {
-    fitToViewPort();
-    disabled.value = false;
-  }, 1000);
-});
+watch(
+  () => ({
+    el: container.value,
+    cw: containerWidth.value,
+    ch: containerHeight.value,
+    ww: worldBounds.value.width,
+    wh: worldBounds.value.height,
+  }),
+  (v, prev) => {
+    if (prev?.el && !v.el) {
+      teardownCamera();
+      cameraInitialized.value = false;
+      return;
+    }
+    if (!v.el || v.cw <= 0 || v.ch <= 0 || v.ww <= 0 || v.wh <= 0) {
+      return;
+    }
+    const worldDimsChanged = !prev || prev.ww !== v.ww || prev.wh !== v.wh;
+    const containerBecameValid =
+      !!prev && (prev.cw <= 0 || prev.ch <= 0) && v.cw > 0 && v.ch > 0;
+    if (worldDimsChanged || containerBecameValid) {
+      fitToViewPort();
+    }
+    if (!cameraInitialized.value) {
+      setupCamera();
+      cameraInitialized.value = true;
+    }
+  },
+  { immediate: true },
+);
 
 const camera = useCameraStore();
 
@@ -96,13 +127,13 @@ const center = computed(() => {
   return { x: x + width / 2, y: y + height / 2 };
 });
 
-const bgImage = ref<SVGImageElement>();
+const worldStage = ref<SVGRectElement>();
 
 const onboarding = useOnboardingStore();
 
 const mapScale = useMapScaleStore();
 
-useScene(container, bgImage);
+useScene(container, worldStage);
 
 const garden = useGardenStore();
 
@@ -336,7 +367,6 @@ const updateGuild = (guild: Guild) => {
         ref="container"
         :viewBox="svgViewbox"
         data-main-svg
-        :disabled="disabled"
         preserveAspectRatio="xMinYMin meet"
         class="min-h-0"
       >
@@ -371,20 +401,28 @@ const updateGuild = (guild: Guild) => {
             />
           </radialGradient>
         </defs>
-        <image
-          v-if="imgDataUrl"
-          ref="bgImage"
-          :xlink:href="imgDataUrl"
+        <rect
+          ref="worldStage"
           x="0"
           y="0"
-          :width="imgWidth"
-          :height="imgHeight"
+          :width="worldBounds.width"
+          :height="worldBounds.height"
+          class="fill-slate-100"
+          data-world-stage
+        />
+        <image
+          v-if="imgDataUrl"
+          :href="imgDataUrl"
+          x="0"
+          y="0"
+          :width="worldBounds.width"
+          :height="worldBounds.height"
           :opacity="permaplannerStore.backgroundOpacity"
         />
         <text
           v-else
-          x="50%"
-          y="50%"
+          :x="worldBounds.width / 2"
+          :y="worldBounds.height / 2"
           fill="red"
           text-anchor="middle"
           dominant-baseline="middle"
@@ -397,8 +435,8 @@ const updateGuild = (guild: Guild) => {
           v-if="mapScale.unitLengthPx"
           x="0"
           y="0"
-          :width="imgWidth"
-          :height="imgHeight"
+          :width="worldBounds.width"
+          :height="worldBounds.height"
           fill="url(#grid)"
           class="pointer-events-none"
         />

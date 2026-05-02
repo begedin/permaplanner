@@ -10,8 +10,8 @@ export const useCamera = (
   dimensions: Ref<{
     containerWidth: number;
     containerHeight: number;
-    backgroundNaturalWidth: number;
-    backgroundNaturalHeight: number;
+    worldWidth: number;
+    worldHeight: number;
   }>,
 ) => {
   const camera = useCameraStore();
@@ -20,15 +20,18 @@ export const useCamera = (
   const scene = useSceneStore();
 
   const zoomBy = (factor: number) => {
-    const { backgroundNaturalWidth, backgroundNaturalHeight } = dimensions.value;
+    const { worldWidth, worldHeight } = dimensions.value;
+    if (worldWidth <= 0 || worldHeight <= 0) {
+      return;
+    }
 
     const newZoom =
       factor > 0
         ? Math.min(camera.zoom + factor, MAX_ZOOM)
         : Math.max(camera.zoom + factor, MIN_ZOOM);
 
-    const newWidth = backgroundNaturalWidth / newZoom;
-    const newHeight = backgroundNaturalHeight / newZoom;
+    const newWidth = worldWidth / newZoom;
+    const newHeight = worldHeight / newZoom;
 
     const atX = scene.worldX;
     const atY = scene.worldY;
@@ -40,7 +43,7 @@ export const useCamera = (
     camera.height = newHeight;
   };
 
-  const teardownController = new AbortController();
+  let teardownController = new AbortController();
 
   const setupMousePositionTracking = () => {
     element.value?.addEventListener(
@@ -107,35 +110,42 @@ export const useCamera = (
   };
 
   const fitToViewPort = () => {
-    const {
-      containerWidth,
-      containerHeight,
-      backgroundNaturalWidth,
-      backgroundNaturalHeight,
-    } = dimensions.value;
+    const { containerWidth, containerHeight, worldWidth, worldHeight } = dimensions.value;
+    if (
+      worldWidth <= 0 ||
+      worldHeight <= 0 ||
+      containerWidth <= 0 ||
+      containerHeight <= 0
+    ) {
+      return;
+    }
 
     camera.zoom = 1;
 
-    camera.width = backgroundNaturalWidth;
-    camera.height = backgroundNaturalHeight;
+    camera.width = worldWidth;
+    camera.height = worldHeight;
 
     camera.x = 0;
     camera.y = 0;
 
-    const scaleX = containerWidth / backgroundNaturalWidth;
-    const scaleY = containerHeight / backgroundNaturalHeight;
+    const scaleX = containerWidth / worldWidth;
+    const scaleY = containerHeight / worldHeight;
     const scale = Math.min(scaleX, scaleY);
     camera.scale = scale;
   };
 
   const setupCamera = () => {
+    teardownController.abort();
+    teardownController = new AbortController();
     setupWheelZoom();
     setupMousePositionTracking();
     setupKeyBindings();
     setupMiddleMousePan();
   };
 
-  const teardownCamera = () => teardownController.abort();
+  const teardownCamera = () => {
+    teardownController.abort();
+  };
 
   return {
     camera,

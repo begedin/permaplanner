@@ -5,9 +5,9 @@ import { useCameraStore } from './useCameraStore';
 
 export const useScene = (
   svgElement: Ref<SVGElement | undefined>,
-  svgBGImageElement: Ref<SVGImageElement | undefined>,
+  stageElement: Ref<SVGElement | undefined>,
 ) => {
-  const { x, y, box, isDrawing } = useDrawBox(svgElement, svgBGImageElement);
+  const { x, y, box, isDrawing } = useDrawBox(svgElement, stageElement);
   const store = useSceneStore();
   const camera = useCameraStore();
 
