@@ -699,6 +699,44 @@
       ]
     },
     {
+      "id": "fig",
+      "name": "Fig",
+      "defaultEmoji": "🌳",
+      "functions": [
+        "edible",
+        "pollinator_attractor"
+      ],
+      "layers": [
+        "understory"
+      ],
+      "cultivars": [
+        {
+          "id": "brown_turkey",
+          "name": "Brown Turkey"
+        },
+        {
+          "id": "chicago_hardy",
+          "name": "Chicago Hardy"
+        },
+        {
+          "id": "celeste",
+          "name": "Celeste"
+        },
+        {
+          "id": "black_mission",
+          "name": "Black Mission"
+        },
+        {
+          "id": "lsu_purple",
+          "name": "LSU Purple"
+        },
+        {
+          "id": "violette_de_bordeaux",
+          "name": "Violette de Bordeaux"
+        }
+      ]
+    },
+    {
       "id": "hazelnut",
       "name": "Hazelnut",
       "defaultEmoji": "🌰",
@@ -1145,88 +1183,6 @@
         {
           "id": "president_grevy",
           "name": "President Grevy"
-        }
-      ]
-    },
-    {
-      "id": "plantago_major",
-      "name": "Common plantain",
-      "defaultEmoji": "🌿",
-      "functions": [
-        "edible",
-        "medicinal",
-        "dynamic_accumulator",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "herb",
-        "ground_cover"
-      ],
-      "cultivars": [
-        {
-          "id": "wild_type",
-          "name": "Wild type (typical green)"
-        },
-        {
-          "id": "rubrifolia",
-          "name": "Rubrifolia (purple leaves)"
-        },
-        {
-          "id": "variegata",
-          "name": "Variegata"
-        }
-      ]
-    },
-    {
-      "id": "sweet_william",
-      "name": "Sweet William",
-      "defaultEmoji": "🌼",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "herb"
-      ],
-      "cultivars": [
-        {
-          "id": "mixed_colors",
-          "name": "Mixed colors (typical strains)"
-        },
-        {
-          "id": "amazon_cherry",
-          "name": "Amazon Cherry"
-        },
-        {
-          "id": "auricula_eyed_mix",
-          "name": "Auricula-eyed mixed"
-        }
-      ]
-    },
-    {
-      "id": "carpathian_bellflower",
-      "name": "Carpathian bellflower",
-      "defaultEmoji": "🪻",
-      "functions": [
-        "pollinator_attractor",
-        "ground_cover"
-      ],
-      "layers": [
-        "herb",
-        "ground_cover"
-      ],
-      "cultivars": [
-        {
-          "id": "blue_clips",
-          "name": "Blue Clips"
-        },
-        {
-          "id": "white_clips",
-          "name": "White Clips"
-        },
-        {
-          "id": "deep_blue_clips",
-          "name": "Deep Blue Clips"
         }
       ]
     }

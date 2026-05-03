@@ -1,6 +1,7 @@
 import rawCatalog from './data/plantCatalog.json';
 import type { GuildFunction, GuildLayer } from './gardenTypes';
 
+/** Cultivar row: include optional fields only when they differ from the species defaults. */
 export type CatalogCultivar = {
   id: string;
   name: string;
