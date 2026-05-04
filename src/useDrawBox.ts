@@ -1,5 +1,7 @@
 import { computed, onBeforeUnmount, ref, watch, type Ref } from 'vue';
 
+import { clientToSvgUser } from './svgClientToUser';
+
 export const useDrawBox = (
   mouseEventReceiver: Ref<HTMLElement | SVGElement | undefined>,
   stageElement: Ref<HTMLElement | SVGElement | undefined> = mouseEventReceiver,
@@ -43,10 +45,11 @@ export const useDrawBox = (
           if (!stageElement.value || e.button !== 0) {
             return;
           }
-          const svgOffsetX = stageElement.value.getBoundingClientRect().left;
-          const svgOffsetY = stageElement.value.getBoundingClientRect().top;
-
-          mouseInitial.value = { x: e.clientX - svgOffsetX, y: e.clientY - svgOffsetY };
+          const root = mouseEventReceiver.value;
+          if (!(root instanceof SVGSVGElement)) {
+            return;
+          }
+          mouseInitial.value = clientToSvgUser(root, e.clientX, e.clientY);
 
           isDrawing.value = true;
         }) as (e: Event) => void,
@@ -59,10 +62,11 @@ export const useDrawBox = (
           if (!stageElement.value) {
             return;
           }
-          const svgOffsetX = stageElement.value.getBoundingClientRect().left;
-          const svgOffsetY = stageElement.value.getBoundingClientRect().top;
-
-          mouseCurrent.value = { x: e.clientX - svgOffsetX, y: e.clientY - svgOffsetY };
+          const root = mouseEventReceiver.value;
+          if (!(root instanceof SVGSVGElement)) {
+            return;
+          }
+          mouseCurrent.value = clientToSvgUser(root, e.clientX, e.clientY);
         },
         { signal: controller.signal },
       );

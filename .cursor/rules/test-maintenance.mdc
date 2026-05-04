@@ -1,0 +1,15 @@
+---
+description: After code changes, update or run related Vitest tests
+alwaysApply: true
+---
+
+# Tests after code changes
+
+When you change **behavior, UI, or public APIs** in `src/` (Vue components, Pinia stores, composables, utils):
+
+1. **Find tests** — Same-directory `*.test.ts`, or search for the symbol (`grep` / search): component filename, store name, composable name.
+2. **Run them** — `npx vitest run path/to/File.test.ts` (or `npm run test:unit` with a path if that matches project habit). Fix failures before finishing the task.
+3. **Update assertions** when the change is intentional (e.g. new `aria-label`, copy, layout split, prop/context). Do not delete coverage just to turn the suite green; replace with assertions on the new contract.
+4. **Split concerns** — If a thin wrapper (e.g. sidebar) delegates to a shared child, tests on the child (`GuildCard`, store) own detailed behavior; wrapper tests stay shallow.
+
+Style: [`.cursor/skills/vitest-testing-style/SKILL.md`](.cursor/skills/vitest-testing-style/SKILL.md). Assertions: prefer `toEqual` / `toMatchObject` and plain `textContent` / `getAttribute` unless the project already uses `@testing-library/jest-dom` matchers.

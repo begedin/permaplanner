@@ -11,6 +11,7 @@ import { useBackgroundImage } from './useBackgroundImage';
 import { useCamera } from './useCamera';
 import { useElementSize } from '@vueuse/core';
 import OnboardingText from './OnboardingText.vue';
+import PlanUnsavedIndicator from './PlanUnsavedIndicator.vue';
 import ThingBar from './ThingBar.vue';
 import ToolSlider from './ToolSlider.vue';
 import ReferenceLine from './ReferenceLine.vue';
@@ -236,6 +237,7 @@ const updateGuild = (guild: Guild) => {
           Choose file…
         </button>
       </div>
+      <PlanUnsavedIndicator v-if="!isRestoringSession" />
       <template v-if="permaplannerStore.fileName">
         <ToolSlider
           v-model:value="mapScale.linePhysicalLength"
@@ -449,7 +451,7 @@ const updateGuild = (guild: Guild) => {
           :unit-length-px="mapScale.unitLengthPx"
           @cancel="garden.deactivateAll"
           @click.exact="garden.editGuild(guild.id)"
-          @click.shift="garden.removeGuild(guild.id)"
+          @click.shift="garden.removeGuildFromAerialMap(guild.id)"
           @mouseenter="garden.hoveredId = guild.id"
           @mouseleave="garden.hoveredId = undefined"
           @update="updateGuild"

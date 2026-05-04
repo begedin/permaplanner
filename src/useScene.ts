@@ -1,7 +1,6 @@
 import { watch, type Ref } from 'vue';
 import { useSceneStore } from './useSceneStore';
 import { useDrawBox } from './useDrawBox';
-import { useCameraStore } from './useCameraStore';
 
 export const useScene = (
   svgElement: Ref<SVGElement | undefined>,
@@ -9,13 +8,13 @@ export const useScene = (
 ) => {
   const { x, y, box, isDrawing } = useDrawBox(svgElement, stageElement);
   const store = useSceneStore();
-  const camera = useCameraStore();
 
   watch(
     x,
     (value) => {
       store.x = value;
-      store.worldX = camera.cameraToWorld(value);
+      // CTM-based coords are already viewBox / world units (cameraToWorld was for old pixel math).
+      store.worldX = value;
     },
     { immediate: true },
   );
@@ -23,7 +22,7 @@ export const useScene = (
     y,
     (value) => {
       store.y = value;
-      store.worldY = camera.cameraToWorld(value);
+      store.worldY = value;
     },
     { immediate: true },
   );
@@ -39,10 +38,10 @@ export const useScene = (
       };
 
       store.worldBox = {
-        x: camera.cameraToWorld(box.value.x),
-        y: camera.cameraToWorld(box.value.y),
-        width: camera.cameraToWorld(box.value.width),
-        height: camera.cameraToWorld(box.value.height),
+        x: box.value.x,
+        y: box.value.y,
+        width: box.value.width,
+        height: box.value.height,
       };
     },
     { immediate: true },

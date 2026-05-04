@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import GithubRepoSyncPanel from './GithubRepoSyncPanel.vue';
+import PlanUnsavedIndicator from './PlanUnsavedIndicator.vue';
 import GuildCard from './GuildCard.vue';
 import { useGardenStore } from './useGardenStore';
 import { usePermaplannerStore } from './usePermaplannerStore';
@@ -87,6 +88,7 @@ const {
           Choose file…
         </button>
       </div>
+      <PlanUnsavedIndicator v-if="!isRestoringSession" />
       <template v-if="permaplannerStore.fileName">
         <span class="text-xs text-slate-600 truncate">{{ permaplannerStore.fileName }}</span>
         <button

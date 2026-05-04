@@ -182,3 +182,12 @@ export const normalizePlantsFromFile = (raw: unknown, catalog: PlantCatalogFile)
 };
 
 export const plantDisplayLabel = (p: Plant): string => p.cultivar || p.name;
+
+/** Guild card list: species only for the default cultivar; `Species, Cultivar` when a specific cultivar is selected. */
+export const plantGuildGroupLabel = (p: Plant): string => {
+  if (p.cultivarId === null) {
+    return p.name;
+  }
+  const c = p.cultivar?.trim();
+  return c ? `${p.name}, ${c}` : p.name;
+};

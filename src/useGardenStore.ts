@@ -99,6 +99,14 @@ export const useGardenStore = defineStore('garden', () => {
     guilds.value = guilds.value.filter((g) => g.id !== id);
   };
 
+  /** Clears the guild bed on the aerial map; keeps the guild and its plants. */
+  const removeGuildFromAerialMap = (id: string) => {
+    const g = guilds.value.find((guild) => guild.id === id);
+    if (g) {
+      g.path = [];
+    }
+  };
+
   const addPlantToGuild = (guildId: string, plantId: string) => {
     const guild = guilds.value.find((g) => g.id === guildId);
     if (!guild) {
@@ -137,6 +145,7 @@ export const useGardenStore = defineStore('garden', () => {
     guilds,
 
     removeGuild,
+    removeGuildFromAerialMap,
     createGuild,
     editGuild,
 

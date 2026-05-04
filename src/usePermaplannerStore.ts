@@ -1,6 +1,6 @@
 import { watchDebounced } from '@vueuse/core';
 import { defineStore, storeToRefs } from 'pinia';
-import { nextTick, ref } from 'vue';
+import { nextTick, ref, watch } from 'vue';
 import { coerceMulchLevel, type Guild, type UserPlant } from './gardenTypes';
 import { assert } from './utils';
 import { plantCatalog } from './plantCatalog';
@@ -119,6 +119,12 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
   /** Skip auto-save while hydrating from disk or similar bulk updates. */
   const suppressAutosaveDepth = ref(0);
 
+  /** True while replacing plan state so reactive updates do not count as user edits. */
+  const isBulkPlanUpdate = ref(false);
+
+  /** Plan differs from the last successful write to disk (or never saved). */
+  const unsavedChanges = ref(false);
+
   const snapshot = (): PermaplannerFileV1 => {
     const mapScale = useMapScaleStore();
     const bg = backgroundImageDataUrl.value;
@@ -145,6 +151,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     const writable = await handle.createWritable();
     await writable.write(text);
     await writable.close();
+    unsavedChanges.value = false;
     try {
       await persistFileBinding(handle);
     } catch (e) {
@@ -168,6 +175,26 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
   const { start: mapStart, end: mapEnd, linePhysicalLength: mapLinePhysicalLength } =
     storeToRefs(mapScaleStore);
 
+  watch(
+    [
+      guilds,
+      plants,
+      backgroundOpacity,
+      backgroundImageDataUrl,
+      syncRevision,
+      mapStart,
+      mapEnd,
+      mapLinePhysicalLength,
+    ],
+    () => {
+      if (suppressAutosaveDepth.value > 0 || isBulkPlanUpdate.value) {
+        return;
+      }
+      unsavedChanges.value = true;
+    },
+    { deep: true, flush: 'post' },
+  );
+
   watchDebounced(
     [
       guilds,
@@ -188,6 +215,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
   type LoadOptions = { skipBindingPersist?: boolean };
 
   const load = async (handle: FileSystemFileHandle, options?: LoadOptions) => {
+    isBulkPlanUpdate.value = true;
     suppressAutosaveDepth.value += 1;
     try {
       const file = await handle.getFile();
@@ -216,6 +244,9 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     } finally {
       await nextTick();
       suppressAutosaveDepth.value -= 1;
+      await nextTick();
+      isBulkPlanUpdate.value = false;
+      unsavedChanges.value = false;
     }
   };
 
@@ -227,16 +258,26 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
   };
 
   const resetToNewPlan = async () => {
-    fileHandle.value = undefined;
-    fileName.value = undefined;
-    needsFileRelink.value = false;
-    await clearFileBinding();
-    backgroundImageDataUrl.value = undefined;
-    backgroundOpacity.value = 0.4;
-    plants.value = defaultUserPlants();
-    guilds.value = [];
-    syncRevision.value = 0;
-    useMapScaleStore().resetToDefaults();
+    isBulkPlanUpdate.value = true;
+    suppressAutosaveDepth.value += 1;
+    try {
+      fileHandle.value = undefined;
+      fileName.value = undefined;
+      needsFileRelink.value = false;
+      await clearFileBinding();
+      backgroundImageDataUrl.value = undefined;
+      backgroundOpacity.value = 0.4;
+      plants.value = defaultUserPlants();
+      guilds.value = [];
+      syncRevision.value = 0;
+      useMapScaleStore().resetToDefaults();
+    } finally {
+      await nextTick();
+      suppressAutosaveDepth.value -= 1;
+      await nextTick();
+      isBulkPlanUpdate.value = false;
+      unsavedChanges.value = false;
+    }
   };
 
   const setSyncRevision = (n: number) => {
@@ -247,6 +288,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
 
   const applyRemoteRepoSnapshot = (doc: PermaplannerFileV1) => {
     suppressAutosaveDepth.value += 1;
+    isBulkPlanUpdate.value = true;
     try {
       backgroundImageDataUrl.value = doc.backgroundImage;
       backgroundOpacity.value = doc.backgroundOpacity;
@@ -257,6 +299,10 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     } finally {
       suppressAutosaveDepth.value -= 1;
     }
+    void nextTick(() => {
+      isBulkPlanUpdate.value = false;
+      unsavedChanges.value = false;
+    });
   };
 
   return {
@@ -264,6 +310,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     save,
     resetToNewPlan,
     snapshot,
+    unsavedChanges,
     fileName,
     fileHandle,
     needsFileRelink,

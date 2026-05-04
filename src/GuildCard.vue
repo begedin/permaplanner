@@ -1,11 +1,29 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue';
 
-import type { MulchLevel, UserPlant } from './gardenTypes';
+import type { MulchLevel, Plant, UserPlant } from './gardenTypes';
 import { GuildFunction, GuildLayer, useGardenStore } from './useGardenStore';
-import { plantCatalog } from './plantCatalog';
+import {
+  CATALOG_MONTH_LABELS,
+  CATALOG_MONTH_LABELS_2,
+  type CatalogMonthPeriod,
+  isMonthInCatalogPeriod,
+  phenologySummaryForPlant,
+  plantCatalog,
+  resolvePhenology,
+} from './plantCatalog';
+import GuildCardSectionLabel from './GuildCardSectionLabel.vue';
 import PlantIcon from './PlantIcon.vue';
+import { plantGuildGroupLabel } from './resolvePlant';
 import { uuid } from './utils';
+
+type GuildPlantGroupRow = {
+  plantId: string;
+  label: string;
+  count: number;
+  thingIds: string[];
+  representativeResolved: Plant;
+};
 
 const garden = useGardenStore();
 
@@ -62,7 +80,59 @@ const setName = (e: Event) => {
   guild.value.name = (e.target as HTMLInputElement)?.value || '';
 };
 
-const removePlant = (index: number) => guild.value?.plants.splice(index, 1);
+const removeGuildThingsByIds = (thingIds: string[]) => {
+  const g = guild.value;
+  if (!g || thingIds.length === 0) {
+    return;
+  }
+  const idSet = new Set(thingIds);
+  for (let i = g.plants.length - 1; i >= 0; i--) {
+    if (idSet.has(g.plants[i]!.id)) {
+      g.plants.splice(i, 1);
+    }
+  }
+};
+
+const removeOneGuildThing = (thingIds: string[]) => {
+  if (thingIds.length <= 1) {
+    return;
+  }
+  removeGuildThingsByIds([thingIds[thingIds.length - 1]!]);
+};
+
+const groupedGuildPlants = computed((): GuildPlantGroupRow[] => {
+  const g = guild.value;
+  if (!g) {
+    return [];
+  }
+  const byPlantId = new Map<string, { thingIds: string[]; rp: Plant }>();
+  for (const thing of g.plants) {
+    const rp = garden.resolvedPlant(thing.plantId);
+    let bucket = byPlantId.get(thing.plantId);
+    if (!bucket) {
+      bucket = { thingIds: [], rp };
+      byPlantId.set(thing.plantId, bucket);
+    }
+    bucket.thingIds.push(thing.id);
+  }
+  const rows: GuildPlantGroupRow[] = [...byPlantId.values()].map(({ thingIds, rp }) => ({
+    plantId: rp.id,
+    label: plantGuildGroupLabel(rp),
+    count: thingIds.length,
+    thingIds,
+    representativeResolved: rp,
+  }));
+  rows.sort((a, b) => {
+    const byName = a.representativeResolved.name.localeCompare(b.representativeResolved.name);
+    if (byName !== 0) {
+      return byName;
+    }
+    return (a.representativeResolved.cultivarId ?? '').localeCompare(
+      b.representativeResolved.cultivarId ?? '',
+    );
+  });
+  return rows;
+});
 
 const onAddPlant = () => {
   if (!guild.value || !addSpeciesId.value) {
@@ -82,6 +152,13 @@ const removeGuild = () => {
     return;
   }
   garden.removeGuild(guild.value.id);
+};
+
+const removeFromAerialMap = () => {
+  if (!guild.value) {
+    return;
+  }
+  garden.removeGuildFromAerialMap(guild.value.id);
 };
 
 const guildFunctions = computed(() => {
@@ -136,6 +213,95 @@ const setMulchLevel = (level: MulchLevel) => {
   }
   guild.value.mulchLevel = level;
 };
+
+const phenologySummaryForThingIds = (thingIds: string[]): string | null => {
+  if (!guild.value || thingIds.length === 0) {
+    return null;
+  }
+  const id0 = thingIds[0]!;
+  const row = guild.value.plants.find((p) => p.id === id0);
+  if (!row) {
+    return null;
+  }
+  const rp = garden.resolvedPlant(row.plantId);
+  return phenologySummaryForPlant(rp.speciesId, rp.cultivarId);
+};
+
+const addPeriodToMonthCounts = (counts: number[], period: CatalogMonthPeriod | undefined): void => {
+  if (!period) {
+    return;
+  }
+  for (let m = 1; m <= 12; m++) {
+    if (isMonthInCatalogPeriod(m, period)) {
+      counts[m - 1]++;
+    }
+  }
+};
+
+/** Per month: guild plants in fruiting window (color steps cap at 5). */
+const guildMonthFruitCounts = computed(() => {
+  const g = guild.value;
+  const counts = Array.from({ length: 12 }, () => 0);
+  if (!g) {
+    return counts;
+  }
+  for (const thing of g.plants) {
+    const rp = garden.resolvedPlant(thing.plantId);
+    const ph = resolvePhenology(rp.speciesId, rp.cultivarId);
+    addPeriodToMonthCounts(counts, ph.fruiting);
+  }
+  return counts;
+});
+
+/** Per month: guild plants in blooming window (color steps cap at 5). */
+const guildMonthBloomCounts = computed(() => {
+  const g = guild.value;
+  const counts = Array.from({ length: 12 }, () => 0);
+  if (!g) {
+    return counts;
+  }
+  for (const thing of g.plants) {
+    const rp = garden.resolvedPlant(thing.plantId);
+    const ph = resolvePhenology(rp.speciesId, rp.cultivarId);
+    addPeriodToMonthCounts(counts, ph.blooming);
+  }
+  return counts;
+});
+
+const guildMonthBlockClass = (rawCount: number): string => {
+  const n = Math.min(5, rawCount);
+  const classes = [
+    'bg-slate-200',
+    'bg-emerald-100',
+    'bg-emerald-200',
+    'bg-emerald-300',
+    'bg-emerald-400',
+    'bg-emerald-500',
+  ];
+  return classes[n] ?? classes[0]!;
+};
+
+const compactPlantTags = computed(() =>
+  groupedGuildPlants.value.map((row) => ({
+    text: row.count > 1 ? `${row.label} ×${row.count}` : row.label,
+  })),
+);
+
+const onAerialListClick = () => {
+  if (props.context === 'aerialSidebar') {
+    garden.selectGuild(props.guildId);
+  }
+};
+
+const onAerialListKeydown = (e: KeyboardEvent) => {
+  if (props.context !== 'aerialSidebar') {
+    return;
+  }
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    garden.selectGuild(props.guildId);
+  }
+};
 </script>
 
 <template>
@@ -145,25 +311,35 @@ const setMulchLevel = (level: MulchLevel) => {
     :class="{
       'ring-2 ring-emerald-500 ring-offset-1':
         context === 'aerialSidebar' && garden.selectedId === guildId,
+      'cursor-pointer': context === 'aerialSidebar',
     }"
     :aria-label="guild.name"
+    :aria-current="context === 'aerialSidebar' && garden.selectedId === guildId ? 'true' : undefined"
+    :tabindex="context === 'aerialSidebar' ? 0 : undefined"
+    @click="onAerialListClick"
+    @keydown="onAerialListKeydown"
   >
-    <div
-      v-if="context === 'aerialSidebar'"
-      class="w-full shrink-0"
-    >
-      <button
-        type="button"
-        class="w-full text-xs bg-emerald-100 hover:bg-emerald-200 rounded py-1.5 px-2 text-slate-800 font-medium"
-        @click="garden.selectGuild(guildId)"
+    <template v-if="context === 'aerialSidebar'">
+      <p class="font-medium text-slate-800 w-full">
+        {{ guild.name }}
+      </p>
+      <div
+        class="flex flex-wrap gap-1 w-full"
+        aria-label="Plants in this guild"
       >
-        {{
-          garden.selectedId === guildId
-            ? 'Selected on aerial map'
-            : 'Select on aerial map'
-        }}
-      </button>
-    </div>
+        <span
+          v-for="(tag, i) in compactPlantTags"
+          :key="`${tag.text}-${i}`"
+          class="text-[11px] leading-tight text-slate-700 bg-slate-100 border border-slate-200/80 rounded px-1.5 py-0.5"
+        >{{ tag.text }}</span>
+        <span
+          v-if="compactPlantTags.length === 0"
+          class="text-xs text-slate-400 italic"
+        >No plants</span>
+      </div>
+    </template>
+
+    <template v-if="context === 'guilds'">
     <div class="flex flex-row items-center justify-between gap-2 w-full flex-wrap">
       <p
         v-if="!placedOnMap"
@@ -172,12 +348,20 @@ const setMulchLevel = (level: MulchLevel) => {
         Not on aerial
       </p>
       <button
+        v-if="placedOnMap"
+        type="button"
+        class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-950 rounded px-2 py-0.5"
+        @click="removeFromAerialMap"
+      >
+        Remove from aerial map
+      </button>
+      <button
         type="button"
         :class="placedOnMap ? '' : 'ml-auto'"
         class="text-xs bg-red-100 hover:bg-red-200 text-red-900 rounded px-2 py-0.5"
         @click="removeGuild"
       >
-        Remove guild
+        Delete guild
       </button>
     </div>
     <input
@@ -260,36 +444,60 @@ const setMulchLevel = (level: MulchLevel) => {
       class="flex flex-col gap-1 w-full"
       aria-label="Plants in this guild"
     >
-      <h3 class="w-full text-left bg-sky-200 -mx-2 px-2">
-        Plants
-      </h3>
-      <div
-        v-for="(plant, index) in guild.plants"
-        :key="plant.id"
-        :aria-label="plant.nameOrCultivar"
-        class="pl-1 flex flex-row items-center justify-start w-full gap-1 border-b border-sky-300"
+      <GuildCardSectionLabel>Plants</GuildCardSectionLabel>
+      <template
+        v-for="row in groupedGuildPlants"
+        :key="row.plantId"
       >
-        <PlantIcon
-          :title="plant.nameOrCultivar"
-          class="h-4 w-4"
-          :plant="garden.resolvedPlant(plant.plantId)"
-        />
-        <span class="truncate text-left flex-grow">{{ plant.nameOrCultivar }}</span>
-        <button
-          type="button"
-          title="Remove plant from bed"
-          aria-label="Remove plant from bed"
-          class="bg-transparent hover:bg-red-200 rounded-md p-1/2 px-1 transition-colors"
-          @click="removePlant(index)"
+        <div
+          :aria-label="row.count > 1 ? `${row.label} (${row.count})` : row.label"
+          class="pl-1 flex flex-row items-start justify-start w-full gap-1 border-b border-sky-300 py-0.5"
         >
-          ✖️
-        </button>
-      </div>
+          <PlantIcon
+            :title="row.label"
+            class="h-4 w-4 shrink-0 mt-0.5"
+            :plant="row.representativeResolved"
+          />
+          <div class="min-w-0 flex-1 flex flex-col gap-0 text-left">
+            <span class="truncate text-sm leading-tight">
+              {{ row.label
+              }}<template v-if="row.count > 1">
+                ({{ row.count }})
+              </template>
+            </span>
+            <span
+              v-if="phenologySummaryForThingIds(row.thingIds)"
+              class="text-[10px] leading-tight text-slate-500"
+            >
+              {{ phenologySummaryForThingIds(row.thingIds) }}
+            </span>
+          </div>
+          <div class="flex flex-row items-start gap-0 shrink-0">
+            <button
+              v-if="row.count > 1"
+              type="button"
+              title="Remove one plant from bed"
+              aria-label="Remove one plant from bed"
+              class="bg-transparent hover:bg-amber-100 rounded-md p-1/2 px-1 transition-colors"
+              @click="removeOneGuildThing(row.thingIds)"
+            >
+              ➖
+            </button>
+            <button
+              type="button"
+              title="Remove plant from bed"
+              aria-label="Remove plant from bed"
+              class="bg-transparent hover:bg-red-200 rounded-md p-1/2 px-1 transition-colors"
+              @click="removeGuildThingsByIds(row.thingIds)"
+            >
+              ✖️
+            </button>
+          </div>
+        </div>
+      </template>
     </div>
     <div class="flex flex-row flex-wrap gap-1 w-full">
-      <h3 class="w-full text-left bg-sky-200 -mx-2 px-2">
-        Functions
-      </h3>
+      <GuildCardSectionLabel>Functions</GuildCardSectionLabel>
       <div
         v-for="(f, i) in guildFunctions"
         :key="i"
@@ -311,9 +519,7 @@ const setMulchLevel = (level: MulchLevel) => {
       </div>
     </div>
     <div class="flex flex-row flex-wrap gap-1 w-full">
-      <h3 class="w-full text-left bg-sky-200 -mx-2 px-1">
-        Layers
-      </h3>
+      <GuildCardSectionLabel>Layers</GuildCardSectionLabel>
       <div
         v-for="(l, i) in guildLayers"
         :key="i"
@@ -332,6 +538,70 @@ const setMulchLevel = (level: MulchLevel) => {
         >
           {{ l.count }}
         </span>
+      </div>
+    </div>
+    </template>
+
+    <div
+      class="flex flex-col gap-1 w-full"
+      aria-label="Guild fruit and bloom by month"
+    >
+      <GuildCardSectionLabel>Season</GuildCardSectionLabel>
+      <div
+        class="flex flex-row items-end gap-1 w-full"
+        aria-label="Months"
+      >
+        <span
+          class="w-9 shrink-0"
+          aria-hidden="true"
+        />
+        <div class="flex flex-row gap-0.5 flex-1 min-w-0">
+          <span
+            v-for="(lab, i) in CATALOG_MONTH_LABELS_2"
+            :key="`mh-${i}`"
+            class="flex-1 min-w-0 text-center text-[10px] leading-none font-medium text-slate-500"
+          >{{ lab }}</span>
+        </div>
+      </div>
+      <div
+        class="flex flex-row items-center gap-1 w-full"
+        role="group"
+        aria-label="Fruiting by month"
+      >
+        <span class="text-[10px] text-slate-500 w-9 shrink-0">Fruit</span>
+        <div
+          class="flex flex-row gap-0.5 flex-1 min-w-0"
+          role="list"
+        >
+          <div
+            v-for="(count, i) in guildMonthFruitCounts"
+            :key="`f-${i}`"
+            role="listitem"
+            class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"
+            :class="guildMonthBlockClass(count)"
+            :title="`${CATALOG_MONTH_LABELS[i]} fruit: ${count} plant${count === 1 ? '' : 's'}`"
+          />
+        </div>
+      </div>
+      <div
+        class="flex flex-row items-center gap-1 w-full"
+        role="group"
+        aria-label="Blooming by month"
+      >
+        <span class="text-[10px] text-slate-500 w-9 shrink-0">Bloom</span>
+        <div
+          class="flex flex-row gap-0.5 flex-1 min-w-0"
+          role="list"
+        >
+          <div
+            v-for="(count, i) in guildMonthBloomCounts"
+            :key="`b-${i}`"
+            role="listitem"
+            class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"
+            :class="guildMonthBlockClass(count)"
+            :title="`${CATALOG_MONTH_LABELS[i]} bloom: ${count} plant${count === 1 ? '' : 's'}`"
+          />
+        </div>
       </div>
     </div>
   </article>

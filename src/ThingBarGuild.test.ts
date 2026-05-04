@@ -5,7 +5,6 @@ import { createTestingPinia } from '@pinia/testing';
 
 import ThingBarGuild from './ThingBarGuild.vue';
 import { useGardenStore } from './useGardenStore';
-import { flushPromises } from '@vue/test-utils';
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
@@ -13,17 +12,14 @@ beforeEach(() => {
 
 afterEach(() => cleanup());
 
-it('renders nothing if no bed in store', async () => {
+it('renders nothing if no guild in store', () => {
   const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });
   expect(wrapper.container.textContent).toEqual('');
 });
 
-it('adds and removes plants', async () => {
+it('shows guild name, compact plant tags, and season section', () => {
   const store = useGardenStore();
-  store.plants = [
-    { id: 'plant', speciesId: 'comfrey', cultivarId: null },
-    { id: 'plant-2', speciesId: 'basil', cultivarId: 'genovese' },
-  ];
+  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
   store.guilds = [
     {
       id: 'guild',
@@ -43,42 +39,17 @@ it('adds and removes plants', async () => {
       path: [],
     },
   ];
-  const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });
-
-  store.selectedId = 'guild';
-  await flushPromises();
-
-  await fireEvent.click(wrapper.getByRole('button', { name: 'Remove plant from bed' }));
-  expect(store.guilds[0].plants).toEqual([]);
-});
-
-it('renames', () => {
-  const store = useGardenStore();
-  store.guilds = [{ id: 'guild', name: 'A guild', plants: [], path: [], mulchLevel: 1 }];
   store.selectedId = 'guild';
 
   const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });
-  fireEvent.update(wrapper.getByRole('textbox'), 'New name');
-
-  expect(store.guilds[0].name).toEqual('New name');
+  expect(wrapper.getByText('A guild')).toBeTruthy();
+  expect(wrapper.getByLabelText('Plants in this guild').textContent).toContain('Comfrey');
+  expect(wrapper.getByLabelText('Guild fruit and bloom by month')).toBeTruthy();
 });
 
-it('shows layers', () => {
+it('marks the card as current when this guild is selected on the map', () => {
   const store = useGardenStore();
-  store.plants = [
-    {
-      id: 'plant',
-      speciesId: 'birch',
-      cultivarId: null,
-      speciesOverride: { layers: ['overstory', 'understory'] },
-    },
-    {
-      id: 'plant-2',
-      speciesId: 'birch',
-      cultivarId: null,
-      speciesOverride: { layers: ['understory'] },
-    },
-  ];
+  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
   store.guilds = [
     {
       id: 'guild',
@@ -92,16 +63,7 @@ it('shows layers', () => {
           x: 0,
           y: 0,
           id: '1',
-          nameOrCultivar: 'A tree',
-        },
-        {
-          plantId: 'plant-2',
-          height: 10,
-          width: 10,
-          x: 0,
-          y: 0,
-          id: '2',
-          nameOrCultivar: 'A small tree',
+          nameOrCultivar: 'Comfrey',
         },
       ],
       path: [],
@@ -110,27 +72,12 @@ it('shows layers', () => {
   store.selectedId = 'guild';
 
   const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });
-  expect(wrapper.getAllByLabelText('Overstory')).toHaveLength(1);
-  expect(wrapper.getAllByLabelText('Understory')).toHaveLength(1);
-  expect(wrapper.getByLabelText('Understory').textContent).toContain('2');
+  expect(wrapper.getByRole('article', { name: 'A guild' }).getAttribute('aria-current')).toBe('true');
 });
 
-it('shows functions', () => {
+it('selects the guild when the card is clicked', async () => {
   const store = useGardenStore();
-  store.plants = [
-    {
-      id: 'apple',
-      speciesId: 'dill',
-      cultivarId: null,
-      speciesOverride: { functions: ['edible', 'medicinal'] },
-    },
-    {
-      id: 'parsley',
-      speciesId: 'basil',
-      cultivarId: null,
-      speciesOverride: { functions: ['edible', 'medicinal'] },
-    },
-  ];
+  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
   store.guilds = [
     {
       id: 'guild',
@@ -138,22 +85,13 @@ it('shows functions', () => {
       mulchLevel: 1,
       plants: [
         {
-          plantId: 'apple',
+          plantId: 'plant',
           height: 10,
           width: 10,
           x: 0,
           y: 0,
           id: '1',
-          nameOrCultivar: 'Dill',
-        },
-        {
-          plantId: 'parsley',
-          height: 10,
-          width: 10,
-          x: 0,
-          y: 0,
-          id: '2',
-          nameOrCultivar: 'Basil',
+          nameOrCultivar: 'Comfrey',
         },
       ],
       path: [],
@@ -161,7 +99,7 @@ it('shows functions', () => {
   ];
 
   const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });
-  expect(wrapper.getAllByLabelText('Edible')).toHaveLength(1);
-  expect(wrapper.getAllByLabelText('Medicinal')).toHaveLength(1);
-  expect(wrapper.getByLabelText('Edible').textContent).toContain('2');
+  await fireEvent.click(wrapper.getByRole('article', { name: 'A guild' }));
+
+  expect(store.selectedId).toBe('guild');
 });

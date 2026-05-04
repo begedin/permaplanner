@@ -54,6 +54,37 @@ it('removeGuild does nothing if guild not found', () => {
   expect(store.guilds).toEqual([{ id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 }]);
 });
 
+it('removeGuildFromAerialMap clears path only', () => {
+  const store = useGardenStore();
+  store.guilds = [
+    {
+      id: 'g1',
+      path: [{ x: 1, y: 2 }],
+      name: 'Bed',
+      plants: [{ id: 't', plantId: 'p', x: 0, y: 0, width: 1, height: 1, nameOrCultivar: 'x' }],
+      mulchLevel: 1,
+    },
+  ];
+
+  store.removeGuildFromAerialMap('g1');
+
+  expect(store.guilds[0]).toMatchObject({
+    id: 'g1',
+    path: [],
+    name: 'Bed',
+    plants: [{ id: 't', plantId: 'p' }],
+  });
+});
+
+it('removeGuildFromAerialMap does nothing if guild not found', () => {
+  const store = useGardenStore();
+  store.guilds = [{ id: 'guild', path: [{ x: 0, y: 0 }], name: 'Guild', plants: [], mulchLevel: 1 }];
+
+  store.removeGuildFromAerialMap('other');
+
+  expect(store.guilds[0]!.path).toEqual([{ x: 0, y: 0 }]);
+});
+
 it('deactivateAll unsets hovered and selected id', () => {
   const store = useGardenStore();
   store.hoveredId = 'thing';

@@ -1,7 +1,11 @@
 import { expect, it } from 'vitest';
 import { plantCatalog } from './plantCatalog';
-import { normalizePlantsFromFile, resolveUserPlant } from './resolvePlant';
-import type { UserPlant } from './gardenTypes';
+import {
+  normalizePlantsFromFile,
+  plantGuildGroupLabel,
+  resolveUserPlant,
+} from './resolvePlant';
+import type { Plant, UserPlant } from './gardenTypes';
 
 it('merges db species → species override → cultivar → cultivar override', () => {
   const user: UserPlant = {
@@ -15,6 +19,34 @@ it('merges db species → species override → cultivar → cultivar override', 
   expect(r.emoji).toBe('🟢');
   expect(r.cultivar).toBe('GS (mine)');
   expect(r.name).toBe('Apple');
+});
+
+it('guild group label is species only for default cultivar', () => {
+  const p: Plant = {
+    id: 'u1',
+    speciesId: 'basil',
+    cultivarId: null,
+    name: 'Basil',
+    cultivar: null,
+    emoji: '🌿',
+    functions: [],
+    layers: [],
+  };
+  expect(plantGuildGroupLabel(p)).toBe('Basil');
+});
+
+it('guild group label is species and cultivar when a cultivar is selected', () => {
+  const p: Plant = {
+    id: 'u1',
+    speciesId: 'basil',
+    cultivarId: 'genovese',
+    name: 'Basil',
+    cultivar: 'Genovese',
+    emoji: '🌿',
+    functions: [],
+    layers: [],
+  };
+  expect(plantGuildGroupLabel(p)).toBe('Basil, Genovese');
 });
 
 it('migrates legacy plan rows to user plants', () => {
