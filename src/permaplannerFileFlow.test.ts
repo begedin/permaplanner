@@ -64,7 +64,13 @@ it('new plan, save, change, save, then load again like after a refresh', async (
   await store.save(makeHandle());
   expect(store.guilds).toHaveLength(0);
 
-  const guild: Guild = { id: 'g-willow', name: 'Willow', path: [{ x: 1, y: 2 }], plants: [], mulchLevel: 1 };
+  const guild: Guild = {
+    id: 'g-willow',
+    name: 'Willow',
+    path: [{ x: 1, y: 2 }],
+    plants: [],
+    mulchLevel: 1,
+  };
   store.guilds = [guild];
   await store.save(makeHandle());
 
@@ -110,7 +116,13 @@ it('auto-saves guild changes to the linked file after the debounce', async () =>
   await store.resetToNewPlan();
   await store.save(makeHandle());
 
-  const autoGuild = { id: 'g-auto', name: 'Autosaved guild', path: [], plants: [], mulchLevel: 1 };
+  const autoGuild: Guild = {
+    id: 'g-auto',
+    name: 'Autosaved guild',
+    path: [],
+    plants: [],
+    mulchLevel: 1,
+  };
   store.guilds = [autoGuild];
   await flushPromises();
   await vi.advanceTimersByTimeAsync(350);

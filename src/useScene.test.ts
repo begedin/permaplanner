@@ -38,9 +38,12 @@ it('copies CTM user coordinates to worldX and worldY without cameraToWorld', asy
   await nextTick();
 
   const svg = wrapper.get('svg').element as SVGSVGElement;
-  svg.getScreenCTM = vi.fn(() => ({
-    inverse: () => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }),
-  }));
+  svg.getScreenCTM = vi.fn(
+    () =>
+      ({
+        inverse: () => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }),
+      }) as DOMMatrix,
+  );
 
   const camera = useCameraStore();
   camera.scale = 0.25;

@@ -5,13 +5,16 @@ import { clientToSvgUser } from './svgClientToUser';
 type Inv = { a: number; b: number; c: number; d: number; e: number; f: number };
 
 const svgWithInverse = (inv: Inv | null) => {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg') as SVGSVGElement;
+  const svg = document.createElementNS(
+    'http://www.w3.org/2000/svg',
+    'svg',
+  ) as SVGSVGElement;
   svg.getScreenCTM = vi.fn(() =>
     inv === null
       ? null
-      : {
+      : ({
           inverse: () => inv,
-        },
+        } as DOMMatrix),
   );
   return svg;
 };
