@@ -4,6 +4,7 @@ import {
   CATALOG_MONTH_LABELS_2,
   formatMonthPeriod,
   formatPhenologySummary,
+  fruitBloomMonthCountsForPhenologies,
   isMonthInCatalogPeriod,
   phenologySummaryForPlant,
   resolveGuildCalendarPeriod,
@@ -59,4 +60,12 @@ it('resolves guild calendar to fruiting when present else bloom', () => {
   ).toEqual({ start: 8, end: 10 });
   expect(resolveGuildCalendarPeriod({ blooming: { start: 5, end: 6 } })).toEqual({ start: 5, end: 6 });
   expect(resolveGuildCalendarPeriod({})).toBeNull();
+});
+
+it('aggregates fruit and bloom month counts across phenology rows', () => {
+  const apple = resolvePhenology('apple', null);
+  const { fruiting, blooming } = fruitBloomMonthCountsForPhenologies([apple, apple]);
+  expect(fruiting[7]).toBe(2);
+  expect(fruiting[6]).toBe(0);
+  expect(blooming[3]).toBe(2);
 });

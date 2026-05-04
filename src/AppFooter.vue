@@ -1,0 +1,105 @@
+<script lang="ts" setup>
+import { computed } from 'vue';
+
+import {
+  CATALOG_MONTH_LABELS,
+  CATALOG_MONTH_LABELS_2,
+  fruitBloomMonthCountsForPhenologies,
+  resolvePhenology,
+} from './plantCatalog';
+import { useGardenStore } from './useGardenStore';
+
+const garden = useGardenStore();
+
+const gardenMonthPhenologyCounts = computed(() => {
+  const phenologies = garden.guilds.flatMap((guild) =>
+    guild.plants.map((thing) => {
+      const rp = garden.resolvedPlant(thing.plantId);
+      return resolvePhenology(rp.speciesId, rp.cultivarId);
+    }),
+  );
+  return fruitBloomMonthCountsForPhenologies(phenologies);
+});
+
+const monthBlockClass = (rawCount: number): string => {
+  const n = Math.min(5, rawCount);
+  const classes = [
+    'bg-slate-200',
+    'bg-emerald-100',
+    'bg-emerald-200',
+    'bg-emerald-300',
+    'bg-emerald-400',
+    'bg-emerald-500',
+  ];
+  return classes[n] ?? classes[0]!;
+};
+</script>
+
+<template>
+  <footer
+    class="shrink-0 border-t border-slate-200 bg-white px-2 py-1.5 text-slate-600 shadow-[0_-1px_3px_rgba(0,0,0,0.04)]"
+    aria-label="Garden overview"
+  >
+    <div
+      class="flex flex-col gap-1 w-full max-w-3xl mx-auto"
+      aria-label="All plants: fruit and bloom by month"
+    >
+      <div
+        class="flex flex-row items-end gap-1 w-full"
+        aria-label="Months"
+      >
+        <span
+          class="w-9 shrink-0"
+          aria-hidden="true"
+        />
+        <div class="flex flex-row gap-0.5 flex-1 min-w-0">
+          <span
+            v-for="(lab, i) in CATALOG_MONTH_LABELS_2"
+            :key="`fh-${i}`"
+            class="flex-1 min-w-0 text-center text-[10px] leading-none font-medium text-slate-500"
+          >{{ lab }}</span>
+        </div>
+      </div>
+      <div
+        class="flex flex-row items-center gap-1 w-full"
+        role="group"
+        aria-label="Fruiting by month"
+      >
+        <span class="text-[10px] text-slate-500 w-9 shrink-0">Fruit</span>
+        <div
+          class="flex flex-row gap-0.5 flex-1 min-w-0"
+          role="list"
+        >
+          <div
+            v-for="(count, i) in gardenMonthPhenologyCounts.fruiting"
+            :key="`ff-${i}`"
+            role="listitem"
+            class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"
+            :class="monthBlockClass(count)"
+            :title="`${CATALOG_MONTH_LABELS[i]} fruit: ${count} plant${count === 1 ? '' : 's'}`"
+          />
+        </div>
+      </div>
+      <div
+        class="flex flex-row items-center gap-1 w-full"
+        role="group"
+        aria-label="Blooming by month"
+      >
+        <span class="text-[10px] text-slate-500 w-9 shrink-0">Bloom</span>
+        <div
+          class="flex flex-row gap-0.5 flex-1 min-w-0"
+          role="list"
+        >
+          <div
+            v-for="(count, i) in gardenMonthPhenologyCounts.blooming"
+            :key="`fb-${i}`"
+            role="listitem"
+            class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"
+            :class="monthBlockClass(count)"
+            :title="`${CATALOG_MONTH_LABELS[i]} bloom: ${count} plant${count === 1 ? '' : 's'}`"
+          />
+        </div>
+      </div>
+    </div>
+  </footer>
+</template>

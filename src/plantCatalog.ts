@@ -123,6 +123,30 @@ export const isMonthInCatalogPeriod = (month: number, period: CatalogMonthPeriod
   return month >= start || month <= end;
 };
 
+const addPeriodToMonthCounts = (counts: number[], period: CatalogMonthPeriod | undefined): void => {
+  if (!period) {
+    return;
+  }
+  for (let m = 1; m <= 12; m++) {
+    if (isMonthInCatalogPeriod(m, period)) {
+      counts[m - 1]++;
+    }
+  }
+};
+
+/** Per calendar month, how many plant rows fall in fruiting / blooming windows (same counting as guild cards). */
+export const fruitBloomMonthCountsForPhenologies = (
+  phenologies: CatalogPhenology[],
+): { fruiting: number[]; blooming: number[] } => {
+  const fruiting = Array.from({ length: 12 }, () => 0);
+  const blooming = Array.from({ length: 12 }, () => 0);
+  for (const ph of phenologies) {
+    addPeriodToMonthCounts(fruiting, ph.fruiting);
+    addPeriodToMonthCounts(blooming, ph.blooming);
+  }
+  return { fruiting, blooming };
+};
+
 /** Guild calendar: fruiting months if the species fruits; otherwise blooming months. */
 export const resolveGuildCalendarPeriod = (ph: CatalogPhenology): CatalogMonthPeriod | null =>
   ph.fruiting ?? ph.blooming ?? null;

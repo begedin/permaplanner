@@ -6,8 +6,7 @@ import { GuildFunction, GuildLayer, useGardenStore } from './useGardenStore';
 import {
   CATALOG_MONTH_LABELS,
   CATALOG_MONTH_LABELS_2,
-  type CatalogMonthPeriod,
-  isMonthInCatalogPeriod,
+  fruitBloomMonthCountsForPhenologies,
   phenologySummaryForPlant,
   plantCatalog,
   resolvePhenology,
@@ -227,45 +226,19 @@ const phenologySummaryForThingIds = (thingIds: string[]): string | null => {
   return phenologySummaryForPlant(rp.speciesId, rp.cultivarId);
 };
 
-const addPeriodToMonthCounts = (counts: number[], period: CatalogMonthPeriod | undefined): void => {
-  if (!period) {
-    return;
-  }
-  for (let m = 1; m <= 12; m++) {
-    if (isMonthInCatalogPeriod(m, period)) {
-      counts[m - 1]++;
-    }
-  }
-};
-
-/** Per month: guild plants in fruiting window (color steps cap at 5). */
-const guildMonthFruitCounts = computed(() => {
+const guildMonthPhenologyCounts = computed(() => {
   const g = guild.value;
-  const counts = Array.from({ length: 12 }, () => 0);
   if (!g) {
-    return counts;
+    return {
+      fruiting: Array.from({ length: 12 }, () => 0),
+      blooming: Array.from({ length: 12 }, () => 0),
+    };
   }
-  for (const thing of g.plants) {
+  const phenologies = g.plants.map((thing) => {
     const rp = garden.resolvedPlant(thing.plantId);
-    const ph = resolvePhenology(rp.speciesId, rp.cultivarId);
-    addPeriodToMonthCounts(counts, ph.fruiting);
-  }
-  return counts;
-});
-
-/** Per month: guild plants in blooming window (color steps cap at 5). */
-const guildMonthBloomCounts = computed(() => {
-  const g = guild.value;
-  const counts = Array.from({ length: 12 }, () => 0);
-  if (!g) {
-    return counts;
-  }
-  for (const thing of g.plants) {
-    const rp = garden.resolvedPlant(thing.plantId);
-    const ph = resolvePhenology(rp.speciesId, rp.cultivarId);
-    addPeriodToMonthCounts(counts, ph.blooming);
-  }
-  return counts;
+    return resolvePhenology(rp.speciesId, rp.cultivarId);
+  });
+  return fruitBloomMonthCountsForPhenologies(phenologies);
 });
 
 const guildMonthBlockClass = (rawCount: number): string => {
@@ -574,7 +547,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           role="list"
         >
           <div
-            v-for="(count, i) in guildMonthFruitCounts"
+            v-for="(count, i) in guildMonthPhenologyCounts.fruiting"
             :key="`f-${i}`"
             role="listitem"
             class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"
@@ -594,7 +567,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           role="list"
         >
           <div
-            v-for="(count, i) in guildMonthBloomCounts"
+            v-for="(count, i) in guildMonthPhenologyCounts.blooming"
             :key="`b-${i}`"
             role="listitem"
             class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"

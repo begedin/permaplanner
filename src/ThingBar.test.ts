@@ -55,6 +55,6 @@ it('renders guilds', async () => {
   ];
   const wrapper = render(ThingBar);
 
-  expect(await wrapper.findAllByDisplayValue('A guild')).toHaveLength(1);
-  expect(await wrapper.findAllByDisplayValue('Another guild')).toHaveLength(1);
+  expect(await wrapper.findAllByRole('article', { name: 'A guild' })).toHaveLength(1);
+  expect(await wrapper.findAllByRole('article', { name: 'Another guild' })).toHaveLength(1);
 });

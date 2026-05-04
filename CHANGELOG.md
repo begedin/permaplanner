@@ -14,3 +14,7 @@
 - Local save approachg as been improved
 - Plant designer has been removed
 - Global plant database has been added, with the option of extending locally
+
+ ## 0.4.0
+
+- [FEATURE] App footer session with aggregated blooming and fruiting calendar
