@@ -4,6 +4,7 @@
 ## 0.4.1
 
 - [FEATURE] Add thyme to plant catalog
+- [FEATURE] Add apistar apple cultivar
 
 ## 0.4.0
 

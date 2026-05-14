@@ -96,6 +96,10 @@
         {
           "id": "cox_orange_pippin",
           "name": "Cox's Orange Pippin"
+        },
+        {
+          "id": "apistar",
+          "name": "Apistar"
         }
       ],
       "blooming": {
