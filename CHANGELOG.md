@@ -5,6 +5,7 @@
 
 - [FEATURE] Add thyme to plant catalog
 - [FEATURE] Add apistar apple cultivar
+- [FEATURE] Add narcisus to database
 
 ## 0.4.0
 

@@ -149,6 +149,39 @@
       }
     },
     {
+      "id": "narcissus",
+      "name": "Narcissus (daffodil)",
+      "defaultEmoji": "🌼",
+      "functions": ["pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "dutch_master",
+          "name": "Dutch Master"
+        },
+        {
+          "id": "king_alfred",
+          "name": "King Alfred"
+        },
+        {
+          "id": "tete_a_tete",
+          "name": "Tête-à-tête"
+        },
+        {
+          "id": "ice_follies",
+          "name": "Ice Follies"
+        },
+        {
+          "id": "paperwhite",
+          "name": "Paperwhite"
+        }
+      ],
+      "blooming": {
+        "start": 3,
+        "end": 5
+      }
+    },
+    {
       "id": "nasturtium",
       "name": "Nasturtium",
       "defaultEmoji": "🌼",
