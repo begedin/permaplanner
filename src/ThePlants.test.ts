@@ -2,6 +2,7 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createTestingPinia } from '@pinia/testing';
 
+import { defaultCatalogPick } from './catalogPlantPick';
 import ThePlants from './ThePlants.vue';
 import { setActivePinia } from 'pinia';
 import { useGardenStore } from './useGardenStore';
@@ -24,7 +25,9 @@ it('creates a plant from catalog defaults', async () => {
 
   expect(useGardenStore().plants).toHaveLength(1);
   const up = useGardenStore().plants[0];
-  expect(up.speciesId).toBe(plantCatalog.species.filter((s) => s.id !== 'unknown')[0]?.id);
+  const expected = defaultCatalogPick(plantCatalog.species.filter((s) => s.id !== 'unknown'));
+  expect(up.speciesId).toBe(expected?.speciesId);
+  expect(up.cultivarId).toBe(expected?.cultivarId ?? null);
   const r = resolveUserPlant(up, plantCatalog);
   expect(r.functions.length).toBeGreaterThan(0);
 });

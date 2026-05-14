@@ -1,38 +1,61 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { v4 as uuidV4 } from 'uuid';
+import {
+  buildCatalogPickGroups,
+  catalogPickForSpeciesCultivar,
+  defaultCatalogPick,
+  type CatalogPlantPick,
+} from './catalogPlantPick';
 import { useGardenStore } from './useGardenStore';
 import type { GuildFunction, GuildLayer, PlantOverrideFields, UserPlant } from './useGardenStore';
 import { plantCatalog } from './plantCatalog';
 import { resolveUserPlant } from './resolvePlant';
 import { PLANT_EMOJI_OPTIONS } from './plantEmojiOptions';
+import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
 import PlantIcon from './PlantIcon.vue';
 import PlantFunctions from './PlantFunctions.vue';
 import PlantLayers from './PlantLayers.vue';
 
 const garden = useGardenStore();
 
-const catalogSpecies = computed(() => plantCatalog.species.filter((s) => s.id !== 'unknown'));
-
-const firstSpecies = () => catalogSpecies.value[0]!;
+const knownSpecies = computed(() => plantCatalog.species.filter((s) => s.id !== 'unknown'));
 
 const makeNewUserPlant = (): UserPlant => {
-  const s = firstSpecies();
+  const pick = defaultCatalogPick(knownSpecies.value);
+  if (!pick) {
+    throw new Error('Plant catalog has no species');
+  }
   return {
     id: uuidV4(),
-    speciesId: s.id,
-    cultivarId: s.cultivars[0]?.id ?? null,
+    speciesId: pick.speciesId,
+    cultivarId: pick.cultivarId,
   };
 };
 
 const plantInEditing = ref<UserPlant>(makeNewUserPlant());
 
-const cultivarOptions = computed(() => {
-  const s = plantCatalog.species.find((x) => x.id === plantInEditing.value.speciesId);
-  return s?.cultivars ?? [];
-});
-
 const resolvedPreview = computed(() => resolveUserPlant(plantInEditing.value, plantCatalog));
+
+const editingCatalogPick = computed({
+  get: (): CatalogPlantPick => {
+    const groups = buildCatalogPickGroups(knownSpecies.value);
+    const hit = catalogPickForSpeciesCultivar(
+      groups,
+      plantInEditing.value.speciesId,
+      plantInEditing.value.cultivarId ?? null,
+    );
+    const fallback = defaultCatalogPick(knownSpecies.value);
+    return hit ?? fallback!;
+  },
+  set: (pick: CatalogPlantPick | null) => {
+    if (!pick) {
+      return;
+    }
+    plantInEditing.value.speciesId = pick.speciesId;
+    plantInEditing.value.cultivarId = pick.cultivarId;
+  },
+});
 
 const editingFunctions = ref<GuildFunction[]>([]);
 const editingLayers = ref<GuildLayer[]>([]);
@@ -51,12 +74,6 @@ watch(
   { deep: true, immediate: true },
 );
 
-const setSpecies = (speciesId: string) => {
-  plantInEditing.value.speciesId = speciesId;
-  const s = plantCatalog.species.find((x) => x.id === speciesId);
-  plantInEditing.value.cultivarId = s?.cultivars[0]?.id ?? null;
-};
-
 const pickEmoji = (emoji: string) => {
   const natural = resolveUserPlant(
     {
@@ -66,7 +83,8 @@ const pickEmoji = (emoji: string) => {
     plantCatalog,
   );
   if (emoji === natural.emoji) {
-    const { emoji: _e, ...rest } = plantInEditing.value.speciesOverride ?? {};
+    const rest = { ...plantInEditing.value.speciesOverride };
+    delete rest.emoji;
     plantInEditing.value.speciesOverride = Object.keys(rest).length ? rest : undefined;
     return;
   }
@@ -136,7 +154,8 @@ const customSpeciesName = computed({
   get: () => plantInEditing.value.speciesOverride?.name ?? '',
   set: (v: string) => {
     if (!v.trim()) {
-      const { name: _n, ...rest } = plantInEditing.value.speciesOverride ?? {};
+      const rest = { ...plantInEditing.value.speciesOverride };
+      delete rest.name;
       plantInEditing.value.speciesOverride = Object.keys(rest).length ? rest : undefined;
       return;
     }
@@ -148,7 +167,8 @@ const customCultivarName = computed({
   get: () => plantInEditing.value.cultivarOverride?.name ?? '',
   set: (v: string) => {
     if (!v.trim()) {
-      const { name: _n, ...rest } = plantInEditing.value.cultivarOverride ?? {};
+      const rest = { ...plantInEditing.value.cultivarOverride };
+      delete rest.name;
       plantInEditing.value.cultivarOverride = Object.keys(rest).length ? rest : undefined;
       return;
     }
@@ -156,12 +176,6 @@ const customCultivarName = computed({
   },
 });
 
-const cultivarIdModel = computed({
-  get: () => plantInEditing.value.cultivarId ?? '',
-  set: (v: string) => {
-    plantInEditing.value.cultivarId = v === '' ? null : v;
-  },
-});
 </script>
 <template>
   <div class="bg-white p-4 grid grid-flow-col items-start gap-8 rounded-md">
@@ -203,43 +217,10 @@ const cultivarIdModel = computed({
 
     <div class="flex flex-col gap-3 min-w-[200px]">
       <h2 class="text-slate-800 font-medium">Catalog</h2>
-      <label class="flex flex-col gap-1">
-        <span class="text-slate-800">Species</span>
-        <select
-          class="p-1 border border-slate-300 rounded-md text-slate-800"
-          :value="plantInEditing.speciesId"
-          @change="setSpecies(($event.target as HTMLSelectElement).value)"
-        >
-          <option
-            v-for="s in catalogSpecies"
-            :key="s.id"
-            :value="s.id"
-          >
-            {{ s.name }}
-          </option>
-        </select>
-      </label>
-      <label
-        v-if="cultivarOptions.length"
-        class="flex flex-col gap-1"
-      >
-        <span class="text-slate-800">Cultivar</span>
-        <select
-          v-model="cultivarIdModel"
-          class="p-1 border border-slate-300 rounded-md text-slate-800"
-        >
-          <option value="">
-            (species default)
-          </option>
-          <option
-            v-for="c in cultivarOptions"
-            :key="c.id"
-            :value="c.id"
-          >
-            {{ c.name }}
-          </option>
-        </select>
-      </label>
+      <PlantCatalogCombobox
+        v-model="editingCatalogPick"
+        label="Catalog species and cultivar"
+      />
     </div>
 
     <div class="flex flex-col gap-2 p-2 max-w-md">

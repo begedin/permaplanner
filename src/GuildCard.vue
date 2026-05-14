@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 
+import type { CatalogPlantPick } from './catalogPlantPick';
 import type { MulchLevel, Plant, UserPlant } from './gardenTypes';
 import { GuildFunction, GuildLayer, useGardenStore } from './useGardenStore';
 import {
@@ -8,10 +9,10 @@ import {
   CATALOG_MONTH_LABELS_2,
   fruitBloomMonthCountsForPhenologies,
   phenologySummaryForPlant,
-  plantCatalog,
   resolvePhenology,
 } from './plantCatalog';
 import GuildCardSectionLabel from './GuildCardSectionLabel.vue';
+import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
 import PlantIcon from './PlantIcon.vue';
 import { plantGuildGroupLabel } from './resolvePlant';
 import { uuid } from './utils';
@@ -37,38 +38,16 @@ const props = withDefaults(
 
 const guild = computed(() => garden.guilds.find((g) => g.id === props.guildId));
 
-const catalogSpecies = computed(() => plantCatalog.species.filter((s) => s.id !== 'unknown'));
-
-const addSpeciesId = ref('');
-const addCultivarId = ref('');
-
-watch(
-  catalogSpecies,
-  (list) => {
-    if (list.length && !addSpeciesId.value) {
-      addSpeciesId.value = list[0]!.id;
-    }
-  },
-  { immediate: true },
-);
-
-const cultivarOptions = computed(() => {
-  const s = plantCatalog.species.find((x) => x.id === addSpeciesId.value);
-  return s?.cultivars ?? [];
-});
-
-watch(addSpeciesId, () => {
-  addCultivarId.value = '';
-});
+const selectedPick = ref<CatalogPlantPick | null>(null);
 
 const findMatchingUserPlant = (): UserPlant | undefined => {
-  const speciesId = addSpeciesId.value;
-  if (!speciesId) {
+  const pick = selectedPick.value;
+  if (!pick) {
     return undefined;
   }
-  const cultivarId = addCultivarId.value === '' ? null : addCultivarId.value;
   return garden.plants.find(
-    (p) => p.speciesId === speciesId && (p.cultivarId ?? null) === (cultivarId ?? null),
+    (pl) =>
+      pl.speciesId === pick.speciesId && (pl.cultivarId ?? null) === (pick.cultivarId ?? null),
   );
 };
 
@@ -134,13 +113,13 @@ const groupedGuildPlants = computed((): GuildPlantGroupRow[] => {
 });
 
 const onAddPlant = () => {
-  if (!guild.value || !addSpeciesId.value) {
+  if (!guild.value || !selectedPick.value) {
     return;
   }
-  const cultivarId = addCultivarId.value === '' ? null : addCultivarId.value;
+  const { speciesId, cultivarId } = selectedPick.value;
   let up = findMatchingUserPlant();
   if (!up) {
-    up = { id: uuid(), speciesId: addSpeciesId.value, cultivarId };
+    up = { id: uuid(), speciesId, cultivarId };
     garden.plants.push(up);
   }
   garden.addPlantToGuild(guild.value.id, up.id);
@@ -313,206 +292,159 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
     </template>
 
     <template v-if="context === 'guilds'">
-    <div class="flex flex-row items-center justify-between gap-2 w-full flex-wrap">
-      <p
-        v-if="!placedOnMap"
-        class="text-xs text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded"
-      >
-        Not on aerial
-      </p>
-      <button
-        v-if="placedOnMap"
-        type="button"
-        class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-950 rounded px-2 py-0.5"
-        @click="removeFromAerialMap"
-      >
-        Remove from aerial map
-      </button>
-      <button
-        type="button"
-        :class="placedOnMap ? '' : 'ml-auto'"
-        class="text-xs bg-red-100 hover:bg-red-200 text-red-900 rounded px-2 py-0.5"
-        @click="removeGuild"
-      >
-        Delete guild
-      </button>
-    </div>
-    <input
-      class="appearance-none bg-transparent border-none focus:outline-none text-slate-600 w-full truncate"
-      :value="guild.name"
-      @input="setName"
-    />
-    <div
-      role="radiogroup"
-      aria-label="Mulch level"
-      class="flex flex-row items-center gap-1.5 w-full"
-    >
-      <span class="text-xs text-slate-500 shrink-0">Mulch</span>
-      <div class="flex flex-row gap-0.5 items-center">
-        <span
-          v-for="n in mulchStars"
-          :key="n"
-          role="radio"
-          :aria-checked="guild.mulchLevel === n"
-          tabindex="0"
-          class="cursor-pointer text-base leading-none select-none rounded px-0.5 focus:outline-none focus:ring-2 focus:ring-amber-400/80 focus:ring-offset-1"
-          :class="n <= guild.mulchLevel ? 'text-amber-500' : 'text-slate-300'"
-          :aria-label="`Mulch level ${n} of 5`"
-          @click="setMulchLevel(n)"
-          @keydown.enter.prevent="setMulchLevel(n)"
-          @keydown.space.prevent="setMulchLevel(n)"
+      <div class="flex flex-row items-center justify-between gap-2 w-full flex-wrap">
+        <p
+          v-if="!placedOnMap"
+          class="text-xs text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded"
         >
-          ★
-        </span>
+          Not on aerial
+        </p>
+        <button
+          v-if="placedOnMap"
+          type="button"
+          class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-950 rounded px-2 py-0.5"
+          @click="removeFromAerialMap"
+        >
+          Remove from aerial map
+        </button>
+        <button
+          type="button"
+          :class="placedOnMap ? '' : 'ml-auto'"
+          class="text-xs bg-red-100 hover:bg-red-200 text-red-900 rounded px-2 py-0.5"
+          @click="removeGuild"
+        >
+          Delete guild
+        </button>
       </div>
-    </div>
-    <div class="flex flex-col gap-2 w-full">
-      <span class="text-xs font-medium text-slate-700">Add plant</span>
-      <label class="flex flex-col gap-0.5 text-xs text-slate-600">
-        <span>Species</span>
-        <select
-          v-model="addSpeciesId"
-          class="w-full p-1 border border-slate-300 rounded text-sm bg-white"
-        >
-          <option
-            v-for="s in catalogSpecies"
-            :key="s.id"
-            :value="s.id"
+      <input
+        class="appearance-none bg-transparent border-none focus:outline-none text-slate-600 w-full truncate"
+        :value="guild.name"
+        @input="setName"
+      />
+      <div
+        role="radiogroup"
+        aria-label="Mulch level"
+        class="flex flex-row items-center gap-1.5 w-full"
+      >
+        <span class="text-xs text-slate-500 shrink-0">Mulch</span>
+        <div class="flex flex-row gap-0.5 items-center">
+          <span
+            v-for="n in mulchStars"
+            :key="n"
+            role="radio"
+            :aria-checked="guild.mulchLevel === n"
+            tabindex="0"
+            class="cursor-pointer text-base leading-none select-none rounded px-0.5 focus:outline-none focus:ring-2 focus:ring-amber-400/80 focus:ring-offset-1"
+            :class="n <= guild.mulchLevel ? 'text-amber-500' : 'text-slate-300'"
+            :aria-label="`Mulch level ${n} of 5`"
+            @click="setMulchLevel(n)"
+            @keydown.enter.prevent="setMulchLevel(n)"
+            @keydown.space.prevent="setMulchLevel(n)"
           >
-            {{ s.name }}
-          </option>
-        </select>
-      </label>
-      <label
-        v-if="cultivarOptions.length > 0"
-        class="flex flex-col gap-0.5 text-xs text-slate-600"
-      >
-        <span>Cultivar</span>
-        <select
-          v-model="addCultivarId"
-          class="w-full p-1 border border-slate-300 rounded text-sm bg-white"
-        >
-          <option value="">
-            (species default)
-          </option>
-          <option
-            v-for="c in cultivarOptions"
-            :key="c.id"
-            :value="c.id"
-          >
-            {{ c.name }}
-          </option>
-        </select>
-      </label>
-      <button
-        type="button"
-        class="w-full text-sm bg-green-200 hover:bg-green-300 disabled:opacity-50 rounded py-1 px-2 text-slate-800"
-        :disabled="!addSpeciesId"
-        @click="onAddPlant"
-      >
-        Add to guild
-      </button>
-    </div>
-    <div
-      class="flex flex-col gap-1 w-full"
-      aria-label="Plants in this guild"
-    >
-      <GuildCardSectionLabel>Plants</GuildCardSectionLabel>
-      <template
-        v-for="row in groupedGuildPlants"
-        :key="row.plantId"
-      >
-        <div
-          :aria-label="row.count > 1 ? `${row.label} (${row.count})` : row.label"
-          class="pl-1 flex flex-row items-start justify-start w-full gap-1 border-b border-sky-300 py-0.5"
-        >
-          <PlantIcon
-            :title="row.label"
-            class="h-4 w-4 shrink-0 mt-0.5"
-            :plant="row.representativeResolved"
-          />
-          <div class="min-w-0 flex-1 flex flex-col gap-0 text-left">
-            <span class="truncate text-sm leading-tight">
-              {{ row.label
-              }}<template v-if="row.count > 1">
-                ({{ row.count }})
-              </template>
-            </span>
-            <span
-              v-if="phenologySummaryForThingIds(row.thingIds)"
-              class="text-[10px] leading-tight text-slate-500"
-            >
-              {{ phenologySummaryForThingIds(row.thingIds) }}
-            </span>
-          </div>
-          <div class="flex flex-row items-start gap-0 shrink-0">
-            <button
-              v-if="row.count > 1"
-              type="button"
-              title="Remove one plant from bed"
-              aria-label="Remove one plant from bed"
-              class="bg-transparent hover:bg-amber-100 rounded-md p-1/2 px-1 transition-colors"
-              @click="removeOneGuildThing(row.thingIds)"
-            >
-              ➖
-            </button>
-            <button
-              type="button"
-              title="Remove plant from bed"
-              aria-label="Remove plant from bed"
-              class="bg-transparent hover:bg-red-200 rounded-md p-1/2 px-1 transition-colors"
-              @click="removeGuildThingsByIds(row.thingIds)"
-            >
-              ✖️
-            </button>
-          </div>
+            ★
+          </span>
         </div>
-      </template>
-    </div>
-    <div class="flex flex-row flex-wrap gap-1 w-full">
-      <GuildCardSectionLabel>Functions</GuildCardSectionLabel>
-      <div
-        v-for="(f, i) in guildFunctions"
-        :key="i"
-        :class="{
-          'bg-red-200': f.count == 0,
-          'bg-green-200': f.count == 1,
-          'bg-green-500': f.count > 1,
-        }"
-        class="rounded-md p-1/2 px-1 text-xs"
-        :aria-label="`${f.label}`"
-      >
-        {{ f.label }}
-        <span
-          v-if="f.count > 1"
-          class="text-slate-500 bg-slate-200 rounded-md px-1 text-xs"
-        >
-          {{ f.count }}
-        </span>
       </div>
-    </div>
-    <div class="flex flex-row flex-wrap gap-1 w-full">
-      <GuildCardSectionLabel>Layers</GuildCardSectionLabel>
       <div
-        v-for="(l, i) in guildLayers"
-        :key="i"
-        :class="{
-          'bg-red-200': l.count == 0,
-          'bg-green-200': l.count == 1,
-          'bg-green-500': l.count > 1,
-        }"
-        class="rounded-md p-1/2 px-1 text-xs"
-        :aria-label="`${l.label}`"
+        class="flex flex-col gap-1 w-full"
+        aria-label="Plants in this guild"
       >
-        {{ l.label }}
-        <span
-          v-if="l.count > 1"
-          class="text-xs text-slate-500 bg-slate-200 rounded-md px-1"
+        <GuildCardSectionLabel>Plants</GuildCardSectionLabel>
+        <template
+          v-for="row in groupedGuildPlants"
+          :key="row.plantId"
         >
-          {{ l.count }}
-        </span>
+          <div
+            :aria-label="row.count > 1 ? `${row.label} (${row.count})` : row.label"
+            class="pl-1 flex flex-row items-start justify-start w-full gap-1 border-b border-sky-300 py-0.5"
+          >
+            <PlantIcon
+              :title="row.label"
+              class="h-4 w-4 shrink-0 mt-0.5"
+              :plant="row.representativeResolved"
+            />
+            <div class="min-w-0 flex-1 flex flex-col gap-0 text-left">
+              <span class="truncate text-sm leading-tight">
+                {{ row.label
+                }}<template v-if="row.count > 1">
+                  ({{ row.count }})
+                </template>
+              </span>
+              <span
+                v-if="phenologySummaryForThingIds(row.thingIds)"
+                class="text-[10px] leading-tight text-slate-500"
+              >
+                {{ phenologySummaryForThingIds(row.thingIds) }}
+              </span>
+            </div>
+            <div class="flex flex-row items-start gap-0 shrink-0">
+              <button
+                v-if="row.count > 1"
+                type="button"
+                title="Remove one plant from bed"
+                aria-label="Remove one plant from bed"
+                class="bg-transparent hover:bg-amber-100 rounded-md p-1/2 px-1 transition-colors"
+                @click="removeOneGuildThing(row.thingIds)"
+              >
+                ➖
+              </button>
+              <button
+                type="button"
+                title="Remove plant from bed"
+                aria-label="Remove plant from bed"
+                class="bg-transparent hover:bg-red-200 rounded-md p-1/2 px-1 transition-colors"
+                @click="removeGuildThingsByIds(row.thingIds)"
+              >
+                ✖️
+              </button>
+            </div>
+          </div>
+        </template>
       </div>
-    </div>
+      <div class="flex flex-row flex-wrap gap-1 w-full">
+        <GuildCardSectionLabel>Functions</GuildCardSectionLabel>
+        <div
+          v-for="(f, i) in guildFunctions"
+          :key="i"
+          :class="{
+            'bg-red-200': f.count == 0,
+            'bg-green-200': f.count == 1,
+            'bg-green-500': f.count > 1,
+          }"
+          class="rounded-md p-1/2 px-1 text-xs"
+          :aria-label="`${f.label}`"
+        >
+          {{ f.label }}
+          <span
+            v-if="f.count > 1"
+            class="text-slate-500 bg-slate-200 rounded-md px-1 text-xs"
+          >
+            {{ f.count }}
+          </span>
+        </div>
+      </div>
+      <div class="flex flex-row flex-wrap gap-1 w-full">
+        <GuildCardSectionLabel>Layers</GuildCardSectionLabel>
+        <div
+          v-for="(l, i) in guildLayers"
+          :key="i"
+          :class="{
+            'bg-red-200': l.count == 0,
+            'bg-green-200': l.count == 1,
+            'bg-green-500': l.count > 1,
+          }"
+          class="rounded-md p-1/2 px-1 text-xs"
+          :aria-label="`${l.label}`"
+        >
+          {{ l.label }}
+          <span
+            v-if="l.count > 1"
+            class="text-xs text-slate-500 bg-slate-200 rounded-md px-1"
+          >
+            {{ l.count }}
+          </span>
+        </div>
+      </div>
     </template>
 
     <div
@@ -576,6 +508,21 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           />
         </div>
       </div>
+    </div>
+    <div
+      v-if="context === 'guilds'"
+      class="flex flex-col gap-2 w-full"
+    >
+      <GuildCardSectionLabel>Add plant</GuildCardSectionLabel>
+      <PlantCatalogCombobox v-model="selectedPick" />
+      <button
+        type="button"
+        class="w-full text-sm bg-green-200 hover:bg-green-300 disabled:opacity-50 rounded py-1 px-2 text-slate-800"
+        :disabled="!selectedPick"
+        @click="onAddPlant"
+      >
+        Add to guild
+      </button>
     </div>
   </article>
 </template>
