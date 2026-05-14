@@ -1102,6 +1102,65 @@
       }
     },
     {
+      "id": "thyme",
+      "name": "Thyme",
+      "defaultEmoji": "🌿",
+      "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "common",
+          "name": "Common (English)"
+        },
+        {
+          "id": "french",
+          "name": "French"
+        },
+        {
+          "id": "lemon",
+          "name": "Lemon"
+        },
+        {
+          "id": "german_winter",
+          "name": "German winter"
+        },
+        {
+          "id": "creeping",
+          "name": "Creeping (mother of thyme)",
+          "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent", "ground_cover"],
+          "layers": ["herb", "ground_cover"]
+        },
+        {
+          "id": "woolly",
+          "name": "Woolly",
+          "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent", "ground_cover"],
+          "layers": ["herb", "ground_cover"]
+        },
+        {
+          "id": "elfin",
+          "name": "Elfin",
+          "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent", "ground_cover"],
+          "layers": ["herb", "ground_cover"]
+        },
+        {
+          "id": "pink_chintz",
+          "name": "Pink Chintz",
+          "functions": ["pollinator_attractor", "ground_cover"],
+          "layers": ["herb", "ground_cover"]
+        },
+        {
+          "id": "red_creeping",
+          "name": "Red creeping (Coccineus)",
+          "functions": ["pollinator_attractor", "ground_cover"],
+          "layers": ["herb", "ground_cover"]
+        }
+      ],
+      "blooming": {
+        "start": 5,
+        "end": 8
+      }
+    },
+    {
       "id": "yamlina",
       "name": "Yamlina (raspberry–strawberry)",
       "defaultEmoji": "🫐",

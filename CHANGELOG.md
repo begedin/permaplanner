@@ -1,6 +1,10 @@
 # Changelog 
 
 
+## 0.4.1
+
+- [FEATURE] Add thyme to plant catalog
+
 ## 0.4.0
 
 - [FEATURE] App footer session with aggregated blooming and fruiting calendar
