@@ -7,9 +7,21 @@ import {
   fruitBloomMonthCountsForPhenologies,
   resolvePhenology,
 } from './plantCatalog';
+import {
+  guildPlantTooltipRows,
+  monthAspectTooltip,
+  monthHeaderTooltip,
+} from './guildPlantTooltips';
 import { useGardenStore } from './useGardenStore';
 
 const garden = useGardenStore();
+
+const gardenTooltipRows = computed(() =>
+  guildPlantTooltipRows(
+    garden.guilds.flatMap((guild) => guild.plants.map((thing) => thing.plantId)),
+    (plantId) => garden.resolvedPlant(plantId),
+  ),
+);
 
 const gardenMonthPhenologyCounts = computed(() => {
   const phenologies = garden.guilds.flatMap((guild) =>
@@ -57,6 +69,7 @@ const monthBlockClass = (rawCount: number): string => {
             v-for="(lab, i) in CATALOG_MONTH_LABELS_2"
             :key="`fh-${i}`"
             class="flex-1 min-w-0 text-center text-[10px] leading-none font-medium text-slate-500"
+            :title="monthHeaderTooltip(gardenTooltipRows, i, CATALOG_MONTH_LABELS[i])"
           >{{ lab }}</span>
         </div>
       </div>
@@ -76,7 +89,7 @@ const monthBlockClass = (rawCount: number): string => {
             role="listitem"
             class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"
             :class="monthBlockClass(count)"
-            :title="`${CATALOG_MONTH_LABELS[i]} fruit: ${count} plant${count === 1 ? '' : 's'}`"
+            :title="monthAspectTooltip(gardenTooltipRows, i, 'fruiting', CATALOG_MONTH_LABELS[i])"
           />
         </div>
       </div>
@@ -96,7 +109,7 @@ const monthBlockClass = (rawCount: number): string => {
             role="listitem"
             class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"
             :class="monthBlockClass(count)"
-            :title="`${CATALOG_MONTH_LABELS[i]} bloom: ${count} plant${count === 1 ? '' : 's'}`"
+            :title="monthAspectTooltip(gardenTooltipRows, i, 'blooming', CATALOG_MONTH_LABELS[i])"
           />
         </div>
       </div>

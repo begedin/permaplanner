@@ -3,7 +3,8 @@ import { computed, ref } from 'vue';
 
 import type { CatalogPlantPick } from './catalogPlantPick';
 import type { MulchLevel, Plant, UserPlant } from './gardenTypes';
-import { GuildFunction, GuildLayer, useGardenStore } from './useGardenStore';
+import type { GuildFunction, GuildLayer } from './useGardenStore';
+import { useGardenStore } from './useGardenStore';
 import {
   CATALOG_MONTH_LABELS,
   CATALOG_MONTH_LABELS_2,
@@ -14,6 +15,13 @@ import {
 import GuildCardSectionLabel from './GuildCardSectionLabel.vue';
 import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
 import PlantIcon from './PlantIcon.vue';
+import {
+  functionLabelTooltip,
+  guildPlantTooltipRows,
+  layerLabelTooltip,
+  monthAspectTooltip,
+  monthHeaderTooltip,
+} from './guildPlantTooltips';
 import { plantGuildGroupLabel } from './resolvePlant';
 import { uuid } from './utils';
 
@@ -47,7 +55,8 @@ const findMatchingUserPlant = (): UserPlant | undefined => {
   }
   return garden.plants.find(
     (pl) =>
-      pl.speciesId === pick.speciesId && (pl.cultivarId ?? null) === (pick.cultivarId ?? null),
+      pl.speciesId === pick.speciesId &&
+      (pl.cultivarId ?? null) === (pick.cultivarId ?? null),
   );
 };
 
@@ -101,7 +110,9 @@ const groupedGuildPlants = computed((): GuildPlantGroupRow[] => {
     representativeResolved: rp,
   }));
   rows.sort((a, b) => {
-    const byName = a.representativeResolved.name.localeCompare(b.representativeResolved.name);
+    const byName = a.representativeResolved.name.localeCompare(
+      b.representativeResolved.name,
+    );
     if (byName !== 0) {
       return byName;
     }
@@ -140,15 +151,17 @@ const removeFromAerialMap = () => {
 };
 
 const guildFunctions = computed(() => {
-  const functionsByName = Object.fromEntries(
-    Object.values(GuildFunction).map((f) => [
-      f,
-      {
-        label: f.replace('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
-        count: 0,
-      },
-    ]),
-  );
+  const functionsByName = {
+    nitrogen_fixer: { label: 'Nitrogen Fixer', count: 0 },
+    dynamic_accumulator: { label: 'Dynamic Accumulator', count: 0 },
+    pollinator_attractor: { label: 'Pollinator Attractor', count: 0 },
+    pest_repellent: { label: 'Pest Repellent', count: 0 },
+    ground_cover: { label: 'Ground Cover', count: 0 },
+    wildfire_suppressor: { label: 'Wildfire Suppressor', count: 0 },
+    mulcher: { label: 'Mulcher', count: 0 },
+    edible: { label: 'Edible', count: 0 },
+    medicinal: { label: 'Medicinal', count: 0 },
+  } satisfies Record<GuildFunction, { label: string; count: number }>;
 
   guild.value?.plants.forEach((thing) => {
     const plant = garden.resolvedPlant(thing.plantId);
@@ -161,15 +174,15 @@ const guildFunctions = computed(() => {
 });
 
 const guildLayers = computed(() => {
-  const layersByName = Object.fromEntries(
-    Object.values(GuildLayer).map((l) => [
-      l,
-      {
-        label: l.replace('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
-        count: 0,
-      },
-    ]),
-  );
+  const layersByName = {
+    overstory: { label: 'Overstory', count: 0 },
+    understory: { label: 'Understory', count: 0 },
+    shrub: { label: 'Shrub', count: 0 },
+    ground_cover: { label: 'Ground Cover', count: 0 },
+    vine: { label: 'Vine', count: 0 },
+    herb: { label: 'Herb', count: 0 },
+    root: { label: 'Root', count: 0 },
+  } satisfies Record<GuildLayer, { label: string; count: number }>;
 
   guild.value?.plants.forEach((thing) => {
     const plant = garden.resolvedPlant(thing.plantId);
@@ -204,6 +217,13 @@ const phenologySummaryForThingIds = (thingIds: string[]): string | null => {
   const rp = garden.resolvedPlant(row.plantId);
   return phenologySummaryForPlant(rp.speciesId, rp.cultivarId);
 };
+
+const guildTooltipRows = computed(() =>
+  guildPlantTooltipRows(
+    guild.value?.plants.map((thing) => thing.plantId) ?? [],
+    (plantId) => garden.resolvedPlant(plantId),
+  ),
+);
 
 const guildMonthPhenologyCounts = computed(() => {
   const g = guild.value;
@@ -266,7 +286,9 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
       'cursor-pointer': context === 'aerialSidebar',
     }"
     :aria-label="guild.name"
-    :aria-current="context === 'aerialSidebar' && garden.selectedId === guildId ? 'true' : undefined"
+    :aria-current="
+      context === 'aerialSidebar' && garden.selectedId === guildId ? 'true' : undefined
+    "
     :tabindex="context === 'aerialSidebar' ? 0 : undefined"
     @click="onAerialListClick"
     @keydown="onAerialListKeydown"
@@ -283,11 +305,13 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           v-for="(tag, i) in compactPlantTags"
           :key="`${tag.text}-${i}`"
           class="text-[11px] leading-tight text-slate-700 bg-slate-100 border border-slate-200/80 rounded px-1.5 py-0.5"
-        >{{ tag.text }}</span>
+          >{{ tag.text }}</span
+        >
         <span
           v-if="compactPlantTags.length === 0"
           class="text-xs text-slate-400 italic"
-        >No plants</span>
+          >No plants</span
+        >
       </div>
     </template>
 
@@ -366,9 +390,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             <div class="min-w-0 flex-1 flex flex-col gap-0 text-left">
               <span class="truncate text-sm leading-tight">
                 {{ row.label
-                }}<template v-if="row.count > 1">
-                  ({{ row.count }})
-                </template>
+                }}<template v-if="row.count > 1"> ({{ row.count }}) </template>
               </span>
               <span
                 v-if="phenologySummaryForThingIds(row.thingIds)"
@@ -404,8 +426,8 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
       <div class="flex flex-row flex-wrap gap-1 w-full">
         <GuildCardSectionLabel>Functions</GuildCardSectionLabel>
         <div
-          v-for="(f, i) in guildFunctions"
-          :key="i"
+          v-for="(f, fnKey) in guildFunctions"
+          :key="fnKey"
           :class="{
             'bg-red-200': f.count == 0,
             'bg-green-200': f.count == 1,
@@ -413,6 +435,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           }"
           class="rounded-md p-1/2 px-1 text-xs"
           :aria-label="`${f.label}`"
+          :title="functionLabelTooltip(guildTooltipRows, fnKey, f.label)"
         >
           {{ f.label }}
           <span
@@ -426,8 +449,8 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
       <div class="flex flex-row flex-wrap gap-1 w-full">
         <GuildCardSectionLabel>Layers</GuildCardSectionLabel>
         <div
-          v-for="(l, i) in guildLayers"
-          :key="i"
+          v-for="(l, layerKey) in guildLayers"
+          :key="layerKey"
           :class="{
             'bg-red-200': l.count == 0,
             'bg-green-200': l.count == 1,
@@ -435,6 +458,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           }"
           class="rounded-md p-1/2 px-1 text-xs"
           :aria-label="`${l.label}`"
+          :title="layerLabelTooltip(guildTooltipRows, layerKey, l.label)"
         >
           {{ l.label }}
           <span
@@ -465,7 +489,9 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             v-for="(lab, i) in CATALOG_MONTH_LABELS_2"
             :key="`mh-${i}`"
             class="flex-1 min-w-0 text-center text-[10px] leading-none font-medium text-slate-500"
-          >{{ lab }}</span>
+            :title="monthHeaderTooltip(guildTooltipRows, i, CATALOG_MONTH_LABELS[i])"
+            >{{ lab }}</span
+          >
         </div>
       </div>
       <div
@@ -484,7 +510,9 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             role="listitem"
             class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"
             :class="guildMonthBlockClass(count)"
-            :title="`${CATALOG_MONTH_LABELS[i]} fruit: ${count} plant${count === 1 ? '' : 's'}`"
+            :title="
+              monthAspectTooltip(guildTooltipRows, i, 'fruiting', CATALOG_MONTH_LABELS[i])
+            "
           />
         </div>
       </div>
@@ -504,7 +532,9 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             role="listitem"
             class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"
             :class="guildMonthBlockClass(count)"
-            :title="`${CATALOG_MONTH_LABELS[i]} bloom: ${count} plant${count === 1 ? '' : 's'}`"
+            :title="
+              monthAspectTooltip(guildTooltipRows, i, 'blooming', CATALOG_MONTH_LABELS[i])
+            "
           />
         </div>
       </div>
