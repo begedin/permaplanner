@@ -1,14 +1,8 @@
 <script lang="ts" setup>
-import {
-  Combobox,
-  ComboboxButton,
-  ComboboxInput,
-  ComboboxLabel,
-  ComboboxOption,
-  ComboboxOptions,
-} from '@headlessui/vue';
+import { ComboboxButton, ComboboxInput, ComboboxOption } from '@headlessui/vue';
 import { computed, ref, watch } from 'vue';
 
+import AutoPositionedCombobox from './AutoPositionedCombobox.vue';
 import {
   buildCatalogPickGroups,
   type CatalogPickGroup,
@@ -80,25 +74,19 @@ watch(
   },
 );
 
-const selected = computed({
-  get: () => props.modelValue,
-  set: (v) => emit('update:modelValue', v),
-});
-
 const displayPickLabel = (p: unknown): string => (p as CatalogPlantPick | null)?.inputLabel ?? '';
 </script>
 
 <template>
-  <Combobox
-    v-model="selected"
-    as="div"
-    class="relative w-full"
+  <AutoPositionedCombobox
+    :model-value="modelValue"
     by="id"
+    @update:model-value="emit('update:modelValue', $event)"
   >
-    <ComboboxLabel class="sr-only">
+    <template #label>
       {{ label }}
-    </ComboboxLabel>
-    <div class="relative w-full">
+    </template>
+    <template #anchor>
       <ComboboxInput
         class="w-full rounded-md border border-slate-300 bg-white py-1 pl-2 pr-9 text-sm text-slate-800 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
         :placeholder="placeholder"
@@ -115,11 +103,8 @@ const displayPickLabel = (p: unknown): string => (p as CatalogPlantPick | null)?
           aria-hidden="true"
         >▾</span>
       </ComboboxButton>
-    </div>
-    <ComboboxOptions
-      as="div"
-      class="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 shadow-lg focus:outline-none"
-    >
+    </template>
+    <template #options>
       <template v-if="filteredPickGroups.length === 0">
         <div class="px-2 py-2 text-xs text-slate-500">
           No matches
@@ -155,6 +140,6 @@ const displayPickLabel = (p: unknown): string => (p as CatalogPlantPick | null)?
           </ComboboxOption>
         </template>
       </template>
-    </ComboboxOptions>
-  </Combobox>
+    </template>
+  </AutoPositionedCombobox>
 </template>
