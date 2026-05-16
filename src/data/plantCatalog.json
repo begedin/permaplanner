@@ -1531,6 +1531,53 @@
         "start": 6,
         "end": 8
       }
+    },
+    {
+      "id": "curry_plant",
+      "name": "Curry plant",
+      "defaultEmoji": "🌼",
+      "functions": ["pollinator_attractor", "pest_repellent", "medicinal"],
+      "layers": ["shrub", "herb"],
+      "cultivars": [],
+      "blooming": {
+        "start": 7,
+        "end": 9
+      }
+    },
+    {
+      "id": "rosehip",
+      "name": "Rosehip",
+      "defaultEmoji": "🌹",
+      "functions": ["edible", "medicinal", "pollinator_attractor"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "dog_rose",
+          "name": "Dog rose (Rosa canina)"
+        },
+        {
+          "id": "rugosa",
+          "name": "Rugosa rose"
+        },
+        {
+          "id": "ornamental",
+          "name": "Ornamental rose (flowers, no hips)",
+          "functions": ["pollinator_attractor"],
+          "blooming": {
+            "start": 5,
+            "end": 10
+          },
+          "fruiting": null
+        }
+      ],
+      "blooming": {
+        "start": 5,
+        "end": 7
+      },
+      "fruiting": {
+        "start": 9,
+        "end": 11
+      }
     }
   ]
 }

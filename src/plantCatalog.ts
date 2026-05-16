@@ -58,8 +58,10 @@ export type CatalogCultivar = {
   defaultEmoji?: string;
   functions?: GuildFunction[];
   layers?: GuildLayer[];
-  blooming?: CatalogMonthPeriod;
-  fruiting?: CatalogMonthPeriod;
+  /** Omit to inherit species. `null` clears inherited species phenology for this aspect. */
+  blooming?: CatalogMonthPeriod | null;
+  /** Omit to inherit species. `null` clears inherited species phenology for this aspect. */
+  fruiting?: CatalogMonthPeriod | null;
 };
 
 export type CatalogSpecies = {
@@ -85,16 +87,35 @@ export const getSpecies = (id: string): CatalogSpecies | undefined =>
 export const getCultivar = (species: CatalogSpecies, cultivarId: string): CatalogCultivar | undefined =>
   species.cultivars.find((c) => c.id === cultivarId);
 
+type PhenologyPeriodKey = 'blooming' | 'fruiting';
+
+const resolvePeriodFromSpeciesAndCultivar = (
+  species: CatalogSpecies,
+  cultivar: CatalogCultivar | undefined,
+  key: PhenologyPeriodKey,
+): CatalogMonthPeriod | undefined => {
+  if (cultivar !== undefined && Object.prototype.hasOwnProperty.call(cultivar, key)) {
+    const v = cultivar[key];
+    return v === null ? undefined : v;
+  }
+  return species[key];
+};
+
+export const mergeSpeciesCultivarPhenology = (
+  species: CatalogSpecies,
+  cultivar: CatalogCultivar | undefined,
+): CatalogPhenology => ({
+  blooming: resolvePeriodFromSpeciesAndCultivar(species, cultivar, 'blooming'),
+  fruiting: resolvePeriodFromSpeciesAndCultivar(species, cultivar, 'fruiting'),
+});
+
 export const resolvePhenology = (speciesId: string, cultivarId: string | null): CatalogPhenology => {
   const species = getSpecies(speciesId);
   if (!species) {
     return {};
   }
   const cultivar = cultivarId ? getCultivar(species, cultivarId) : undefined;
-  return {
-    blooming: cultivar?.blooming ?? species.blooming,
-    fruiting: cultivar?.fruiting ?? species.fruiting,
-  };
+  return mergeSpeciesCultivarPhenology(species, cultivar);
 };
 
 export const formatPhenologySummary = (ph: CatalogPhenology): string | null => {

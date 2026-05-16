@@ -1,5 +1,9 @@
 # Changelog 
 
+## 0.4.2
+
+- [FIX] Allow cultivar to unset species phenology
+- [FEATURE] Add rosehip, ornamental rose, curry plant
 
 ## 0.4.1
 

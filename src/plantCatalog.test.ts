@@ -1,11 +1,14 @@
 import { expect, it } from 'vitest';
 
 import {
+  type CatalogCultivar,
+  type CatalogSpecies,
   CATALOG_MONTH_LABELS_2,
   formatMonthPeriod,
   formatPhenologySummary,
   fruitBloomMonthCountsForPhenologies,
   isMonthInCatalogPeriod,
+  mergeSpeciesCultivarPhenology,
   phenologySummaryForPlant,
   resolveGuildCalendarPeriod,
   resolvePhenology,
@@ -29,6 +32,47 @@ it('resolves phenology from catalog species', () => {
   expect(resolvePhenology('apple', null)).toMatchObject({
     blooming: { start: 4, end: 5 },
     fruiting: { start: 8, end: 10 },
+  });
+});
+
+it('inherits species phenology when cultivar omits blooming and fruiting', () => {
+  expect(resolvePhenology('rosehip', 'dog_rose')).toMatchObject({
+    blooming: { start: 5, end: 7 },
+    fruiting: { start: 9, end: 11 },
+  });
+});
+
+it('treats cultivar fruiting null as clearing inherited species fruiting', () => {
+  expect(resolvePhenology('rosehip', 'ornamental')).toMatchObject({
+    blooming: { start: 5, end: 10 },
+  });
+  expect(resolvePhenology('rosehip', 'ornamental').fruiting).toBeUndefined();
+  expect(phenologySummaryForPlant('rosehip', 'ornamental')).toBe('Bloom May–Oct');
+  expect(resolveGuildCalendarPeriod(resolvePhenology('rosehip', 'ornamental'))).toEqual({
+    start: 5,
+    end: 10,
+  });
+});
+
+it('treats cultivar blooming null as clearing inherited species blooming', () => {
+  const species: CatalogSpecies = {
+    id: 'x',
+    name: 'X',
+    defaultEmoji: '🌱',
+    functions: [],
+    layers: [],
+    cultivars: [],
+    blooming: { start: 1, end: 2 },
+    fruiting: { start: 6, end: 7 },
+  };
+  const cultivar: CatalogCultivar = {
+    id: 'c',
+    name: 'C',
+    blooming: null,
+  };
+  expect(mergeSpeciesCultivarPhenology(species, cultivar)).toEqual({
+    blooming: undefined,
+    fruiting: { start: 6, end: 7 },
   });
 });
 
