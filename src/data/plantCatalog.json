@@ -423,6 +423,35 @@
       }
     },
     {
+      "id": "goumi",
+      "name": "Goumi",
+      "defaultEmoji": "🍒",
+      "functions": ["edible", "nitrogen_fixer", "pollinator_attractor"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "sweet_scarlet",
+          "name": "Sweet Scarlet"
+        },
+        {
+          "id": "carmine_splendens",
+          "name": "Carmine Splendens"
+        },
+        {
+          "id": "gomo",
+          "name": "Gomo"
+        }
+      ],
+      "blooming": {
+        "start": 4,
+        "end": 5
+      },
+      "fruiting": {
+        "start": 6,
+        "end": 8
+      }
+    },
+    {
       "id": "comfrey",
       "name": "Comfrey",
       "defaultEmoji": "🪻",
@@ -792,6 +821,10 @@
         {
           "id": "goldcot",
           "name": "Goldcot"
+        },
+        {
+          "id": "aprisali",
+          "name": "Aprisali"
         }
       ],
       "blooming": {
@@ -1481,6 +1514,31 @@
       "blooming": {
         "start": 7,
         "end": 9
+      }
+    },
+    {
+      "id": "larkspur",
+      "name": "Larkspur",
+      "defaultEmoji": "💐",
+      "functions": ["pollinator_attractor", "medicinal"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "giants_mix",
+          "name": "Giants Mix"
+        },
+        {
+          "id": "sublime_mix",
+          "name": "Sublime Mix"
+        },
+        {
+          "id": "pacific_giant",
+          "name": "Pacific Giant"
+        }
+      ],
+      "blooming": {
+        "start": 5,
+        "end": 8
       }
     },
     {

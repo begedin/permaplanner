@@ -1,5 +1,11 @@
 # Changelog 
 
+## 0.4.3
+
+- [DB] Aprisali appricot
+- [DB] Larkspur
+- [DB] Goumi
+
 ## 0.4.2
 
 - [FIX] Allow cultivar to unset species phenology
