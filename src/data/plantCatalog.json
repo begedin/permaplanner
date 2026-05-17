@@ -100,6 +100,14 @@
         {
           "id": "apistar",
           "name": "Apistar"
+        },
+        {
+          "id": "amaty",
+          "name": "Amaty"
+        },
+        {
+          "id": "francuska_kozarka",
+          "name": "Francuska kožarka (French russet)"
         }
       ],
       "blooming": {
@@ -323,6 +331,23 @@
       }
     },
     {
+      "id": "ornamental_allium",
+      "name": "Ornamental allium",
+      "defaultEmoji": "🌸",
+      "functions": ["pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "naples_garlic",
+          "name": "Naples garlic (Allium neapolitanum)"
+        }
+      ],
+      "blooming": {
+        "start": 5,
+        "end": 6
+      }
+    },
+    {
       "id": "daisy",
       "name": "Daisy",
       "defaultEmoji": "🌼",
@@ -345,6 +370,18 @@
       "blooming": {
         "start": 5,
         "end": 9
+      }
+    },
+    {
+      "id": "japanese_maple",
+      "name": "Japanese maple",
+      "defaultEmoji": "🍁",
+      "functions": ["pollinator_attractor", "mulcher"],
+      "layers": ["understory"],
+      "cultivars": [],
+      "blooming": {
+        "start": 4,
+        "end": 5
       }
     },
     {
@@ -609,6 +646,81 @@
       }
     },
     {
+      "id": "mint",
+      "name": "Mint",
+      "defaultEmoji": "🌿",
+      "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb", "ground_cover"],
+      "cultivars": [
+        {
+          "id": "multimentha",
+          "name": "Multimentha (peppermint)"
+        }
+      ],
+      "blooming": {
+        "start": 7,
+        "end": 8
+      }
+    },
+    {
+      "id": "marjoram",
+      "name": "Marjoram",
+      "defaultEmoji": "🌿",
+      "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "venezia",
+          "name": "Venezia"
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 9
+      }
+    },
+    {
+      "id": "mulberry",
+      "name": "Mulberry",
+      "defaultEmoji": "🫐",
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["overstory"],
+      "cultivars": [
+        {
+          "id": "red",
+          "name": "Red mulberry"
+        },
+        {
+          "id": "white",
+          "name": "White mulberry"
+        },
+        {
+          "id": "black",
+          "name": "Black mulberry"
+        }
+      ],
+      "blooming": {
+        "start": 4,
+        "end": 5
+      },
+      "fruiting": {
+        "start": 6,
+        "end": 8
+      }
+    },
+    {
+      "id": "sage",
+      "name": "Sage",
+      "defaultEmoji": "🌿",
+      "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb", "shrub"],
+      "cultivars": [],
+      "blooming": {
+        "start": 6,
+        "end": 8
+      }
+    },
+    {
       "id": "dill",
       "name": "Dill",
       "defaultEmoji": "🌿",
@@ -825,6 +937,10 @@
         {
           "id": "aprisali",
           "name": "Aprisali"
+        },
+        {
+          "id": "korai_piros",
+          "name": "Korai piros (Early red)"
         }
       ],
       "blooming": {
@@ -858,6 +974,10 @@
         {
           "id": "greengage",
           "name": "Greengage"
+        },
+        {
+          "id": "california_blue",
+          "name": "California Blue"
         }
       ],
       "blooming": {
@@ -914,12 +1034,24 @@
           "name": "Rainier"
         },
         {
+          "id": "yellow_drogan",
+          "name": "Yellow Drogan"
+        },
+        {
           "id": "stella",
           "name": "Stella"
         },
         {
           "id": "lapins",
           "name": "Lapins"
+        },
+        {
+          "id": "new_star",
+          "name": "New Star"
+        },
+        {
+          "id": "from_seed",
+          "name": "From seed (not grafted)"
         }
       ],
       "blooming": {
@@ -949,6 +1081,10 @@
         {
           "id": "morello",
           "name": "Morello"
+        },
+        {
+          "id": "from_seed",
+          "name": "From seed (not grafted)"
         }
       ],
       "blooming": {
@@ -1019,6 +1155,14 @@
         {
           "id": "theta",
           "name": "Theta"
+        },
+        {
+          "id": "tonda_romana",
+          "name": "Tonda Romana"
+        },
+        {
+          "id": "from_seed",
+          "name": "From seed (not grafted)"
         }
       ],
       "blooming": {
@@ -1189,6 +1333,11 @@
         {
           "id": "lemon",
           "name": "Lemon"
+        },
+        {
+          "id": "summerdreams_lemon_gold",
+          "name": "Summerdreams Lemon Gold",
+          "layers": ["herb", "ground_cover"]
         },
         {
           "id": "german_winter",
@@ -1458,7 +1607,7 @@
         },
         {
           "id": "prostratus",
-          "name": "Prostratus"
+          "name": "Prostratus (prostrate)"
         }
       ],
       "blooming": {
@@ -1596,7 +1745,12 @@
       "defaultEmoji": "🌼",
       "functions": ["pollinator_attractor", "pest_repellent", "medicinal"],
       "layers": ["shrub", "herb"],
-      "cultivars": [],
+      "cultivars": [
+        {
+          "id": "tikka",
+          "name": "Tikka"
+        }
+      ],
       "blooming": {
         "start": 7,
         "end": 9
