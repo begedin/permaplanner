@@ -1,5 +1,9 @@
 # Changelog 
 
+## 0.7.0 
+
+- [FEATURE] New app layout
+
 ## 0.6.0
 
 - [FEATURE] Restructure github json to be more LLM friendly

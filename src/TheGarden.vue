@@ -11,21 +11,14 @@ import { useBackgroundImage } from './useBackgroundImage';
 import { useCamera } from './useCamera';
 import { useElementSize } from '@vueuse/core';
 import OnboardingText from './OnboardingText.vue';
-import PlanUnsavedIndicator from './PlanUnsavedIndicator.vue';
 import ThingBar from './ThingBar.vue';
-import ToolSlider from './ToolSlider.vue';
 import ReferenceLine from './ReferenceLine.vue';
 import { useOnboardingStore } from './useOnboardingStore';
-import GithubRepoSyncPanel from './GithubRepoSyncPanel.vue';
 import { isGithubStorageLinked } from './githubRepoSync';
 import { usePermaplannerStore } from './usePermaplannerStore';
-import { usePlanSession } from './usePlanSession';
 
 const permaplannerStore = usePermaplannerStore();
 
-const { load, newPlan, save, saveAs } = usePlanSession();
-
-const showLocalFileActions = computed(() => Boolean(permaplannerStore.fileName));
 const showThingBar = computed(
   () => Boolean(permaplannerStore.fileName) || isGithubStorageLinked(),
 );
@@ -172,54 +165,8 @@ const updateGuild = (guild: Guild) => {
 </script>
 
 <template>
-  <div class="flex flex-row items-stretch h-full">
-    <div class="p-2 flex w-[200px] flex-col items-stretch gap-1 bg-gray-50">
-      <PlanUnsavedIndicator />
-      <template v-if="showLocalFileActions">
-        <ToolSlider
-          v-model:value="mapScale.linePhysicalLength"
-          label="Map scale"
-          :min="1"
-          :max="300"
-          :step="1"
-        />
-        <ToolSlider
-          v-model:value="permaplannerStore.backgroundOpacity"
-          label="BG opacity"
-          :min="0"
-          :max="1"
-          :step="0.01"
-        />
-        <span>{{ permaplannerStore.fileName }}</span>
-        <button
-          class="bg-green-200 hover:bg-green-300 rounded p-1"
-          @click="save"
-        >
-          Save plan
-        </button>
-        <button
-          class="bg-green-200 hover:bg-green-300 rounded p-1"
-          @click="saveAs"
-        >
-          Save as...
-        </button>
-      </template>
-      <button
-        class="bg-green-200 hover:bg-green-300 rounded p-1"
-        @click="load"
-      >
-        Open plan
-      </button>
-      <button
-        class="bg-green-200 hover:bg-green-300 rounded p-1"
-        @click="newPlan"
-      >
-        New plan
-      </button>
-      <GithubRepoSyncPanel />
-    </div>
-
-    <div class="flex flex-col flex-1">
+  <div class="flex flex-row items-stretch h-full min-h-0">
+    <div class="flex flex-col flex-1 min-h-0 min-w-0">
       <svg
         ref="container"
         :viewBox="svgViewbox"

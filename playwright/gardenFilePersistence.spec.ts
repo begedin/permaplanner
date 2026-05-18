@@ -1,12 +1,15 @@
 import { test, expect, type Page } from '@playwright/test';
-import { installOpfsPlanFileHandleE2E, waitForMainApp } from './helpers';
+import {
+  installOpfsPlanFileHandleE2E,
+  openPlanSessionDrawer,
+  waitForMainApp,
+} from './helpers';
 
 const waitForPlanRestoredOrSetup = async (page: Page) => {
   const setupHeading = page.getByRole('heading', { name: 'Choose where to save your plan' });
-  const restored = page.getByText('e2e-plan.json', { exact: true });
   await Promise.race([
     setupHeading.waitFor({ state: 'visible', timeout: 20_000 }),
-    restored.waitFor({ state: 'visible', timeout: 20_000 }),
+    waitForMainApp(page),
   ]);
 };
 
@@ -20,6 +23,7 @@ test('new plan, edit map scale, save, reload — plan and map scale restore', as
     await waitForMainApp(page);
   }
 
+  await openPlanSessionDrawer(page);
   await expect(page.getByRole('button', { name: 'Save plan' })).toBeVisible();
   await expect(page.getByText('e2e-plan.json', { exact: true })).toBeVisible();
 
@@ -29,6 +33,7 @@ test('new plan, edit map scale, save, reload — plan and map scale restore', as
   await page.reload();
   await waitForMainApp(page);
 
+  await openPlanSessionDrawer(page);
   await expect(page.getByText('e2e-plan.json', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Map scale')).toHaveValue('77');
 

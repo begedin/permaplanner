@@ -43,6 +43,12 @@ export const waitForMainApp = async (page: Page): Promise<void> => {
   await expect(page.getByRole('heading', { name: 'Choose where to save your plan' })).toBeHidden();
 };
 
+/** Opens the top-bar plan menu (save, open, map tools on aerial). */
+export const openPlanSessionDrawer = async (page: Page): Promise<void> => {
+  await page.getByRole('button', { name: /^Plan and sync/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Plan and sync' })).toBeVisible();
+};
+
 export const stubSaveFilePicker = async (page: Page, fileName: string) => {
   const newPath = path.join(helpersDir, 'fixtures', fileName);
   const bytes = fs.readFileSync(newPath);
@@ -101,7 +107,9 @@ export const onboard = async (page: Page): Promise<void> => {
   await page.mouse.move(bbox.x + bbox.width - 30, bbox.y + 30);
   await page.mouse.up();
 
+  await openPlanSessionDrawer(page);
   await page.getByLabel('Map scale').fill('100');
+  await page.keyboard.press('Escape');
 };
 
 const readEmptyPlan = (): string => fs.readFileSync(emptyPlanPath, 'utf-8');

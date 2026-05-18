@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { createNewPlanThroughGate, pasteAerialPhotoOntoMap } from './helpers';
+import {
+  createNewPlanThroughGate,
+  openPlanSessionDrawer,
+  pasteAerialPhotoOntoMap,
+} from './helpers';
 
 test('onboards', async ({ browser }) => {
   const context = await browser.newContext({
@@ -49,17 +53,20 @@ test('onboards', async ({ browser }) => {
 
   await expect(page.locator('[data-onboarding-text]')).toHaveText(/set the length/);
 
+  await openPlanSessionDrawer(page);
   await page.getByLabel('Map scale').fill('100');
+  await page.keyboard.press('Escape');
 
-  await expect(page.locator('text', { hasText: '100' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Plan and sync' })).toBeHidden();
 
   await expect(page.locator('rect[fill="url(#grid)"]')).toBeVisible();
   const gridPattern = page.locator('pattern#grid');
   await expect(gridPattern).toHaveAttribute('width', /2\.3\d+/);
   await expect(gridPattern).toHaveAttribute('height', /2\.3\d+/);
 
-  await expect(page.locator('line')).toHaveAttribute('x1', /1[12]\.\d+/);
-  await expect(page.locator('line')).toHaveAttribute('y1', /1[12]\.\d+/);
-  await expect(page.locator('line')).toHaveAttribute('x2', /24[34]\.\d+/);
-  await expect(page.locator('line')).toHaveAttribute('y2', /1[12]\.\d+/);
+  const scaleLine = page.locator('[data-main-svg] line[stroke="red"]');
+  await expect(scaleLine).toHaveAttribute('x1', /1[12]\.\d+/);
+  await expect(scaleLine).toHaveAttribute('y1', /1[12]\.\d+/);
+  await expect(scaleLine).toHaveAttribute('x2', /24[34]\.\d+/);
+  await expect(scaleLine).toHaveAttribute('y2', /1[12]\.\d+/);
 });
