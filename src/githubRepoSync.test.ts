@@ -2,7 +2,8 @@ import { expect, it } from 'vitest';
 
 import {
   buildGithubAuthorizeUrl,
-  nextSyncRevisionForPush,
+  gitBranchHeadRefSegment,
+  githubSyncUserMessage,
   planBackgroundMediaRepoPath,
   planGardenFolderSegment,
   planPathSegment,
@@ -36,8 +37,23 @@ it('planPathSegment sanitizes; repo paths use one folder per garden under plans/
   expect(planBackgroundMediaRepoPath('foo.json', 'png')).toBe('plans/foo/background.png');
 });
 
-it('nextSyncRevisionForPush bumps above both local and remote', () => {
-  expect(nextSyncRevisionForPush(0, 0)).toBe(1);
-  expect(nextSyncRevisionForPush(3, 5)).toBe(6);
-  expect(nextSyncRevisionForPush(5, 3)).toBe(6);
+it('gitBranchHeadRefSegment is heads/branch for the Git ref API', () => {
+  expect(gitBranchHeadRefSegment()).toBe('heads/main');
+});
+
+it('githubSyncUserMessage for 409 suggests pushing again with local copy', () => {
+  const message = githubSyncUserMessage(
+    'write',
+    'refs/heads/main',
+    409,
+    '{"message":"Update is not a fast forward"}',
+  );
+  expect(message).toMatch(/Push again/i);
+  expect(message).not.toMatch(/pull remote/i);
+});
+
+it('githubSyncUserMessage prefers GitHub API message for other errors when present', () => {
+  expect(
+    githubSyncUserMessage('read', 'plans/garden/config.json', 500, '{"message":"Server Error"}'),
+  ).toBe('Server Error');
 });

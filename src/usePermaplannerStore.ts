@@ -1,12 +1,14 @@
 import { watchDebounced } from '@vueuse/core';
 import { defineStore, storeToRefs } from 'pinia';
 import { nextTick, ref, watch } from 'vue';
-import { coerceMulchLevel, type Guild, type UserPlant } from './gardenTypes';
+import { type Guild, type UserPlant } from './gardenTypes';
 import { assert } from './utils';
 import { plantCatalog } from './plantCatalog';
 import { normalizePlantsFromFile } from './resolvePlant';
 import { useMapScaleStore } from './useMapScaleStore';
+import { mergeGuildsFromPersistence } from './guildPersistence';
 import { migratePlanDocumentRaw } from './permaplannerFileMigrate';
+import { buildLocalPlanJsonText } from './permaplannerFileExport';
 import { PERMAPLANNER_FILE_VERSION, type PermaplannerFileVersion } from './permaplannerFileVersion';
 import {
   clearPlanMigrationPending,
@@ -17,7 +19,7 @@ import { clearFileBinding, persistFileBinding } from './sessionFileHandle';
 
 export type PermaplannerFileV1 = {
   version: PermaplannerFileVersion;
-  /** Increments on each successful GitHub sync push; used to compare with remote. */
+  /** Monotonic plan version for comparing with the GitHub backup; not bumped on push. */
   syncRevision: number;
   plants: UserPlant[];
   guilds: Guild[];
@@ -61,10 +63,7 @@ export const parsePermaplannerDocument = async (raw: unknown): Promise<Permaplan
     version: PERMAPLANNER_FILE_VERSION,
     syncRevision,
     plants,
-    guilds: (Array.isArray(data.guilds) ? data.guilds : []).map((g) => ({
-      ...(g as Guild),
-      mulchLevel: coerceMulchLevel((g as Record<string, unknown>).mulchLevel),
-    })),
+    guilds: mergeGuildsFromPersistence(data.guilds, data.guildLocations),
     mapScale: defaultMapScaleSnapshot(),
     backgroundOpacity: 0.4,
   };
@@ -151,7 +150,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
   };
 
   const writePlanToHandle = async (handle: FileSystemFileHandle) => {
-    const text = JSON.stringify(snapshot(), null, 2);
+    const text = buildLocalPlanJsonText(snapshot());
     const writable = await handle.createWritable();
     await writable.write(text);
     await writable.close();

@@ -26,5 +26,18 @@ it('buildGithubPlanShardExports versions each shard file', () => {
   const shards = buildGithubPlanShardExports(sampleDoc, { gardenFolderSegment: 'garden' });
   expect(JSON.parse(shards.configJson)).toMatchObject({ version: PERMAPLANNER_FILE_VERSION });
   expect(JSON.parse(shards.plantsJson)).toMatchObject({ version: PERMAPLANNER_FILE_VERSION, plants: [] });
-  expect(JSON.parse(shards.guildsJson)).toMatchObject({ version: PERMAPLANNER_FILE_VERSION, guilds: [] });
+  expect(JSON.parse(shards.guildsJson)).toMatchObject({
+    version: PERMAPLANNER_FILE_VERSION,
+    guilds: [],
+    guildLocations: [],
+  });
+});
+
+it('buildLocalPlanJsonText writes split guild fields', () => {
+  const parsed = JSON.parse(buildLocalPlanJsonText(sampleDoc)) as Record<string, unknown>;
+  expect(parsed).toMatchObject({
+    version: PERMAPLANNER_FILE_VERSION,
+    guilds: [],
+    guildLocations: [],
+  });
 });

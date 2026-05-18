@@ -9,7 +9,9 @@ import {
   fetchRemotePlanSyncRevision,
   getGithubAccessToken,
   getPlanRepoGardenFolderUrl,
+  githubRepoLastSyncError,
   githubRepoPushInFlightCount,
+  GithubSyncError,
   planRepoSyncUpdatedEventName,
   pullPlanJsonFromGithubRepo,
   pushPlanJsonToGithubRepo,
@@ -27,6 +29,13 @@ const { syncRevision } = storeToRefs(permaplannerStore);
 
 const authMessage = ref<string | undefined>();
 const syncError = ref<string | undefined>();
+
+const githubSyncFailureMessage = (e: unknown): string =>
+  e instanceof GithubSyncError ? e.message : e instanceof Error ? e.message : String(e);
+
+const displayedSyncError = computed(
+  () => syncError.value ?? githubRepoLastSyncError.value,
+);
 const syncing = ref(false);
 const pulling = ref(false);
 const connected = ref(Boolean(getGithubAccessToken()));
@@ -62,7 +71,7 @@ const refreshRemoteRevision = async () => {
   try {
     remoteSyncRevision.value = await fetchRemotePlanSyncRevision(token, permaplannerStore.fileName);
   } catch (e) {
-    syncError.value = e instanceof Error ? e.message : String(e);
+    syncError.value = githubSyncFailureMessage(e);
     remoteSyncRevision.value = undefined;
   } finally {
     remoteLoading.value = false;
@@ -104,6 +113,7 @@ const disconnect = () => {
   connected.value = false;
   authMessage.value = undefined;
   syncError.value = undefined;
+  githubRepoLastSyncError.value = undefined;
   remoteSyncRevision.value = undefined;
 };
 
@@ -115,17 +125,16 @@ const pushCurrent = async () => {
   syncError.value = undefined;
   syncing.value = true;
   try {
-    const { syncRevision: next } = await pushPlanJsonToGithubRepo(
+    await pushPlanJsonToGithubRepo(
       token,
       permaplannerStore.snapshot(),
       permaplannerStore.fileName,
     );
-    permaplannerStore.setSyncRevision(next);
     updateRepoLink();
+    await refreshRemoteRevision();
     window.dispatchEvent(new Event(planRepoSyncUpdatedEventName));
-    remoteSyncRevision.value = next;
   } catch (e) {
-    syncError.value = e instanceof Error ? e.message : String(e);
+    syncError.value = githubSyncFailureMessage(e);
   } finally {
     syncing.value = false;
   }
@@ -145,7 +154,7 @@ const pullRemote = async () => {
     remoteSyncRevision.value = doc.syncRevision;
     await checkGithubPlanMigration(permaplannerStore.fileName);
   } catch (e) {
-    syncError.value = e instanceof Error ? e.message : String(e);
+    syncError.value = githubSyncFailureMessage(e);
   } finally {
     pulling.value = false;
   }
@@ -254,10 +263,11 @@ const pullRemote = async () => {
         {{ authMessage }}
       </p>
       <p
-        v-if="syncError"
+        v-if="displayedSyncError"
         class="text-red-700"
+        role="alert"
       >
-        {{ syncError }}
+        {{ displayedSyncError }}
       </p>
     </template>
   </div>

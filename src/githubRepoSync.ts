@@ -16,6 +16,89 @@ export const planRepoSyncUpdatedEventName = 'permaplanner:plan-repo-updated';
 /** Incremented around `pushPlanJsonToGithubRepo` (manual push + `syncIfRepoLinked` after save). */
 export const githubRepoPushInFlightCount = ref(0);
 
+/** Set when a background sync after save fails; cleared on the next successful push. */
+export const githubRepoLastSyncError = ref<string | undefined>();
+
+export type GithubSyncFailureKind = 'conflict' | 'auth' | 'rejected' | 'generic';
+
+export class GithubSyncError extends Error {
+  readonly status: number;
+  readonly path: string;
+  readonly kind: GithubSyncFailureKind;
+
+  constructor(
+    message: string,
+    opts: { status: number; path: string; kind: GithubSyncFailureKind },
+  ) {
+    super(message);
+    this.name = 'GithubSyncError';
+    this.status = opts.status;
+    this.path = opts.path;
+    this.kind = opts.kind;
+  }
+}
+
+const githubSyncFailureKind = (status: number): GithubSyncFailureKind => {
+  if (status === 409) {
+    return 'conflict';
+  }
+  if (status === 401 || status === 403) {
+    return 'auth';
+  }
+  if (status === 422) {
+    return 'rejected';
+  }
+  return 'generic';
+};
+
+/** User-facing message for GitHub Contents API failures (not raw JSON bodies). */
+export const githubSyncUserMessage = (
+  operation: 'read' | 'write',
+  path: string,
+  status: number,
+  bodyText: string,
+): string => {
+  if (status === 409) {
+    return 'GitHub was updated while saving your plan. Push again to overwrite with your local copy.';
+  }
+  if (status === 404) {
+    return operation === 'write'
+      ? 'GitHub could not find the plan repo or branch. Disconnect and connect GitHub again, or check that the backup repo still exists.'
+      : `Could not read "${path}" from GitHub (not found).`;
+  }
+  if (status === 401 || status === 403) {
+    return 'GitHub access expired or was denied. Disconnect and connect GitHub again.';
+  }
+  if (status === 422) {
+    return 'GitHub rejected this update. The file may be too large; try a smaller background image.';
+  }
+  try {
+    const api = JSON.parse(bodyText) as { message?: string };
+    if (typeof api.message === 'string' && api.message.trim()) {
+      return api.message;
+    }
+  } catch {
+    /* ignore */
+  }
+  return operation === 'write'
+    ? `Could not upload "${path}" to GitHub (${status}).`
+    : `Could not read "${path}" from GitHub (${status}).`;
+};
+
+const failGithubSync = (
+  operation: 'read' | 'write',
+  path: string,
+  status: number,
+  bodyText: string,
+): never => {
+  const message = githubSyncUserMessage(operation, path, status, bodyText);
+  throw new GithubSyncError(message, {
+    status,
+    path,
+    kind: githubSyncFailureKind(status),
+  });
+};
+
 /** Normalizes Vite env (trim + strip wrapping quotes from dotenv / 1Password). */
 export const readGithubClientIdConfig = (): string | undefined => {
   const raw = import.meta.env.VITE_GITHUB_CLIENT_ID;
@@ -256,7 +339,7 @@ const mimeToImageExt = (mime: string): string => {
   return 'png';
 };
 
-/** Parses a data URL; returns RFC 4648 base64 for the GitHub Contents API body. */
+/** Parses a data URL; returns RFC 4648 base64 for the GitHub Git blobs API. */
 const decodeDataUrlImageForRepo = (
   dataUrl: string,
 ): { standardBase64: string; ext: string } | null => {
@@ -324,8 +407,6 @@ const ensurePlanRepo = async (token: string): Promise<string> => {
   localStorage.setItem(LS_REPO_FULL_NAME, repo.full_name);
   return repo.full_name;
 };
-
-type ContentGetResponse = { sha: string; type: string };
 
 type ContentFileApi = {
   type: string;
@@ -396,7 +477,7 @@ const getRepoContentsFile = async (
   }
   if (!res.ok) {
     const t = await res.text();
-    throw new Error(`GitHub read ${path}: ${res.status} ${t}`);
+    failGithubSync('read', path, res.status, t);
   }
   const body = (await res.json()) as ContentFileApi;
   if (body.type !== 'file') {
@@ -427,64 +508,166 @@ const getRepoJsonIfExists = async (
   return JSON.parse(new TextDecoder().decode(bytes)) as unknown;
 };
 
-/** Next sync revision after a successful push (always strictly greater than local and remote). */
-export const nextSyncRevisionForPush = (local: number, remote: number): number =>
-  Math.max(Math.max(0, Math.floor(local)), Math.max(0, Math.floor(remote))) + 1;
+type GitPlanBlobFile = {
+  path: string;
+  contentBase64: string;
+};
 
-/**
- * Creates or updates a single file via the Contents API (normal git blob).
- * Git LFS is not supported here — LFS uses a separate upload + pointer-file flow.
- *
- * Retries on 409 when the blob SHA from GET is stale (concurrent syncs or other writers).
- */
-const putRepoContents = async (
+type GitBranchHead = {
+  commitSha: string;
+  treeSha: string;
+};
+
+type GitTreeEntry = {
+  path: string;
+  mode: '100644';
+  type: 'blob';
+  sha: string;
+};
+
+const gitApiUrl = (fullName: string, suffix: string): string =>
+  `https://api.github.com/repos/${fullName}/git/${suffix}`;
+
+/** GitHub `git/ref/{ref}` and `git/refs/{ref}` paths use `heads/branch`, not `refs/heads/branch`. */
+export const gitBranchHeadRefSegment = (): string => `heads/${DEFAULT_BRANCH}`;
+
+const getGitBranchHead = async (token: string, fullName: string): Promise<GitBranchHead> => {
+  const refSegment = gitBranchHeadRefSegment();
+  const refRes = await fetch(gitApiUrl(fullName, `ref/${refSegment}`), {
+    headers: githubHeaders(token),
+  });
+  const refText = await refRes.text();
+  if (!refRes.ok) {
+    failGithubSync('read', `refs/${refSegment}`, refRes.status, refText);
+  }
+  const ref = JSON.parse(refText) as { object: { sha: string } };
+  const commitSha = ref.object.sha;
+
+  const commitRes = await fetch(gitApiUrl(fullName, `commits/${commitSha}`), {
+    headers: githubHeaders(token),
+  });
+  const commitText = await commitRes.text();
+  if (!commitRes.ok) {
+    failGithubSync('read', commitSha, commitRes.status, commitText);
+  }
+  const commit = JSON.parse(commitText) as { tree: { sha: string } };
+  return { commitSha, treeSha: commit.tree.sha };
+};
+
+const createGitBlob = async (
   token: string,
   fullName: string,
-  path: string,
   contentBase64: string,
+): Promise<string> => {
+  const res = await fetch(gitApiUrl(fullName, 'blobs'), {
+    method: 'POST',
+    headers: { ...githubHeaders(token), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content: contentBase64, encoding: 'base64' }),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    failGithubSync('write', 'git/blobs', res.status, text);
+  }
+  return (JSON.parse(text) as { sha: string }).sha;
+};
+
+const createGitTree = async (
+  token: string,
+  fullName: string,
+  baseTreeSha: string,
+  entries: GitTreeEntry[],
+): Promise<string> => {
+  const res = await fetch(gitApiUrl(fullName, 'trees'), {
+    method: 'POST',
+    headers: { ...githubHeaders(token), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ base_tree: baseTreeSha, tree: entries }),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    failGithubSync('write', 'git/trees', res.status, text);
+  }
+  return (JSON.parse(text) as { sha: string }).sha;
+};
+
+const createGitCommit = async (
+  token: string,
+  fullName: string,
+  message: string,
+  treeSha: string,
+  parentCommitSha: string,
+): Promise<string> => {
+  const res = await fetch(gitApiUrl(fullName, 'commits'), {
+    method: 'POST',
+    headers: { ...githubHeaders(token), 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message,
+      tree: treeSha,
+      parents: [parentCommitSha],
+    }),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    failGithubSync('write', 'git/commits', res.status, text);
+  }
+  return (JSON.parse(text) as { sha: string }).sha;
+};
+
+const updateGitBranchRef = async (
+  token: string,
+  fullName: string,
+  commitSha: string,
+): Promise<'ok' | 'stale'> => {
+  const refSegment = gitBranchHeadRefSegment();
+  const res = await fetch(gitApiUrl(fullName, `refs/${refSegment}`), {
+    method: 'PATCH',
+    headers: { ...githubHeaders(token), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sha: commitSha }),
+  });
+  if (res.ok) {
+    return 'ok';
+  }
+  const text = await res.text();
+  if (res.status === 409 || res.status === 422) {
+    return 'stale';
+  }
+  return failGithubSync('write', `refs/${refSegment}`, res.status, text);
+};
+
+/** One commit updating all plan shard paths (local content wins on the branch tip). */
+const commitPlanFilesViaGitApi = async (
+  token: string,
+  fullName: string,
+  files: GitPlanBlobFile[],
   message: string,
 ): Promise<void> => {
-  const url = `https://api.github.com/repos/${fullName}/contents/${path}`;
-  const maxAttempts = 4;
+  const refLabel = `refs/${gitBranchHeadRefSegment()}`;
+  const maxAttempts = 3;
 
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const getRes = await fetch(`${url}?ref=${DEFAULT_BRANCH}`, { headers: githubHeaders(token) });
-    let sha: string | undefined;
-    if (getRes.ok) {
-      const meta = (await getRes.json()) as ContentGetResponse;
-      if (meta.type === 'file' && meta.sha) {
-        sha = meta.sha;
-      }
-    } else if (getRes.status === 404) {
-      sha = undefined;
-    } else {
-      const t = await getRes.text();
-      throw new Error(`GitHub read ${path}: ${getRes.status} ${t}`);
-    }
-
-    const body: { message: string; content: string; branch: string; sha?: string } = {
-      message,
-      content: contentBase64,
-      branch: DEFAULT_BRANCH,
-    };
-    if (sha) {
-      body.sha = sha;
-    }
-
-    const putRes = await fetch(url, {
-      method: 'PUT',
-      headers: { ...githubHeaders(token), 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (putRes.ok) {
+  for (let i = 0; i < maxAttempts; i++) {
+    const head = await getGitBranchHead(token, fullName);
+    const blobShas = await Promise.all(
+      files.map((file) => createGitBlob(token, fullName, file.contentBase64)),
+    );
+    const treeEntries: GitTreeEntry[] = files.map((file, index) => ({
+      path: file.path,
+      mode: '100644',
+      type: 'blob',
+      sha: blobShas[index]!,
+    }));
+    const treeSha = await createGitTree(token, fullName, head.treeSha, treeEntries);
+    const commitSha = await createGitCommit(token, fullName, message, treeSha, head.commitSha);
+    const refResult = await updateGitBranchRef(token, fullName, commitSha);
+    if (refResult === 'ok') {
       return;
     }
-    const errText = await putRes.text();
-    if (putRes.status === 409 && attempt < maxAttempts - 1) {
-      continue;
-    }
-    throw new Error(`GitHub write ${path}: ${putRes.status} ${errText}`);
   }
+
+  failGithubSync(
+    'write',
+    refLabel,
+    409,
+    'Branch head changed while pushing.',
+  );
 };
 
 const dataUrlMimeForRepoPath = (repoPath: string): string => {
@@ -583,73 +766,75 @@ export const pullPlanJsonFromGithubRepo = async (
   return parsePermaplannerDocument(merged);
 };
 
+type PushPlanJob = {
+  token: string;
+  snapshot: PermaplannerFileV1;
+  sourceFileName: string | undefined;
+};
+
+let pushPlanRunner: Promise<void> | null = null;
+let queuedPushPlan: PushPlanJob | null = null;
+
+const pushPlanJsonToGithubRepoOnce = async (
+  token: string,
+  snapshot: PermaplannerFileV1,
+  sourceFileName: string | undefined,
+): Promise<void> => {
+  const fullName = await ensurePlanRepo(token);
+  const configPath = planRepoConfigPath(sourceFileName);
+
+  const bg = snapshot.backgroundImage;
+
+  let backgroundImagePath: string | undefined;
+  const gitFiles: GitPlanBlobFile[] = [];
+  if (typeof bg === 'string' && bg.startsWith('data:')) {
+    const img = decodeDataUrlImageForRepo(bg);
+    if (img) {
+      backgroundImagePath = planBackgroundMediaRepoPath(sourceFileName, img.ext);
+      gitFiles.push({ path: backgroundImagePath, contentBase64: img.standardBase64 });
+    }
+  }
+
+  const segment = planGardenFolderSegment(sourceFileName);
+  const { configJson, plantsJson, guildsJson } = buildGithubPlanShardExports(snapshot, {
+    gardenFolderSegment: segment,
+    backgroundImagePath,
+  });
+
+  gitFiles.push(
+    { path: planRepoPlantsPath(sourceFileName), contentBase64: utf8ToBase64(plantsJson) },
+    { path: planRepoGuildsPath(sourceFileName), contentBase64: utf8ToBase64(guildsJson) },
+    { path: configPath, contentBase64: utf8ToBase64(configJson) },
+  );
+
+  await commitPlanFilesViaGitApi(token, fullName, gitFiles, `Update plan (${segment})`);
+};
+
 export const pushPlanJsonToGithubRepo = async (
   token: string,
   snapshot: PermaplannerFileV1,
   sourceFileName: string | undefined,
-): Promise<{ syncRevision: number }> => {
-  githubRepoPushInFlightCount.value += 1;
-  try {
-    const fullName = await ensurePlanRepo(token);
-    const configPath = planRepoConfigPath(sourceFileName);
-    const remoteConfig = await getRepoJsonIfExists(token, fullName, configPath);
-    const remoteRev = readSyncRevisionFromConfigJson(remoteConfig);
-    const nextRev = nextSyncRevisionForPush(snapshot.syncRevision, remoteRev);
-    const snapshotForPush: PermaplannerFileV1 = { ...snapshot, syncRevision: nextRev };
+): Promise<void> => {
+  queuedPushPlan = { token, snapshot, sourceFileName };
 
-    const bg = snapshotForPush.backgroundImage;
-
-    let backgroundImagePath: string | undefined;
-    if (typeof bg === 'string' && bg.startsWith('data:')) {
-      const img = decodeDataUrlImageForRepo(bg);
-      if (img) {
-        const mediaPath = planBackgroundMediaRepoPath(sourceFileName, img.ext);
-        await putRepoContents(
-          token,
-          fullName,
-          mediaPath,
-          img.standardBase64,
-          `Update plan background (${mediaPath})`,
-        );
-        backgroundImagePath = mediaPath;
+  if (!pushPlanRunner) {
+    pushPlanRunner = (async () => {
+      githubRepoPushInFlightCount.value += 1;
+      try {
+        do {
+          const job = queuedPushPlan!;
+          queuedPushPlan = null;
+          await pushPlanJsonToGithubRepoOnce(job.token, job.snapshot, job.sourceFileName);
+        } while (queuedPushPlan);
+        githubRepoLastSyncError.value = undefined;
+      } finally {
+        githubRepoPushInFlightCount.value -= 1;
+        pushPlanRunner = null;
       }
-    }
-
-    const segment = planGardenFolderSegment(sourceFileName);
-    const { configJson, plantsJson, guildsJson } = buildGithubPlanShardExports(snapshotForPush, {
-      gardenFolderSegment: segment,
-      backgroundImagePath,
-    });
-
-    const plantsPath = planRepoPlantsPath(sourceFileName);
-    const guildsPath = planRepoGuildsPath(sourceFileName);
-
-    await putRepoContents(
-      token,
-      fullName,
-      plantsPath,
-      utf8ToBase64(plantsJson),
-      `Update plan plants (${segment})`,
-    );
-    await putRepoContents(
-      token,
-      fullName,
-      guildsPath,
-      utf8ToBase64(guildsJson),
-      `Update plan guilds (${segment})`,
-    );
-    await putRepoContents(
-      token,
-      fullName,
-      configPath,
-      utf8ToBase64(configJson),
-      `Update plan config (${segment})`,
-    );
-
-    return { syncRevision: nextRev };
-  } finally {
-    githubRepoPushInFlightCount.value -= 1;
+    })();
   }
+
+  return pushPlanRunner;
 };
 
 export const syncIfRepoLinked = async (
@@ -664,10 +849,11 @@ export const syncIfRepoLinked = async (
     return;
   }
   try {
-    const { syncRevision } = await pushPlanJsonToGithubRepo(token, snapshot, sourceFileName);
-    usePermaplannerStore().setSyncRevision(syncRevision);
+    await pushPlanJsonToGithubRepo(token, snapshot, sourceFileName);
     window.dispatchEvent(new Event(planRepoSyncUpdatedEventName));
   } catch (e) {
+    const message = e instanceof GithubSyncError ? e.message : e instanceof Error ? e.message : String(e);
+    githubRepoLastSyncError.value = message;
     console.error('[permaplanner] GitHub repo sync failed:', e);
   }
 };

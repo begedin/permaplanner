@@ -1,3 +1,4 @@
+import { mergeGuildsFromPersistence } from './guildPersistence';
 import { planMigrationLoaders } from './migrations/plan/loaders';
 import { guildsShardMigrationLoaders } from './migrations/guildsShard/loaders';
 import { plantsShardMigrationLoaders } from './migrations/plantsShard/loaders';
@@ -39,5 +40,5 @@ export const plantsArrayFromShard = async (raw: unknown): Promise<unknown> => {
 
 export const guildsArrayFromShard = async (raw: unknown): Promise<unknown> => {
   const doc = await migrateGuildsShardRaw(raw);
-  return doc.guilds ?? [];
+  return mergeGuildsFromPersistence(doc.guilds, doc.guildLocations);
 };

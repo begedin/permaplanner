@@ -1,5 +1,10 @@
 # Changelog 
 
+## 0.6.0
+
+- [FEATURE] Restructure github json to be more LLM friendly
+- [FIX] Syncing to github improvements
+
 ## 0.5.0
 
 - [FEATURE] Migration support

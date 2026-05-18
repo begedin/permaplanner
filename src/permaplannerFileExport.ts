@@ -1,8 +1,13 @@
+import { splitGuildsForPersistence } from './guildPersistence';
 import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
 import type { PermaplannerFileV1 } from './usePermaplannerStore';
 
-export const buildLocalPlanJsonText = (snapshot: PermaplannerFileV1): string =>
-  JSON.stringify(snapshot, null, 2);
+export const buildLocalPlanJsonText = (snapshot: PermaplannerFileV1): string => {
+  const { guilds, guildLocations } = splitGuildsForPersistence(snapshot.guilds);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { guilds: _merged, ...rest } = snapshot;
+  return JSON.stringify({ ...rest, guilds, guildLocations }, null, 2);
+};
 
 export type GithubPlanShardExports = {
   configJson: string;
@@ -34,8 +39,9 @@ export const buildGithubPlanShardExports = (
     null,
     2,
   );
+  const { guilds, guildLocations } = splitGuildsForPersistence(snapshot.guilds);
   const guildsJson = JSON.stringify(
-    { version: PERMAPLANNER_FILE_VERSION, guilds: snapshot.guilds },
+    { version: PERMAPLANNER_FILE_VERSION, guilds, guildLocations },
     null,
     2,
   );
@@ -47,7 +53,11 @@ export const buildGithubPlanShardExports = (
   };
 };
 
-export const downloadTextAsFile = (filename: string, text: string, mime = 'application/json'): void => {
+export const downloadTextAsFile = (
+  filename: string,
+  text: string,
+  mime = 'application/json',
+): void => {
   const blob = new Blob([text], { type: mime });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

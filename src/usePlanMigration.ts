@@ -120,12 +120,7 @@ export const performPlanMigration = async (): Promise<void> => {
       if (!planFileName) {
         throw new Error('Save your plan to a file before migrating the GitHub copy.');
       }
-      const { syncRevision } = await pushPlanJsonToGithubRepo(
-        token,
-        store.snapshot(),
-        planFileName,
-      );
-      store.setSyncRevision(syncRevision);
+      await pushPlanJsonToGithubRepo(token, store.snapshot(), planFileName);
     }
 
     clearPlanMigrationPending();
