@@ -4,6 +4,7 @@
 
 - [FEATURE] Restructure github json to be more LLM friendly
 - [FIX] Syncing to github improvements
+- [DB] Added coneflower, viburnum, and aubrieta to the catalog
 
 ## 0.5.0
 

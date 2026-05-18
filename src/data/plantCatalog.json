@@ -1790,6 +1790,89 @@
         "start": 9,
         "end": 11
       }
+    },
+    {
+      "id": "coneflower",
+      "name": "Coneflower (Echinacea)",
+      "defaultEmoji": "🌸",
+      "functions": ["medicinal", "pollinator_attractor"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "magnus",
+          "name": "Magnus"
+        },
+        {
+          "id": "powwow_wild_berry",
+          "name": "PowWow Wild Berry"
+        },
+        {
+          "id": "white_swan",
+          "name": "White Swan"
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 9
+      }
+    },
+    {
+      "id": "viburnum",
+      "name": "Viburnum",
+      "defaultEmoji": "🌸",
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "korean_spice",
+          "name": "Korean spice (V. carlesii)"
+        },
+        {
+          "id": "snowball",
+          "name": "Snowball (V. opulus 'Roseum')"
+        },
+        {
+          "id": "arrowwood",
+          "name": "Arrowwood (V. dentatum)"
+        },
+        {
+          "id": "david_viburnum",
+          "name": "David viburnum (V. davidii)"
+        }
+      ],
+      "blooming": {
+        "start": 4,
+        "end": 5
+      },
+      "fruiting": {
+        "start": 8,
+        "end": 10
+      }
+    },
+    {
+      "id": "aubrieta",
+      "name": "Aubrieta (rock cress)",
+      "defaultEmoji": "🌼",
+      "functions": ["pollinator_attractor", "ground_cover"],
+      "layers": ["herb", "ground_cover"],
+      "cultivars": [
+        {
+          "id": "royal_blue",
+          "name": "Royal Blue"
+        },
+        {
+          "id": "whitewell_gem",
+          "name": "Whitewell Gem"
+        },
+        {
+          "id": "cascade_purple",
+          "name": "Cascade Purple"
+        }
+      ],
+      "blooming": {
+        "start": 3,
+        "end": 5
+      }
     }
   ]
 }
