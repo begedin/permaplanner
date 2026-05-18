@@ -1,10 +1,24 @@
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { Page } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 
 const helpersDir = path.dirname(fileURLToPath(import.meta.url));
 const emptyPlanPath = path.join(helpersDir, 'fixtures', 'emptyPlan.json');
+
+/** Dispatches a paste event with a tiny PNG (more reliable than OS clipboard in headless). */
+export const pasteAerialPhotoOntoMap = async (page: Page): Promise<void> => {
+  await page.evaluate(async () => {
+    const dataUrl =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAIAAADTED8xAAADMElEQVR4nOzVwQnAIBQFQYXff81RUkQCOyDj1YOPnbXWPmeTRef+/3O/OyBjzh3CD95BfqICMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMO0TAAD//2Anhf4QtqobAAAAAElFTkSuQmCC';
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], 'aerial.png', { type: 'image/png' });
+    const clipboardData = new DataTransfer();
+    clipboardData.items.add(file);
+    document.dispatchEvent(new ClipboardEvent('paste', { clipboardData, bubbles: true }));
+  });
+};
 
 export const putImageIntoClipboard = async (page: Page): Promise<void> => {
   await page.evaluate(async () => {
@@ -15,7 +29,7 @@ export const putImageIntoClipboard = async (page: Page): Promise<void> => {
     };
 
     dataURLtoFile(
-      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAIAAADTED8xAAADMElEQVR4nOzVwQnAIBQFQYXff81RUkQCOyDj1YOPnbXWPmeTRef+/3O/OyBjzh3CD95BfqICMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMO0TAAD//2Anhf4QtqobAAAAAElFTkSuQmCC',
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAIAAADTED8xAAADMElEQVR4nOzVwQnAIBQFQYXff81RUkQCOyDj1YOPnbXWPmeTRef+/3O/OyBjzh3CD95BfqICMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMO0TAAD//2Anhf4QtqobAAAAAElFTkSuQmCC',
     ).then((file) => {
       const item = new ClipboardItem({ 'image/png': file });
       navigator.clipboard.write([item]);
@@ -23,12 +37,53 @@ export const putImageIntoClipboard = async (page: Page): Promise<void> => {
   });
 };
 
+/** Full-screen gate is gone and primary nav is usable. */
+export const waitForMainApp = async (page: Page): Promise<void> => {
+  await expect(page.getByRole('link', { name: 'Guilds' })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole('heading', { name: 'Choose where to save your plan' })).toBeHidden();
+};
+
+export const stubSaveFilePicker = async (page: Page, fileName: string) => {
+  const newPath = path.join(helpersDir, 'fixtures', fileName);
+  const bytes = fs.readFileSync(newPath);
+  await page.evaluate(
+    async ({ content, saveName }) => {
+      const blob = new Blob([new Uint8Array(content)], { type: 'application/json' });
+      window.showSaveFilePicker = () =>
+        Promise.resolve({
+          name: saveName,
+          getFile: () => Promise.resolve(blob as File),
+          createWritable: () =>
+            Promise.resolve({
+              write: () => Promise.resolve(),
+              close: () => Promise.resolve(),
+            } as unknown as FileSystemWritableFileStream),
+        } as unknown as FileSystemFileHandle);
+    },
+    { content: [...bytes], saveName: fileName },
+  );
+};
+
+/** Dismiss the setup gate by creating a new plan (requires save picker stub). */
+export const createNewPlanThroughGate = async (
+  page: Page,
+  fixtureFileName = 'new.json',
+): Promise<void> => {
+  await stubSaveFilePicker(page, fixtureFileName);
+  await page.getByRole('button', { name: 'Create new plan…' }).click();
+  await waitForMainApp(page);
+};
+
 export const onboard = async (page: Page): Promise<void> => {
-  await stubSaveFilePicker(page, 'new.json');
-  await page.getByRole('button', { name: 'New plan' }).click();
-  await putImageIntoClipboard(page);
-  await page.keyboard.press('ControlOrMeta+v');
-  await page.waitForSelector('image');
+  await createNewPlanThroughGate(page, 'new.json');
+  if (!page.url().includes('/aerial')) {
+    await page.getByRole('link', { name: 'Aerial' }).click();
+  }
+  const map = page.locator('[data-main-svg]');
+  await map.waitFor({ state: 'visible', timeout: 15_000 });
+  await map.click();
+  await pasteAerialPhotoOntoMap(page);
+  await page.waitForSelector('image', { timeout: 15_000 });
 
   const bbox = await page.locator('image').boundingBox();
 
@@ -47,23 +102,6 @@ export const onboard = async (page: Page): Promise<void> => {
   await page.mouse.up();
 
   await page.getByLabel('Map scale').fill('100');
-};
-
-export const stubSaveFilePicker = async (page: Page, fileName: string) => {
-  const newPath = path.join(helpersDir, 'fixtures', fileName);
-  const blob = fs.openAsBlob(newPath);
-  await page.evaluate(async (blob) => {
-    window.showSaveFilePicker = () =>
-      Promise.resolve({
-        name: 'new.json',
-        getFile: () => Promise.resolve(blob),
-        createWritable: () =>
-          Promise.resolve({
-            write: () => Promise.resolve(),
-            close: () => Promise.resolve(),
-          } as unknown as FileSystemWritableFileStream),
-      } as unknown as FileSystemFileHandle);
-  }, blob);
 };
 
 const readEmptyPlan = (): string => fs.readFileSync(emptyPlanPath, 'utf-8');

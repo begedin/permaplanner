@@ -6,12 +6,17 @@ import { assert } from './utils';
 import { plantCatalog } from './plantCatalog';
 import { normalizePlantsFromFile } from './resolvePlant';
 import { useMapScaleStore } from './useMapScaleStore';
+import { migratePlanDocumentRaw } from './permaplannerFileMigrate';
+import { PERMAPLANNER_FILE_VERSION, type PermaplannerFileVersion } from './permaplannerFileVersion';
+import {
+  clearPlanMigrationPending,
+  isPlanMigrationPending,
+  noteLocalPlanMigrationIfNeeded,
+} from './usePlanMigration';
 import { clearFileBinding, persistFileBinding } from './sessionFileHandle';
 
-const FILE_VERSION = 2 as const;
-
 export type PermaplannerFileV1 = {
-  version: typeof FILE_VERSION | 1;
+  version: PermaplannerFileVersion;
   /** Increments on each successful GitHub sync push; used to compare with remote. */
   syncRevision: number;
   plants: UserPlant[];
@@ -36,15 +41,14 @@ const defaultMapScaleSnapshot = (): PermaplannerFileV1['mapScale'] => ({
   linePhysicalLength: 1,
 });
 
-export const parsePermaplannerDocument = (raw: unknown): PermaplannerFileV1 => {
-  const data = assert(raw) as Record<string, unknown> & { plants?: unknown; guilds?: Guild[] };
+export const parsePermaplannerDocument = async (raw: unknown): Promise<PermaplannerFileV1> => {
+  const data = (await migratePlanDocumentRaw(assert(raw))) as Record<string, unknown> & {
+    plants?: unknown;
+    guilds?: Guild[];
+  };
 
   const backgroundImageFromFile =
-    typeof data.backgroundImage === 'string'
-      ? data.backgroundImage
-      : typeof data.backgroundImageDataUrl === 'string'
-        ? data.backgroundImageDataUrl
-        : undefined;
+    typeof data.backgroundImage === 'string' ? data.backgroundImage : undefined;
 
   const syncRevision =
     typeof data.syncRevision === 'number' && Number.isFinite(data.syncRevision)
@@ -54,7 +58,7 @@ export const parsePermaplannerDocument = (raw: unknown): PermaplannerFileV1 => {
   const plants = normalizePlantsFromFile(data.plants ?? [], plantCatalog);
 
   const base: PermaplannerFileV1 = {
-    version: FILE_VERSION,
+    version: PERMAPLANNER_FILE_VERSION,
     syncRevision,
     plants,
     guilds: (Array.isArray(data.guilds) ? data.guilds : []).map((g) => ({
@@ -129,7 +133,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     const mapScale = useMapScaleStore();
     const bg = backgroundImageDataUrl.value;
     const doc: PermaplannerFileV1 = {
-      version: FILE_VERSION,
+      version: PERMAPLANNER_FILE_VERSION,
       syncRevision: syncRevision.value,
       plants: plants.value,
       guilds: guilds.value,
@@ -161,7 +165,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
 
   const flushAutosave = async () => {
     const h = fileHandle.value;
-    if (!h || suppressAutosaveDepth.value > 0) {
+    if (!h || suppressAutosaveDepth.value > 0 || isPlanMigrationPending.value) {
       return;
     }
     try {
@@ -229,7 +233,9 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
         }
       }
 
-      const data = parsePermaplannerDocument(JSON.parse(text) as unknown);
+      const raw = JSON.parse(text) as unknown;
+      noteLocalPlanMigrationIfNeeded(raw);
+      const data = await parsePermaplannerDocument(raw);
 
       backgroundImageDataUrl.value = data.backgroundImage;
       backgroundOpacity.value = data.backgroundOpacity;
@@ -265,6 +271,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       fileName.value = undefined;
       needsFileRelink.value = false;
       await clearFileBinding();
+      clearPlanMigrationPending();
       backgroundImageDataUrl.value = undefined;
       backgroundOpacity.value = 0.4;
       plants.value = defaultUserPlants();

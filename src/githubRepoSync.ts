@@ -1,5 +1,14 @@
 import { ref } from 'vue';
 
+import { buildGithubPlanShardExports } from './permaplannerFileExport';
+import {
+  documentNeedsMigration,
+  guildsArrayFromShard,
+  migratePlanDocumentRaw,
+  plantsArrayFromShard,
+  readDocumentVersion,
+} from './permaplannerFileMigrate';
+import type { GithubShardMigrationVersions } from './permaplannerFileMigrate';
 import { parsePermaplannerDocument, usePermaplannerStore, type PermaplannerFileV1 } from './usePermaplannerStore';
 
 export const planRepoSyncUpdatedEventName = 'permaplanner:plan-repo-updated';
@@ -73,6 +82,8 @@ export const buildGithubAuthorizeUrl = (params: {
 
 export const getGithubAccessToken = (): string | undefined =>
   sessionStorage.getItem(SS_TOKEN) ?? undefined;
+
+export const isGithubStorageLinked = (): boolean => Boolean(getGithubAccessToken());
 
 export const planPathSegment = (fileName: string | undefined): string => {
   const raw = (fileName ?? 'plan.json').trim() || 'plan.json';
@@ -492,6 +503,31 @@ const readSyncRevisionFromConfigJson = (raw: unknown): number => {
   return typeof sr === 'number' && Number.isFinite(sr) ? Math.max(0, Math.floor(sr)) : 0;
 };
 
+export const scanGithubPlanShardsForMigration = async (
+  token: string,
+  sourceFileName: string | undefined,
+): Promise<GithubShardMigrationVersions | undefined> => {
+  const fullName = await ensurePlanRepo(token);
+  const plantsRaw = await getRepoJsonIfExists(token, fullName, planRepoPlantsPath(sourceFileName));
+  const guildsRaw = await getRepoJsonIfExists(token, fullName, planRepoGuildsPath(sourceFileName));
+  const configRaw = await getRepoJsonIfExists(token, fullName, planRepoConfigPath(sourceFileName));
+  if (plantsRaw === undefined && guildsRaw === undefined && configRaw === undefined) {
+    return undefined;
+  }
+
+  const out: GithubShardMigrationVersions = {};
+  if (configRaw !== undefined && documentNeedsMigration(configRaw)) {
+    out.config = readDocumentVersion(configRaw);
+  }
+  if (plantsRaw !== undefined && documentNeedsMigration(plantsRaw)) {
+    out.plants = readDocumentVersion(plantsRaw);
+  }
+  if (guildsRaw !== undefined && documentNeedsMigration(guildsRaw)) {
+    out.guilds = readDocumentVersion(guildsRaw);
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+};
+
 export const fetchRemotePlanSyncRevision = async (
   token: string,
   sourceFileName: string | undefined,
@@ -535,13 +571,10 @@ export const pullPlanJsonFromGithubRepo = async (
     }
   }
 
-  const plantsWrap = plantsRaw as { plants?: unknown } | undefined;
-  const guildsWrap = guildsRaw as { guilds?: unknown } | undefined;
-
   const merged: Record<string, unknown> = {
-    ...cfg,
-    plants: plantsWrap?.plants,
-    guilds: guildsWrap?.guilds,
+    ...(await migratePlanDocumentRaw(cfg)),
+    plants: plantsRaw !== undefined ? await plantsArrayFromShard(plantsRaw) : undefined,
+    guilds: guildsRaw !== undefined ? await guildsArrayFromShard(guildsRaw) : undefined,
   };
   if (backgroundImage !== undefined) {
     merged.backgroundImage = backgroundImage;
@@ -583,19 +616,10 @@ export const pushPlanJsonToGithubRepo = async (
     }
 
     const segment = planGardenFolderSegment(sourceFileName);
-    const plantsJson = JSON.stringify({ plants: snapshotForPush.plants }, null, 2);
-    const guildsJson = JSON.stringify({ guilds: snapshotForPush.guilds }, null, 2);
-    const configJson = JSON.stringify(
-      {
-        version: snapshotForPush.version,
-        syncRevision: snapshotForPush.syncRevision,
-        mapScale: snapshotForPush.mapScale,
-        backgroundOpacity: snapshotForPush.backgroundOpacity,
-        ...(backgroundImagePath !== undefined ? { backgroundImagePath } : {}),
-      },
-      null,
-      2,
-    );
+    const { configJson, plantsJson, guildsJson } = buildGithubPlanShardExports(snapshotForPush, {
+      gardenFolderSegment: segment,
+      backgroundImagePath,
+    });
 
     const plantsPath = planRepoPlantsPath(sourceFileName);
     const guildsPath = planRepoGuildsPath(sourceFileName);

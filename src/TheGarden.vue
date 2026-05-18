@@ -17,21 +17,18 @@ import ToolSlider from './ToolSlider.vue';
 import ReferenceLine from './ReferenceLine.vue';
 import { useOnboardingStore } from './useOnboardingStore';
 import GithubRepoSyncPanel from './GithubRepoSyncPanel.vue';
+import { isGithubStorageLinked } from './githubRepoSync';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanSession } from './usePlanSession';
 
 const permaplannerStore = usePermaplannerStore();
 
-const {
-  isRestoringSession,
-  awaitingReopenFileClick,
-  expectedRelinkName,
-  continueReopenPersistedFile,
-  load,
-  newPlan,
-  save,
-  saveAs,
-} = usePlanSession();
+const { load, newPlan, save, saveAs } = usePlanSession();
+
+const showLocalFileActions = computed(() => Boolean(permaplannerStore.fileName));
+const showThingBar = computed(
+  () => Boolean(permaplannerStore.fileName) || isGithubStorageLinked(),
+);
 
 const {
   setupBackgroundImagePaste,
@@ -177,68 +174,8 @@ const updateGuild = (guild: Guild) => {
 <template>
   <div class="flex flex-row items-stretch h-full">
     <div class="p-2 flex w-[200px] flex-col items-stretch gap-1 bg-gray-50">
-      <p
-        v-if="isRestoringSession && !permaplannerStore.fileName"
-        class="p-1 text-sm text-slate-500"
-        role="status"
-        aria-live="polite"
-      >
-        Looking for a saved plan…
-      </p>
-      <div
-        v-if="awaitingReopenFileClick && !permaplannerStore.fileName"
-        class="p-2 mb-1 rounded text-sm bg-sky-100 text-sky-950 border border-sky-200"
-      >
-        <p class="font-medium">Continue with your saved file</p>
-        <p
-          v-if="expectedRelinkName"
-          class="mt-1"
-        >
-          <code class="text-xs bg-sky-50 px-1 rounded">{{ expectedRelinkName }}</code>
-        </p>
-        <p class="mt-1.5 text-sky-900/90">
-          The browser needs a click to allow read access after a reload.
-        </p>
-        <button
-          type="button"
-          class="mt-2 w-full bg-sky-200 hover:bg-sky-300 rounded p-1"
-          @click="continueReopenPersistedFile"
-        >
-          Allow access and open
-        </button>
-      </div>
-      <div
-        v-if="permaplannerStore.needsFileRelink && !permaplannerStore.fileName"
-        class="p-2 mb-1 rounded text-sm bg-amber-100 text-amber-950 border border-amber-200"
-      >
-        <p class="font-medium">Could not open the saved file</p>
-        <p
-          v-if="expectedRelinkName"
-          class="mt-1"
-        >
-          It was
-          <code class="text-xs bg-amber-50 px-1 rounded">{{ expectedRelinkName }}</code>
-        </p>
-        <p
-          v-else
-          class="mt-1"
-        >
-          The file link is no longer available.
-        </p>
-        <p class="mt-1.5 text-amber-900/90">
-          Choose that file again, or a different <code class="text-xs">.json</code> if you
-          renamed it.
-        </p>
-        <button
-          type="button"
-          class="mt-2 w-full bg-amber-200 hover:bg-amber-300 rounded p-1 text-left"
-          @click="load"
-        >
-          Choose file…
-        </button>
-      </div>
-      <PlanUnsavedIndicator v-if="!isRestoringSession" />
-      <template v-if="permaplannerStore.fileName">
+      <PlanUnsavedIndicator />
+      <template v-if="showLocalFileActions">
         <ToolSlider
           v-model:value="mapScale.linePhysicalLength"
           label="Map scale"
@@ -268,104 +205,22 @@ const updateGuild = (guild: Guild) => {
         </button>
       </template>
       <button
-        v-if="!isRestoringSession"
         class="bg-green-200 hover:bg-green-300 rounded p-1"
         @click="load"
       >
         Open plan
       </button>
       <button
-        v-if="!isRestoringSession"
         class="bg-green-200 hover:bg-green-300 rounded p-1"
         @click="newPlan"
       >
         New plan
       </button>
-      <GithubRepoSyncPanel v-if="!isRestoringSession" />
+      <GithubRepoSyncPanel />
     </div>
 
     <div class="flex flex-col flex-1">
-      <div
-        v-if="!permaplannerStore.fileName"
-        class="m-auto text-center text-slate-600 max-w-md px-4"
-        :aria-busy="isRestoringSession"
-      >
-        <template v-if="isRestoringSession">
-          <p
-            class="text-slate-500 animate-pulse"
-            role="status"
-            aria-live="polite"
-          >
-            Loading your plan…
-          </p>
-        </template>
-        <template v-else-if="awaitingReopenFileClick">
-          <p class="text-sky-800 font-medium">Open your saved plan</p>
-          <p
-            v-if="expectedRelinkName"
-            class="mt-3"
-          >
-            Your last file was
-            <code class="text-sm bg-sky-100 px-1 rounded">{{ expectedRelinkName }}</code>
-            . Browsers require a click here to restore file access after you reload the page.
-          </p>
-          <p
-            v-else
-            class="mt-3"
-          >
-            Browsers require a click to restore file access after you reload the page.
-          </p>
-          <button
-            type="button"
-            class="mt-5 bg-sky-200 hover:bg-sky-300 rounded px-3 py-1.5"
-            @click="continueReopenPersistedFile"
-          >
-            Allow access and open
-          </button>
-        </template>
-        <template v-else-if="permaplannerStore.needsFileRelink">
-          <p class="text-amber-800 font-medium">The plan file could not be read</p>
-          <p
-            v-if="expectedRelinkName"
-            class="mt-3"
-          >
-            It was previously linked to
-            <code class="text-sm bg-amber-100 px-1 rounded">{{
-              expectedRelinkName
-            }}</code>
-            . The file may have been moved, deleted, or the browser revoked access to it.
-          </p>
-          <p
-            v-else
-            class="mt-3"
-          >
-            The saved file link is missing or no longer valid.
-          </p>
-          <p class="mt-3 text-slate-600">
-            Open the same file to continue, or pick another
-            <code class="text-sm bg-slate-100 px-1 rounded">.json</code> plan if you moved
-            or renamed it.
-          </p>
-          <button
-            type="button"
-            class="mt-5 bg-green-200 hover:bg-green-300 rounded px-3 py-1.5"
-            @click="load"
-          >
-            Choose a plan file
-          </button>
-        </template>
-        <template v-else>
-          <p>
-            Open a <code class="text-sm bg-slate-100 px-1 rounded">.json</code> file or
-            start a new plan. The app remembers your file link in this browser (so you can
-            return after a refresh or a full restart) until you start a new plan. Your
-            plan data still lives in that file, not in the app. After a reload you may need
-            one click to let the browser read the file again.
-          </p>
-        </template>
-      </div>
       <svg
-        v-else
         ref="container"
         :viewBox="svgViewbox"
         data-main-svg
@@ -478,7 +333,7 @@ const updateGuild = (guild: Guild) => {
       </svg>
     </div>
     <div
-      v-if="permaplannerStore.fileName"
+      v-if="showThingBar"
       class="overflow-y-auto w-[300px]"
     >
       <ThingBar />

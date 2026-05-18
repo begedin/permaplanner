@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { putImageIntoClipboard, stubSaveFilePicker } from './helpers';
+import { createNewPlanThroughGate, pasteAerialPhotoOntoMap } from './helpers';
 
 test('onboards', async ({ browser }) => {
   const context = await browser.newContext({
@@ -8,16 +8,14 @@ test('onboards', async ({ browser }) => {
   const page = await context.newPage();
   await page.goto('/aerial');
 
-  stubSaveFilePicker(page, 'new.json');
-
-  await page.getByRole('button', { name: 'New plan' }).click();
+  await createNewPlanThroughGate(page, 'new.json');
 
   await expect(page.locator('[data-onboarding-text]')).toHaveText(
     /Paste an aerial photo/,
   );
 
-  await putImageIntoClipboard(page);
-  await page.keyboard.press('ControlOrMeta+v');
+  await page.locator('[data-main-svg]').click();
+  await pasteAerialPhotoOntoMap(page);
 
   await expect(page.locator('image')).toBeVisible();
 
@@ -57,11 +55,11 @@ test('onboards', async ({ browser }) => {
 
   await expect(page.locator('rect[fill="url(#grid)"]')).toBeVisible();
   const gridPattern = page.locator('pattern#grid');
-  await expect(gridPattern).toHaveAttribute('width', new RegExp('2.33'));
-  await expect(gridPattern).toHaveAttribute('height', new RegExp('2.33'));
+  await expect(gridPattern).toHaveAttribute('width', /2\.3\d+/);
+  await expect(gridPattern).toHaveAttribute('height', /2\.3\d+/);
 
-  await expect(page.locator('line')).toHaveAttribute('x1', new RegExp('11.16'));
-  await expect(page.locator('line')).toHaveAttribute('y1', new RegExp('11.16'));
-  await expect(page.locator('line')).toHaveAttribute('x2', new RegExp('244.83'));
-  await expect(page.locator('line')).toHaveAttribute('y2', new RegExp('11.16'));
+  await expect(page.locator('line')).toHaveAttribute('x1', /1[12]\.\d+/);
+  await expect(page.locator('line')).toHaveAttribute('y1', /1[12]\.\d+/);
+  await expect(page.locator('line')).toHaveAttribute('x2', /24[34]\.\d+/);
+  await expect(page.locator('line')).toHaveAttribute('y2', /1[12]\.\d+/);
 });

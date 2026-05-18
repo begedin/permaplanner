@@ -1,5 +1,11 @@
 # Agent notes (permaplanner)
 
+## Plan file format & migrations
+
+Persisted garden data uses a **`version`** field (local `.json` and GitHub `plans/<garden>/{config,plants,guilds}.json`).
+
+**Before changing saved fields or JSON layout:** read [`.cursor/skills/data-format-migration/SKILL.md`](.cursor/skills/data-format-migration/SKILL.md) and follow it (bump `PERMAPLANNER_FILE_VERSION`, add a module under `src/migrations/`, register it in the matching `loaders.ts`, update push/pull and tests). Cursor auto-attaches [`.cursor/rules/data-format-migration.mdc`](.cursor/rules/data-format-migration.mdc) when you edit those paths.
+
 ## Plant catalog
 
 To add or edit plants, follow [README — Adding plants to the catalog](README.md#adding-plants-to-the-catalog). Source of truth: `src/data/plantCatalog.json`; allowed `functions` / `layers` values: `src/gardenTypes.ts`.
@@ -8,7 +14,9 @@ To add or edit plants, follow [README — Adding plants to the catalog](README.m
 
 - **Cursor** loads skills from `.cursor/skills/<name>/SKILL.md`.
 - **Claude Code** loads the same `SKILL.md` shape from `.claude/skills/<name>/` ([docs](https://code.claude.com/docs/en/skills)).
-- They do **not** read each other’s folders. The **canonical** text is [`.cursor/skills/vitest-testing-style/SKILL.md`](.cursor/skills/vitest-testing-style/SKILL.md). [`.claude/skills/vitest-testing-style/SKILL.md`](.claude/skills/vitest-testing-style/SKILL.md) is a short pointer that tells the agent to read the canonical file.
+- **Canonical** skills live under `.cursor/skills/`. Claude Code uses a **symlink** to the same file where noted below (single source of truth).
+- [vitest-testing-style](.cursor/skills/vitest-testing-style/SKILL.md) — Claude stub at [`.claude/skills/vitest-testing-style/SKILL.md`](.claude/skills/vitest-testing-style/SKILL.md) (pointer text).
+- [data-format-migration](.cursor/skills/data-format-migration/SKILL.md) — Claude symlink at [`.claude/skills/data-format-migration/SKILL.md`](.claude/skills/data-format-migration/SKILL.md).
 
 ## Unit tests (Vitest)
 

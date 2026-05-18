@@ -1,0 +1,20 @@
+---
+description: Plan file and GitHub shard schema changes require version bump and migrations. Follow the data-format-migration skill.
+globs:
+  - src/permaplannerFileVersion.ts
+  - src/permaplannerFileMigrate.ts
+  - src/permaplannerFileMigrate.test.ts
+  - src/migrations/**/*
+  - src/usePermaplannerStore.ts
+  - src/githubRepoSync.ts
+  - playwright/fixtures/**/*
+alwaysApply: false
+---
+
+# Plan data migrations
+
+When this rule applies, read and follow [`.cursor/skills/data-format-migration/SKILL.md`](../skills/data-format-migration/SKILL.md) **before** editing.
+
+- Bump `PERMAPLANNER_FILE_VERSION` and add a migration step for every persisted shape change.
+- Keep `version` on local monolithic saves and on all three GitHub shard files.
+- Add or update tests in `permaplannerFileMigrate.test.ts`; run related unit tests after changes.

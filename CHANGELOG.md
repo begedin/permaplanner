@@ -1,5 +1,11 @@
 # Changelog 
 
+## 0.5.0
+
+- [FEATURE] Migration support
+- [DB] Bunch of new plants added
+- [REFACTOR] E2E passes again
+
 ## 0.4.3
 
 - [DB] Aprisali appricot

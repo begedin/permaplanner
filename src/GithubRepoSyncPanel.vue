@@ -15,6 +15,7 @@ import {
   pushPlanJsonToGithubRepo,
   readGithubClientIdConfig,
 } from './githubRepoSync';
+import { checkGithubPlanMigration } from './usePlanMigration';
 import { usePermaplannerStore } from './usePermaplannerStore';
 
 const clientId = computed(() => readGithubClientIdConfig());
@@ -142,6 +143,7 @@ const pullRemote = async () => {
     permaplannerStore.applyRemoteRepoSnapshot(doc);
     updateRepoLink();
     remoteSyncRevision.value = doc.syncRevision;
+    await checkGithubPlanMigration(permaplannerStore.fileName);
   } catch (e) {
     syncError.value = e instanceof Error ? e.message : String(e);
   } finally {

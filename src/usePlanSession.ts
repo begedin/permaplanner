@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 
 import { completeGithubAuthIfNeeded, syncIfRepoLinked } from './githubRepoSync';
+import { checkGithubPlanMigration } from './usePlanMigration';
 import { useOnboardingStore } from './useOnboardingStore';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import {
@@ -10,8 +11,8 @@ import {
   getPersistedBoundFileName,
 } from './sessionFileHandle';
 
-const isRestoringSession = ref(true);
-const awaitingReopenFileClick = ref(false);
+export const isRestoringSession = ref(true);
+export const awaitingReopenFileClick = ref(false);
 const pendingReopenFileHandle = ref<FileSystemFileHandle | null>(null);
 
 let bootstrapStarted = false;
@@ -68,6 +69,7 @@ export const usePlanSession = () => {
         return;
       }
       await permaplannerStore.load(h, { skipBindingPersist: true });
+      await checkGithubPlanMigration(permaplannerStore.fileName);
     } catch (e) {
       console.error('[permaplanner] Could not open file after permission grant:', e);
       permaplannerStore.needsFileRelink = true;
@@ -88,6 +90,7 @@ export const usePlanSession = () => {
     try {
       const [fileHandle] = await window.showOpenFilePicker(options);
       await permaplannerStore.load(fileHandle);
+      await checkGithubPlanMigration(permaplannerStore.fileName);
     } catch (e) {
       console.error(e);
     }
@@ -136,6 +139,9 @@ export const usePlanSession = () => {
     try {
       await completeGithubAuthIfNeeded();
       await tryRestorePersistedFile();
+      await checkGithubPlanMigration(
+        permaplannerStore.fileName ?? getPersistedBoundFileName(),
+      );
     } finally {
       isRestoringSession.value = false;
     }
