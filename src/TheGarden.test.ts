@@ -1,10 +1,12 @@
-import { cleanup } from '@testing-library/vue';
+import { cleanup, fireEvent, render, screen } from '@testing-library/vue';
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
+import { flushPromises } from '@vue/test-utils';
 import { setActivePinia } from 'pinia';
 import { mount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 
 import TheGarden from './TheGarden.vue';
+import { createGuildTestRouter } from './testGuildRouter';
 import { useGardenStore } from './useGardenStore';
 import GardenGuild from './GardenGuild.vue';
 import { usePermaplannerStore } from './usePermaplannerStore';
@@ -30,13 +32,49 @@ afterEach(() => {
   cleanup();
 });
 
+const renderGarden = async (path = '/aerial') => {
+  const router = createGuildTestRouter();
+  await router.push(path);
+  await router.isReady();
+  return { router, view: render(TheGarden, { global: { plugins: [router] } }) };
+};
+
+it('deselects when the aerial page title is clicked', async () => {
+  const store = useGardenStore();
+  store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 }];
+  const { router } = await renderGarden('/aerial/guild');
+
+  expect(screen.getByRole('navigation', { name: 'Breadcrumb' }).textContent).toContain(
+    'Guild',
+  );
+  await fireEvent.click(screen.getByRole('button', { name: 'Deselect guild, Aerial' }));
+  await flushPromises();
+  await router.isReady();
+
+  expect(router.currentRoute.value.name).toBe('aerial');
+  expect(router.currentRoute.value.params.guildId).toBeUndefined();
+});
+
+it('shows the aerial header and guild list in the left sidebar', async () => {
+  const store = useGardenStore();
+  store.guilds = [
+    { id: 'guild', name: 'A guild', mulchLevel: 1, plants: [], path: [] },
+    { id: 'guild-2', name: 'Another guild', mulchLevel: 1, plants: [], path: [] },
+  ];
+  await renderGarden();
+
+  expect(screen.getByRole('heading', { name: 'Aerial', level: 1 })).toBeTruthy();
+  expect(screen.getByRole('complementary', { name: 'Guild list' })).toBeTruthy();
+  expect(screen.getByRole('article', { name: 'A guild' })).toBeTruthy();
+  expect(screen.getByRole('region', { name: 'Aerial map' })).toBeTruthy();
+});
+
 it('deletes the selected guild on Delete only when confirmed', async () => {
-  mount(TheGarden);
   const store = useGardenStore();
   store.guilds = [
     { id: 'guild', path: [{ x: 0, y: 0 }], name: 'Bed', plants: [], mulchLevel: 1 },
   ];
-  store.selectedId = 'guild';
+  const { router } = await renderGarden('/aerial/guild');
 
   const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false);
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }));
@@ -47,11 +85,13 @@ it('deletes the selected guild on Delete only when confirmed', async () => {
   confirm.mockReturnValueOnce(true);
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }));
   expect(store.guilds).toEqual([]);
-  expect(store.selectedId).toBeUndefined();
+  await flushPromises();
+  await router.isReady();
+  expect(router.currentRoute.value.name).toBe('aerial');
+  expect(router.currentRoute.value.params.guildId).toBeUndefined();
 });
 
 it('switches selection to another guild and discards the previous edit', async () => {
-  const wrapper = mount(TheGarden);
   const store = useGardenStore();
   const bedA = {
     id: 'a',
@@ -78,7 +118,8 @@ it('switches selection to another guild and discards the previous edit', async (
     plants: [],
   };
   store.guilds = [bedA, bedB];
-  store.selectedId = 'a';
+  const { router } = await renderGarden('/aerial/a');
+  const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   await wrapper.vm.$nextTick();
 
   const scene = useSceneStore();
@@ -93,21 +134,26 @@ it('switches selection to another guild and discards the previous edit', async (
     .findAllComponents(GardenGuild)
     .find((c) => c.props('guild')?.id === 'b');
   await guildB?.find('polygon.pointer-events-fill').trigger('click');
+  await flushPromises();
+  await router.isReady();
 
-  expect(store.selectedId).toBe('b');
+  expect(router.currentRoute.value.params.guildId).toBe('b');
   expect(store.guilds.find((g) => g.id === 'a')?.path).toEqual(bedA.path);
 });
 
 it('deselects when placement is cancelled', async () => {
-  const wrapper = mount(TheGarden);
   const store = useGardenStore();
   store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 }];
-  store.selectedId = 'guild';
+  const { router } = await renderGarden('/aerial/guild');
+  const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   store.hoveredId = 'guild';
   await wrapper.vm.$nextTick();
   const guildComponents = wrapper.findAllComponents(GardenGuild);
   const placement = guildComponents.find((c) => c.props('guild')?.id === 'guild');
   await placement?.vm.$emit('cancel');
-  expect(store.selectedId).toBeUndefined();
+  await flushPromises();
+  await router.isReady();
+  expect(router.currentRoute.value.name).toBe('aerial');
+  expect(router.currentRoute.value.params.guildId).toBeUndefined();
   expect(store.hoveredId).toBeUndefined();
 });

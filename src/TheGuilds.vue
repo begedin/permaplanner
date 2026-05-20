@@ -2,40 +2,20 @@
 import { computed } from 'vue';
 
 import GuildCard from './GuildCard.vue';
+import GuildTabHeader from './GuildTabHeader.vue';
 import ThingBarGuild from './ThingBarGuild.vue';
 import { useGardenStore } from './useGardenStore';
+import { useGuildSelection } from './useGuildSelection';
 
 const garden = useGardenStore();
-
-const selectedGuildId = computed(() => {
-  const id = garden.selectedId;
-  if (!id) {
-    return undefined;
-  }
-  return garden.guilds.some((g) => g.id === id) ? id : undefined;
-});
+const { selectedGuildId } = useGuildSelection();
 
 const showMobileDetail = computed(() => Boolean(selectedGuildId.value));
-
-const closeDetail = () => {
-  garden.deactivateAll();
-};
 </script>
 
 <template>
   <div class="flex flex-col h-full min-h-0 bg-emerald-50/40">
-    <div
-      class="flex flex-row flex-wrap items-center justify-between gap-2 shrink-0 border-b border-slate-200/80 px-4 py-3"
-    >
-      <h1 class="text-lg font-medium text-slate-800">Guilds</h1>
-      <button
-        type="button"
-        class="bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1.5 text-sm"
-        @click="garden.createGuild"
-      >
-        Add guild
-      </button>
-    </div>
+    <GuildTabHeader title="Guilds" />
 
     <div
       v-if="garden.guilds.length === 0"
@@ -69,26 +49,12 @@ const closeDetail = () => {
       >
         <div
           v-if="selectedGuildId"
-          class="flex flex-col min-h-0 h-full"
+          class="flex-1 min-h-0 overflow-y-auto p-4"
         >
-          <div
-            class="flex shrink-0 items-center justify-end border-b border-slate-200/80 px-2 py-1.5 bg-white/80"
-          >
-            <button
-              type="button"
-              class="text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded px-2 py-1"
-              aria-label="Close guild details"
-              @click="closeDetail"
-            >
-              Close
-            </button>
-          </div>
-          <div class="flex-1 min-h-0 overflow-y-auto p-4">
-            <GuildCard
-              :guild-id="selectedGuildId"
-              context="guilds"
-            />
-          </div>
+          <GuildCard
+            :guild-id="selectedGuildId"
+            context="guilds"
+          />
         </div>
         <p
           v-else

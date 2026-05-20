@@ -1,5 +1,9 @@
 # Changelog 
 
+## 0.9.0
+
+- [FEATURE] Further layout improvements
+
 ## 0.8.0
 
 - [FEATURE] Show guild size in card, iconize buttons, format code, add style skill

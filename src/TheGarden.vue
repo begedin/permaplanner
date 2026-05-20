@@ -10,8 +10,10 @@ import { useScene } from './useScene';
 import { useBackgroundImage } from './useBackgroundImage';
 import { useCamera } from './useCamera';
 import { useElementSize } from '@vueuse/core';
+import GuildTabHeader from './GuildTabHeader.vue';
 import OnboardingText from './OnboardingText.vue';
-import ThingBar from './ThingBar.vue';
+import ThingBarGuild from './ThingBarGuild.vue';
+import { useGuildSelection } from './useGuildSelection';
 import ReferenceLine from './ReferenceLine.vue';
 import { useOnboardingStore } from './useOnboardingStore';
 import { isGithubStorageLinked } from './githubRepoSync';
@@ -127,13 +129,14 @@ const mapScale = useMapScaleStore();
 useScene(container, worldStage);
 
 const garden = useGardenStore();
+const { selectedGuildId, selectGuild, clearSelection } = useGuildSelection();
 
 const placedGuilds = computed(() => garden.guilds.filter((g) => g.path.length > 0));
 
 /** Selected guild is drawn first so other beds stay clickable on top while editing. */
 const placedGuildsRenderOrder = computed(() => {
   const placed = placedGuilds.value;
-  const selected = garden.selectedId;
+  const selected = selectedGuildId.value;
   if (!selected) {
     return placed;
   }
@@ -145,7 +148,7 @@ const placedGuildsRenderOrder = computed(() => {
 });
 
 const placementGuildDraft = computed(() => {
-  const id = garden.selectedId;
+  const id = selectedGuildId.value;
   if (!id) {
     return undefined;
   }
@@ -158,10 +161,14 @@ const placementGuildDraft = computed(() => {
 
 onMounted(() => {
   document.addEventListener('keydown', (e): void => {
-    if (e.key === 'Delete' && garden.selectedId !== undefined) {
+    if (e.key === 'Delete' && selectedGuildId.value !== undefined) {
       e.preventDefault();
       e.stopPropagation();
-      garden.deleteFeature(garden.selectedId);
+      const id = selectedGuildId.value;
+      garden.deleteFeature(id);
+      if (!garden.guilds.some((g) => g.id === id)) {
+        void clearSelection();
+      }
     }
   });
 });
@@ -172,131 +179,145 @@ const updateGuild = (guild: Guild) => {
     return;
   }
   garden.guilds[index] = guild;
-  garden.selectedId = undefined;
-  garden.hoveredId = undefined;
+  void clearSelection();
 };
 </script>
 
 <template>
-  <div class="flex flex-row items-stretch h-full min-h-0">
-    <div class="flex flex-col flex-1 min-h-0 min-w-0">
-      <svg
-        ref="container"
-        :viewBox="svgViewbox"
-        data-main-svg
-        preserveAspectRatio="xMinYMin meet"
-        class="min-h-0"
+  <div class="flex flex-col h-full min-h-0 bg-emerald-50/40">
+    <GuildTabHeader title="Aerial" />
+
+    <div class="flex flex-1 min-h-0">
+      <aside
+        v-if="showThingBar"
+        class="flex flex-col min-h-0 min-w-0 border-r border-slate-200/80 bg-white/60 w-full md:w-72 md:shrink-0"
+        aria-label="Guild list"
       >
-        <defs>
-          <pattern
-            id="grid"
-            :height="mapScale.unitLengthPx"
-            :width="mapScale.unitLengthPx"
-            patternUnits="userSpaceOnUse"
-          >
-            <path
-              :d="`M ${mapScale.unitLengthPx} 0 L 0 0 0 ${mapScale.unitLengthPx}`"
-              fill="none"
-              stroke="gray"
-              stroke-width="0.5"
-            />
-          </pattern>
+        <div class="flex-1 min-h-0 overflow-y-auto p-2 flex flex-col gap-2">
+          <ThingBarGuild
+            v-for="guild in garden.guilds"
+            :id="guild.id"
+            :key="guild.id"
+          />
+        </div>
+      </aside>
 
-          <radialGradient
-            id="bed-gradient"
-            cx="50%"
-            cy="50%"
-            r="50%"
-          >
-            <stop
-              offset="0%"
-              style="stop-color: #fff; stop-opacity: 1"
-            />
-            <stop
-              offset="100%"
-              style="stop-color: #000; stop-opacity: 0"
-            />
-          </radialGradient>
-        </defs>
-        <rect
-          ref="worldStage"
-          x="0"
-          y="0"
-          :width="worldBounds.width"
-          :height="worldBounds.height"
-          class="fill-slate-100"
-          data-world-stage
-        />
-        <image
-          v-if="imgDataUrl"
-          :href="imgDataUrl"
-          x="0"
-          y="0"
-          :width="worldBounds.width"
-          :height="worldBounds.height"
-          :opacity="permaplannerStore.backgroundOpacity"
-        />
-        <text
-          v-else
-          :x="worldBounds.width / 2"
-          :y="worldBounds.height / 2"
-          fill="red"
-          text-anchor="middle"
-          dominant-baseline="middle"
-          data-onboarding-text
+      <section
+        class="flex flex-1 min-h-0 min-w-0 flex-col"
+        aria-label="Aerial map"
+      >
+        <svg
+          ref="container"
+          :viewBox="svgViewbox"
+          data-main-svg
+          preserveAspectRatio="xMinYMin meet"
+          class="flex-1 min-h-0 w-full"
         >
-          Paste an aerial photo of your plot of land here. You can use Google Maps to take
-          a screenshot
-        </text>
-        <rect
-          v-if="mapScale.unitLengthPx"
-          x="0"
-          y="0"
-          :width="worldBounds.width"
-          :height="worldBounds.height"
-          fill="url(#grid)"
-          class="pointer-events-none"
-        />
-        <GardenGuild
-          v-for="guild in placedGuildsRenderOrder"
-          :key="guild.id"
-          :selected="garden.selectedId === guild.id"
-          :hovered="garden.hoveredId === guild.id"
-          :guild="guild"
-          :unit-length-px="mapScale.unitLengthPx"
-          @cancel="garden.deactivateAll"
-          @click.exact="garden.editGuild(guild.id)"
-          @click.shift="garden.removeGuildFromAerialMap(guild.id)"
-          @mouseenter="garden.hoveredId = guild.id"
-          @mouseleave="garden.hoveredId = undefined"
-          @update="updateGuild"
-        ></GardenGuild>
+          <defs>
+            <pattern
+              id="grid"
+              :height="mapScale.unitLengthPx"
+              :width="mapScale.unitLengthPx"
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                :d="`M ${mapScale.unitLengthPx} 0 L 0 0 0 ${mapScale.unitLengthPx}`"
+                fill="none"
+                stroke="gray"
+                stroke-width="0.5"
+              />
+            </pattern>
 
-        <GardenGuild
-          v-if="placementGuildDraft"
-          :guild="placementGuildDraft"
-          :unit-length-px="mapScale.unitLengthPx"
-          hovered
-          selected
-          @update="updateGuild"
-          @cancel="garden.deactivateAll"
-        />
+            <radialGradient
+              id="bed-gradient"
+              cx="50%"
+              cy="50%"
+              r="50%"
+            >
+              <stop
+                offset="0%"
+                style="stop-color: #fff; stop-opacity: 1"
+              />
+              <stop
+                offset="100%"
+                style="stop-color: #000; stop-opacity: 0"
+              />
+            </radialGradient>
+          </defs>
+          <rect
+            ref="worldStage"
+            x="0"
+            y="0"
+            :width="worldBounds.width"
+            :height="worldBounds.height"
+            class="fill-slate-100"
+            data-world-stage
+          />
+          <image
+            v-if="imgDataUrl"
+            :href="imgDataUrl"
+            x="0"
+            y="0"
+            :width="worldBounds.width"
+            :height="worldBounds.height"
+            :opacity="permaplannerStore.backgroundOpacity"
+          />
+          <text
+            v-else
+            :x="worldBounds.width / 2"
+            :y="worldBounds.height / 2"
+            fill="red"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            data-onboarding-text
+          >
+            Paste an aerial photo of your plot of land here. You can use Google Maps to
+            take a screenshot
+          </text>
+          <rect
+            v-if="mapScale.unitLengthPx"
+            x="0"
+            y="0"
+            :width="worldBounds.width"
+            :height="worldBounds.height"
+            fill="url(#grid)"
+            class="pointer-events-none"
+          />
+          <GardenGuild
+            v-for="guild in placedGuildsRenderOrder"
+            :key="guild.id"
+            :selected="selectedGuildId === guild.id"
+            :hovered="garden.hoveredId === guild.id"
+            :guild="guild"
+            :unit-length-px="mapScale.unitLengthPx"
+            @cancel="clearSelection"
+            @click.exact="selectGuild(guild.id)"
+            @click.shift="garden.removeGuildFromAerialMap(guild.id)"
+            @mouseenter="garden.hoveredId = guild.id"
+            @mouseleave="garden.hoveredId = undefined"
+            @update="updateGuild"
+          ></GardenGuild>
 
-        <OnboardingText
-          v-if="imgDataUrl && onboarding.onboardingState !== 'done'"
-          :x="center.x"
-          :y="center.y"
-          :onboarding-state="onboarding.onboardingState"
-        />
+          <GardenGuild
+            v-if="placementGuildDraft"
+            :guild="placementGuildDraft"
+            :unit-length-px="mapScale.unitLengthPx"
+            hovered
+            selected
+            @update="updateGuild"
+            @cancel="clearSelection"
+          />
 
-        <ReferenceLine />
-      </svg>
-    </div>
-    <div
-      v-if="showThingBar"
-      class="overflow-y-auto w-[300px]"
-    >
-      <ThingBar />
+          <OnboardingText
+            v-if="imgDataUrl && onboarding.onboardingState !== 'done'"
+            :x="center.x"
+            :y="center.y"
+            :onboarding-state="onboarding.onboardingState"
+          />
+
+          <ReferenceLine />
+        </svg>
+      </section>
     </div>
   </div>
 </template>

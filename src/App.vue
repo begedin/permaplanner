@@ -9,8 +9,11 @@ import PlantParts from './PlantParts.vue';
 import { showMainApp } from './usePlanAppGate';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanSession } from './usePlanSession';
+import { useGuildSelection } from './useGuildSelection';
 
 usePlanSession();
+
+const { guildsTabTo, aerialTabTo } = useGuildSelection();
 
 const planDrawerOpen = ref(false);
 const { unsavedChanges } = storeToRefs(usePermaplannerStore());
@@ -73,14 +76,14 @@ const planMenuLabel = computed(() =>
       <RouterLink
         class="bg-emerald-200 hover:bg-emerald-300 px-2 py-1 flex-1 text-slate-600 text-center transition-colors flex items-center justify-center"
         active-class="bg-emerald-300"
-        to="/guilds"
+        :to="guildsTabTo"
       >
         Guilds
       </RouterLink>
       <RouterLink
         class="bg-emerald-200 hover:bg-emerald-300 px-2 py-1 flex-1 text-slate-600 text-center transition-colors flex items-center justify-center"
         active-class="bg-emerald-300"
-        to="/aerial"
+        :to="aerialTabTo"
       >
         Aerial
       </RouterLink>

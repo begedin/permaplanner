@@ -63,15 +63,13 @@ export const useGardenStore = defineStore('garden', () => {
     }
   };
 
-  const selectedId = ref<string>();
   const hoveredId = ref<string>();
 
   const deactivateAll = () => {
-    selectedId.value = undefined;
     hoveredId.value = undefined;
   };
 
-  const createGuild = () => {
+  const createGuild = (): Guild => {
     const g: Guild = {
       id: uuid(),
       name: 'New guild',
@@ -80,16 +78,8 @@ export const useGardenStore = defineStore('garden', () => {
       mulchLevel: 1,
     };
     guilds.value.push(g);
-    selectedId.value = g.id;
     hoveredId.value = g.id;
-  };
-
-  const editGuild = (id: string) => {
-    const g = guilds.value.find((guild) => guild.id === id);
-    if (g) {
-      selectedId.value = id;
-      hoveredId.value = id;
-    }
+    return g;
   };
 
   const removeGuild = (id: string) => {
@@ -98,8 +88,7 @@ export const useGardenStore = defineStore('garden', () => {
       return;
     }
     guilds.value = guilds.value.filter((g) => g.id !== id);
-    if (selectedId.value === id) {
-      selectedId.value = undefined;
+    if (hoveredId.value === id) {
       hoveredId.value = undefined;
     }
   };
@@ -133,11 +122,6 @@ export const useGardenStore = defineStore('garden', () => {
     });
   };
 
-  const selectGuild = (id: string) => {
-    selectedId.value = id;
-    hoveredId.value = id;
-  };
-
   return {
     plants,
     plantsById,
@@ -145,7 +129,6 @@ export const useGardenStore = defineStore('garden', () => {
     deleteFeature,
 
     deactivateAll,
-    selectedId,
     hoveredId,
 
     guilds,
@@ -153,9 +136,7 @@ export const useGardenStore = defineStore('garden', () => {
     removeGuild,
     removeGuildFromAerialMap,
     createGuild,
-    editGuild,
 
     addPlantToGuild,
-    selectGuild,
   };
 });

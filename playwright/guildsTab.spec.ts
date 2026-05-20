@@ -27,7 +27,7 @@ test.describe('guilds tab', () => {
     await guildDetails.locator('input').first().fill('Berry guild');
     await expect(guildList.getByRole('article', { name: 'Berry guild' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Close guild details' }).click();
+    await page.getByRole('button', { name: 'Deselect guild, Guilds' }).click();
     await expect(guildDetails.getByRole('button', { name: 'Delete' })).toBeHidden();
     await expect(
       page.getByText('Select a guild from the list to view and edit it.'),

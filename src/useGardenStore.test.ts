@@ -13,31 +13,18 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-it('createGuild adds a guild and selects it', async () => {
+it('createGuild adds a guild and hovers it', async () => {
   const store = useGardenStore();
   expect(store.guilds).toEqual([]);
 
-  store.createGuild();
+  const created = store.createGuild();
   await nextTick();
 
   expect(store.guilds).toMatchObject([
     { name: 'New guild', path: [], plants: [], mulchLevel: 1 },
   ]);
-  expect(store.selectedId).toEqual(store.guilds[0]!.id);
+  expect(created.id).toEqual(store.guilds[0]!.id);
   expect(store.hoveredId).toEqual(store.guilds[0]!.id);
-});
-
-it('editGuild sets edited, hovered and selected guild', async () => {
-  const store = useGardenStore();
-  store.guilds = [
-    { id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 },
-    { id: 'guild2', path: [], name: 'Guild', plants: [], mulchLevel: 1 },
-  ];
-
-  await store.editGuild('guild');
-
-  expect(store.hoveredId).toEqual('guild');
-  expect(store.selectedId).toEqual('guild');
 });
 
 it('removeGuild removes guild', () => {
@@ -69,7 +56,6 @@ it('removeGuild does nothing when deletion is not confirmed', () => {
   vi.spyOn(window, 'confirm').mockReturnValue(false);
   const store = useGardenStore();
   store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 }];
-  store.selectedId = 'guild';
   store.hoveredId = 'guild';
 
   store.removeGuild('guild');
@@ -77,7 +63,7 @@ it('removeGuild does nothing when deletion is not confirmed', () => {
   expect(store.guilds).toEqual([
     { id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 },
   ]);
-  expect(store.selectedId).toBe('guild');
+  expect(store.hoveredId).toBe('guild');
 });
 
 it('deleteFeature removes a guild only after confirmation', () => {
@@ -129,13 +115,11 @@ it('removeGuildFromAerialMap does nothing if guild not found', () => {
   expect(store.guilds[0]!.path).toEqual([{ x: 0, y: 0 }]);
 });
 
-it('deactivateAll unsets hovered and selected id', () => {
+it('deactivateAll unsets hovered id', () => {
   const store = useGardenStore();
   store.hoveredId = 'thing';
-  store.selectedId = 'thing';
 
   store.deactivateAll();
 
   expect(store.hoveredId).toBeUndefined();
-  expect(store.selectedId).toBeUndefined();
 });

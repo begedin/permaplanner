@@ -2,9 +2,8 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
-import { createRouter, createWebHistory } from 'vue-router';
-
 import App from './App.vue';
+import { createGuildTestRouter } from './testGuildRouter';
 import { usePermaplannerStore } from './usePermaplannerStore';
 
 vi.mock('./usePlanAppGate', () => ({
@@ -20,18 +19,11 @@ vi.mock('./usePlanSession', () => ({
   }),
 }));
 
-const router = createRouter({
-  history: createWebHistory(),
-  routes: [
-    { path: '/guilds', component: { template: '<div>Guilds view</div>' } },
-    { path: '/aerial', component: { template: '<div>Aerial view</div>' } },
-    { path: '/plants', component: { template: '<div>Plants view</div>' } },
-  ],
-});
+const router = createGuildTestRouter();
 
 beforeEach(async () => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
-  await router.push('/guilds');
+  await router.push({ name: 'guilds' });
   await router.isReady();
 });
 

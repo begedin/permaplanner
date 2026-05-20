@@ -60,13 +60,31 @@ test('onboards', async ({ browser }) => {
   await expect(page.getByRole('dialog', { name: 'Plan and sync' })).toBeHidden();
 
   await expect(page.locator('rect[fill="url(#grid)"]')).toBeVisible();
-  const gridPattern = page.locator('pattern#grid');
-  await expect(gridPattern).toHaveAttribute('width', /2\.3\d+/);
-  await expect(gridPattern).toHaveAttribute('height', /2\.3\d+/);
 
-  const scaleLine = page.locator('[data-main-svg] line[stroke="red"]');
-  await expect(scaleLine).toHaveAttribute('x1', /1[12]\.\d+/);
-  await expect(scaleLine).toHaveAttribute('y1', /1[12]\.\d+/);
-  await expect(scaleLine).toHaveAttribute('x2', /24[34]\.\d+/);
-  await expect(scaleLine).toHaveAttribute('y2', /1[12]\.\d+/);
+  await expect
+    .poll(async () =>
+      page.evaluate(() => {
+        const grid = document.querySelector('pattern#grid');
+        const line = document.querySelector('[data-main-svg] line[stroke="red"]');
+        if (!grid || !line) {
+          return null;
+        }
+        const gridWidth = Number(grid.getAttribute('width'));
+        const gridHeight = Number(grid.getAttribute('height'));
+        const x1 = Number(line.getAttribute('x1'));
+        const y1 = Number(line.getAttribute('y1'));
+        const x2 = Number(line.getAttribute('x2'));
+        const y2 = Number(line.getAttribute('y2'));
+        const indicatorLengthPx = Math.hypot(x2 - x1, y2 - y1);
+        const expectedUnit = indicatorLengthPx / 100;
+        const gridMatchesScale =
+          gridWidth > 0 &&
+          Math.abs(gridWidth - gridHeight) < 1e-6 &&
+          Math.abs(gridWidth - expectedUnit) < 1e-6;
+        const lineMostlyHorizontal =
+          x2 > x1 && Math.abs(y2 - y1) < Math.max(5, indicatorLengthPx * 0.05);
+        return gridMatchesScale && lineMostlyHorizontal;
+      }),
+    )
+    .toBe(true);
 });

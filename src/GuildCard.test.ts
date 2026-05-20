@@ -7,6 +7,7 @@ import { createTestingPinia } from '@pinia/testing';
 
 import GuildCard from './GuildCard.vue';
 import type { GardenThing, Guild } from './gardenTypes';
+import { createGuildTestRouter } from './testGuildRouter';
 import { useGardenStore } from './useGardenStore';
 
 const testGuild = {
@@ -30,6 +31,20 @@ afterEach(() => {
   cleanup();
 });
 
+const renderGuildCard = async (
+  props: { guildId: string; context: 'guilds' | 'aerialSidebar' } = {
+    guildId: 'guild',
+    context: 'guilds',
+  },
+) => {
+  const router = createGuildTestRouter();
+  await router.push(
+    props.context === 'guilds' ? `/guilds/${props.guildId}` : `/aerial/${props.guildId}`,
+  );
+  await router.isReady();
+  return render(GuildCard, { props, global: { plugins: [router] } });
+};
+
 const baseThing = (
   overrides: Partial<GardenThing> & Pick<GardenThing, 'id' | 'plantId'>,
 ): GardenThing => ({
@@ -41,10 +56,10 @@ const baseThing = (
   ...overrides,
 });
 
-it('updates guild name from the name input', () => {
+it('updates guild name from the name input', async () => {
   const store = useGardenStore();
   store.guilds[0]!.name = 'Old';
-  const wrapper = render(GuildCard, { props: { context: 'guilds', guildId: 'guild' } });
+  const wrapper = await renderGuildCard();
   fireEvent.update(wrapper.getByRole('textbox'), 'New');
   expect(store.guilds[0]).toMatchObject({ name: 'New' });
 });
@@ -62,7 +77,7 @@ it('removes the last duplicate guild plant when remove-one is used', async () =>
     },
   ];
 
-  const wrapper = render(GuildCard, { props: { context: 'guilds', guildId: 'guild' } });
+  const wrapper = await renderGuildCard();
   await fireEvent.click(
     wrapper.getByRole('button', { name: 'Remove one plant from bed' }),
   );
@@ -74,7 +89,7 @@ it('deletes the guild when confirmed', async () => {
   const store = useGardenStore();
   const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
-  const wrapper = render(GuildCard, { props: { context: 'guilds', guildId: 'guild' } });
+  const wrapper = await renderGuildCard();
   wrapper.getByRole('button', { name: 'Delete' }).click();
 
   expect(confirm).toHaveBeenCalledWith(
@@ -89,13 +104,13 @@ it('keeps the guild when deletion is cancelled', async () => {
   vi.spyOn(window, 'confirm').mockReturnValue(false);
   const store = useGardenStore();
 
-  const wrapper = render(GuildCard, { props: { context: 'guilds', guildId: 'guild' } });
+  const wrapper = await renderGuildCard();
   await fireEvent.click(wrapper.getByRole('button', { name: 'Delete' }));
 
   expect(store.guilds).toEqual([{ ...testGuild, plants: [] }]);
 });
 
-it('does not offer remove-one when there is only one instance', () => {
+it('does not offer remove-one when there is only one instance', async () => {
   const store = useGardenStore();
   store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
   store.guilds = [
@@ -106,7 +121,7 @@ it('does not offer remove-one when there is only one instance', () => {
     },
   ];
 
-  const wrapper = render(GuildCard, { props: { context: 'guilds', guildId: 'guild' } });
+  const wrapper = await renderGuildCard();
   expect(wrapper.queryByRole('button', { name: 'Remove one plant from bed' })).toBeNull();
 });
 
@@ -123,7 +138,7 @@ it('shows map size and an icon remove control when the guild is on the aerial ma
     },
   ];
 
-  const wrapper = render(GuildCard, { props: { context: 'guilds', guildId: 'guild' } });
+  const wrapper = await renderGuildCard();
 
   expect(wrapper.getByLabelText('Guild size on aerial map').textContent).toBe(
     '1.00×0.77',
@@ -154,7 +169,7 @@ it('remove-one only affects the subgroup row that has duplicates', async () => {
     },
   ];
 
-  const wrapper = render(GuildCard, { props: { context: 'guilds', guildId: 'guild' } });
+  const wrapper = await renderGuildCard();
   expect(
     wrapper.getAllByRole('button', { name: 'Remove one plant from bed' }),
   ).toHaveLength(1);

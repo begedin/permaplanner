@@ -6,6 +6,7 @@ import type { Guild, MulchLevel, Plant, UserPlant } from './gardenTypes';
 import type { GuildFunction, GuildLayer } from './useGardenStore';
 import { formatGuildMapDimensions, pathBounds } from './guildPathBounds';
 import { useGardenStore } from './useGardenStore';
+import { useGuildSelection } from './useGuildSelection';
 import { useMapScaleStore } from './useMapScaleStore';
 import {
   CATALOG_MONTH_LABELS,
@@ -37,6 +38,7 @@ type GuildPlantGroupRow = {
 
 const garden = useGardenStore();
 const mapScale = useMapScaleStore();
+const { selectedGuildId, selectGuild } = useGuildSelection();
 
 const props = defineProps<{
   guildId: string;
@@ -250,7 +252,7 @@ const compactPlantTags = computed(() =>
 
 const onAerialListClick = () => {
   if (props.context === 'aerialSidebar') {
-    garden.selectGuild(props.guildId);
+    void selectGuild(props.guildId);
   }
 };
 
@@ -260,7 +262,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
   }
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
-    garden.selectGuild(props.guildId);
+    void selectGuild(props.guildId);
   }
 };
 </script>
@@ -270,12 +272,12 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
     class="flex flex-col gap-1 items-start justify-start p-2 rounded text-slate-600 bg-white border border-slate-200 shadow-sm hover:border-emerald-200 transition-colors w-full"
     :class="{
       'ring-2 ring-emerald-500 ring-offset-1':
-        context === 'aerialSidebar' && garden.selectedId === guildId,
+        context === 'aerialSidebar' && selectedGuildId === guildId,
       'cursor-pointer': context === 'aerialSidebar',
     }"
     :aria-label="guild.name"
     :aria-current="
-      context === 'aerialSidebar' && garden.selectedId === guildId ? 'true' : undefined
+      context === 'aerialSidebar' && selectedGuildId === guildId ? 'true' : undefined
     "
     :tabindex="context === 'aerialSidebar' ? 0 : undefined"
     @click="onAerialListClick"

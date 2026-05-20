@@ -9,6 +9,7 @@ import { isGithubStorageLinked } from './githubRepoSync';
 import { useMapScaleStore } from './useMapScaleStore';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanSession } from './usePlanSession';
+import { isAerialPath } from './useGuildSelection';
 
 const permaplannerStore = usePermaplannerStore();
 const mapScale = useMapScaleStore();
@@ -21,7 +22,7 @@ const showGithubOnlyHint = computed(
   () => !permaplannerStore.fileName && isGithubStorageLinked(),
 );
 const showAerialMapTools = computed(
-  () => showLocalFileActions.value && route.path === '/aerial',
+  () => showLocalFileActions.value && isAerialPath(route.path),
 );
 </script>
 

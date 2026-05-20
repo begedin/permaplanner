@@ -16,8 +16,24 @@ app.use(
     history: createWebHistory(),
     routes: [
       { path: '/', redirect: '/guilds' },
-      { path: '/guilds', component: TheGuilds },
-      { path: '/aerial', component: TheGarden },
+      { path: '/guilds', name: 'guilds', component: TheGuilds },
+      { path: '/guilds/:guildId', name: 'guilds-detail', component: TheGuilds },
+      {
+        path: '/aerial',
+        name: 'aerial',
+        component: TheGarden,
+        beforeEnter: (to) => {
+          const legacy = to.query.guild;
+          if (typeof legacy === 'string' && legacy.length > 0) {
+            return {
+              name: 'aerial-detail',
+              params: { guildId: legacy },
+              replace: true,
+            };
+          }
+        },
+      },
+      { path: '/aerial/:guildId', name: 'aerial-detail', component: TheGarden },
       { path: '/garden', redirect: '/aerial' },
       { path: '/plants', component: ThePlants },
       { path: '/:pathMatch(.*)*', redirect: '/guilds' },
