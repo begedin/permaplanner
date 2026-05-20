@@ -42,7 +42,9 @@ const connected = ref(Boolean(getGithubAccessToken()));
 const remoteSyncRevision = ref<number | undefined>(undefined);
 const remoteLoading = ref(false);
 
-const repoFolderUrl = ref<string | undefined>(getPlanRepoGardenFolderUrl(permaplannerStore.fileName));
+const repoFolderUrl = ref<string | undefined>(
+  getPlanRepoGardenFolderUrl(permaplannerStore.fileName),
+);
 
 const updateRepoLink = () => {
   repoFolderUrl.value = getPlanRepoGardenFolderUrl(permaplannerStore.fileName);
@@ -69,7 +71,10 @@ const refreshRemoteRevision = async () => {
   remoteLoading.value = true;
   syncError.value = undefined;
   try {
-    remoteSyncRevision.value = await fetchRemotePlanSyncRevision(token, permaplannerStore.fileName);
+    remoteSyncRevision.value = await fetchRemotePlanSyncRevision(
+      token,
+      permaplannerStore.fileName,
+    );
   } catch (e) {
     syncError.value = githubSyncFailureMessage(e);
     remoteSyncRevision.value = undefined;
@@ -162,13 +167,16 @@ const pullRemote = async () => {
 </script>
 
 <template>
-  <div class="mt-2 p-2 rounded border border-slate-200 bg-white text-xs text-slate-700 space-y-2">
+  <div
+    class="mt-2 p-2 rounded border border-slate-200 bg-white text-xs text-slate-700 space-y-2"
+  >
     <p class="font-medium text-slate-800">GitHub backup</p>
     <p
       v-if="!clientId"
       class="text-amber-800"
     >
-      Set <code class="bg-amber-50 px-0.5 rounded">VITE_GITHUB_CLIENT_ID</code> to enable sign-in.
+      Set <code class="bg-amber-50 px-0.5 rounded">VITE_GITHUB_CLIENT_ID</code> to enable
+      sign-in.
     </p>
     <template v-else>
       <div class="flex flex-col gap-1">
@@ -185,21 +193,27 @@ const pullRemote = async () => {
             class="flex flex-wrap gap-x-3 gap-y-1 text-slate-600"
             :aria-busy="repoPushBusy || syncing || pulling || remoteLoading"
           >
-            <span>Local sync: <strong class="text-slate-800">{{ syncRevision }}</strong></span>
+            <span
+              >Local sync:
+              <strong class="text-slate-800">{{ syncRevision }}</strong></span
+            >
             <span>
               Remote:
               <strong
                 v-if="remoteLoading"
                 class="text-slate-500"
-              >…</strong>
+                >…</strong
+              >
               <strong
                 v-else-if="remoteSyncRevision !== undefined"
                 class="text-slate-800"
-              >{{ remoteSyncRevision }}</strong>
+                >{{ remoteSyncRevision }}</strong
+              >
               <strong
                 v-else
                 class="text-slate-500 font-normal"
-              >—</strong>
+                >—</strong
+              >
             </span>
             <button
               type="button"
@@ -254,7 +268,8 @@ const pullRemote = async () => {
           :href="repoFolderUrl"
           target="_blank"
           rel="noopener noreferrer"
-        >Open plan folder on GitHub</a>
+          >Open plan folder on GitHub</a
+        >
       </p>
       <p
         v-if="authMessage"

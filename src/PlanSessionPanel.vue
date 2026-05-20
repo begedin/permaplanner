@@ -32,7 +32,8 @@ const showAerialMapTools = computed(
       v-if="showGithubOnlyHint"
       class="text-xs text-slate-600"
     >
-      Plan backed up on GitHub. Use <strong>Open plan</strong> to also save a copy on this device.
+      Plan backed up on GitHub. Use <strong>Open plan</strong> to also save a copy on this
+      device.
     </p>
     <template v-if="showAerialMapTools">
       <ToolSlider
@@ -51,7 +52,9 @@ const showAerialMapTools = computed(
       />
     </template>
     <template v-if="showLocalFileActions">
-      <span class="text-xs text-slate-600 truncate">{{ permaplannerStore.fileName }}</span>
+      <span class="text-xs text-slate-600 truncate">{{
+        permaplannerStore.fileName
+      }}</span>
       <button
         type="button"
         class="bg-green-200 hover:bg-green-300 rounded p-1 text-sm text-slate-800"

@@ -50,7 +50,9 @@ onBeforeUnmount(() => {
         aria-label="Plan and sync"
         @click.stop
       >
-        <div class="flex shrink-0 items-center justify-end border-b border-slate-200/80 px-2 py-1.5">
+        <div
+          class="flex shrink-0 items-center justify-end border-b border-slate-200/80 px-2 py-1.5"
+        >
           <button
             type="button"
             class="text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded px-2 py-1"

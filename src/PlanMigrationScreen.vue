@@ -23,14 +23,19 @@ const pending = computed(() => planMigrationPending.value);
 const localPending = computed(() => pending.value?.localFromVersion !== undefined);
 const githubPending = computed(() => {
   const g = pending.value?.github;
-  return g !== undefined && (g.config !== undefined || g.plants !== undefined || g.guilds !== undefined);
+  return (
+    g !== undefined &&
+    (g.config !== undefined || g.plants !== undefined || g.guilds !== undefined)
+  );
 });
 
 const canMigrateLocal = computed(
   () => !localPending.value || permaplannerStore.fileHandle !== undefined,
 );
 const canMigrateGithub = computed(
-  () => !githubPending.value || (Boolean(permaplannerStore.fileName) && Boolean(getGithubAccessToken())),
+  () =>
+    !githubPending.value ||
+    (Boolean(permaplannerStore.fileName) && Boolean(getGithubAccessToken())),
 );
 
 const canMigrate = computed(() => canMigrateLocal.value && canMigrateGithub.value);
@@ -57,7 +62,10 @@ const hasLoadedPlan = computed(() => permaplannerStore.fileName !== undefined);
 
 const downloadLocalJson = () => {
   const text = buildLocalPlanJsonText(permaplannerStore.snapshot());
-  downloadTextAsFile(`${downloadBaseName.value}-v${PERMAPLANNER_FILE_VERSION}.json`, text);
+  downloadTextAsFile(
+    `${downloadBaseName.value}-v${PERMAPLANNER_FILE_VERSION}.json`,
+    text,
+  );
 };
 
 const downloadGithubShards = () => {
@@ -98,14 +106,18 @@ const onMigrate = () => {
       v-if="localPending || githubPending"
       class="text-sm text-violet-900/80 list-disc list-inside bg-violet-50/80 rounded-lg p-3 border border-violet-200"
     >
-      <li v-if="localPending">
-        Local file (version {{ pending?.localFromVersion }})
-      </li>
+      <li v-if="localPending">Local file (version {{ pending?.localFromVersion }})</li>
       <li v-if="githubPending">
         GitHub sync
-        <span v-if="pending?.github?.config !== undefined"> · config v{{ pending.github.config }}</span>
-        <span v-if="pending?.github?.plants !== undefined"> · plants v{{ pending.github.plants }}</span>
-        <span v-if="pending?.github?.guilds !== undefined"> · guilds v{{ pending.github.guilds }}</span>
+        <span v-if="pending?.github?.config !== undefined">
+          · config v{{ pending.github.config }}</span
+        >
+        <span v-if="pending?.github?.plants !== undefined">
+          · plants v{{ pending.github.plants }}</span
+        >
+        <span v-if="pending?.github?.guilds !== undefined">
+          · guilds v{{ pending.github.guilds }}</span
+        >
       </li>
     </ul>
 

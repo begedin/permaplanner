@@ -1354,19 +1354,37 @@
         {
           "id": "creeping",
           "name": "Creeping (mother of thyme)",
-          "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent", "ground_cover"],
+          "functions": [
+            "edible",
+            "medicinal",
+            "pollinator_attractor",
+            "pest_repellent",
+            "ground_cover"
+          ],
           "layers": ["herb", "ground_cover"]
         },
         {
           "id": "woolly",
           "name": "Woolly",
-          "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent", "ground_cover"],
+          "functions": [
+            "edible",
+            "medicinal",
+            "pollinator_attractor",
+            "pest_repellent",
+            "ground_cover"
+          ],
           "layers": ["herb", "ground_cover"]
         },
         {
           "id": "elfin",
           "name": "Elfin",
-          "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent", "ground_cover"],
+          "functions": [
+            "edible",
+            "medicinal",
+            "pollinator_attractor",
+            "pest_repellent",
+            "ground_cover"
+          ],
           "layers": ["herb", "ground_cover"]
         },
         {

@@ -26,7 +26,9 @@ const planMenuLabel = computed(() =>
     v-else
     class="flex flex-col h-full min-h-0"
   >
-    <nav class="flex flex-row h-8 shrink-0 items-stretch z-20 bg-emerald-100 border-b border-emerald-300/60">
+    <nav
+      class="flex flex-row h-8 shrink-0 items-stretch z-20 bg-emerald-100 border-b border-emerald-300/60"
+    >
       <div class="relative shrink-0 flex items-stretch border-r border-emerald-300/60">
         <button
           type="button"

@@ -3,7 +3,10 @@ import { planMigrationLoaders } from './migrations/plan/loaders';
 import { guildsShardMigrationLoaders } from './migrations/guildsShard/loaders';
 import { plantsShardMigrationLoaders } from './migrations/plantsShard/loaders';
 import { runMigrations } from './migrations/runMigrations';
-import { PERMAPLANNER_FILE_VERSION, readDocumentVersion } from './permaplannerFileVersion';
+import {
+  PERMAPLANNER_FILE_VERSION,
+  readDocumentVersion,
+} from './permaplannerFileVersion';
 
 export type GithubShardMigrationVersions = {
   config?: number;

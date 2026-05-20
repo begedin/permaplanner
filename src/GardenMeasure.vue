@@ -11,6 +11,8 @@ defineProps<{
     :y="box.y + box.height + 18"
     fill="red"
   >
-    {{ `${(box.width / unitLengthPx).toFixed(2)}x${(box.height / unitLengthPx).toFixed(2)}` }}
+    {{
+      `${(box.width / unitLengthPx).toFixed(2)}x${(box.height / unitLengthPx).toFixed(2)}`
+    }}
   </text>
 </template>

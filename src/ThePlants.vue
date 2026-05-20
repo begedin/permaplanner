@@ -8,7 +8,12 @@ import {
   type CatalogPlantPick,
 } from './catalogPlantPick';
 import { useGardenStore } from './useGardenStore';
-import type { GuildFunction, GuildLayer, PlantOverrideFields, UserPlant } from './useGardenStore';
+import type {
+  GuildFunction,
+  GuildLayer,
+  PlantOverrideFields,
+  UserPlant,
+} from './useGardenStore';
 import { plantCatalog } from './plantCatalog';
 import { resolveUserPlant } from './resolvePlant';
 import { PLANT_EMOJI_OPTIONS } from './plantEmojiOptions';
@@ -19,7 +24,9 @@ import PlantLayers from './PlantLayers.vue';
 
 const garden = useGardenStore();
 
-const knownSpecies = computed(() => plantCatalog.species.filter((s) => s.id !== 'unknown'));
+const knownSpecies = computed(() =>
+  plantCatalog.species.filter((s) => s.id !== 'unknown'),
+);
 
 const makeNewUserPlant = (): UserPlant => {
   const pick = defaultCatalogPick(knownSpecies.value);
@@ -35,7 +42,9 @@ const makeNewUserPlant = (): UserPlant => {
 
 const plantInEditing = ref<UserPlant>(makeNewUserPlant());
 
-const resolvedPreview = computed(() => resolveUserPlant(plantInEditing.value, plantCatalog));
+const resolvedPreview = computed(() =>
+  resolveUserPlant(plantInEditing.value, plantCatalog),
+);
 
 const editingCatalogPick = computed({
   get: (): CatalogPlantPick => {
@@ -121,7 +130,9 @@ const save = () => {
   if (JSON.stringify(editingLayers.value) !== JSON.stringify(natural.layers)) {
     speciesOverride.layers = [...editingLayers.value];
   }
-  plantInEditing.value.speciesOverride = Object.keys(speciesOverride).length ? speciesOverride : undefined;
+  plantInEditing.value.speciesOverride = Object.keys(speciesOverride).length
+    ? speciesOverride
+    : undefined;
 
   const index = garden.plants.findIndex((p) => p.id === plantInEditing.value.id);
   const toSave = { ...plantInEditing.value };
@@ -133,7 +144,11 @@ const save = () => {
 };
 
 const edit = (plant: UserPlant) => {
-  plantInEditing.value = { ...plant, speciesOverride: plant.speciesOverride ? { ...plant.speciesOverride } : undefined, cultivarOverride: plant.cultivarOverride ? { ...plant.cultivarOverride } : undefined };
+  plantInEditing.value = {
+    ...plant,
+    speciesOverride: plant.speciesOverride ? { ...plant.speciesOverride } : undefined,
+    cultivarOverride: plant.cultivarOverride ? { ...plant.cultivarOverride } : undefined,
+  };
   syncGuildFieldsFromResolved();
 };
 
@@ -159,7 +174,10 @@ const customSpeciesName = computed({
       plantInEditing.value.speciesOverride = Object.keys(rest).length ? rest : undefined;
       return;
     }
-    plantInEditing.value.speciesOverride = { ...plantInEditing.value.speciesOverride, name: v.trim() };
+    plantInEditing.value.speciesOverride = {
+      ...plantInEditing.value.speciesOverride,
+      name: v.trim(),
+    };
   },
 });
 
@@ -172,10 +190,12 @@ const customCultivarName = computed({
       plantInEditing.value.cultivarOverride = Object.keys(rest).length ? rest : undefined;
       return;
     }
-    plantInEditing.value.cultivarOverride = { ...plantInEditing.value.cultivarOverride, name: v.trim() };
+    plantInEditing.value.cultivarOverride = {
+      ...plantInEditing.value.cultivarOverride,
+      name: v.trim(),
+    };
   },
 });
-
 </script>
 <template>
   <div class="bg-white p-4 grid grid-flow-col items-start gap-8 rounded-md">
@@ -194,7 +214,10 @@ const customCultivarName = computed({
           class="w-7 h-7"
           :plant="resolveUserPlant(plant, plantCatalog)"
         />
-        <span class="w-28 truncate text-left">{{ resolveUserPlant(plant, plantCatalog).cultivar || resolveUserPlant(plant, plantCatalog).name }}</span>
+        <span class="w-28 truncate text-left">{{
+          resolveUserPlant(plant, plantCatalog).cultivar ||
+          resolveUserPlant(plant, plantCatalog).name
+        }}</span>
         <button
           class="bg-red-200 hover:bg-red-300 p-1 rounded-md text-xs"
           @click.self="remove(plant)"
@@ -210,7 +233,8 @@ const customCultivarName = computed({
         <span
           class="w-7 h-7 flex items-center justify-center text-xl"
           aria-hidden="true"
-        >➕</span>
+          >➕</span
+        >
         <span class="w-28 truncate text-left">{{ isNew ? 'New plant' : 'New' }}</span>
       </button>
     </div>
@@ -230,7 +254,8 @@ const customCultivarName = computed({
           :plant="resolvedPreview"
         />
         <p class="text-sm text-slate-600">
-          Preview merges catalog → your species overrides → cultivar → your cultivar overrides.
+          Preview merges catalog → your species overrides → cultivar → your cultivar
+          overrides.
         </p>
       </div>
 

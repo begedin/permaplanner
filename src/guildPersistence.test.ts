@@ -48,7 +48,9 @@ it('splitGuildsForPersistence separates content from map layout', () => {
 
 it('mergeGuildsFromPersistence round-trips split shards', () => {
   const split = splitGuildsForPersistence([sampleGuild]);
-  expect(mergeGuildsFromPersistence(split.guilds, split.guildLocations)).toEqual([sampleGuild]);
+  expect(mergeGuildsFromPersistence(split.guilds, split.guildLocations)).toEqual([
+    sampleGuild,
+  ]);
 });
 
 it('migrateGuildsShardRaw splits v2 merged guilds.json to v3', async () => {
@@ -103,5 +105,8 @@ it('splitGuildFieldsOnDocument leaves already-split guild lists unchanged', () =
     guilds: split.guilds,
     guildLocations: split.guildLocations,
   });
-  expect(doc).toMatchObject({ guilds: split.guilds, guildLocations: split.guildLocations });
+  expect(doc).toMatchObject({
+    guilds: split.guilds,
+    guildLocations: split.guildLocations,
+  });
 });

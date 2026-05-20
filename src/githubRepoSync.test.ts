@@ -54,6 +54,11 @@ it('githubSyncUserMessage for 409 suggests pushing again with local copy', () =>
 
 it('githubSyncUserMessage prefers GitHub API message for other errors when present', () => {
   expect(
-    githubSyncUserMessage('read', 'plans/garden/config.json', 500, '{"message":"Server Error"}'),
+    githubSyncUserMessage(
+      'read',
+      'plans/garden/config.json',
+      500,
+      '{"message":"Server Error"}',
+    ),
   ).toBe('Server Error');
 });

@@ -98,7 +98,11 @@ it('discards unsaved path edits when deselected', async () => {
   const scene = useSceneStore();
   const guild = {
     id: 'guild',
-    path: [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 10 }],
+    path: [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 10 },
+    ],
     plants: [],
     name: 'Bed',
     mulchLevel: 1 as const,
@@ -121,7 +125,9 @@ it('discards unsaved path edits when deselected', async () => {
   scene.isDrawing = false;
   await wrapper.vm.$nextTick();
 
-  const pathBeforeDeselect = wrapper.get('polygon[class*="pointer-events-fill"]').attributes('points');
+  const pathBeforeDeselect = wrapper
+    .get('polygon[class*="pointer-events-fill"]')
+    .attributes('points');
   expect(pathBeforeDeselect).not.toEqual(
     guild.path.map(({ x, y }) => `${x},${y}`).join(' '),
   );
@@ -129,7 +135,9 @@ it('discards unsaved path edits when deselected', async () => {
   await wrapper.setProps({ selected: false });
   await wrapper.vm.$nextTick();
 
-  const pathAfterDeselect = wrapper.get('polygon[class*="pointer-events-fill"]').attributes('points');
+  const pathAfterDeselect = wrapper
+    .get('polygon[class*="pointer-events-fill"]')
+    .attributes('points');
   expect(pathAfterDeselect).toEqual(guild.path.map(({ x, y }) => `${x},${y}`).join(' '));
   expect(wrapper.emitted('update')).toBeUndefined();
 });

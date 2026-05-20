@@ -4,7 +4,9 @@ import { createNewPlanThroughGate, openPlanSessionDrawer } from './helpers';
 test.describe('guilds tab', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
 
-  test('lists guilds, opens detail panel, renames, and uses plan drawer', async ({ page }) => {
+  test('lists guilds, opens detail panel, renames, and uses plan drawer', async ({
+    page,
+  }) => {
     await page.goto('/guilds');
     await createNewPlanThroughGate(page);
 
@@ -17,15 +19,19 @@ test.describe('guilds tab', () => {
     await page.getByRole('button', { name: 'Add guild' }).click();
 
     await expect(guildList.getByRole('article', { name: 'New guild' })).toBeVisible();
-    await expect(page.getByText('Select a guild from the list to view and edit it.')).toBeHidden();
-    await expect(guildDetails.getByRole('button', { name: 'Delete guild' })).toBeVisible();
+    await expect(
+      page.getByText('Select a guild from the list to view and edit it.'),
+    ).toBeHidden();
+    await expect(guildDetails.getByRole('button', { name: 'Delete' })).toBeVisible();
 
     await guildDetails.locator('input').first().fill('Berry guild');
     await expect(guildList.getByRole('article', { name: 'Berry guild' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Close guild details' }).click();
-    await expect(guildDetails.getByRole('button', { name: 'Delete guild' })).toBeHidden();
-    await expect(page.getByText('Select a guild from the list to view and edit it.')).toBeVisible();
+    await expect(guildDetails.getByRole('button', { name: 'Delete' })).toBeHidden();
+    await expect(
+      page.getByText('Select a guild from the list to view and edit it.'),
+    ).toBeVisible();
 
     await page.getByRole('button', { name: 'Add guild' }).click();
     await expect(guildList.getByRole('article', { name: 'New guild' })).toHaveCount(1);

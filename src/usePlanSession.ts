@@ -23,7 +23,8 @@ const clearReopenFileUi = () => {
 };
 
 const isFilePermissionError = (e: unknown): boolean =>
-  e instanceof DOMException && (e.name === 'NotAllowedError' || e.name === 'SecurityError');
+  e instanceof DOMException &&
+  (e.name === 'NotAllowedError' || e.name === 'SecurityError');
 
 export const usePlanSession = () => {
   const permaplannerStore = usePermaplannerStore();

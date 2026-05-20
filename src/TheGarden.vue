@@ -175,7 +175,6 @@ const updateGuild = (guild: Guild) => {
   garden.selectedId = undefined;
   garden.hoveredId = undefined;
 };
-
 </script>
 
 <template>

@@ -27,7 +27,9 @@ it('shows a list item per guild and a desktop empty detail hint when none is sel
 
   expect(screen.getByRole('article', { name: 'Alpha guild' })).toBeTruthy();
   expect(screen.getByRole('article', { name: 'Beta guild' })).toBeTruthy();
-  expect(screen.getByText('Select a guild from the list to view and edit it.')).toBeTruthy();
+  expect(
+    screen.getByText('Select a guild from the list to view and edit it.'),
+  ).toBeTruthy();
   expect(screen.queryByRole('button', { name: 'Close guild details' })).toBeNull();
 });
 
@@ -39,7 +41,7 @@ it('selects a guild from the list and shows full details with close', async () =
 
   const store = useGardenStore();
   expect(store.selectedId).toBe('b');
-  expect(screen.getByRole('button', { name: 'Delete guild' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Delete' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Close guild details' })).toBeTruthy();
 });
 

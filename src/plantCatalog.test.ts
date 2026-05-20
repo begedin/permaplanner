@@ -81,9 +81,12 @@ it('returns empty phenology for unknown species id', () => {
 });
 
 it('summarizes phenology for guild display', () => {
-  expect(formatPhenologySummary({ blooming: { start: 5, end: 6 }, fruiting: { start: 7, end: 8 } })).toBe(
-    'Bloom May–Jun · Fruit Jul–Aug',
-  );
+  expect(
+    formatPhenologySummary({
+      blooming: { start: 5, end: 6 },
+      fruiting: { start: 7, end: 8 },
+    }),
+  ).toBe('Bloom May–Jun · Fruit Jul–Aug');
   expect(phenologySummaryForPlant('basil', null)).toBe('Bloom Jul–Sep');
 });
 
@@ -100,9 +103,15 @@ it('detects months inside inclusive and wrapped periods', () => {
 
 it('resolves guild calendar to fruiting when present else bloom', () => {
   expect(
-    resolveGuildCalendarPeriod({ blooming: { start: 4, end: 5 }, fruiting: { start: 8, end: 10 } }),
+    resolveGuildCalendarPeriod({
+      blooming: { start: 4, end: 5 },
+      fruiting: { start: 8, end: 10 },
+    }),
   ).toEqual({ start: 8, end: 10 });
-  expect(resolveGuildCalendarPeriod({ blooming: { start: 5, end: 6 } })).toEqual({ start: 5, end: 6 });
+  expect(resolveGuildCalendarPeriod({ blooming: { start: 5, end: 6 } })).toEqual({
+    start: 5,
+    end: 6,
+  });
   expect(resolveGuildCalendarPeriod({})).toBeNull();
 });
 

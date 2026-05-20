@@ -1,4 +1,9 @@
-import { coerceMulchLevel, type GardenThing, type Guild, type MulchLevel } from './gardenTypes';
+import {
+  coerceMulchLevel,
+  type GardenThing,
+  type Guild,
+  type MulchLevel,
+} from './gardenTypes';
 
 /** Guild composition in saved files (no map geometry). */
 export type PersistedGuildContent = {
@@ -74,7 +79,8 @@ const parseLocationPlants = (raw: unknown): PersistedGuildLocation['plants'] => 
     if (!isRecord(item) || typeof item.id !== 'string') {
       continue;
     }
-    const num = (k: string) => (typeof item[k] === 'number' && Number.isFinite(item[k]) ? item[k] : 0);
+    const num = (k: string) =>
+      typeof item[k] === 'number' && Number.isFinite(item[k]) ? item[k] : 0;
     out.push({
       id: item.id,
       x: num('x'),
@@ -115,12 +121,10 @@ const parseGuildLocationList = (raw: unknown): PersistedGuildLocation[] => {
       continue;
     }
     const path = Array.isArray(g.path)
-      ? g.path
-          .filter(isRecord)
-          .map((pt) => ({
-            x: typeof pt.x === 'number' ? pt.x : 0,
-            y: typeof pt.y === 'number' ? pt.y : 0,
-          }))
+      ? g.path.filter(isRecord).map((pt) => ({
+          x: typeof pt.x === 'number' ? pt.x : 0,
+          y: typeof pt.y === 'number' ? pt.y : 0,
+        }))
       : [];
     out.push({
       id: g.id,
@@ -178,7 +182,9 @@ const isLegacyMergedGuildList = (guilds: unknown[]): boolean => {
 };
 
 /** Split legacy merged `guilds` arrays (v2) into v3 persisted fields on a document. */
-export const splitGuildFieldsOnDocument = (doc: Record<string, unknown>): Record<string, unknown> => {
+export const splitGuildFieldsOnDocument = (
+  doc: Record<string, unknown>,
+): Record<string, unknown> => {
   const legacy = doc.guilds;
   if (!Array.isArray(legacy) || legacy.length === 0) {
     return { ...doc, version: 3, guildLocations: doc.guildLocations ?? [] };

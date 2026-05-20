@@ -15,7 +15,9 @@ export type CatalogPickGroup = {
   picks: CatalogPlantPick[];
 };
 
-export const buildCatalogPickGroups = (speciesList: CatalogSpecies[]): CatalogPickGroup[] => {
+export const buildCatalogPickGroups = (
+  speciesList: CatalogSpecies[],
+): CatalogPickGroup[] => {
   const species = [...speciesList].sort((a, b) =>
     a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
   );
@@ -71,7 +73,9 @@ export const catalogPickForSpeciesCultivar = (
   return undefined;
 };
 
-export const defaultCatalogPick = (speciesList: CatalogSpecies[]): CatalogPlantPick | null => {
+export const defaultCatalogPick = (
+  speciesList: CatalogSpecies[],
+): CatalogPlantPick | null => {
   const groups = buildCatalogPickGroups(speciesList);
   return groups[0]?.picks[0] ?? null;
 };

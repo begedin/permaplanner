@@ -33,12 +33,16 @@ afterEach(() => {
 it('deletes the selected guild on Delete only when confirmed', async () => {
   mount(TheGarden);
   const store = useGardenStore();
-  store.guilds = [{ id: 'guild', path: [{ x: 0, y: 0 }], name: 'Bed', plants: [], mulchLevel: 1 }];
+  store.guilds = [
+    { id: 'guild', path: [{ x: 0, y: 0 }], name: 'Bed', plants: [], mulchLevel: 1 },
+  ];
   store.selectedId = 'guild';
 
   const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false);
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }));
-  expect(store.guilds).toEqual([{ id: 'guild', path: [{ x: 0, y: 0 }], name: 'Bed', plants: [], mulchLevel: 1 }]);
+  expect(store.guilds).toEqual([
+    { id: 'guild', path: [{ x: 0, y: 0 }], name: 'Bed', plants: [], mulchLevel: 1 },
+  ]);
 
   confirm.mockReturnValueOnce(true);
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }));
@@ -85,7 +89,9 @@ it('switches selection to another guild and discards the previous edit', async (
   scene.isDrawing = false;
   await wrapper.vm.$nextTick();
 
-  const guildB = wrapper.findAllComponents(GardenGuild).find((c) => c.props('guild')?.id === 'b');
+  const guildB = wrapper
+    .findAllComponents(GardenGuild)
+    .find((c) => c.props('guild')?.id === 'b');
   await guildB?.find('polygon.pointer-events-fill').trigger('click');
 
   expect(store.selectedId).toBe('b');

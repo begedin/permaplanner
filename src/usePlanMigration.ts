@@ -28,7 +28,9 @@ export const planMigrationError = ref<string | undefined>();
 
 const githubShardPending = (github: GithubShardMigrationVersions | undefined): boolean =>
   github !== undefined &&
-  (github.config !== undefined || github.plants !== undefined || github.guilds !== undefined);
+  (github.config !== undefined ||
+    github.plants !== undefined ||
+    github.guilds !== undefined);
 
 export const hasPlanMigrationPending = (pending: PlanMigrationPending | null): boolean =>
   pending !== null &&
@@ -67,7 +69,9 @@ export const noteLocalPlanMigrationIfNeeded = (raw: unknown): void => {
   mergePending({ localFromVersion: readDocumentVersion(raw) });
 };
 
-export const checkGithubPlanMigration = async (fileName: string | undefined): Promise<void> => {
+export const checkGithubPlanMigration = async (
+  fileName: string | undefined,
+): Promise<void> => {
   if (!readGithubClientIdConfig()) {
     return;
   }
@@ -106,7 +110,9 @@ export const performPlanMigration = async (): Promise<void> => {
     if (pending!.localFromVersion !== undefined) {
       const handle = store.fileHandle;
       if (!handle) {
-        throw new Error('Open or restore your plan file before migrating the local copy.');
+        throw new Error(
+          'Open or restore your plan file before migrating the local copy.',
+        );
       }
       await store.save(handle);
     }
@@ -132,4 +138,3 @@ export const performPlanMigration = async (): Promise<void> => {
     planMigrationInFlight.value = false;
   }
 };
-

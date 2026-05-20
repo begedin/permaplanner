@@ -38,7 +38,9 @@ const formatRows = (heading: string, rows: GuildPlantTooltipRow[]): string => {
   if (rows.length === 0) {
     return `${heading}: none`;
   }
-  const list = rows.map((r) => (r.count > 1 ? `${r.label} ×${r.count}` : r.label)).join(', ');
+  const list = rows
+    .map((r) => (r.count > 1 ? `${r.label} ×${r.count}` : r.label))
+    .join(', ');
   return `${heading}: ${list}`;
 };
 
@@ -46,13 +48,21 @@ export const functionLabelTooltip = (
   rows: GuildPlantTooltipRow[],
   fn: GuildFunction,
   fnLabel: string,
-): string => formatRows(fnLabel, rows.filter((r) => r.functions.includes(fn)));
+): string =>
+  formatRows(
+    fnLabel,
+    rows.filter((r) => r.functions.includes(fn)),
+  );
 
 export const layerLabelTooltip = (
   rows: GuildPlantTooltipRow[],
   layer: GuildLayer,
   layerLabel: string,
-): string => formatRows(layerLabel, rows.filter((r) => r.layers.includes(layer)));
+): string =>
+  formatRows(
+    layerLabel,
+    rows.filter((r) => r.layers.includes(layer)),
+  );
 
 type PhenologyAspect = 'fruiting' | 'blooming';
 
@@ -75,7 +85,10 @@ export const monthAspectTooltip = (
   monthName: string,
 ): string => {
   const aspectLabel = aspect === 'fruiting' ? 'fruit' : 'bloom';
-  return formatRows(`${monthName} ${aspectLabel}`, rowsForMonthAspect(rows, monthIndex, aspect));
+  return formatRows(
+    `${monthName} ${aspectLabel}`,
+    rowsForMonthAspect(rows, monthIndex, aspect),
+  );
 };
 
 export const monthHeaderTooltip = (

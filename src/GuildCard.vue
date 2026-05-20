@@ -2,9 +2,11 @@
 import { computed, ref } from 'vue';
 
 import type { CatalogPlantPick } from './catalogPlantPick';
-import type { MulchLevel, Plant, UserPlant } from './gardenTypes';
+import type { Guild, MulchLevel, Plant, UserPlant } from './gardenTypes';
 import type { GuildFunction, GuildLayer } from './useGardenStore';
+import { formatGuildMapDimensions, pathBounds } from './guildPathBounds';
 import { useGardenStore } from './useGardenStore';
+import { useMapScaleStore } from './useMapScaleStore';
 import {
   CATALOG_MONTH_LABELS,
   CATALOG_MONTH_LABELS_2,
@@ -34,17 +36,21 @@ type GuildPlantGroupRow = {
 };
 
 const garden = useGardenStore();
+const mapScale = useMapScaleStore();
 
-const props = withDefaults(
-  defineProps<{
-    guildId: string;
-    /** Aerial sidebar: map selection control + ring when selected. Guilds tab: omit extras. */
-    context?: 'aerialSidebar' | 'guilds';
-  }>(),
-  { context: 'guilds' },
-);
+const props = defineProps<{
+  guildId: string;
+  /** Aerial sidebar: compact list row. Guilds: full edit card (selected panel / guilds tab). */
+  context: 'aerialSidebar' | 'guilds';
+}>();
 
-const guild = computed(() => garden.guilds.find((g) => g.id === props.guildId));
+const guild = computed((): Guild => {
+  const g = garden.guilds.find((x) => x.id === props.guildId);
+  if (!g) {
+    throw new Error(`Guild not found: ${props.guildId}`);
+  }
+  return g;
+});
 
 const selectedPick = ref<CatalogPlantPick | null>(null);
 
@@ -61,21 +67,17 @@ const findMatchingUserPlant = (): UserPlant | undefined => {
 };
 
 const setName = (e: Event) => {
-  if (!guild.value) {
-    return;
-  }
   guild.value.name = (e.target as HTMLInputElement)?.value || '';
 };
 
 const removeGuildThingsByIds = (thingIds: string[]) => {
-  const g = guild.value;
-  if (!g || thingIds.length === 0) {
+  if (thingIds.length === 0) {
     return;
   }
   const idSet = new Set(thingIds);
-  for (let i = g.plants.length - 1; i >= 0; i--) {
-    if (idSet.has(g.plants[i]!.id)) {
-      g.plants.splice(i, 1);
+  for (let i = guild.value.plants.length - 1; i >= 0; i--) {
+    if (idSet.has(guild.value.plants[i]!.id)) {
+      guild.value.plants.splice(i, 1);
     }
   }
 };
@@ -88,12 +90,8 @@ const removeOneGuildThing = (thingIds: string[]) => {
 };
 
 const groupedGuildPlants = computed((): GuildPlantGroupRow[] => {
-  const g = guild.value;
-  if (!g) {
-    return [];
-  }
   const byPlantId = new Map<string, { thingIds: string[]; rp: Plant }>();
-  for (const thing of g.plants) {
+  for (const thing of guild.value.plants) {
     const rp = garden.resolvedPlant(thing.plantId);
     let bucket = byPlantId.get(thing.plantId);
     if (!bucket) {
@@ -124,7 +122,7 @@ const groupedGuildPlants = computed((): GuildPlantGroupRow[] => {
 });
 
 const onAddPlant = () => {
-  if (!guild.value || !selectedPick.value) {
+  if (!selectedPick.value) {
     return;
   }
   const { speciesId, cultivarId } = selectedPick.value;
@@ -137,16 +135,10 @@ const onAddPlant = () => {
 };
 
 const removeGuild = () => {
-  if (!guild.value) {
-    return;
-  }
   garden.removeGuild(guild.value.id);
 };
 
 const removeFromAerialMap = () => {
-  if (!guild.value) {
-    return;
-  }
   garden.removeGuildFromAerialMap(guild.value.id);
 };
 
@@ -163,7 +155,7 @@ const guildFunctions = computed(() => {
     medicinal: { label: 'Medicinal', count: 0 },
   } satisfies Record<GuildFunction, { label: string; count: number }>;
 
-  guild.value?.plants.forEach((thing) => {
+  guild.value.plants.forEach((thing) => {
     const plant = garden.resolvedPlant(thing.plantId);
     plant.functions.forEach((f) => {
       functionsByName[f].count++;
@@ -184,7 +176,7 @@ const guildLayers = computed(() => {
     root: { label: 'Root', count: 0 },
   } satisfies Record<GuildLayer, { label: string; count: number }>;
 
-  guild.value?.plants.forEach((thing) => {
+  guild.value.plants.forEach((thing) => {
     const plant = garden.resolvedPlant(thing.plantId);
     plant.layers.forEach((layer) => {
       layersByName[layer].count++;
@@ -194,19 +186,23 @@ const guildLayers = computed(() => {
   return layersByName;
 });
 
-const placedOnMap = computed(() => (guild.value ? guild.value.path.length > 0 : false));
+const placedOnMap = computed(() => guild.value.path.length > 0);
+
+const guildMapSizeLabel = computed(() => {
+  if (!placedOnMap.value) {
+    return null;
+  }
+  return formatGuildMapDimensions(pathBounds(guild.value.path), mapScale.unitLengthPx);
+});
 
 const mulchStars: MulchLevel[] = [1, 2, 3, 4, 5];
 
 const setMulchLevel = (level: MulchLevel) => {
-  if (!guild.value) {
-    return;
-  }
   guild.value.mulchLevel = level;
 };
 
 const phenologySummaryForThingIds = (thingIds: string[]): string | null => {
-  if (!guild.value || thingIds.length === 0) {
+  if (thingIds.length === 0) {
     return null;
   }
   const id0 = thingIds[0]!;
@@ -220,20 +216,13 @@ const phenologySummaryForThingIds = (thingIds: string[]): string | null => {
 
 const guildTooltipRows = computed(() =>
   guildPlantTooltipRows(
-    guild.value?.plants.map((thing) => thing.plantId) ?? [],
+    guild.value.plants.map((thing) => thing.plantId),
     (plantId) => garden.resolvedPlant(plantId),
   ),
 );
 
 const guildMonthPhenologyCounts = computed(() => {
-  const g = guild.value;
-  if (!g) {
-    return {
-      fruiting: Array.from({ length: 12 }, () => 0),
-      blooming: Array.from({ length: 12 }, () => 0),
-    };
-  }
-  const phenologies = g.plants.map((thing) => {
+  const phenologies = guild.value.plants.map((thing) => {
     const rp = garden.resolvedPlant(thing.plantId);
     return resolvePhenology(rp.speciesId, rp.cultivarId);
   });
@@ -278,7 +267,6 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
 
 <template>
   <article
-    v-if="guild"
     class="flex flex-col gap-1 items-start justify-start p-2 rounded text-slate-600 bg-white border border-slate-200 shadow-sm hover:border-emerald-200 transition-colors w-full"
     :class="{
       'ring-2 ring-emerald-500 ring-offset-1':
@@ -294,9 +282,32 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
     @keydown="onAerialListKeydown"
   >
     <template v-if="context === 'aerialSidebar'">
-      <p class="font-medium text-slate-800 w-full">
-        {{ guild.name }}
-      </p>
+      <div class="flex flex-row items-start justify-between gap-2 w-full">
+        <p class="font-medium text-slate-800 min-w-0 flex-1">
+          {{ guild.name }}
+        </p>
+        <div
+          v-if="placedOnMap"
+          class="flex flex-row items-center gap-1 shrink-0"
+        >
+          <span
+            v-if="guildMapSizeLabel"
+            class="text-[11px] leading-tight text-slate-500 tabular-nums"
+            aria-label="Guild size on aerial map"
+          >
+            {{ guildMapSizeLabel }}
+          </span>
+          <button
+            type="button"
+            title="Remove from aerial map"
+            aria-label="Remove from aerial map"
+            class="bg-transparent hover:bg-amber-100 rounded-md p-0.5 px-1 text-sm leading-none transition-colors"
+            @click.stop="removeFromAerialMap"
+          >
+            ⊖
+          </button>
+        </div>
+      </div>
       <div
         class="flex flex-wrap gap-1 w-full"
         aria-label="Plants in this guild"
@@ -323,21 +334,40 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
         >
           Not on aerial
         </p>
-        <button
+        <div
           v-if="placedOnMap"
-          type="button"
-          class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-950 rounded px-2 py-0.5"
-          @click="removeFromAerialMap"
+          class="flex flex-row items-center gap-1.5"
         >
-          Remove from aerial map
-        </button>
+          <span
+            v-if="guildMapSizeLabel"
+            class="text-xs text-slate-600 tabular-nums"
+            aria-label="Guild size on aerial map"
+          >
+            {{ guildMapSizeLabel }}
+          </span>
+          <button
+            type="button"
+            title="Remove from aerial map"
+            aria-label="Remove from aerial map"
+            class="bg-transparent hover:bg-amber-100 rounded-md p-0.5 px-1 text-sm leading-none transition-colors"
+            @click.stop="removeFromAerialMap"
+          >
+            ⊖
+          </button>
+        </div>
         <button
           type="button"
           :class="placedOnMap ? '' : 'ml-auto'"
-          class="text-xs bg-red-100 hover:bg-red-200 text-red-900 rounded px-2 py-0.5"
+          class="inline-flex items-center gap-1 text-xs bg-red-100 hover:bg-red-200 text-red-900 rounded px-2 py-0.5"
+          aria-label="Delete"
           @click="removeGuild"
         >
-          Delete guild
+          <span
+            class="leading-none"
+            aria-hidden="true"
+            >🗑️</span
+          >
+          Delete
         </button>
       </div>
       <input

@@ -9,7 +9,10 @@ import { useMapScaleStore } from './useMapScaleStore';
 import { mergeGuildsFromPersistence } from './guildPersistence';
 import { migratePlanDocumentRaw } from './permaplannerFileMigrate';
 import { buildLocalPlanJsonText } from './permaplannerFileExport';
-import { PERMAPLANNER_FILE_VERSION, type PermaplannerFileVersion } from './permaplannerFileVersion';
+import {
+  PERMAPLANNER_FILE_VERSION,
+  type PermaplannerFileVersion,
+} from './permaplannerFileVersion';
 import {
   clearPlanMigrationPending,
   isPlanMigrationPending,
@@ -43,7 +46,9 @@ const defaultMapScaleSnapshot = (): PermaplannerFileV1['mapScale'] => ({
   linePhysicalLength: 1,
 });
 
-export const parsePermaplannerDocument = async (raw: unknown): Promise<PermaplannerFileV1> => {
+export const parsePermaplannerDocument = async (
+  raw: unknown,
+): Promise<PermaplannerFileV1> => {
   const data = (await migratePlanDocumentRaw(assert(raw))) as Record<string, unknown> & {
     plants?: unknown;
     guilds?: Guild[];
@@ -73,7 +78,12 @@ export const parsePermaplannerDocument = async (raw: unknown): Promise<Permaplan
 
   if (data.mapScale && typeof data.mapScale === 'object' && data.mapScale !== null) {
     const ms = data.mapScale as Record<string, unknown>;
-    if (ms.start && typeof ms.start === 'object' && ms.end && typeof ms.end === 'object') {
+    if (
+      ms.start &&
+      typeof ms.start === 'object' &&
+      ms.end &&
+      typeof ms.end === 'object'
+    ) {
       const s = ms.start as { x?: number; y?: number };
       const e = ms.end as { x?: number; y?: number };
       if (
@@ -86,7 +96,8 @@ export const parsePermaplannerDocument = async (raw: unknown): Promise<Permaplan
           start: { x: s.x, y: s.y },
           end: { x: e.x, y: e.y },
           linePhysicalLength:
-            typeof ms.linePhysicalLength === 'number' && Number.isFinite(ms.linePhysicalLength)
+            typeof ms.linePhysicalLength === 'number' &&
+            Number.isFinite(ms.linePhysicalLength)
               ? ms.linePhysicalLength
               : 1,
         };
@@ -94,7 +105,10 @@ export const parsePermaplannerDocument = async (raw: unknown): Promise<Permaplan
     }
   }
 
-  if (typeof data.backgroundOpacity === 'number' && Number.isFinite(data.backgroundOpacity)) {
+  if (
+    typeof data.backgroundOpacity === 'number' &&
+    Number.isFinite(data.backgroundOpacity)
+  ) {
     base.backgroundOpacity = data.backgroundOpacity;
   }
 
@@ -175,8 +189,11 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
   };
 
   const mapScaleStore = useMapScaleStore();
-  const { start: mapStart, end: mapEnd, linePhysicalLength: mapLinePhysicalLength } =
-    storeToRefs(mapScaleStore);
+  const {
+    start: mapStart,
+    end: mapEnd,
+    linePhysicalLength: mapLinePhysicalLength,
+  } = storeToRefs(mapScaleStore);
 
   watch(
     [

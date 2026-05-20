@@ -63,5 +63,9 @@ it('migrates legacy plan rows to user plants', () => {
     },
   ];
   const migrated = normalizePlantsFromFile(raw, plantCatalog);
-  expect(migrated[0]).toMatchObject({ id: 'apple_granny_smith', speciesId: 'apple', cultivarId: 'granny_smith' });
+  expect(migrated[0]).toMatchObject({
+    id: 'apple_granny_smith',
+    speciesId: 'apple',
+    cultivarId: 'granny_smith',
+  });
 });

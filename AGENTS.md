@@ -16,6 +16,7 @@ To add or edit plants, follow [README — Adding plants to the catalog](README.m
 - **Claude Code** loads the same `SKILL.md` shape from `.claude/skills/<name>/` ([docs](https://code.claude.com/docs/en/skills)).
 - **Canonical** skills live under `.cursor/skills/`. Claude Code uses a **symlink** to the same file where noted below (single source of truth).
 - [vitest-testing-style](.cursor/skills/vitest-testing-style/SKILL.md) — Claude stub at [`.claude/skills/vitest-testing-style/SKILL.md`](.claude/skills/vitest-testing-style/SKILL.md) (pointer text).
+- [typescript-coding-style](.cursor/skills/typescript-coding-style/SKILL.md) — Claude stub at [`.claude/skills/typescript-coding-style/SKILL.md`](.claude/skills/typescript-coding-style/SKILL.md) (pointer text).
 - [data-format-migration](.cursor/skills/data-format-migration/SKILL.md) — Claude symlink at [`.claude/skills/data-format-migration/SKILL.md`](.claude/skills/data-format-migration/SKILL.md).
 
 ## Unit tests (Vitest)

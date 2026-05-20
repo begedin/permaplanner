@@ -18,9 +18,7 @@ const selectedGuildId = computed(() => {
 <template>
   <div class="p-2 flex flex-col gap-3 bg-emerald-50 min-h-0">
     <section class="flex flex-col gap-1.5 shrink-0">
-      <h2 class="text-sm font-medium text-slate-800">
-        Selected guild
-      </h2>
+      <h2 class="text-sm font-medium text-slate-800">Selected guild</h2>
       <GuildCard
         v-if="selectedGuildId"
         :guild-id="selectedGuildId"
@@ -35,9 +33,7 @@ const selectedGuildId = computed(() => {
     </section>
 
     <section class="flex flex-col gap-2 min-h-0">
-      <h2 class="text-sm text-slate-600">
-        All guilds
-      </h2>
+      <h2 class="text-sm text-slate-600">All guilds</h2>
       <div class="flex flex-col gap-2">
         <ThingBarGuild
           v-for="guild in garden.guilds"

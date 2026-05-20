@@ -1,11 +1,20 @@
 import type { PlantCatalogFile } from './plantCatalog';
 import { getCultivar, getSpecies, plantCatalog } from './plantCatalog';
-import type { GuildFunction, GuildLayer, Plant, PlantOverrideFields, UserPlant } from './gardenTypes';
+import type {
+  GuildFunction,
+  GuildLayer,
+  Plant,
+  PlantOverrideFields,
+  UserPlant,
+} from './gardenTypes';
 
-const applyScalarOverride = <T extends string>(base: T, o?: T): T => (o !== undefined ? o : base);
+const applyScalarOverride = <T extends string>(base: T, o?: T): T =>
+  o !== undefined ? o : base;
 
-const applyArrayOverride = (base: GuildFunction[], o?: GuildFunction[]): GuildFunction[] =>
-  o !== undefined ? [...o] : [...base];
+const applyArrayOverride = (
+  base: GuildFunction[],
+  o?: GuildFunction[],
+): GuildFunction[] => (o !== undefined ? [...o] : [...base]);
 
 const applyLayerOverride = (base: GuildLayer[], o?: GuildLayer[]): GuildLayer[] =>
   o !== undefined ? [...o] : [...base];
@@ -16,7 +25,12 @@ const applyPlantOverrideFields = (
   functions: GuildFunction[],
   layers: GuildLayer[],
   o?: PlantOverrideFields,
-): { speciesName: string; emoji: string; functions: GuildFunction[]; layers: GuildLayer[] } => ({
+): {
+  speciesName: string;
+  emoji: string;
+  functions: GuildFunction[];
+  layers: GuildLayer[];
+} => ({
   speciesName: applyScalarOverride(speciesName, o?.name),
   emoji: applyScalarOverride(emoji, o?.emoji),
   functions: applyArrayOverride(functions, o?.functions),
@@ -26,7 +40,10 @@ const applyPlantOverrideFields = (
 /**
  * Resolved display: db species → speciesOverride → db cultivar → cultivarOverride.
  */
-export const resolveUserPlant = (user: UserPlant, catalog: PlantCatalogFile = plantCatalog): Plant => {
+export const resolveUserPlant = (
+  user: UserPlant,
+  catalog: PlantCatalogFile = plantCatalog,
+): Plant => {
   const species = getSpecies(user.speciesId) ?? catalog.species[0];
 
   let speciesName = species.name;
@@ -34,12 +51,13 @@ export const resolveUserPlant = (user: UserPlant, catalog: PlantCatalogFile = pl
   let functions = [...species.functions];
   let layers = [...species.layers];
 
-  ({
+  ({ speciesName, emoji, functions, layers } = applyPlantOverrideFields(
     speciesName,
     emoji,
     functions,
     layers,
-  } = applyPlantOverrideFields(speciesName, emoji, functions, layers, user.speciesOverride));
+    user.speciesOverride,
+  ));
 
   let cultivarName: string | null = null;
 
@@ -122,14 +140,19 @@ const isGuildFunction = (v: unknown): v is GuildFunction =>
 
 const isGuildLayer = (v: unknown): v is GuildLayer =>
   typeof v === 'string' &&
-  ['overstory', 'understory', 'shrub', 'ground_cover', 'vine', 'herb', 'root'].includes(v);
+  ['overstory', 'understory', 'shrub', 'ground_cover', 'vine', 'herb', 'root'].includes(
+    v,
+  );
 
 const isUserPlant = (row: Record<string, unknown>): row is UserPlant =>
   typeof row.id === 'string' &&
   typeof row.speciesId === 'string' &&
   (row.cultivarId === null || typeof row.cultivarId === 'string');
 
-const legacyToUserPlant = (row: Record<string, unknown>, catalog: PlantCatalogFile): UserPlant => {
+const legacyToUserPlant = (
+  row: Record<string, unknown>,
+  catalog: PlantCatalogFile,
+): UserPlant => {
   const id = row.id as string;
   const mapped = LEGACY_ID_MAP[id];
   if (mapped) {
@@ -141,14 +164,19 @@ const legacyToUserPlant = (row: Record<string, unknown>, catalog: PlantCatalogFi
   }
 
   const name = typeof row.name === 'string' ? row.name : 'Plant';
-  const cultivarStr = row.cultivar === null || row.cultivar === undefined ? null : String(row.cultivar);
-  const speciesHit = catalog.species.find((s) => s.name.toLowerCase() === name.toLowerCase());
+  const cultivarStr =
+    row.cultivar === null || row.cultivar === undefined ? null : String(row.cultivar);
+  const speciesHit = catalog.species.find(
+    (s) => s.name.toLowerCase() === name.toLowerCase(),
+  );
   const feature = row.feature as string | null | undefined;
   const emoji = feature && FEATURE_EMOJI[feature] ? FEATURE_EMOJI[feature] : '🌱';
 
   if (speciesHit) {
     const cultivarHit = cultivarStr
-      ? speciesHit.cultivars.find((c) => c.name.toLowerCase() === cultivarStr.toLowerCase())
+      ? speciesHit.cultivars.find(
+          (c) => c.name.toLowerCase() === cultivarStr.toLowerCase(),
+        )
       : undefined;
     return {
       id,
@@ -164,18 +192,28 @@ const legacyToUserPlant = (row: Record<string, unknown>, catalog: PlantCatalogFi
     speciesOverride: {
       name,
       emoji,
-      functions: Array.isArray(row.functions) ? row.functions.filter(isGuildFunction) : [],
+      functions: Array.isArray(row.functions)
+        ? row.functions.filter(isGuildFunction)
+        : [],
       layers: Array.isArray(row.layers) ? row.layers.filter(isGuildLayer) : [],
     },
   };
 };
 
-export const normalizePlantsFromFile = (raw: unknown, catalog: PlantCatalogFile): UserPlant[] => {
+export const normalizePlantsFromFile = (
+  raw: unknown,
+  catalog: PlantCatalogFile,
+): UserPlant[] => {
   if (!Array.isArray(raw) || raw.length === 0) {
     return [];
   }
   const first = raw[0];
-  if (first && typeof first === 'object' && !Array.isArray(first) && isUserPlant(first as Record<string, unknown>)) {
+  if (
+    first &&
+    typeof first === 'object' &&
+    !Array.isArray(first) &&
+    isUserPlant(first as Record<string, unknown>)
+  ) {
     return raw as UserPlant[];
   }
   return (raw as Record<string, unknown>[]).map((row) => legacyToUserPlant(row, catalog));

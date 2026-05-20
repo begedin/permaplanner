@@ -5,6 +5,7 @@ import { usePermaplannerStore } from './usePermaplannerStore';
 import type { Guild, Plant } from './gardenTypes';
 import { plantCatalog } from './plantCatalog';
 import { confirmGuildDeletion } from './confirmGuildDeletion';
+import { pathBounds } from './guildPathBounds';
 import { plantDisplayLabel, resolveUserPlant } from './resolvePlant';
 
 export * from './gardenTypes';
@@ -18,17 +19,6 @@ const FALLBACK_PLANT: Plant = {
   emoji: '🌱',
   functions: [],
   layers: [],
-};
-
-const getPathBounds = (path: { x: number; y: number }[]) => {
-  if (path.length === 0) {
-    return { x: 0, y: 0, width: 0, height: 0 };
-  }
-  const minX = Math.min(...path.map((p) => p.x));
-  const minY = Math.min(...path.map((p) => p.y));
-  const maxX = Math.max(...path.map((p) => p.x));
-  const maxY = Math.max(...path.map((p) => p.y));
-  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 };
 
 type Bounds = {
@@ -56,7 +46,7 @@ export const useGardenStore = defineStore('garden', () => {
     Object.fromEntries(
       guilds.value
         .filter((g) => g.path.length > 0)
-        .map((guild) => [guild.id, getPathBounds(guild.path)]),
+        .map((guild) => [guild.id, pathBounds(guild.path)]),
     ),
   );
 
@@ -82,7 +72,13 @@ export const useGardenStore = defineStore('garden', () => {
   };
 
   const createGuild = () => {
-    const g: Guild = { id: uuid(), name: 'New guild', path: [], plants: [], mulchLevel: 1 };
+    const g: Guild = {
+      id: uuid(),
+      name: 'New guild',
+      path: [],
+      plants: [],
+      mulchLevel: 1,
+    };
     guilds.value.push(g);
     selectedId.value = g.id;
     hoveredId.value = g.id;
@@ -122,7 +118,8 @@ export const useGardenStore = defineStore('garden', () => {
       return;
     }
     const bounds =
-      guildBoundsById.value[guildId] ?? ({ x: 0, y: 0, width: 64, height: 64 } satisfies Bounds);
+      guildBoundsById.value[guildId] ??
+      ({ x: 0, y: 0, width: 64, height: 64 } satisfies Bounds);
     const rp = resolvedPlant(plantId);
 
     guild.plants.push({

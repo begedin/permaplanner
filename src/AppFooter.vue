@@ -70,7 +70,8 @@ const monthBlockClass = (rawCount: number): string => {
             :key="`fh-${i}`"
             class="flex-1 min-w-0 text-center text-[10px] leading-none font-medium text-slate-500"
             :title="monthHeaderTooltip(gardenTooltipRows, i, CATALOG_MONTH_LABELS[i])"
-          >{{ lab }}</span>
+            >{{ lab }}</span
+          >
         </div>
       </div>
       <div
@@ -89,7 +90,14 @@ const monthBlockClass = (rawCount: number): string => {
             role="listitem"
             class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"
             :class="monthBlockClass(count)"
-            :title="monthAspectTooltip(gardenTooltipRows, i, 'fruiting', CATALOG_MONTH_LABELS[i])"
+            :title="
+              monthAspectTooltip(
+                gardenTooltipRows,
+                i,
+                'fruiting',
+                CATALOG_MONTH_LABELS[i],
+              )
+            "
           />
         </div>
       </div>
@@ -109,7 +117,14 @@ const monthBlockClass = (rawCount: number): string => {
             role="listitem"
             class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"
             :class="monthBlockClass(count)"
-            :title="monthAspectTooltip(gardenTooltipRows, i, 'blooming', CATALOG_MONTH_LABELS[i])"
+            :title="
+              monthAspectTooltip(
+                gardenTooltipRows,
+                i,
+                'blooming',
+                CATALOG_MONTH_LABELS[i],
+              )
+            "
           />
         </div>
       </div>

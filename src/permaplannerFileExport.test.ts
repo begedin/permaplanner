@@ -1,6 +1,9 @@
 import { expect, it } from 'vitest';
 
-import { buildGithubPlanShardExports, buildLocalPlanJsonText } from './permaplannerFileExport';
+import {
+  buildGithubPlanShardExports,
+  buildLocalPlanJsonText,
+} from './permaplannerFileExport';
 import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
 import type { PermaplannerFileV1 } from './usePermaplannerStore';
 
@@ -23,9 +26,16 @@ it('buildLocalPlanJsonText includes current version', () => {
 });
 
 it('buildGithubPlanShardExports versions each shard file', () => {
-  const shards = buildGithubPlanShardExports(sampleDoc, { gardenFolderSegment: 'garden' });
-  expect(JSON.parse(shards.configJson)).toMatchObject({ version: PERMAPLANNER_FILE_VERSION });
-  expect(JSON.parse(shards.plantsJson)).toMatchObject({ version: PERMAPLANNER_FILE_VERSION, plants: [] });
+  const shards = buildGithubPlanShardExports(sampleDoc, {
+    gardenFolderSegment: 'garden',
+  });
+  expect(JSON.parse(shards.configJson)).toMatchObject({
+    version: PERMAPLANNER_FILE_VERSION,
+  });
+  expect(JSON.parse(shards.plantsJson)).toMatchObject({
+    version: PERMAPLANNER_FILE_VERSION,
+    plants: [],
+  });
   expect(JSON.parse(shards.guildsJson)).toMatchObject({
     version: PERMAPLANNER_FILE_VERSION,
     guilds: [],

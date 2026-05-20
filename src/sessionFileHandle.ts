@@ -199,7 +199,9 @@ export const clearFileBinding = async () => {
 };
 
 /** When permission is `prompt`, may call `requestPermission` — use from a user gesture. */
-export const ensureReadAccess = async (handle: FileSystemFileHandle): Promise<boolean> => {
+export const ensureReadAccess = async (
+  handle: FileSystemFileHandle,
+): Promise<boolean> => {
   const q = await handle.queryPermission({ mode: 'read' });
   if (q === 'granted') {
     return true;

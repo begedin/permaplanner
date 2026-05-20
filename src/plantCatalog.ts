@@ -84,8 +84,10 @@ export const plantCatalog = rawCatalog as PlantCatalogFile;
 export const getSpecies = (id: string): CatalogSpecies | undefined =>
   plantCatalog.species.find((s) => s.id === id);
 
-export const getCultivar = (species: CatalogSpecies, cultivarId: string): CatalogCultivar | undefined =>
-  species.cultivars.find((c) => c.id === cultivarId);
+export const getCultivar = (
+  species: CatalogSpecies,
+  cultivarId: string,
+): CatalogCultivar | undefined => species.cultivars.find((c) => c.id === cultivarId);
 
 type PhenologyPeriodKey = 'blooming' | 'fruiting';
 
@@ -109,7 +111,10 @@ export const mergeSpeciesCultivarPhenology = (
   fruiting: resolvePeriodFromSpeciesAndCultivar(species, cultivar, 'fruiting'),
 });
 
-export const resolvePhenology = (speciesId: string, cultivarId: string | null): CatalogPhenology => {
+export const resolvePhenology = (
+  speciesId: string,
+  cultivarId: string | null,
+): CatalogPhenology => {
   const species = getSpecies(speciesId);
   if (!species) {
     return {};
@@ -129,11 +134,16 @@ export const formatPhenologySummary = (ph: CatalogPhenology): string | null => {
   return parts.length > 0 ? parts.join(' · ') : null;
 };
 
-export const phenologySummaryForPlant = (speciesId: string, cultivarId: string | null): string | null =>
-  formatPhenologySummary(resolvePhenology(speciesId, cultivarId));
+export const phenologySummaryForPlant = (
+  speciesId: string,
+  cultivarId: string | null,
+): string | null => formatPhenologySummary(resolvePhenology(speciesId, cultivarId));
 
 /** True if `month` (1–12) lies in the inclusive period; supports wrap when start > end. */
-export const isMonthInCatalogPeriod = (month: number, period: CatalogMonthPeriod): boolean => {
+export const isMonthInCatalogPeriod = (
+  month: number,
+  period: CatalogMonthPeriod,
+): boolean => {
   if (month < 1 || month > 12) {
     return false;
   }
@@ -144,7 +154,10 @@ export const isMonthInCatalogPeriod = (month: number, period: CatalogMonthPeriod
   return month >= start || month <= end;
 };
 
-const addPeriodToMonthCounts = (counts: number[], period: CatalogMonthPeriod | undefined): void => {
+const addPeriodToMonthCounts = (
+  counts: number[],
+  period: CatalogMonthPeriod | undefined,
+): void => {
   if (!period) {
     return;
   }
@@ -169,5 +182,6 @@ export const fruitBloomMonthCountsForPhenologies = (
 };
 
 /** Guild calendar: fruiting months if the species fruits; otherwise blooming months. */
-export const resolveGuildCalendarPeriod = (ph: CatalogPhenology): CatalogMonthPeriod | null =>
-  ph.fruiting ?? ph.blooming ?? null;
+export const resolveGuildCalendarPeriod = (
+  ph: CatalogPhenology,
+): CatalogMonthPeriod | null => ph.fruiting ?? ph.blooming ?? null;

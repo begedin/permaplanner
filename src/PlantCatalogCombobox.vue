@@ -27,7 +27,9 @@ const emit = defineEmits<{
   'update:modelValue': [value: CatalogPlantPick | null];
 }>();
 
-const catalogSpecies = computed(() => plantCatalog.species.filter((s) => s.id !== 'unknown'));
+const catalogSpecies = computed(() =>
+  plantCatalog.species.filter((s) => s.id !== 'unknown'),
+);
 
 const query = ref('');
 
@@ -74,7 +76,8 @@ watch(
   },
 );
 
-const displayPickLabel = (p: unknown): string => (p as CatalogPlantPick | null)?.inputLabel ?? '';
+const displayPickLabel = (p: unknown): string =>
+  (p as CatalogPlantPick | null)?.inputLabel ?? '';
 </script>
 
 <template>
@@ -101,14 +104,13 @@ const displayPickLabel = (p: unknown): string => (p as CatalogPlantPick | null)?
         <span
           class="text-xs leading-none"
           aria-hidden="true"
-        >▾</span>
+          >▾</span
+        >
       </ComboboxButton>
     </template>
     <template #options>
       <template v-if="filteredPickGroups.length === 0">
-        <div class="px-2 py-2 text-xs text-slate-500">
-          No matches
-        </div>
+        <div class="px-2 py-2 text-xs text-slate-500">No matches</div>
       </template>
       <template v-else>
         <template

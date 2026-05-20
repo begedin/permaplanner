@@ -1,5 +1,9 @@
 # Changelog 
 
+## 0.8.0
+
+- [FEATURE] Show guild size in card, iconize buttons, format code, add style skill
+
 ## 0.7.1
 
 - [DB] Added Carmeliter Reinette apple cultivar and Loch Ness blackberry cultivar to the catalog

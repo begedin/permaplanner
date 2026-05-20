@@ -25,7 +25,9 @@ it('creates a plant from catalog defaults', async () => {
 
   expect(useGardenStore().plants).toHaveLength(1);
   const up = useGardenStore().plants[0];
-  const expected = defaultCatalogPick(plantCatalog.species.filter((s) => s.id !== 'unknown'));
+  const expected = defaultCatalogPick(
+    plantCatalog.species.filter((s) => s.id !== 'unknown'),
+  );
   expect(up.speciesId).toBe(expected?.speciesId);
   expect(up.cultivarId).toBe(expected?.cultivarId ?? null);
   const r = resolveUserPlant(up, plantCatalog);
@@ -46,8 +48,13 @@ it('can override guild functions and save', async () => {
 it('can set custom species name', async () => {
   render(ThePlants);
 
-  await fireEvent.update(screen.getByPlaceholderText('Uses catalog name if empty'), 'Herb patch');
+  await fireEvent.update(
+    screen.getByPlaceholderText('Uses catalog name if empty'),
+    'Herb patch',
+  );
   await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
-  expect(resolveUserPlant(useGardenStore().plants[0], plantCatalog).name).toBe('Herb patch');
+  expect(resolveUserPlant(useGardenStore().plants[0], plantCatalog).name).toBe(
+    'Herb patch',
+  );
 });

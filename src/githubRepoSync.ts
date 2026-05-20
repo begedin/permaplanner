@@ -9,7 +9,11 @@ import {
   readDocumentVersion,
 } from './permaplannerFileMigrate';
 import type { GithubShardMigrationVersions } from './permaplannerFileMigrate';
-import { parsePermaplannerDocument, usePermaplannerStore, type PermaplannerFileV1 } from './usePermaplannerStore';
+import {
+  parsePermaplannerDocument,
+  usePermaplannerStore,
+  type PermaplannerFileV1,
+} from './usePermaplannerStore';
 
 export const planRepoSyncUpdatedEventName = 'permaplanner:plan-repo-updated';
 
@@ -170,14 +174,17 @@ export const isGithubStorageLinked = (): boolean => Boolean(getGithubAccessToken
 
 export const planPathSegment = (fileName: string | undefined): string => {
   const raw = (fileName ?? 'plan.json').trim() || 'plan.json';
-  const safe = raw.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'plan.json';
+  const safe =
+    raw.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'plan.json';
   const withExt = safe.toLowerCase().endsWith('.json') ? safe : `${safe}.json`;
   return withExt.slice(0, 180);
 };
 
 /** Folder name under `plans/` for one garden (derived from the local plan file name). */
 export const planGardenFolderSegment = (fileName: string | undefined): string => {
-  const stem = planPathSegment(fileName).replace(/\.json$/i, '').slice(0, 120);
+  const stem = planPathSegment(fileName)
+    .replace(/\.json$/i, '')
+    .slice(0, 120);
   return stem || 'plan';
 };
 
@@ -197,11 +204,15 @@ export const planRepoConfigPath = (fileName: string | undefined): string =>
   `${gardenDir(fileName)}/config.json`;
 
 /** Background image path in the same garden folder (Contents API = normal git blob, not LFS). */
-export const planBackgroundMediaRepoPath = (fileName: string | undefined, ext: string): string =>
-  `${PLANS_DIR}/${planGardenFolderSegment(fileName)}/background.${ext}`;
+export const planBackgroundMediaRepoPath = (
+  fileName: string | undefined,
+  ext: string,
+): string => `${PLANS_DIR}/${planGardenFolderSegment(fileName)}/background.${ext}`;
 
 /** Web URL for the `plans/<garden>/` folder on GitHub (not a single file). */
-export const getPlanRepoGardenFolderUrl = (fileName: string | undefined): string | undefined => {
+export const getPlanRepoGardenFolderUrl = (
+  fileName: string | undefined,
+): string | undefined => {
   const full = localStorage.getItem(LS_REPO_FULL_NAME);
   if (!full) {
     return undefined;
@@ -372,7 +383,9 @@ const ensurePlanRepo = async (token: string): Promise<string> => {
     return cached;
   }
 
-  const userRes = await fetch('https://api.github.com/user', { headers: githubHeaders(token) });
+  const userRes = await fetch('https://api.github.com/user', {
+    headers: githubHeaders(token),
+  });
   if (!userRes.ok) {
     const t = await userRes.text();
     throw new Error(`GitHub user: ${userRes.status} ${t}`);
@@ -483,8 +496,7 @@ const getRepoContentsFile = async (
   if (body.type !== 'file') {
     throw new Error(`GitHub read ${path}: unexpected response shape`);
   }
-  const hasInlineBase64 =
-    body.encoding === 'base64' && typeof body.content === 'string';
+  const hasInlineBase64 = body.encoding === 'base64' && typeof body.content === 'string';
   const hasBlobSha = typeof body.sha === 'string' && body.sha.length > 0;
   if (!hasInlineBase64 && !hasBlobSha) {
     throw new Error(`GitHub read ${path}: unexpected response shape`);
@@ -531,7 +543,10 @@ const gitApiUrl = (fullName: string, suffix: string): string =>
 /** GitHub `git/ref/{ref}` and `git/refs/{ref}` paths use `heads/branch`, not `refs/heads/branch`. */
 export const gitBranchHeadRefSegment = (): string => `heads/${DEFAULT_BRANCH}`;
 
-const getGitBranchHead = async (token: string, fullName: string): Promise<GitBranchHead> => {
+const getGitBranchHead = async (
+  token: string,
+  fullName: string,
+): Promise<GitBranchHead> => {
   const refSegment = gitBranchHeadRefSegment();
   const refRes = await fetch(gitApiUrl(fullName, `ref/${refSegment}`), {
     headers: githubHeaders(token),
@@ -655,19 +670,20 @@ const commitPlanFilesViaGitApi = async (
       sha: blobShas[index]!,
     }));
     const treeSha = await createGitTree(token, fullName, head.treeSha, treeEntries);
-    const commitSha = await createGitCommit(token, fullName, message, treeSha, head.commitSha);
+    const commitSha = await createGitCommit(
+      token,
+      fullName,
+      message,
+      treeSha,
+      head.commitSha,
+    );
     const refResult = await updateGitBranchRef(token, fullName, commitSha);
     if (refResult === 'ok') {
       return;
     }
   }
 
-  failGithubSync(
-    'write',
-    refLabel,
-    409,
-    'Branch head changed while pushing.',
-  );
+  failGithubSync('write', refLabel, 409, 'Branch head changed while pushing.');
 };
 
 const dataUrlMimeForRepoPath = (repoPath: string): string => {
@@ -691,9 +707,21 @@ export const scanGithubPlanShardsForMigration = async (
   sourceFileName: string | undefined,
 ): Promise<GithubShardMigrationVersions | undefined> => {
   const fullName = await ensurePlanRepo(token);
-  const plantsRaw = await getRepoJsonIfExists(token, fullName, planRepoPlantsPath(sourceFileName));
-  const guildsRaw = await getRepoJsonIfExists(token, fullName, planRepoGuildsPath(sourceFileName));
-  const configRaw = await getRepoJsonIfExists(token, fullName, planRepoConfigPath(sourceFileName));
+  const plantsRaw = await getRepoJsonIfExists(
+    token,
+    fullName,
+    planRepoPlantsPath(sourceFileName),
+  );
+  const guildsRaw = await getRepoJsonIfExists(
+    token,
+    fullName,
+    planRepoGuildsPath(sourceFileName),
+  );
+  const configRaw = await getRepoJsonIfExists(
+    token,
+    fullName,
+    planRepoConfigPath(sourceFileName),
+  );
   if (plantsRaw === undefined && guildsRaw === undefined && configRaw === undefined) {
     return undefined;
   }
@@ -716,7 +744,11 @@ export const fetchRemotePlanSyncRevision = async (
   sourceFileName: string | undefined,
 ): Promise<number | undefined> => {
   const fullName = await ensurePlanRepo(token);
-  const raw = await getRepoJsonIfExists(token, fullName, planRepoConfigPath(sourceFileName));
+  const raw = await getRepoJsonIfExists(
+    token,
+    fullName,
+    planRepoConfigPath(sourceFileName),
+  );
   if (raw === undefined) {
     return undefined;
   }
@@ -740,9 +772,13 @@ export const pullPlanJsonFromGithubRepo = async (
     throw new Error('No saved plan found in the GitHub repo for this garden.');
   }
 
-  const cfg = (configRaw && typeof configRaw === 'object' ? configRaw : {}) as Record<string, unknown>;
+  const cfg = (configRaw && typeof configRaw === 'object' ? configRaw : {}) as Record<
+    string,
+    unknown
+  >;
   let backgroundImage: string | undefined;
-  const bgPath = typeof cfg.backgroundImagePath === 'string' ? cfg.backgroundImagePath : undefined;
+  const bgPath =
+    typeof cfg.backgroundImagePath === 'string' ? cfg.backgroundImagePath : undefined;
   if (bgPath) {
     const file = await getRepoContentsFile(token, fullName, bgPath);
     if (file) {
@@ -852,7 +888,12 @@ export const syncIfRepoLinked = async (
     await pushPlanJsonToGithubRepo(token, snapshot, sourceFileName);
     window.dispatchEvent(new Event(planRepoSyncUpdatedEventName));
   } catch (e) {
-    const message = e instanceof GithubSyncError ? e.message : e instanceof Error ? e.message : String(e);
+    const message =
+      e instanceof GithubSyncError
+        ? e.message
+        : e instanceof Error
+          ? e.message
+          : String(e);
     githubRepoLastSyncError.value = message;
     console.error('[permaplanner] GitHub repo sync failed:', e);
   }

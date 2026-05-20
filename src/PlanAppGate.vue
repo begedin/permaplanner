@@ -33,7 +33,9 @@ const connectGithub = () => {
     <div
       class="w-full max-w-lg rounded-xl border border-slate-200 bg-white shadow-lg p-6 sm:p-8"
       role="dialog"
-      :aria-labelledby="mode === 'migration' ? 'plan-migration-heading' : 'plan-gate-heading'"
+      :aria-labelledby="
+        mode === 'migration' ? 'plan-migration-heading' : 'plan-gate-heading'
+      "
       aria-modal="true"
     >
       <template v-if="mode === 'loading'">
@@ -60,8 +62,8 @@ const connectGithub = () => {
             Choose where to save your plan
           </h1>
           <p class="mt-2 text-slate-600">
-            Permaplanner keeps your garden in a file on your device or in a private GitHub repo.
-            Pick one to get started.
+            Permaplanner keeps your garden in a file on your device or in a private GitHub
+            repo. Pick one to get started.
           </p>
         </header>
 
@@ -69,9 +71,7 @@ const connectGithub = () => {
           v-if="awaitingReopenFileClick"
           class="mb-5 p-4 rounded-lg bg-sky-50 border border-sky-200 text-sm text-sky-950"
         >
-          <p class="font-medium">
-            Restore your last plan file
-          </p>
+          <p class="font-medium">Restore your last plan file</p>
           <p
             v-if="expectedRelinkName"
             class="mt-1"
@@ -94,9 +94,7 @@ const connectGithub = () => {
           v-else-if="permaplannerStore.needsFileRelink"
           class="mb-5 p-4 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-950"
         >
-          <p class="font-medium">
-            Re-link your plan file
-          </p>
+          <p class="font-medium">Re-link your plan file</p>
           <p
             v-if="expectedRelinkName"
             class="mt-1"
@@ -114,9 +112,7 @@ const connectGithub = () => {
         </div>
 
         <section class="space-y-3">
-          <h2 class="text-sm font-medium text-slate-700">
-            Save on this device
-          </h2>
+          <h2 class="text-sm font-medium text-slate-700">Save on this device</h2>
           <button
             type="button"
             class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 py-3 font-medium text-left"
@@ -143,9 +139,7 @@ const connectGithub = () => {
         </div>
 
         <section class="space-y-3">
-          <h2 class="text-sm font-medium text-slate-700">
-            Save with GitHub
-          </h2>
+          <h2 class="text-sm font-medium text-slate-700">Save with GitHub</h2>
           <p
             v-if="!githubClientConfigured"
             class="text-sm text-amber-800"

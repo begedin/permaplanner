@@ -20,7 +20,9 @@ it('createGuild adds a guild and selects it', async () => {
   store.createGuild();
   await nextTick();
 
-  expect(store.guilds).toMatchObject([{ name: 'New guild', path: [], plants: [], mulchLevel: 1 }]);
+  expect(store.guilds).toMatchObject([
+    { name: 'New guild', path: [], plants: [], mulchLevel: 1 },
+  ]);
   expect(store.selectedId).toEqual(store.guilds[0]!.id);
   expect(store.hoveredId).toEqual(store.guilds[0]!.id);
 });
@@ -47,7 +49,9 @@ it('removeGuild removes guild', () => {
 
   store.removeGuild('guild');
 
-  expect(store.guilds).toEqual([{ id: 'guild2', name: 'Guild', path: [], plants: [], mulchLevel: 1 }]);
+  expect(store.guilds).toEqual([
+    { id: 'guild2', name: 'Guild', path: [], plants: [], mulchLevel: 1 },
+  ]);
 });
 
 it('removeGuild does nothing if guild not found', () => {
@@ -56,7 +60,9 @@ it('removeGuild does nothing if guild not found', () => {
 
   store.removeGuild('guild2');
 
-  expect(store.guilds).toEqual([{ id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 }]);
+  expect(store.guilds).toEqual([
+    { id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 },
+  ]);
 });
 
 it('removeGuild does nothing when deletion is not confirmed', () => {
@@ -68,7 +74,9 @@ it('removeGuild does nothing when deletion is not confirmed', () => {
 
   store.removeGuild('guild');
 
-  expect(store.guilds).toEqual([{ id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 }]);
+  expect(store.guilds).toEqual([
+    { id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 },
+  ]);
   expect(store.selectedId).toBe('guild');
 });
 
@@ -93,7 +101,9 @@ it('removeGuildFromAerialMap clears path only', () => {
       id: 'g1',
       path: [{ x: 1, y: 2 }],
       name: 'Bed',
-      plants: [{ id: 't', plantId: 'p', x: 0, y: 0, width: 1, height: 1, nameOrCultivar: 'x' }],
+      plants: [
+        { id: 't', plantId: 'p', x: 0, y: 0, width: 1, height: 1, nameOrCultivar: 'x' },
+      ],
       mulchLevel: 1,
     },
   ];
@@ -110,7 +120,9 @@ it('removeGuildFromAerialMap clears path only', () => {
 
 it('removeGuildFromAerialMap does nothing if guild not found', () => {
   const store = useGardenStore();
-  store.guilds = [{ id: 'guild', path: [{ x: 0, y: 0 }], name: 'Guild', plants: [], mulchLevel: 1 }];
+  store.guilds = [
+    { id: 'guild', path: [{ x: 0, y: 0 }], name: 'Guild', plants: [], mulchLevel: 1 },
+  ];
 
   store.removeGuildFromAerialMap('other');
 

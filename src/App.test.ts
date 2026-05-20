@@ -58,5 +58,7 @@ it('shows an unsaved dot on the plan menu button', () => {
   usePermaplannerStore().unsavedChanges = true;
   renderApp();
 
-  expect(screen.getByRole('button', { name: 'Plan and sync, unsaved changes' })).toBeTruthy();
+  expect(
+    screen.getByRole('button', { name: 'Plan and sync, unsaved changes' }),
+  ).toBeTruthy();
 });

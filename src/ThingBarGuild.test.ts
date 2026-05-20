@@ -12,9 +12,10 @@ beforeEach(() => {
 
 afterEach(() => cleanup());
 
-it('renders nothing if no guild in store', () => {
-  const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });
-  expect(wrapper.container.textContent).toEqual('');
+it('throws if no guild in store', () => {
+  expect(() => render(ThingBarGuild, { props: { id: 'guild' } })).toThrow(
+    'Guild not found: guild',
+  );
 });
 
 it('shows guild name, compact plant tags, and season section', () => {
@@ -72,7 +73,34 @@ it('marks the card as current when this guild is selected on the map', () => {
   store.selectedId = 'guild';
 
   const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });
-  expect(wrapper.getByRole('article', { name: 'A guild' }).getAttribute('aria-current')).toBe('true');
+  expect(
+    wrapper.getByRole('article', { name: 'A guild' }).getAttribute('aria-current'),
+  ).toBe('true');
+});
+
+it('shows map size and icon remove when the guild is placed on the aerial map', async () => {
+  const store = useGardenStore();
+  store.guilds = [
+    {
+      id: 'guild',
+      name: 'A guild',
+      mulchLevel: 1,
+      plants: [],
+      path: [
+        { x: 0, y: 0 },
+        { x: 130, y: 100 },
+      ],
+    },
+  ];
+
+  const wrapper = render(ThingBarGuild, { props: { id: 'guild' } });
+
+  expect(wrapper.getByLabelText('Guild size on aerial map').textContent).toBe(
+    '1.00×0.77',
+  );
+  expect(
+    wrapper.getByRole('button', { name: 'Remove from aerial map' }).textContent?.trim(),
+  ).toBe('⊖');
 });
 
 it('selects the guild when the card is clicked', async () => {

@@ -24,10 +24,10 @@ const closeDetail = () => {
 
 <template>
   <div class="flex flex-col h-full min-h-0 bg-emerald-50/40">
-    <div class="flex flex-row flex-wrap items-center justify-between gap-2 shrink-0 border-b border-slate-200/80 px-4 py-3">
-      <h1 class="text-lg font-medium text-slate-800">
-        Guilds
-      </h1>
+    <div
+      class="flex flex-row flex-wrap items-center justify-between gap-2 shrink-0 border-b border-slate-200/80 px-4 py-3"
+    >
+      <h1 class="text-lg font-medium text-slate-800">Guilds</h1>
       <button
         type="button"
         class="bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1.5 text-sm"
@@ -64,16 +64,16 @@ const closeDetail = () => {
 
       <section
         class="flex-1 min-h-0 min-w-0 flex-col"
-        :class="[
-          showMobileDetail ? 'flex' : 'hidden md:flex',
-        ]"
+        :class="[showMobileDetail ? 'flex' : 'hidden md:flex']"
         aria-label="Guild details"
       >
         <div
           v-if="selectedGuildId"
           class="flex flex-col min-h-0 h-full"
         >
-          <div class="flex shrink-0 items-center justify-end border-b border-slate-200/80 px-2 py-1.5 bg-white/80">
+          <div
+            class="flex shrink-0 items-center justify-end border-b border-slate-200/80 px-2 py-1.5 bg-white/80"
+          >
             <button
               type="button"
               class="text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded px-2 py-1"
