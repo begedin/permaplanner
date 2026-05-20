@@ -44,6 +44,8 @@ const props = defineProps<{
   guildId: string;
   /** Aerial sidebar: compact list row. Guilds: full edit card (selected panel / guilds tab). */
   context: 'aerialSidebar' | 'guilds';
+  /** Stretch to the grid row height in multi-column guild list browse mode. */
+  fillCell?: boolean;
 }>();
 
 const guild = computed((): Guild => {
@@ -271,6 +273,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
   <article
     class="flex flex-col gap-1 items-start justify-start p-2 rounded text-slate-600 bg-white border border-slate-200 shadow-sm hover:border-emerald-200 transition-colors w-full"
     :class="{
+      'h-full': context === 'aerialSidebar' && fillCell,
       'ring-2 ring-emerald-500 ring-offset-1':
         context === 'aerialSidebar' && selectedGuildId === guildId,
       'cursor-pointer': context === 'aerialSidebar',

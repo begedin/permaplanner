@@ -26,16 +26,15 @@ const seedGuilds = async (initialPath = '/guilds') => {
   return { router, store };
 };
 
-it('shows a list item per guild and a desktop empty detail hint when none is selected', async () => {
+it('shows guilds in a multi-column grid when none is selected', async () => {
   const { router } = await seedGuilds();
-  render(TheGuilds, { global: { plugins: [router] } });
+  const { container } = render(TheGuilds, { global: { plugins: [router] } });
 
   expect(screen.getByRole('article', { name: 'Alpha guild' })).toBeTruthy();
   expect(screen.getByRole('article', { name: 'Beta guild' })).toBeTruthy();
-  expect(
-    screen.getByText('Select a guild from the list to view and edit it.'),
-  ).toBeTruthy();
   expect(screen.getByRole('heading', { name: 'Guilds', level: 1 })).toBeTruthy();
+  expect(container.querySelector('.guild-list')).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
 });
 
 it('selects a guild from the list and shows full details', async () => {

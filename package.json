@@ -21,6 +21,7 @@
   "dependencies": {
     "@headlessui/vue": "^1.7.23",
     "@vueuse/core": "^12.1.0",
+    "motion-v": "^2.2.1",
     "pinia": "^2.1.7",
     "polygon-clipping": "^0.15.7",
     "simplify-js": "^1.2.4",

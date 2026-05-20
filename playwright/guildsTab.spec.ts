@@ -19,9 +19,6 @@ test.describe('guilds tab', () => {
     await page.getByRole('button', { name: 'Add guild' }).click();
 
     await expect(guildList.getByRole('article', { name: 'New guild' })).toBeVisible();
-    await expect(
-      page.getByText('Select a guild from the list to view and edit it.'),
-    ).toBeHidden();
     await expect(guildDetails.getByRole('button', { name: 'Delete' })).toBeVisible();
 
     await guildDetails.locator('input').first().fill('Berry guild');
@@ -29,9 +26,7 @@ test.describe('guilds tab', () => {
 
     await page.getByRole('button', { name: 'Deselect guild, Guilds' }).click();
     await expect(guildDetails.getByRole('button', { name: 'Delete' })).toBeHidden();
-    await expect(
-      page.getByText('Select a guild from the list to view and edit it.'),
-    ).toBeVisible();
+    await expect(guildList.locator('.grid')).toBeVisible();
 
     await page.getByRole('button', { name: 'Add guild' }).click();
     await expect(guildList.getByRole('article', { name: 'New guild' })).toHaveCount(1);
