@@ -2,7 +2,7 @@
 
 ## 0.7.1
 
-- [DB] Added Carmeliter Reinette apple cultivar to the catalog
+- [DB] Added Carmeliter Reinette apple cultivar and Loch Ness blackberry cultivar to the catalog
 - [FEATURE] Confirmation prompt when deleting guild
 
 ## 0.7.0 

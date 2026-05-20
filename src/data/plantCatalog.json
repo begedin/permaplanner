@@ -1283,6 +1283,10 @@
         {
           "id": "navaho",
           "name": "Navaho"
+        },
+        {
+          "id": "loch_ness",
+          "name": "Loch Ness"
         }
       ],
       "blooming": {
