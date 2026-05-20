@@ -94,6 +94,46 @@ it('cancells drawing a bed', async () => {
   expect(wrapper.emitted('update')).toBeUndefined();
 });
 
+it('discards unsaved path edits when deselected', async () => {
+  const scene = useSceneStore();
+  const guild = {
+    id: 'guild',
+    path: [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 10 }],
+    plants: [],
+    name: 'Bed',
+    mulchLevel: 1 as const,
+  };
+
+  const wrapper = mount(GardenGuild, {
+    props: {
+      guild,
+      unitLengthPx: 5,
+      hovered: false,
+      selected: true,
+    },
+    attachTo: document.body,
+  });
+
+  scene.isDrawing = true;
+  scene.x = 50;
+  scene.y = 50;
+  await wrapper.vm.$nextTick();
+  scene.isDrawing = false;
+  await wrapper.vm.$nextTick();
+
+  const pathBeforeDeselect = wrapper.get('polygon[class*="pointer-events-fill"]').attributes('points');
+  expect(pathBeforeDeselect).not.toEqual(
+    guild.path.map(({ x, y }) => `${x},${y}`).join(' '),
+  );
+
+  await wrapper.setProps({ selected: false });
+  await wrapper.vm.$nextTick();
+
+  const pathAfterDeselect = wrapper.get('polygon[class*="pointer-events-fill"]').attributes('points');
+  expect(pathAfterDeselect).toEqual(guild.path.map(({ x, y }) => `${x},${y}`).join(' '));
+  expect(wrapper.emitted('update')).toBeUndefined();
+});
+
 it('changes brush size', async () => {
   const wrapper = mount(GardenGuild, {
     props: {

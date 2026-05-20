@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useGardenStore } from './useGardenStore';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
@@ -6,6 +6,11 @@ import { nextTick } from 'vue';
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 it('createGuild adds a guild and selects it', async () => {
@@ -52,6 +57,33 @@ it('removeGuild does nothing if guild not found', () => {
   store.removeGuild('guild2');
 
   expect(store.guilds).toEqual([{ id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 }]);
+});
+
+it('removeGuild does nothing when deletion is not confirmed', () => {
+  vi.spyOn(window, 'confirm').mockReturnValue(false);
+  const store = useGardenStore();
+  store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 }];
+  store.selectedId = 'guild';
+  store.hoveredId = 'guild';
+
+  store.removeGuild('guild');
+
+  expect(store.guilds).toEqual([{ id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 }]);
+  expect(store.selectedId).toBe('guild');
+});
+
+it('deleteFeature removes a guild only after confirmation', () => {
+  const confirm = vi.spyOn(window, 'confirm');
+  confirm.mockReturnValueOnce(false).mockReturnValueOnce(true);
+  const store = useGardenStore();
+  store.guilds = [{ id: 'guild', path: [], name: 'Bed', plants: [], mulchLevel: 1 }];
+
+  store.deleteFeature('guild');
+  expect(store.guilds).toHaveLength(1);
+
+  store.deleteFeature('guild');
+  expect(store.guilds).toEqual([]);
+  expect(confirm).toHaveBeenCalledWith('Delete guild “Bed”? This cannot be undone.');
 });
 
 it('removeGuildFromAerialMap clears path only', () => {

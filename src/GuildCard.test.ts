@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
 
@@ -9,9 +10,13 @@ import { useGardenStore } from './useGardenStore';
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
 });
 
-afterEach(() => cleanup());
+afterEach(() => {
+  vi.restoreAllMocks();
+  cleanup();
+});
 
 const baseThing = (overrides: Partial<GardenThing> & Pick<GardenThing, 'id' | 'plantId'>): GardenThing => ({
   height: 10,
@@ -55,6 +60,31 @@ it('removes the last duplicate guild plant when remove-one is used', async () =>
   await fireEvent.click(wrapper.getByRole('button', { name: 'Remove one plant from bed' }));
 
   expect(store.guilds[0].plants).toEqual([first]);
+});
+
+it('deletes the guild when confirmed', async () => {
+  const store = useGardenStore();
+  store.guilds = [{ id: 'guild', name: 'Berry guild', mulchLevel: 1, path: [], plants: [] }];
+  const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+  const wrapper = render(GuildCard, { props: { guildId: 'guild' } });
+  await fireEvent.click(wrapper.getByRole('button', { name: 'Delete guild' }));
+
+  expect(confirm).toHaveBeenCalledWith(
+    'Delete guild “Berry guild”? This cannot be undone.',
+  );
+  expect(store.guilds).toEqual([]);
+});
+
+it('keeps the guild when deletion is cancelled', async () => {
+  vi.spyOn(window, 'confirm').mockReturnValue(false);
+  const store = useGardenStore();
+  store.guilds = [{ id: 'guild', name: 'Berry guild', mulchLevel: 1, path: [], plants: [] }];
+
+  const wrapper = render(GuildCard, { props: { guildId: 'guild' } });
+  await fireEvent.click(wrapper.getByRole('button', { name: 'Delete guild' }));
+
+  expect(store.guilds).toEqual([{ id: 'guild', name: 'Berry guild', mulchLevel: 1, path: [], plants: [] }]);
 });
 
 it('does not offer remove-one when there is only one instance', () => {

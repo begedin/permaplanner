@@ -4,6 +4,7 @@ import { uuid } from './utils';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import type { Guild, Plant } from './gardenTypes';
 import { plantCatalog } from './plantCatalog';
+import { confirmGuildDeletion } from './confirmGuildDeletion';
 import { plantDisplayLabel, resolveUserPlant } from './resolvePlant';
 
 export * from './gardenTypes';
@@ -60,9 +61,9 @@ export const useGardenStore = defineStore('garden', () => {
   );
 
   const deleteFeature = (id: string) => {
-    const guildById = guilds.value.find((g) => g.id === id);
-    if (guildById) {
-      guilds.value = guilds.value.filter((g) => g.id !== id);
+    if (guilds.value.some((g) => g.id === id)) {
+      removeGuild(id);
+      return;
     }
 
     const guildByPlantId = guilds.value.find((g) => g.plants.some((p) => p.id === id));
@@ -96,7 +97,15 @@ export const useGardenStore = defineStore('garden', () => {
   };
 
   const removeGuild = (id: string) => {
+    const guild = guilds.value.find((g) => g.id === id);
+    if (!guild || !confirmGuildDeletion(guild.name)) {
+      return;
+    }
     guilds.value = guilds.value.filter((g) => g.id !== id);
+    if (selectedId.value === id) {
+      selectedId.value = undefined;
+      hoveredId.value = undefined;
+    }
   };
 
   /** Clears the guild bed on the aerial map; keeps the guild and its plants. */

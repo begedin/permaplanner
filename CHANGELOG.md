@@ -1,5 +1,10 @@
 # Changelog 
 
+## 0.7.1
+
+- [DB] Added Carmeliter Reinette apple cultivar to the catalog
+- [FEATURE] Confirmation prompt when deleting guild
+
 ## 0.7.0 
 
 - [FEATURE] New app layout

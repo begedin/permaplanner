@@ -108,6 +108,10 @@
         {
           "id": "francuska_kozarka",
           "name": "Francuska kožarka (French russet)"
+        },
+        {
+          "id": "carmeliter_reinette",
+          "name": "Carmeliter Reinette"
         }
       ],
       "blooming": {

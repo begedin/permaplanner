@@ -130,6 +130,20 @@ const garden = useGardenStore();
 
 const placedGuilds = computed(() => garden.guilds.filter((g) => g.path.length > 0));
 
+/** Selected guild is drawn first so other beds stay clickable on top while editing. */
+const placedGuildsRenderOrder = computed(() => {
+  const placed = placedGuilds.value;
+  const selected = garden.selectedId;
+  if (!selected) {
+    return placed;
+  }
+  const selectedGuild = placed.find((g) => g.id === selected);
+  if (!selectedGuild) {
+    return placed;
+  }
+  return [selectedGuild, ...placed.filter((g) => g.id !== selected)];
+});
+
 const placementGuildDraft = computed(() => {
   const id = garden.selectedId;
   if (!id) {
@@ -245,7 +259,7 @@ const updateGuild = (guild: Guild) => {
           class="pointer-events-none"
         />
         <GardenGuild
-          v-for="guild in placedGuilds"
+          v-for="guild in placedGuildsRenderOrder"
           :key="guild.id"
           :selected="garden.selectedId === guild.id"
           :hovered="garden.hoveredId === guild.id"

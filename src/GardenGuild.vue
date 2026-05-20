@@ -123,6 +123,8 @@ watch(
   (selected) => {
     if (!selected) {
       editModeController.abort();
+      stroke.value = [];
+      resetPath();
       return;
     }
 
