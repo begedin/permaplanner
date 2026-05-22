@@ -1,10 +1,10 @@
 ---
 name: typescript-coding-style
 description: >-
-  TypeScript and Vue coding style for this repo: run Prettier on every modified
-  file; avoid extracting tiny single-use helpers. Use when writing or editing
-  TypeScript/Vue, tests, or config in this project, or when the user asks about
-  formatting, function extraction, or coding style.
+  TypeScript and Vue coding style for this repo: run type-check and Prettier on
+  every modified file; avoid extracting tiny single-use helpers. Use when writing
+  or editing TypeScript/Vue, tests, or config in this project, or when the user
+  asks about formatting, function extraction, or coding style.
 ---
 
 # TypeScript coding style (permaplanner)
@@ -22,6 +22,18 @@ npx prettier --write path/to/File.ts path/to/Other.vue
 - Run format **after** your edits are complete, then re-read the diff if anything material moved (imports, line breaks).
 
 Formatting is not optional and is part of “done” for any code change.
+
+## Type-check before you finish
+
+**Before finishing a task** that touches TypeScript or Vue, run:
+
+```bash
+npm run type-check
+```
+
+- Fix every reported error; do not leave type failures for CI (`build` runs `type-check` via `run-p`).
+- Re-run after fixes until the command exits 0.
+- If you only changed Vitest files under `src/` and they are not in `tsconfig.app.json`, still run `type-check` when you also edited any `.vue` / `.ts` that is part of the app build.
 
 ## Do not extract one-off micro-helpers
 

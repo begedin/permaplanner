@@ -15,7 +15,7 @@ const guildListGridStyle = {
 
 const guildLayoutTransition = {
   layout: { type: 'spring', stiffness: 400, damping: 38 },
-};
+} as const;
 
 const garden = useGardenStore();
 const { selectedGuildId } = useGuildSelection();
