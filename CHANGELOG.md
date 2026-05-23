@@ -1,5 +1,9 @@
 # Changelog 
 
+## 0.10.0
+
+- [FEATURE] Improve card layout, edit plants
+
 ## 0.9.0
 
 - [FEATURE] Further layout improvements

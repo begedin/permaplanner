@@ -6,7 +6,9 @@ import {
   ComboboxLabel,
   ComboboxOptions,
 } from '@headlessui/vue';
-import { computed, nextTick, onUnmounted, ref, watch } from 'vue';
+import { computed, nextTick, onUnmounted, provide, ref, watch } from 'vue';
+
+import { comboboxPanelOpenKey } from './comboboxPanelOpen';
 
 type PopoverListbox = HTMLElement & {
   showPopover: (options?: { source?: Element }) => void;
@@ -42,6 +44,7 @@ const anchorRef = ref<HTMLElement | null>(null);
 const optionsPanelRef = ref<{ $el?: HTMLElement; el?: HTMLElement } | null>(null);
 
 const panelOpen = ref(false);
+provide(comboboxPanelOpenKey, panelOpen);
 
 const syncPanelOpen = (open: boolean): string => {
   if (panelOpen.value !== open) {

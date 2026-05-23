@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { ComboboxButton, ComboboxInput, ComboboxOption } from '@headlessui/vue';
-import { computed, ref, watch } from 'vue';
+import { computed, inject, ref, watch } from 'vue';
+
+import { comboboxPanelOpenKey } from './comboboxPanelOpen';
 
 import AutoPositionedCombobox from './AutoPositionedCombobox.vue';
 import {
@@ -25,7 +27,18 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   'update:modelValue': [value: CatalogPlantPick | null];
+  submit: [];
 }>();
+
+const comboboxPanelOpen = inject(comboboxPanelOpenKey, null);
+
+const onComboboxEnter = (e: KeyboardEvent) => {
+  if (comboboxPanelOpen?.value) {
+    return;
+  }
+  e.preventDefault();
+  emit('submit');
+};
 
 const catalogSpecies = computed(() =>
   plantCatalog.species.filter((s) => s.id !== 'unknown'),
@@ -95,6 +108,7 @@ const displayPickLabel = (p: unknown): string =>
         :placeholder="placeholder"
         :display-value="displayPickLabel"
         @change="query = ($event.target as HTMLInputElement).value"
+        @keydown.enter="onComboboxEnter"
       />
       <ComboboxButton
         type="button"

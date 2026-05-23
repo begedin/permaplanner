@@ -1,7 +1,12 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
 
-import type { CatalogPlantPick } from './catalogPlantPick';
+import {
+  buildCatalogPickGroups,
+  catalogPickForSpeciesCultivar,
+  defaultCatalogPick,
+  type CatalogPlantPick,
+} from './catalogPlantPick';
 import type { Guild, MulchLevel, Plant, UserPlant } from './gardenTypes';
 import type { GuildFunction, GuildLayer } from './useGardenStore';
 import { formatGuildMapDimensions, pathBounds } from './guildPathBounds';
@@ -25,7 +30,8 @@ import {
   monthAspectTooltip,
   monthHeaderTooltip,
 } from './guildPlantTooltips';
-import { plantGuildGroupLabel } from './resolvePlant';
+import { plantDisplayLabel, plantGuildGroupLabel } from './resolvePlant';
+import { plantCatalog } from './plantCatalog';
 import { uuid } from './utils';
 
 type GuildPlantGroupRow = {
@@ -56,7 +62,26 @@ const guild = computed((): Guild => {
   return g;
 });
 
+type PlantEditor =
+  | { kind: 'add' }
+  | { kind: 'edit'; plantId: string; thingIds: string[] };
+
+const plantEditor = ref<PlantEditor | null>(null);
 const selectedPick = ref<CatalogPlantPick | null>(null);
+
+const catalogSpecies = () => plantCatalog.species.filter((s) => s.id !== 'unknown');
+
+const catalogPickForUserPlant = (userPlantId: string): CatalogPlantPick | null => {
+  const up = garden.plants.find((p) => p.id === userPlantId);
+  if (!up) {
+    return null;
+  }
+  const groups = buildCatalogPickGroups(catalogSpecies());
+  return (
+    catalogPickForSpeciesCultivar(groups, up.speciesId, up.cultivarId ?? null) ??
+    defaultCatalogPick(catalogSpecies())
+  );
+};
 
 const findMatchingUserPlant = (): UserPlant | undefined => {
   const pick = selectedPick.value;
@@ -125,7 +150,31 @@ const groupedGuildPlants = computed((): GuildPlantGroupRow[] => {
   return rows;
 });
 
-const onAddPlant = () => {
+const openAddPlantEditor = () => {
+  plantEditor.value = { kind: 'add' };
+  selectedPick.value = null;
+};
+
+const openEditPlantEditor = (row: GuildPlantGroupRow) => {
+  plantEditor.value = {
+    kind: 'edit',
+    plantId: row.plantId,
+    thingIds: [...row.thingIds],
+  };
+  selectedPick.value = catalogPickForUserPlant(row.plantId);
+};
+
+const isEditingRow = (row: GuildPlantGroupRow): boolean => {
+  const editor = plantEditor.value;
+  return editor?.kind === 'edit' && editor.plantId === row.plantId;
+};
+
+const closePlantEditor = () => {
+  plantEditor.value = null;
+  selectedPick.value = null;
+};
+
+const onConfirmPlant = () => {
   if (!selectedPick.value) {
     return;
   }
@@ -135,7 +184,22 @@ const onAddPlant = () => {
     up = { id: uuid(), speciesId, cultivarId };
     garden.plants.push(up);
   }
+  const editor = plantEditor.value;
+  if (editor?.kind === 'edit') {
+    const rp = garden.resolvedPlant(up.id);
+    const label = plantDisplayLabel(rp);
+    for (const thingId of editor.thingIds) {
+      const thing = guild.value.plants.find((t) => t.id === thingId);
+      if (thing) {
+        thing.plantId = up.id;
+        thing.nameOrCultivar = label;
+      }
+    }
+    closePlantEditor();
+    return;
+  }
   garden.addPlantToGuild(guild.value.id, up.id);
+  closePlantEditor();
 };
 
 const removeGuild = () => {
@@ -414,6 +478,36 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           :key="row.plantId"
         >
           <div
+            v-if="isEditingRow(row)"
+            class="flex flex-row items-center gap-1 w-full border-b border-sky-300 py-1 pl-1"
+            aria-label="Edit guild plant"
+          >
+            <div class="min-w-0 flex-1">
+              <PlantCatalogCombobox
+                v-model="selectedPick"
+                @submit="onConfirmPlant"
+              />
+            </div>
+            <button
+              type="button"
+              class="shrink-0 text-sm bg-green-200 hover:bg-green-300 disabled:opacity-50 rounded py-1 px-2 text-slate-800"
+              :disabled="!selectedPick"
+              aria-label="Save plant in guild"
+              @click.stop="onConfirmPlant"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              class="shrink-0 text-sm bg-slate-100 hover:bg-slate-200 rounded py-1 px-2 text-slate-700"
+              aria-label="Cancel editing plant"
+              @click.stop="closePlantEditor"
+            >
+              Cancel
+            </button>
+          </div>
+          <div
+            v-else
             :aria-label="row.count > 1 ? `${row.label} (${row.count})` : row.label"
             class="pl-1 flex flex-row items-start justify-start w-full gap-1 border-b border-sky-300 py-0.5"
           >
@@ -436,6 +530,15 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             </div>
             <div class="flex flex-row items-start gap-0 shrink-0">
               <button
+                type="button"
+                title="Edit plant in bed"
+                aria-label="Edit plant in bed"
+                class="bg-transparent hover:bg-sky-100 rounded-md p-1/2 px-1 transition-colors"
+                @click.stop="openEditPlantEditor(row)"
+              >
+                ✏️
+              </button>
+              <button
                 v-if="row.count > 1"
                 type="button"
                 title="Remove one plant from bed"
@@ -457,6 +560,45 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             </div>
           </div>
         </template>
+        <button
+          v-if="!plantEditor"
+          type="button"
+          title="Add plant to guild"
+          aria-label="Add plant to guild"
+          class="self-start bg-transparent hover:bg-slate-100 rounded-md p-1/2 px-1 text-sm leading-none transition-colors border border-dashed border-slate-300"
+          @click.stop="openAddPlantEditor"
+        >
+          ➕
+        </button>
+        <div
+          v-else-if="plantEditor?.kind === 'add'"
+          class="flex flex-row items-center gap-1 w-full border-b border-sky-300 py-1"
+          aria-label="Add guild plant"
+        >
+          <div class="min-w-0 flex-1">
+            <PlantCatalogCombobox
+              v-model="selectedPick"
+              @submit="onConfirmPlant"
+            />
+          </div>
+          <button
+            type="button"
+            class="shrink-0 text-sm bg-green-200 hover:bg-green-300 disabled:opacity-50 rounded py-1 px-2 text-slate-800"
+            :disabled="!selectedPick"
+            aria-label="Add to guild"
+            @click.stop="onConfirmPlant"
+          >
+            Add
+          </button>
+          <button
+            type="button"
+            class="shrink-0 text-sm bg-slate-100 hover:bg-slate-200 rounded py-1 px-2 text-slate-700"
+            aria-label="Cancel adding plant"
+            @click.stop="closePlantEditor"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
       <div class="flex flex-row flex-wrap gap-1 w-full">
         <GuildCardSectionLabel>Functions</GuildCardSectionLabel>
@@ -573,21 +715,6 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           />
         </div>
       </div>
-    </div>
-    <div
-      v-if="context === 'guilds'"
-      class="flex flex-col gap-2 w-full"
-    >
-      <GuildCardSectionLabel>Add plant</GuildCardSectionLabel>
-      <PlantCatalogCombobox v-model="selectedPick" />
-      <button
-        type="button"
-        class="w-full text-sm bg-green-200 hover:bg-green-300 disabled:opacity-50 rounded py-1 px-2 text-slate-800"
-        :disabled="!selectedPick"
-        @click="onAddPlant"
-      >
-        Add to guild
-      </button>
     </div>
   </article>
 </template>
