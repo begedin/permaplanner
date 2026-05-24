@@ -1,6 +1,7 @@
 import { computed, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
+import { isRestoringSession } from './usePlanSession';
 import { useGardenStore } from './useGardenStore';
 
 const isGuildsPath = (path: string) => path === '/guilds' || path.startsWith('/guilds/');
@@ -90,6 +91,9 @@ export const useGuildSelection = () => {
   });
 
   watchEffect(() => {
+    if (isRestoringSession.value) {
+      return;
+    }
     if (rawGuildId.value && !selectedGuildId.value) {
       void clearSelection();
     }

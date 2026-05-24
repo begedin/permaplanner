@@ -1,5 +1,9 @@
 # Changelog 
 
+## 0.11.1
+
+- [FIX] Keep guild selected when refreshing on a `/guilds/:id` or `/aerial/:id` URL
+
 ## 0.11.0 
 
 - [FEATURE] Icon theme

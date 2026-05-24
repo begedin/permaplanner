@@ -7,11 +7,13 @@ import { createTestingPinia } from '@pinia/testing';
 
 import GuildTabHeader from './GuildTabHeader.vue';
 import { createGuildTestRouter } from './testGuildRouter';
+import { isRestoringSession } from './usePlanSession';
 import { useGardenStore } from './useGardenStore';
 import { useGuildSelection } from './useGuildSelection';
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
+  isRestoringSession.value = false;
 });
 
 afterEach(() => cleanup());
@@ -23,6 +25,45 @@ const SelectionProbe = defineComponent({
   },
   template:
     '<p :data-selected="selectedGuildId ?? \'none\'">{{ selectedGuildId ?? "none" }}</p>',
+});
+
+it('keeps the guild route while the plan session is restoring', async () => {
+  isRestoringSession.value = true;
+  const router = createGuildTestRouter();
+
+  await router.push({ name: 'guilds-detail', params: { guildId: 'alpha' } });
+  await router.isReady();
+  render(SelectionProbe, { global: { plugins: [router] } });
+  await flushPromises();
+
+  expect(router.currentRoute.value.name).toBe('guilds-detail');
+  expect(router.currentRoute.value.params.guildId).toBe('alpha');
+
+  const store = useGardenStore();
+  store.guilds = [{ id: 'alpha', name: 'Alpha', path: [], plants: [], mulchLevel: 1 }];
+  isRestoringSession.value = false;
+  await flushPromises();
+
+  expect(screen.getByText('alpha').getAttribute('data-selected')).toBe('alpha');
+});
+
+it('clears an unknown guild route after the plan session finishes restoring', async () => {
+  isRestoringSession.value = true;
+  const router = createGuildTestRouter();
+
+  await router.push({ name: 'aerial-detail', params: { guildId: 'missing' } });
+  await router.isReady();
+  render(SelectionProbe, { global: { plugins: [router] } });
+  await flushPromises();
+
+  expect(router.currentRoute.value.name).toBe('aerial-detail');
+
+  isRestoringSession.value = false;
+  await flushPromises();
+  await router.isReady();
+
+  expect(router.currentRoute.value.name).toBe('aerial');
+  expect(router.currentRoute.value.params.guildId).toBeUndefined();
 });
 
 it('reads the guild route param on the guilds tab', async () => {
