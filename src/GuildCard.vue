@@ -336,7 +336,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
 
 <template>
   <article
-    class="flex flex-col gap-1 items-start justify-start p-2 rounded text-ink-600 bg-parchment-50 border border-parchment-300 shadow-parchment hover:border-sage-300 transition-colors w-full"
+    class="flex flex-col gap-1 items-start justify-start p-2 rounded text-ink-600 paper-surface border border-parchment-300 shadow-parchment hover:border-sage-300 transition-colors w-full"
     :class="{
       'h-full': context === 'aerialSidebar' && fillCell,
       'ring-2 ring-sage-500 ring-offset-1 ring-offset-parchment-100':
@@ -388,7 +388,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
         <span
           v-for="(tag, i) in compactPlantTags"
           :key="`${tag.text}-${i}`"
-          class="text-[11px] leading-tight text-ink-700 bg-parchment-200 border border-parchment-400/60 rounded px-1.5 py-0.5"
+          class="text-[11px] leading-tight text-ink-700 paper-inset border border-parchment-400/60 rounded px-1.5 py-0.5"
           >{{ tag.text }}</span
         >
         <span

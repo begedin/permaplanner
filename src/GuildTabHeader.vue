@@ -22,7 +22,7 @@ const selectedGuildName = computed(() => {
 
 <template>
   <div
-    class="flex flex-row flex-wrap items-center justify-between gap-2 shrink-0 border-b border-parchment-400/60 px-4 py-3"
+    class="flex flex-row flex-wrap items-center justify-between gap-2 shrink-0 border-b border-parchment-400/60 paper-surface px-4 py-3"
   >
     <nav
       v-if="selectedGuildId && selectedGuildName"

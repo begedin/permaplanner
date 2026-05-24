@@ -49,7 +49,7 @@ const monthBlockClass = (rawCount: number): string => {
 
 <template>
   <footer
-    class="shrink-0 border-t border-parchment-300 bg-parchment-50 px-2 py-1.5 text-ink-600 shadow-parchment"
+    class="shrink-0 border-t border-parchment-300 paper-surface px-2 py-1.5 text-ink-600 shadow-parchment"
     aria-label="Garden overview"
   >
     <div

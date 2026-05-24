@@ -129,14 +129,14 @@ const onMigrate = () => {
       >
         <button
           type="button"
-          class="flex-1 min-w-[10rem] bg-parchment-50 hover:bg-lavender-50 border border-lavender-200 rounded-lg px-4 py-2.5 text-sm text-left"
+          class="flex-1 min-w-[10rem] paper-surface hover:bg-lavender-50 border border-lavender-200 rounded-lg px-4 py-2.5 text-sm text-left"
           @click="downloadLocalJson"
         >
           Local plan (.json)
         </button>
         <button
           type="button"
-          class="flex-1 min-w-[10rem] bg-parchment-50 hover:bg-lavender-50 border border-lavender-200 rounded-lg px-4 py-2.5 text-sm text-left"
+          class="flex-1 min-w-[10rem] paper-surface hover:bg-lavender-50 border border-lavender-200 rounded-lg px-4 py-2.5 text-sm text-left"
           @click="downloadGithubShards"
         >
           GitHub shards (config, plants, guilds)

@@ -190,7 +190,7 @@ const updateGuild = (guild: Guild) => {
     <div class="flex flex-1 min-h-0">
       <aside
         v-if="showThingBar"
-        class="flex flex-col min-h-0 min-w-0 border-r border-parchment-400/60 bg-parchment-50/60 w-full md:w-72 md:shrink-0"
+        class="flex flex-col min-h-0 min-w-0 border-r border-parchment-400/60 paper-surface w-full md:w-72 md:shrink-0"
         aria-label="Guild list"
       >
         <div class="flex-1 min-h-0 overflow-y-auto p-2 flex flex-col gap-2">

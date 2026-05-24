@@ -133,7 +133,7 @@ const displayPickLabel = (p: unknown): string =>
         >
           <div
             role="presentation"
-            class="sticky top-0 z-10 border-b border-parchment-300 bg-parchment-200 px-2 py-1 text-left text-xs font-semibold text-ink-700"
+            class="sticky top-0 z-10 border-b border-parchment-300 paper-inset px-2 py-1 text-left text-xs font-semibold text-ink-700"
           >
             {{ group.speciesName }}
           </div>

@@ -168,7 +168,7 @@ const pullRemote = async () => {
 
 <template>
   <div
-    class="mt-2 p-2 rounded border border-parchment-300 bg-parchment-50 text-xs text-ink-700 space-y-2"
+    class="mt-2 p-2 rounded border border-parchment-300 paper-surface text-xs text-ink-700 space-y-2"
   >
     <p class="font-medium text-ink-800">GitHub backup</p>
     <p

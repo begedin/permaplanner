@@ -44,7 +44,7 @@ onBeforeUnmount(() => {
         @click="close"
       />
       <aside
-        class="relative flex flex-col w-[min(100%,280px)] max-w-full h-full bg-parchment-100 shadow-xl overflow-y-auto"
+        class="relative flex flex-col w-[min(100%,280px)] max-w-full h-full paper-surface shadow-parchment-lg overflow-y-auto"
         role="dialog"
         aria-modal="true"
         aria-label="Plan and sync"

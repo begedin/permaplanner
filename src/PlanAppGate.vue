@@ -31,7 +31,7 @@ const connectGithub = () => {
     role="presentation"
   >
     <div
-      class="w-full max-w-lg rounded-xl border border-parchment-300 bg-parchment-50 shadow-parchment-lg p-6 sm:p-8"
+      class="w-full max-w-lg rounded-xl border border-parchment-300 paper-surface shadow-parchment-lg p-6 sm:p-8"
       role="dialog"
       :aria-labelledby="
         mode === 'migration' ? 'plan-migration-heading' : 'plan-gate-heading'

@@ -200,7 +200,9 @@ const customCultivarName = computed({
 });
 </script>
 <template>
-  <div class="bg-parchment-50 p-4 grid grid-flow-col items-start gap-8 rounded-md">
+  <div
+    class="paper-surface p-4 grid grid-flow-col items-start gap-8 rounded-md border border-parchment-300 shadow-parchment"
+  >
     <div class="flex flex-col gap-1">
       <div
         v-for="plant in garden.plants"

@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --paper-grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  }
+
   html {
     @apply h-full;
   }
@@ -10,7 +14,7 @@
   body {
     @apply h-full w-full text-ink-700 antialiased;
     background-color: theme('colors.parchment.100');
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"),
+    background-image: var(--paper-grain),
       radial-gradient(
         ellipse 100% 55% at 50% -8%,
         rgba(255, 252, 240, 0.85) 0%,
@@ -26,5 +30,38 @@
         rgba(180, 155, 120, 0.1) 0%,
         transparent 50%
       );
+  }
+}
+
+@layer components {
+  /** Lifted card / panel — grain plus soft age spots and a top highlight. */
+  .paper-surface {
+    background-color: theme('colors.parchment.50');
+    background-image: var(--paper-grain),
+      radial-gradient(
+        ellipse 85% 55% at 12% 8%,
+        rgba(255, 248, 232, 0.75) 0%,
+        transparent 52%
+      ),
+      radial-gradient(
+        ellipse 60% 45% at 92% 88%,
+        rgba(196, 172, 136, 0.14) 0%,
+        transparent 48%
+      ),
+      radial-gradient(
+        ellipse 40% 30% at 70% 15%,
+        rgba(210, 185, 150, 0.07) 0%,
+        transparent 50%
+      ),
+      linear-gradient(168deg, rgba(255, 252, 245, 0.55) 0%, transparent 38%);
+    box-shadow: inset 0 1px 0 rgba(255, 252, 240, 0.75);
+  }
+
+  /** Nested inset chips on paper cards. */
+  .paper-inset {
+    background-color: theme('colors.parchment.200');
+    background-image: var(--paper-grain),
+      linear-gradient(180deg, rgba(255, 252, 245, 0.35) 0%, transparent 45%);
+    box-shadow: inset 0 1px 2px rgba(61, 47, 36, 0.06);
   }
 }

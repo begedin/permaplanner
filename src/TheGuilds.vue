@@ -67,7 +67,7 @@ const detailMotionStyle = computed((): Record<string, string> => {
             :initial="false"
             :layout-dependency="selectedGuildId"
             :transition="guildLayoutTransition"
-            class="flex flex-col min-h-0 min-w-0 border-r border-parchment-400/60 bg-parchment-50/60 w-full md:shrink-0"
+            class="flex flex-col min-h-0 min-w-0 border-r border-parchment-400/60 paper-surface w-full md:shrink-0"
             :class="showMobileDetail ? 'hidden md:flex' : 'flex'"
             :style="asideMotionStyle"
             aria-label="Guild list"
