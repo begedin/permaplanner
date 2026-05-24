@@ -168,9 +168,9 @@ const pullRemote = async () => {
 
 <template>
   <div
-    class="mt-2 p-2 rounded border border-slate-200 bg-white text-xs text-slate-700 space-y-2"
+    class="mt-2 p-2 rounded border border-parchment-300 bg-parchment-50 text-xs text-ink-700 space-y-2"
   >
-    <p class="font-medium text-slate-800">GitHub backup</p>
+    <p class="font-medium text-ink-800">GitHub backup</p>
     <p
       v-if="!clientId"
       class="text-amber-800"
@@ -183,41 +183,40 @@ const pullRemote = async () => {
         <button
           v-if="!connected"
           type="button"
-          class="bg-slate-800 hover:bg-slate-900 text-white rounded p-1.5 text-left"
+          class="bg-ink-800 hover:bg-ink-900 text-white rounded p-1.5 text-left"
           @click="connect"
         >
           Connect GitHub
         </button>
         <template v-else>
           <div
-            class="flex flex-wrap gap-x-3 gap-y-1 text-slate-600"
+            class="flex flex-wrap gap-x-3 gap-y-1 text-ink-600"
             :aria-busy="repoPushBusy || syncing || pulling || remoteLoading"
           >
             <span
-              >Local sync:
-              <strong class="text-slate-800">{{ syncRevision }}</strong></span
+              >Local sync: <strong class="text-ink-800">{{ syncRevision }}</strong></span
             >
             <span>
               Remote:
               <strong
                 v-if="remoteLoading"
-                class="text-slate-500"
+                class="text-ink-500"
                 >…</strong
               >
               <strong
                 v-else-if="remoteSyncRevision !== undefined"
-                class="text-slate-800"
+                class="text-ink-800"
                 >{{ remoteSyncRevision }}</strong
               >
               <strong
                 v-else
-                class="text-slate-500 font-normal"
+                class="text-ink-500 font-normal"
                 >—</strong
               >
             </span>
             <button
               type="button"
-              class="text-slate-500 hover:text-slate-800 underline"
+              class="text-ink-500 hover:text-ink-800 underline"
               :disabled="remoteLoading || syncing || pulling || repoPushBusy"
               @click="refreshRemoteRevision"
             >
@@ -226,7 +225,7 @@ const pullRemote = async () => {
           </div>
           <p
             v-if="repoPushBusy && !syncing"
-            class="text-slate-500"
+            class="text-ink-500"
             role="status"
           >
             Saving backup to GitHub…
@@ -234,7 +233,7 @@ const pullRemote = async () => {
           <div class="flex flex-col gap-1">
             <button
               type="button"
-              class="bg-slate-200 hover:bg-slate-300 rounded p-1.5 text-left disabled:opacity-50"
+              class="bg-parchment-300 hover:bg-parchment-400 rounded p-1.5 text-left disabled:opacity-50"
               :disabled="syncing || pulling || repoPushBusy"
               @click="pushCurrent"
             >
@@ -242,7 +241,7 @@ const pullRemote = async () => {
             </button>
             <button
               type="button"
-              class="bg-slate-200 hover:bg-slate-300 rounded p-1.5 text-left disabled:opacity-50"
+              class="bg-parchment-300 hover:bg-parchment-400 rounded p-1.5 text-left disabled:opacity-50"
               :disabled="syncing || pulling || repoPushBusy"
               @click="pullRemote"
             >
@@ -250,7 +249,7 @@ const pullRemote = async () => {
             </button>
             <button
               type="button"
-              class="bg-slate-100 hover:bg-slate-200 rounded p-1.5 text-left disabled:opacity-50"
+              class="bg-parchment-200 hover:bg-parchment-300 rounded p-1.5 text-left disabled:opacity-50"
               :disabled="syncing || pulling || repoPushBusy || remoteLoading"
               @click="disconnect"
             >
@@ -264,7 +263,7 @@ const pullRemote = async () => {
         class="pt-0.5"
       >
         <a
-          class="text-emerald-800 hover:text-emerald-900 underline"
+          class="text-sage-800 hover:text-sage-800 underline"
           :href="repoFolderUrl"
           target="_blank"
           rel="noopener noreferrer"
@@ -273,7 +272,7 @@ const pullRemote = async () => {
       </p>
       <p
         v-if="authMessage"
-        class="text-slate-600"
+        class="text-ink-600"
       >
         {{ authMessage }}
       </p>

@@ -11,13 +11,8 @@
     {
       "id": "nashi_pear",
       "name": "Nashi pear",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "understory"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["understory"],
       "cultivars": [
         {
           "id": "nijisseiki",
@@ -49,14 +44,8 @@
     {
       "id": "nanking_cherry",
       "name": "Nanking cherry",
-      "functions": [
-        "edible",
-        "pollinator_attractor",
-        "pest_repellent"
-      ],
-      "layers": [
-        "shrub"
-      ],
+      "functions": ["edible", "pollinator_attractor", "pest_repellent"],
+      "layers": ["shrub"],
       "cultivars": [
         {
           "id": "oriental",
@@ -84,13 +73,8 @@
     {
       "id": "apple",
       "name": "Apple",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "understory"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["understory"],
       "cultivars": [
         {
           "id": "granny_smith",
@@ -142,13 +126,8 @@
     {
       "id": "pear",
       "name": "Pear",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "understory"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["understory"],
       "cultivars": [
         {
           "id": "bartlett",
@@ -184,13 +163,8 @@
     {
       "id": "narcissus",
       "name": "Narcissus (daffodil)",
-      "functions": [
-        "pollinator_attractor",
-        "pest_repellent"
-      ],
-      "layers": [
-        "herb"
-      ],
+      "functions": ["pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
       "cultivars": [
         {
           "id": "dutch_master",
@@ -222,15 +196,8 @@
     {
       "id": "nasturtium",
       "name": "Nasturtium",
-      "functions": [
-        "edible",
-        "pest_repellent",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "ground_cover",
-        "herb"
-      ],
+      "functions": ["edible", "pest_repellent", "pollinator_attractor"],
+      "layers": ["ground_cover", "herb"],
       "cultivars": [
         {
           "id": "alaska",
@@ -254,13 +221,8 @@
     {
       "id": "haskap",
       "name": "Haskap",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["shrub"],
       "cultivars": [
         {
           "id": "borealis",
@@ -292,14 +254,8 @@
     {
       "id": "strawberry",
       "name": "Strawberry",
-      "functions": [
-        "edible",
-        "pollinator_attractor",
-        "ground_cover"
-      ],
-      "layers": [
-        "ground_cover"
-      ],
+      "functions": ["edible", "pollinator_attractor", "ground_cover"],
+      "layers": ["ground_cover"],
       "cultivars": [
         {
           "id": "alpine_mignonette",
@@ -331,15 +287,8 @@
     {
       "id": "basil",
       "name": "Basil",
-      "functions": [
-        "edible",
-        "medicinal",
-        "pest_repellent",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "herb"
-      ],
+      "functions": ["edible", "medicinal", "pest_repellent", "pollinator_attractor"],
+      "layers": ["herb"],
       "cultivars": [
         {
           "id": "genovese",
@@ -367,14 +316,8 @@
     {
       "id": "chives",
       "name": "Chives",
-      "functions": [
-        "edible",
-        "pollinator_attractor",
-        "pest_repellent"
-      ],
-      "layers": [
-        "herb"
-      ],
+      "functions": ["edible", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
       "cultivars": [
         {
           "id": "common",
@@ -394,13 +337,8 @@
     {
       "id": "ornamental_allium",
       "name": "Ornamental allium",
-      "functions": [
-        "pollinator_attractor",
-        "pest_repellent"
-      ],
-      "layers": [
-        "herb"
-      ],
+      "functions": ["pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
       "cultivars": [
         {
           "id": "naples_garlic",
@@ -416,14 +354,8 @@
     {
       "id": "daisy",
       "name": "Daisy",
-      "functions": [
-        "pollinator_attractor",
-        "medicinal"
-      ],
-      "layers": [
-        "herb",
-        "ground_cover"
-      ],
+      "functions": ["pollinator_attractor", "medicinal"],
+      "layers": ["herb", "ground_cover"],
       "cultivars": [
         {
           "id": "shasta",
@@ -447,13 +379,8 @@
     {
       "id": "japanese_maple",
       "name": "Japanese maple",
-      "functions": [
-        "pollinator_attractor",
-        "mulcher"
-      ],
-      "layers": [
-        "understory"
-      ],
+      "functions": ["pollinator_attractor", "mulcher"],
+      "layers": ["understory"],
       "cultivars": [],
       "blooming": {
         "start": 4,
@@ -464,13 +391,8 @@
     {
       "id": "jostaberry",
       "name": "Jostaberry",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["shrub"],
       "cultivars": [
         {
           "id": "ymerina",
@@ -498,13 +420,8 @@
     {
       "id": "banana",
       "name": "Banana",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "understory"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["understory"],
       "cultivars": [
         {
           "id": "cavendish",
@@ -520,13 +437,8 @@
     {
       "id": "gooseberry",
       "name": "Gooseberry",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["shrub"],
       "cultivars": [
         {
           "id": "invicta",
@@ -554,14 +466,8 @@
     {
       "id": "goumi",
       "name": "Goumi",
-      "functions": [
-        "edible",
-        "nitrogen_fixer",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub"
-      ],
+      "functions": ["edible", "nitrogen_fixer", "pollinator_attractor"],
+      "layers": ["shrub"],
       "cultivars": [
         {
           "id": "sweet_scarlet",
@@ -595,10 +501,7 @@
         "medicinal",
         "pollinator_attractor"
       ],
-      "layers": [
-        "herb",
-        "root"
-      ],
+      "layers": ["herb", "root"],
       "cultivars": [
         {
           "id": "bocking_14",
@@ -629,10 +532,7 @@
         "ground_cover",
         "dynamic_accumulator"
       ],
-      "layers": [
-        "herb",
-        "ground_cover"
-      ],
+      "layers": ["herb", "ground_cover"],
       "cultivars": [
         {
           "id": "broadleaf",
@@ -652,15 +552,8 @@
     {
       "id": "calendula",
       "name": "Calendula (pot marigold)",
-      "functions": [
-        "edible",
-        "medicinal",
-        "pollinator_attractor",
-        "pest_repellent"
-      ],
-      "layers": [
-        "herb"
-      ],
+      "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
       "cultivars": [
         {
           "id": "radio_extra",
@@ -684,14 +577,8 @@
     {
       "id": "carpathian_bellflower",
       "name": "Carpathian bellflower",
-      "functions": [
-        "pollinator_attractor",
-        "ground_cover"
-      ],
-      "layers": [
-        "herb",
-        "ground_cover"
-      ],
+      "functions": ["pollinator_attractor", "ground_cover"],
+      "layers": ["herb", "ground_cover"],
       "cultivars": [
         {
           "id": "blue_clips",
@@ -715,14 +602,8 @@
     {
       "id": "sweet_william",
       "name": "Sweet William",
-      "functions": [
-        "edible",
-        "pollinator_attractor",
-        "pest_repellent"
-      ],
-      "layers": [
-        "herb"
-      ],
+      "functions": ["edible", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
       "cultivars": [
         {
           "id": "auricula_eyed",
@@ -746,13 +627,8 @@
     {
       "id": "tagetes",
       "name": "Marigold (Tagetes)",
-      "functions": [
-        "pollinator_attractor",
-        "pest_repellent"
-      ],
-      "layers": [
-        "herb"
-      ],
+      "functions": ["pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
       "cultivars": [
         {
           "id": "french",
@@ -776,16 +652,8 @@
     {
       "id": "mint",
       "name": "Mint",
-      "functions": [
-        "edible",
-        "medicinal",
-        "pollinator_attractor",
-        "pest_repellent"
-      ],
-      "layers": [
-        "herb",
-        "ground_cover"
-      ],
+      "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb", "ground_cover"],
       "cultivars": [
         {
           "id": "multimentha",
@@ -801,15 +669,8 @@
     {
       "id": "marjoram",
       "name": "Marjoram",
-      "functions": [
-        "edible",
-        "medicinal",
-        "pollinator_attractor",
-        "pest_repellent"
-      ],
-      "layers": [
-        "herb"
-      ],
+      "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
       "cultivars": [
         {
           "id": "venezia",
@@ -825,13 +686,8 @@
     {
       "id": "mulberry",
       "name": "Mulberry",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "overstory"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["overstory"],
       "cultivars": [
         {
           "id": "red",
@@ -859,16 +715,8 @@
     {
       "id": "sage",
       "name": "Sage",
-      "functions": [
-        "edible",
-        "medicinal",
-        "pollinator_attractor",
-        "pest_repellent"
-      ],
-      "layers": [
-        "herb",
-        "shrub"
-      ],
+      "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb", "shrub"],
       "cultivars": [],
       "blooming": {
         "start": 6,
@@ -879,14 +727,8 @@
     {
       "id": "dill",
       "name": "Dill",
-      "functions": [
-        "edible",
-        "pollinator_attractor",
-        "pest_repellent"
-      ],
-      "layers": [
-        "herb"
-      ],
+      "functions": ["edible", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
       "cultivars": [
         {
           "id": "bouquet",
@@ -914,15 +756,8 @@
     {
       "id": "che",
       "name": "Che (mandarin melon berry)",
-      "functions": [
-        "edible",
-        "medicinal",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub",
-        "understory"
-      ],
+      "functions": ["edible", "medicinal", "pollinator_attractor"],
+      "layers": ["shrub", "understory"],
       "cultivars": [
         {
           "id": "seedless",
@@ -946,14 +781,8 @@
     {
       "id": "black_currant",
       "name": "Black currant",
-      "functions": [
-        "edible",
-        "pollinator_attractor",
-        "medicinal"
-      ],
-      "layers": [
-        "shrub"
-      ],
+      "functions": ["edible", "pollinator_attractor", "medicinal"],
+      "layers": ["shrub"],
       "cultivars": [
         {
           "id": "titania",
@@ -981,13 +810,8 @@
     {
       "id": "white_currant",
       "name": "White currant",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["shrub"],
       "cultivars": [
         {
           "id": "white_grape",
@@ -1011,13 +835,8 @@
     {
       "id": "red_currant",
       "name": "Red currant",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["shrub"],
       "cultivars": [
         {
           "id": "jonkheer_van_tets",
@@ -1045,13 +864,8 @@
     {
       "id": "peach",
       "name": "Peach",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "understory"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["understory"],
       "cultivars": [
         {
           "id": "elberta",
@@ -1079,13 +893,8 @@
     {
       "id": "nectarine",
       "name": "Nectarine",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "understory"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["understory"],
       "cultivars": [
         {
           "id": "fantasia",
@@ -1113,13 +922,8 @@
     {
       "id": "apricot",
       "name": "Apricot",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "understory"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["understory"],
       "cultivars": [
         {
           "id": "moorpark",
@@ -1155,13 +959,8 @@
     {
       "id": "plum",
       "name": "Plum",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "understory"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["understory"],
       "cultivars": [
         {
           "id": "stanley",
@@ -1197,13 +996,8 @@
     {
       "id": "persimmon",
       "name": "Persimmon",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "understory"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["understory"],
       "cultivars": [
         {
           "id": "fuyu",
@@ -1231,13 +1025,8 @@
     {
       "id": "sweet_cherry",
       "name": "Sweet cherry",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "overstory"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["overstory"],
       "cultivars": [
         {
           "id": "bing",
@@ -1281,13 +1070,8 @@
     {
       "id": "sour_cherry",
       "name": "Sour cherry",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "understory"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["understory"],
       "cultivars": [
         {
           "id": "montmorency",
@@ -1319,13 +1103,8 @@
     {
       "id": "fig",
       "name": "Fig",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "understory"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["understory"],
       "cultivars": [
         {
           "id": "brown_turkey",
@@ -1365,15 +1144,8 @@
     {
       "id": "hazelnut",
       "name": "Hazelnut",
-      "functions": [
-        "edible",
-        "pollinator_attractor",
-        "wildfire_suppressor"
-      ],
-      "layers": [
-        "shrub",
-        "understory"
-      ],
+      "functions": ["edible", "pollinator_attractor", "wildfire_suppressor"],
+      "layers": ["shrub", "understory"],
       "cultivars": [
         {
           "id": "barcelona",
@@ -1409,14 +1181,8 @@
     {
       "id": "walnut",
       "name": "Walnut",
-      "functions": [
-        "edible",
-        "dynamic_accumulator",
-        "mulcher"
-      ],
-      "layers": [
-        "overstory"
-      ],
+      "functions": ["edible", "dynamic_accumulator", "mulcher"],
+      "layers": ["overstory"],
       "cultivars": [
         {
           "id": "chandler",
@@ -1444,13 +1210,8 @@
     {
       "id": "blueberry",
       "name": "Blueberry",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["shrub"],
       "cultivars": [
         {
           "id": "bluecrop",
@@ -1478,13 +1239,8 @@
     {
       "id": "raspberry",
       "name": "Raspberry",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["shrub"],
       "cultivars": [
         {
           "id": "heritage",
@@ -1512,14 +1268,8 @@
     {
       "id": "blackberry",
       "name": "Blackberry",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub",
-        "vine"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["shrub", "vine"],
       "cultivars": [
         {
           "id": "triple_crown",
@@ -1551,14 +1301,8 @@
     {
       "id": "tayberry",
       "name": "Tayberry",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub",
-        "vine"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["shrub", "vine"],
       "cultivars": [
         {
           "id": "buckingham",
@@ -1582,15 +1326,8 @@
     {
       "id": "thyme",
       "name": "Thyme",
-      "functions": [
-        "edible",
-        "medicinal",
-        "pollinator_attractor",
-        "pest_repellent"
-      ],
-      "layers": [
-        "herb"
-      ],
+      "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
       "cultivars": [
         {
           "id": "common",
@@ -1607,10 +1344,7 @@
         {
           "id": "summerdreams_lemon_gold",
           "name": "Summerdreams Lemon Gold",
-          "layers": [
-            "herb",
-            "ground_cover"
-          ]
+          "layers": ["herb", "ground_cover"]
         },
         {
           "id": "german_winter",
@@ -1626,10 +1360,7 @@
             "pest_repellent",
             "ground_cover"
           ],
-          "layers": [
-            "herb",
-            "ground_cover"
-          ]
+          "layers": ["herb", "ground_cover"]
         },
         {
           "id": "woolly",
@@ -1641,10 +1372,7 @@
             "pest_repellent",
             "ground_cover"
           ],
-          "layers": [
-            "herb",
-            "ground_cover"
-          ]
+          "layers": ["herb", "ground_cover"]
         },
         {
           "id": "elfin",
@@ -1656,34 +1384,19 @@
             "pest_repellent",
             "ground_cover"
           ],
-          "layers": [
-            "herb",
-            "ground_cover"
-          ]
+          "layers": ["herb", "ground_cover"]
         },
         {
           "id": "pink_chintz",
           "name": "Pink Chintz",
-          "functions": [
-            "pollinator_attractor",
-            "ground_cover"
-          ],
-          "layers": [
-            "herb",
-            "ground_cover"
-          ]
+          "functions": ["pollinator_attractor", "ground_cover"],
+          "layers": ["herb", "ground_cover"]
         },
         {
           "id": "red_creeping",
           "name": "Red creeping (Coccineus)",
-          "functions": [
-            "pollinator_attractor",
-            "ground_cover"
-          ],
-          "layers": [
-            "herb",
-            "ground_cover"
-          ]
+          "functions": ["pollinator_attractor", "ground_cover"],
+          "layers": ["herb", "ground_cover"]
         }
       ],
       "blooming": {
@@ -1695,13 +1408,8 @@
     {
       "id": "yamlina",
       "name": "Yamlina (raspberry–strawberry)",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["shrub"],
       "cultivars": [],
       "blooming": {
         "start": 6,
@@ -1716,14 +1424,8 @@
     {
       "id": "lemon",
       "name": "Lemon",
-      "functions": [
-        "edible",
-        "pest_repellent",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "understory"
-      ],
+      "functions": ["edible", "pest_repellent", "pollinator_attractor"],
+      "layers": ["understory"],
       "cultivars": [
         {
           "id": "meyer",
@@ -1751,13 +1453,8 @@
     {
       "id": "orange",
       "name": "Orange",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "understory"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["understory"],
       "cultivars": [
         {
           "id": "valencia",
@@ -1785,15 +1482,8 @@
     {
       "id": "hardy_orange",
       "name": "Hardy orange (trifoliate)",
-      "functions": [
-        "edible",
-        "pest_repellent",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub",
-        "understory"
-      ],
+      "functions": ["edible", "pest_repellent", "pollinator_attractor"],
+      "layers": ["shrub", "understory"],
       "cultivars": [
         {
           "id": "flying_dragon",
@@ -1817,14 +1507,8 @@
     {
       "id": "goji",
       "name": "Goji berry",
-      "functions": [
-        "edible",
-        "medicinal",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub"
-      ],
+      "functions": ["edible", "medicinal", "pollinator_attractor"],
+      "layers": ["shrub"],
       "cultivars": [
         {
           "id": "crimson_star",
@@ -1852,14 +1536,8 @@
     {
       "id": "cornelian_cherry",
       "name": "Cornelian cherry",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub",
-        "understory"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["shrub", "understory"],
       "cultivars": [
         {
           "id": "jolico",
@@ -1887,14 +1565,8 @@
     {
       "id": "chinese_chestnut",
       "name": "Chinese chestnut",
-      "functions": [
-        "edible",
-        "pollinator_attractor",
-        "mulcher"
-      ],
-      "layers": [
-        "overstory"
-      ],
+      "functions": ["edible", "pollinator_attractor", "mulcher"],
+      "layers": ["overstory"],
       "cultivars": [
         {
           "id": "qing",
@@ -1922,15 +1594,8 @@
     {
       "id": "yellowhorn",
       "name": "Yellowhorn (shan li hong)",
-      "functions": [
-        "edible",
-        "pollinator_attractor",
-        "medicinal"
-      ],
-      "layers": [
-        "shrub",
-        "understory"
-      ],
+      "functions": ["edible", "pollinator_attractor", "medicinal"],
+      "layers": ["shrub", "understory"],
       "cultivars": [
         {
           "id": "sinensis",
@@ -1954,16 +1619,8 @@
     {
       "id": "rosemary",
       "name": "Rosemary",
-      "functions": [
-        "edible",
-        "medicinal",
-        "pest_repellent",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub",
-        "herb"
-      ],
+      "functions": ["edible", "medicinal", "pest_repellent", "pollinator_attractor"],
+      "layers": ["shrub", "herb"],
       "cultivars": [
         {
           "id": "arp",
@@ -1987,14 +1644,8 @@
     {
       "id": "birch",
       "name": "Birch",
-      "functions": [
-        "dynamic_accumulator",
-        "mulcher",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "overstory"
-      ],
+      "functions": ["dynamic_accumulator", "mulcher", "pollinator_attractor"],
+      "layers": ["overstory"],
       "cultivars": [
         {
           "id": "river",
@@ -2018,15 +1669,8 @@
     {
       "id": "hibiscus",
       "name": "Hibiscus",
-      "functions": [
-        "pollinator_attractor",
-        "medicinal",
-        "edible"
-      ],
-      "layers": [
-        "shrub",
-        "herb"
-      ],
+      "functions": ["pollinator_attractor", "medicinal", "edible"],
+      "layers": ["shrub", "herb"],
       "cultivars": [
         {
           "id": "cranberry",
@@ -2050,13 +1694,8 @@
     {
       "id": "larkspur",
       "name": "Larkspur",
-      "functions": [
-        "pollinator_attractor",
-        "medicinal"
-      ],
-      "layers": [
-        "herb"
-      ],
+      "functions": ["pollinator_attractor", "medicinal"],
+      "layers": ["herb"],
       "cultivars": [
         {
           "id": "giants_mix",
@@ -2080,14 +1719,8 @@
     {
       "id": "lilac",
       "name": "Lilac",
-      "functions": [
-        "pollinator_attractor",
-        "pest_repellent"
-      ],
-      "layers": [
-        "shrub",
-        "understory"
-      ],
+      "functions": ["pollinator_attractor", "pest_repellent"],
+      "layers": ["shrub", "understory"],
       "cultivars": [
         {
           "id": "common_purple",
@@ -2111,14 +1744,8 @@
     {
       "id": "livingstone_daisy",
       "name": "Livingstone daisy",
-      "functions": [
-        "pollinator_attractor",
-        "ground_cover"
-      ],
-      "layers": [
-        "herb",
-        "ground_cover"
-      ],
+      "functions": ["pollinator_attractor", "ground_cover"],
+      "layers": ["herb", "ground_cover"],
       "cultivars": [],
       "blooming": {
         "start": 4,
@@ -2129,12 +1756,8 @@
     {
       "id": "sea_lavender",
       "name": "Sea lavender",
-      "functions": [
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "herb"
-      ],
+      "functions": ["pollinator_attractor"],
+      "layers": ["herb"],
       "cultivars": [],
       "blooming": {
         "start": 6,
@@ -2145,15 +1768,8 @@
     {
       "id": "curry_plant",
       "name": "Curry plant",
-      "functions": [
-        "pollinator_attractor",
-        "pest_repellent",
-        "medicinal"
-      ],
-      "layers": [
-        "shrub",
-        "herb"
-      ],
+      "functions": ["pollinator_attractor", "pest_repellent", "medicinal"],
+      "layers": ["shrub", "herb"],
       "cultivars": [
         {
           "id": "tikka",
@@ -2169,14 +1785,8 @@
     {
       "id": "rosehip",
       "name": "Rosehip",
-      "functions": [
-        "edible",
-        "medicinal",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub"
-      ],
+      "functions": ["edible", "medicinal", "pollinator_attractor"],
+      "layers": ["shrub"],
       "cultivars": [
         {
           "id": "dog_rose",
@@ -2189,9 +1799,7 @@
         {
           "id": "ornamental",
           "name": "Ornamental rose (flowers, no hips)",
-          "functions": [
-            "pollinator_attractor"
-          ],
+          "functions": ["pollinator_attractor"],
           "blooming": {
             "start": 5,
             "end": 10
@@ -2212,13 +1820,8 @@
     {
       "id": "coneflower",
       "name": "Coneflower (Echinacea)",
-      "functions": [
-        "medicinal",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "herb"
-      ],
+      "functions": ["medicinal", "pollinator_attractor"],
+      "layers": ["herb"],
       "cultivars": [
         {
           "id": "magnus",
@@ -2242,13 +1845,8 @@
     {
       "id": "viburnum",
       "name": "Viburnum",
-      "functions": [
-        "edible",
-        "pollinator_attractor"
-      ],
-      "layers": [
-        "shrub"
-      ],
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["shrub"],
       "cultivars": [
         {
           "id": "korean_spice",
@@ -2280,14 +1878,8 @@
     {
       "id": "aubrieta",
       "name": "Aubrieta (rock cress)",
-      "functions": [
-        "pollinator_attractor",
-        "ground_cover"
-      ],
-      "layers": [
-        "herb",
-        "ground_cover"
-      ],
+      "functions": ["pollinator_attractor", "ground_cover"],
+      "layers": ["herb", "ground_cover"],
       "cultivars": [
         {
           "id": "royal_blue",

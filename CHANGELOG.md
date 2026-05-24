@@ -3,6 +3,7 @@
 ## 0.11.0 
 
 - [FEATURE] Icon theme
+- [FEATURE] Color theme
 
 ## 0.10.0
 

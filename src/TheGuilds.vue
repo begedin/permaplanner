@@ -45,12 +45,12 @@ const detailMotionStyle = computed((): Record<string, string> => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full min-h-0 bg-emerald-50/40">
+  <div class="flex flex-col h-full min-h-0 bg-parchment-100/50">
     <GuildTabHeader title="Guilds" />
 
     <div
       v-if="garden.guilds.length === 0"
-      class="p-4 text-slate-600 text-sm"
+      class="p-4 text-ink-600 text-sm"
     >
       No guilds yet. Click <strong>Add guild</strong> to create one.
     </div>
@@ -67,7 +67,7 @@ const detailMotionStyle = computed((): Record<string, string> => {
             :initial="false"
             :layout-dependency="selectedGuildId"
             :transition="guildLayoutTransition"
-            class="flex flex-col min-h-0 min-w-0 border-r border-slate-200/80 bg-white/60 w-full md:shrink-0"
+            class="flex flex-col min-h-0 min-w-0 border-r border-parchment-400/60 bg-parchment-50/60 w-full md:shrink-0"
             :class="showMobileDetail ? 'hidden md:flex' : 'flex'"
             :style="asideMotionStyle"
             aria-label="Guild list"

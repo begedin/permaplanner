@@ -200,14 +200,14 @@ const customCultivarName = computed({
 });
 </script>
 <template>
-  <div class="bg-white p-4 grid grid-flow-col items-start gap-8 rounded-md">
+  <div class="bg-parchment-50 p-4 grid grid-flow-col items-start gap-8 rounded-md">
     <div class="flex flex-col gap-1">
       <div
         v-for="plant in garden.plants"
         :key="plant.id"
         role="button"
-        class="flex flex-row items-center gap-1 bg-slate-200 rounded-md p-1 hover:bg-slate-300 text-slate-900"
-        :class="{ 'bg-slate-400': plant.id === plantInEditing.id }"
+        class="flex flex-row items-center gap-1 bg-parchment-300 rounded-md p-1 hover:bg-parchment-400 text-ink-900"
+        :class="{ 'bg-parchment-500': plant.id === plantInEditing.id }"
         :title="resolveUserPlant(plant, plantCatalog).name"
         :aria-label="resolveUserPlant(plant, plantCatalog).name"
         @click="edit(plant)"
@@ -229,8 +229,8 @@ const customCultivarName = computed({
         </button>
       </div>
       <button
-        class="flex flex-row items-center gap-1 bg-slate-200 rounded-md p-1 hover:bg-slate-300 text-slate-900"
-        :class="{ 'bg-slate-400': isNew }"
+        class="flex flex-row items-center gap-1 bg-parchment-300 rounded-md p-1 hover:bg-parchment-400 text-ink-900"
+        :class="{ 'bg-parchment-500': isNew }"
         @click="newPlant"
       >
         <UiIcon
@@ -242,7 +242,7 @@ const customCultivarName = computed({
     </div>
 
     <div class="flex flex-col gap-3 min-w-[200px]">
-      <h2 class="text-slate-800 font-medium">Catalog</h2>
+      <h2 class="text-ink-800 font-medium">Catalog</h2>
       <PlantCatalogCombobox
         v-model="editingCatalogPick"
         label="Catalog species and cultivar"
@@ -252,34 +252,34 @@ const customCultivarName = computed({
     <div class="flex flex-col gap-2 p-2 max-w-md">
       <div class="flex flex-row items-center gap-2">
         <PlantIcon
-          class="w-14 h-14 shrink-0 border border-slate-200 rounded-md"
+          class="w-14 h-14 shrink-0 border border-parchment-300 rounded-md"
           :plant="resolvedPreview"
         />
-        <p class="text-sm text-slate-600">
+        <p class="text-sm text-ink-600">
           Preview merges catalog → your species overrides → cultivar → your cultivar
           overrides.
         </p>
       </div>
 
       <label class="flex flex-col gap-1">
-        <span class="text-slate-800">Custom species name (optional)</span>
+        <span class="text-ink-800">Custom species name (optional)</span>
         <input
           v-model="customSpeciesName"
-          class="p-1 border border-slate-300 rounded-md text-slate-800"
+          class="p-1 border border-parchment-400 rounded-md text-ink-800"
           placeholder="Uses catalog name if empty"
         />
       </label>
       <label class="flex flex-col gap-1">
-        <span class="text-slate-800">Custom cultivar label (optional)</span>
+        <span class="text-ink-800">Custom cultivar label (optional)</span>
         <input
           v-model="customCultivarName"
-          class="p-1 border border-slate-300 rounded-md text-slate-800"
+          class="p-1 border border-parchment-400 rounded-md text-ink-800"
           placeholder="Uses catalog cultivar if empty"
         />
       </label>
 
       <div class="flex flex-col gap-1">
-        <span class="text-slate-800">Icon</span>
+        <span class="text-ink-800">Icon</span>
         <div
           class="flex flex-row flex-wrap gap-1 max-w-xs"
           role="list"
@@ -288,8 +288,10 @@ const customCultivarName = computed({
             v-for="iconId in PLANT_ICON_OPTIONS"
             :key="iconId"
             type="button"
-            class="p-1 rounded border border-transparent hover:bg-slate-100"
-            :class="resolvedPreview.iconId === iconId && 'border-sky-400 bg-sky-50'"
+            class="p-1 rounded border border-transparent hover:bg-parchment-200"
+            :class="
+              resolvedPreview.iconId === iconId && 'border-blossom-300 bg-blossom-50'
+            "
             :aria-pressed="resolvedPreview.iconId === iconId"
             :aria-label="iconId"
             @click="pickIcon(iconId)"
@@ -306,7 +308,7 @@ const customCultivarName = computed({
       <PlantLayers v-model:value="editingLayers" />
 
       <button
-        class="px-2 py-1 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
+        class="px-2 py-1 rounded-md bg-parchment-300 hover:bg-parchment-400 text-ink-600"
         @click="save"
       >
         {{ isNew ? 'Create' : 'Save' }}

@@ -105,7 +105,7 @@ const displayPickLabel = (p: unknown): string =>
     </template>
     <template #anchor>
       <ComboboxInput
-        class="w-full rounded-md border border-slate-300 bg-white py-1 pl-2 pr-9 text-sm text-slate-800 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+        class="w-full rounded-md border border-parchment-400 bg-parchment-50 py-1 pl-2 pr-9 text-sm text-ink-800 focus:border-sage-400 focus:outline-none focus:ring-1 focus:ring-sage-400"
         :placeholder="placeholder"
         :display-value="displayPickLabel"
         @change="query = ($event.target as HTMLInputElement).value"
@@ -113,7 +113,7 @@ const displayPickLabel = (p: unknown): string =>
       />
       <ComboboxButton
         type="button"
-        class="absolute inset-y-0 right-0 flex items-center px-2 text-slate-500 hover:text-slate-800"
+        class="absolute inset-y-0 right-0 flex items-center px-2 text-ink-500 hover:text-ink-800"
         aria-label="Open plant list"
       >
         <UiIcon
@@ -124,7 +124,7 @@ const displayPickLabel = (p: unknown): string =>
     </template>
     <template #options>
       <template v-if="filteredPickGroups.length === 0">
-        <div class="px-2 py-2 text-xs text-slate-500">No matches</div>
+        <div class="px-2 py-2 text-xs text-ink-500">No matches</div>
       </template>
       <template v-else>
         <template
@@ -133,7 +133,7 @@ const displayPickLabel = (p: unknown): string =>
         >
           <div
             role="presentation"
-            class="sticky top-0 z-10 border-b border-slate-200 bg-slate-100 px-2 py-1 text-left text-xs font-semibold text-slate-700"
+            class="sticky top-0 z-10 border-b border-parchment-300 bg-parchment-200 px-2 py-1 text-left text-xs font-semibold text-ink-700"
           >
             {{ group.speciesName }}
           </div>
@@ -147,7 +147,7 @@ const displayPickLabel = (p: unknown): string =>
             <div
               :class="[
                 'cursor-pointer px-2 py-1.5 text-left text-sm',
-                active ? 'bg-emerald-100 text-slate-900' : 'text-slate-700',
+                active ? 'bg-sage-100 text-ink-900' : 'text-ink-700',
                 isSelected ? 'font-medium' : '',
               ]"
             >

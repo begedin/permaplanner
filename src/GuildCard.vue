@@ -301,12 +301,12 @@ const guildMonthPhenologyCounts = computed(() => {
 const guildMonthBlockClass = (rawCount: number): string => {
   const n = Math.min(5, rawCount);
   const classes = [
-    'bg-slate-200',
-    'bg-emerald-100',
-    'bg-emerald-200',
-    'bg-emerald-300',
-    'bg-emerald-400',
-    'bg-emerald-500',
+    'bg-parchment-300',
+    'bg-sage-100',
+    'bg-sage-200',
+    'bg-sage-300',
+    'bg-sage-400',
+    'bg-sage-500',
   ];
   return classes[n] ?? classes[0]!;
 };
@@ -336,10 +336,10 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
 
 <template>
   <article
-    class="flex flex-col gap-1 items-start justify-start p-2 rounded text-slate-600 bg-white border border-slate-200 shadow-sm hover:border-emerald-200 transition-colors w-full"
+    class="flex flex-col gap-1 items-start justify-start p-2 rounded text-ink-600 bg-parchment-50 border border-parchment-300 shadow-parchment hover:border-sage-300 transition-colors w-full"
     :class="{
       'h-full': context === 'aerialSidebar' && fillCell,
-      'ring-2 ring-emerald-500 ring-offset-1':
+      'ring-2 ring-sage-500 ring-offset-1 ring-offset-parchment-100':
         context === 'aerialSidebar' && selectedGuildId === guildId,
       'cursor-pointer': context === 'aerialSidebar',
     }"
@@ -353,7 +353,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
   >
     <template v-if="context === 'aerialSidebar'">
       <div class="flex flex-row items-start justify-between gap-2 w-full">
-        <p class="font-medium text-slate-800 min-w-0 flex-1">
+        <p class="font-medium text-ink-800 min-w-0 flex-1">
           {{ guild.name }}
         </p>
         <div
@@ -362,7 +362,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
         >
           <span
             v-if="guildMapSizeLabel"
-            class="text-[11px] leading-tight text-slate-500 tabular-nums"
+            class="text-[11px] leading-tight text-ink-500 tabular-nums"
             aria-label="Guild size on aerial map"
           >
             {{ guildMapSizeLabel }}
@@ -388,12 +388,12 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
         <span
           v-for="(tag, i) in compactPlantTags"
           :key="`${tag.text}-${i}`"
-          class="text-[11px] leading-tight text-slate-700 bg-slate-100 border border-slate-200/80 rounded px-1.5 py-0.5"
+          class="text-[11px] leading-tight text-ink-700 bg-parchment-200 border border-parchment-400/60 rounded px-1.5 py-0.5"
           >{{ tag.text }}</span
         >
         <span
           v-if="compactPlantTags.length === 0"
-          class="text-xs text-slate-400 italic"
+          class="text-xs text-ink-400 italic"
           >No plants</span
         >
       </div>
@@ -413,7 +413,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
         >
           <span
             v-if="guildMapSizeLabel"
-            class="text-xs text-slate-600 tabular-nums"
+            class="text-xs text-ink-600 tabular-nums"
             aria-label="Guild size on aerial map"
           >
             {{ guildMapSizeLabel }}
@@ -443,7 +443,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
         </button>
       </div>
       <input
-        class="appearance-none bg-transparent border-none focus:outline-none text-slate-600 w-full truncate"
+        class="appearance-none bg-transparent border-none focus:outline-none text-ink-600 w-full truncate"
         :value="guild.name"
         @input="setName"
       />
@@ -452,7 +452,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
         aria-label="Mulch level"
         class="flex flex-row items-center gap-1.5 w-full"
       >
-        <span class="text-xs text-slate-500 shrink-0">Mulch</span>
+        <span class="text-xs text-ink-500 shrink-0">Mulch</span>
         <div class="flex flex-row gap-0.5 items-center">
           <span
             v-for="n in mulchStars"
@@ -461,7 +461,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             :aria-checked="guild.mulchLevel === n"
             tabindex="0"
             class="cursor-pointer inline-flex size-5 items-center justify-center select-none rounded focus:outline-none focus:ring-2 focus:ring-amber-400/80 focus:ring-offset-1"
-            :class="n <= guild.mulchLevel ? 'text-amber-500' : 'text-slate-300'"
+            :class="n <= guild.mulchLevel ? 'text-amber-500' : 'text-parchment-400'"
             :aria-label="`Mulch level ${n} of 5`"
             @click="setMulchLevel(n)"
             @keydown.enter.prevent="setMulchLevel(n)"
@@ -485,7 +485,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
         >
           <div
             v-if="isEditingRow(row)"
-            class="flex flex-row items-center gap-1 w-full border-b border-sky-300 py-1 pl-1"
+            class="flex flex-row items-center gap-1 w-full border-b border-blossom-300 py-1 pl-1"
             aria-label="Edit guild plant"
           >
             <div class="min-w-0 flex-1">
@@ -496,7 +496,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             </div>
             <button
               type="button"
-              class="shrink-0 text-sm bg-green-200 hover:bg-green-300 disabled:opacity-50 rounded py-1 px-2 text-slate-800"
+              class="shrink-0 text-sm bg-sage-200 hover:bg-sage-300 disabled:opacity-50 rounded py-1 px-2 text-ink-800"
               :disabled="!selectedPick"
               aria-label="Save plant in guild"
               @click.stop="onConfirmPlant"
@@ -505,7 +505,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             </button>
             <button
               type="button"
-              class="shrink-0 text-sm bg-slate-100 hover:bg-slate-200 rounded py-1 px-2 text-slate-700"
+              class="shrink-0 text-sm bg-parchment-200 hover:bg-parchment-300 rounded py-1 px-2 text-ink-700"
               aria-label="Cancel editing plant"
               @click.stop="closePlantEditor"
             >
@@ -515,7 +515,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           <div
             v-else
             :aria-label="row.count > 1 ? `${row.label} (${row.count})` : row.label"
-            class="pl-1 flex flex-row items-start justify-start w-full gap-1 border-b border-sky-300 py-0.5"
+            class="pl-1 flex flex-row items-start justify-start w-full gap-1 border-b border-blossom-300 py-0.5"
           >
             <PlantIcon
               :title="row.label"
@@ -529,7 +529,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
               </span>
               <span
                 v-if="phenologySummaryForThingIds(row.thingIds)"
-                class="text-[10px] leading-tight text-slate-500"
+                class="text-[10px] leading-tight text-ink-500"
               >
                 {{ phenologySummaryForThingIds(row.thingIds) }}
               </span>
@@ -539,7 +539,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
                 type="button"
                 title="Edit plant in bed"
                 aria-label="Edit plant in bed"
-                class="bg-transparent hover:bg-sky-100 rounded-md p-1/2 px-1 transition-colors"
+                class="bg-transparent hover:bg-blossom-100 rounded-md p-1/2 px-1 transition-colors"
                 @click.stop="openEditPlantEditor(row)"
               >
                 <UiIcon name="edit" />
@@ -571,14 +571,14 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           type="button"
           title="Add plant to guild"
           aria-label="Add plant to guild"
-          class="self-start bg-transparent hover:bg-slate-100 rounded-md p-1/2 px-1 text-sm leading-none transition-colors border border-dashed border-slate-300"
+          class="self-start bg-transparent hover:bg-parchment-200 rounded-md p-1/2 px-1 text-sm leading-none transition-colors border border-dashed border-parchment-400"
           @click.stop="openAddPlantEditor"
         >
           <UiIcon name="add" />
         </button>
         <div
           v-else-if="plantEditor?.kind === 'add'"
-          class="flex flex-row items-center gap-1 w-full border-b border-sky-300 py-1"
+          class="flex flex-row items-center gap-1 w-full border-b border-blossom-300 py-1"
           aria-label="Add guild plant"
         >
           <div class="min-w-0 flex-1">
@@ -589,7 +589,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           </div>
           <button
             type="button"
-            class="shrink-0 text-sm bg-green-200 hover:bg-green-300 disabled:opacity-50 rounded py-1 px-2 text-slate-800"
+            class="shrink-0 text-sm bg-sage-200 hover:bg-sage-300 disabled:opacity-50 rounded py-1 px-2 text-ink-800"
             :disabled="!selectedPick"
             aria-label="Add to guild"
             @click.stop="onConfirmPlant"
@@ -598,7 +598,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           </button>
           <button
             type="button"
-            class="shrink-0 text-sm bg-slate-100 hover:bg-slate-200 rounded py-1 px-2 text-slate-700"
+            class="shrink-0 text-sm bg-parchment-200 hover:bg-parchment-300 rounded py-1 px-2 text-ink-700"
             aria-label="Cancel adding plant"
             @click.stop="closePlantEditor"
           >
@@ -613,8 +613,8 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           :key="fnKey"
           :class="{
             'bg-red-200': f.count == 0,
-            'bg-green-200': f.count == 1,
-            'bg-green-500': f.count > 1,
+            'bg-sage-200': f.count == 1,
+            'bg-sage-500': f.count > 1,
           }"
           class="rounded-md p-1/2 px-1 text-xs"
           :aria-label="`${f.label}`"
@@ -623,7 +623,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           {{ f.label }}
           <span
             v-if="f.count > 1"
-            class="text-slate-500 bg-slate-200 rounded-md px-1 text-xs"
+            class="text-ink-500 bg-parchment-300 rounded-md px-1 text-xs"
           >
             {{ f.count }}
           </span>
@@ -636,8 +636,8 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           :key="layerKey"
           :class="{
             'bg-red-200': l.count == 0,
-            'bg-green-200': l.count == 1,
-            'bg-green-500': l.count > 1,
+            'bg-sage-200': l.count == 1,
+            'bg-sage-500': l.count > 1,
           }"
           class="rounded-md p-1/2 px-1 text-xs"
           :aria-label="`${l.label}`"
@@ -646,7 +646,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           {{ l.label }}
           <span
             v-if="l.count > 1"
-            class="text-xs text-slate-500 bg-slate-200 rounded-md px-1"
+            class="text-xs text-ink-500 bg-parchment-300 rounded-md px-1"
           >
             {{ l.count }}
           </span>
@@ -671,7 +671,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           <span
             v-for="(lab, i) in CATALOG_MONTH_LABELS_2"
             :key="`mh-${i}`"
-            class="flex-1 min-w-0 text-center text-[10px] leading-none font-medium text-slate-500"
+            class="flex-1 min-w-0 text-center text-[10px] leading-none font-medium text-ink-500"
             :title="monthHeaderTooltip(guildTooltipRows, i, CATALOG_MONTH_LABELS[i])"
             >{{ lab }}</span
           >
@@ -682,7 +682,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
         role="group"
         aria-label="Fruiting by month"
       >
-        <span class="text-[10px] text-slate-500 w-9 shrink-0">Fruit</span>
+        <span class="text-[10px] text-ink-500 w-9 shrink-0">Fruit</span>
         <div
           class="flex flex-row gap-0.5 flex-1 min-w-0"
           role="list"
@@ -691,7 +691,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             v-for="(count, i) in guildMonthPhenologyCounts.fruiting"
             :key="`f-${i}`"
             role="listitem"
-            class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"
+            class="flex-1 min-w-0 rounded-sm h-3 border border-parchment-400/60"
             :class="guildMonthBlockClass(count)"
             :title="
               monthAspectTooltip(guildTooltipRows, i, 'fruiting', CATALOG_MONTH_LABELS[i])
@@ -704,7 +704,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
         role="group"
         aria-label="Blooming by month"
       >
-        <span class="text-[10px] text-slate-500 w-9 shrink-0">Bloom</span>
+        <span class="text-[10px] text-ink-500 w-9 shrink-0">Bloom</span>
         <div
           class="flex flex-row gap-0.5 flex-1 min-w-0"
           role="list"
@@ -713,7 +713,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             v-for="(count, i) in guildMonthPhenologyCounts.blooming"
             :key="`b-${i}`"
             role="listitem"
-            class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"
+            class="flex-1 min-w-0 rounded-sm h-3 border border-parchment-400/60"
             :class="guildMonthBlockClass(count)"
             :title="
               monthAspectTooltip(guildTooltipRows, i, 'blooming', CATALOG_MONTH_LABELS[i])

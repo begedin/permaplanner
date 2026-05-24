@@ -39,23 +39,23 @@ onBeforeUnmount(() => {
     >
       <button
         type="button"
-        class="absolute inset-0 bg-slate-900/30 cursor-default"
+        class="absolute inset-0 bg-ink-900/25 cursor-default"
         aria-label="Close plan menu"
         @click="close"
       />
       <aside
-        class="relative flex flex-col w-[min(100%,280px)] max-w-full h-full bg-gray-50 shadow-xl overflow-y-auto"
+        class="relative flex flex-col w-[min(100%,280px)] max-w-full h-full bg-parchment-100 shadow-xl overflow-y-auto"
         role="dialog"
         aria-modal="true"
         aria-label="Plan and sync"
         @click.stop
       >
         <div
-          class="flex shrink-0 items-center justify-end border-b border-slate-200/80 px-2 py-1.5"
+          class="flex shrink-0 items-center justify-end border-b border-parchment-400/60 px-2 py-1.5"
         >
           <button
             type="button"
-            class="text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded px-2 py-1"
+            class="text-sm text-ink-600 hover:text-ink-900 hover:bg-parchment-200 rounded px-2 py-1"
             @click="close"
           >
             Close

@@ -92,11 +92,11 @@ const onMigrate = () => {
     <header class="text-center">
       <h1
         id="plan-migration-heading"
-        class="text-xl font-semibold text-violet-950"
+        class="text-xl font-semibold text-ink-800"
       >
         Update your plan format
       </h1>
-      <p class="mt-2 text-violet-900/90">
+      <p class="mt-2 text-ink-600">
         Your saved data uses an older format. Download backups at version
         {{ PERMAPLANNER_FILE_VERSION }}, then migrate to continue.
       </p>
@@ -104,7 +104,7 @@ const onMigrate = () => {
 
     <ul
       v-if="localPending || githubPending"
-      class="text-sm text-violet-900/80 list-disc list-inside bg-violet-50/80 rounded-lg p-3 border border-violet-200"
+      class="text-sm text-ink-600 list-disc list-inside bg-lavender-50/80 rounded-lg p-3 border border-lavender-200"
     >
       <li v-if="localPending">Local file (version {{ pending?.localFromVersion }})</li>
       <li v-if="githubPending">
@@ -122,23 +122,21 @@ const onMigrate = () => {
     </ul>
 
     <section>
-      <h2 class="text-sm font-medium text-violet-950">
-        Download current format (backup)
-      </h2>
+      <h2 class="text-sm font-medium text-ink-800">Download current format (backup)</h2>
       <div
         v-if="hasLoadedPlan"
         class="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap"
       >
         <button
           type="button"
-          class="flex-1 min-w-[10rem] bg-white hover:bg-violet-50 border border-violet-200 rounded-lg px-4 py-2.5 text-sm text-left"
+          class="flex-1 min-w-[10rem] bg-parchment-50 hover:bg-lavender-50 border border-lavender-200 rounded-lg px-4 py-2.5 text-sm text-left"
           @click="downloadLocalJson"
         >
           Local plan (.json)
         </button>
         <button
           type="button"
-          class="flex-1 min-w-[10rem] bg-white hover:bg-violet-50 border border-violet-200 rounded-lg px-4 py-2.5 text-sm text-left"
+          class="flex-1 min-w-[10rem] bg-parchment-50 hover:bg-lavender-50 border border-lavender-200 rounded-lg px-4 py-2.5 text-sm text-left"
           @click="downloadGithubShards"
         >
           GitHub shards (config, plants, guilds)
@@ -146,7 +144,7 @@ const onMigrate = () => {
       </div>
       <p
         v-else
-        class="mt-2 text-sm text-violet-900/90"
+        class="mt-2 text-sm text-ink-600"
       >
         Open your plan to download backups of the current format.
       </p>
@@ -154,7 +152,7 @@ const onMigrate = () => {
 
     <button
       type="button"
-      class="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-lg px-4 py-3 text-base font-medium"
+      class="w-full bg-lavender-600 hover:bg-lavender-700 disabled:opacity-50 text-white rounded-lg px-4 py-3 text-base font-medium"
       :disabled="planMigrationInFlight || !canMigrate"
       @click="onMigrate"
     >
@@ -162,7 +160,7 @@ const onMigrate = () => {
     </button>
     <p
       v-if="migrateHint"
-      class="text-sm text-center text-violet-900/90"
+      class="text-sm text-center text-ink-600"
     >
       {{ migrateHint }}
     </p>

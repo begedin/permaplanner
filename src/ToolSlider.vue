@@ -13,7 +13,7 @@ withDefaults(
 const emit = defineEmits<{ (e: 'update:value', value: number): void }>();
 </script>
 <template>
-  <label class="text-slate-600 flex flex-col gap-1">
+  <label class="text-ink-600 flex flex-col gap-1">
     {{ label }}
     <div class="flex gap-2 flex-row items-center">
       <input

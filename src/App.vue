@@ -35,12 +35,12 @@ const planMenuLabel = computed(() =>
     class="flex flex-col h-full min-h-0"
   >
     <nav
-      class="flex flex-row h-8 shrink-0 items-stretch z-20 bg-emerald-100 border-b border-emerald-300/60"
+      class="flex flex-row h-8 shrink-0 items-stretch z-20 bg-sage-100 border-b border-sage-300/60"
     >
-      <div class="relative shrink-0 flex items-stretch border-r border-emerald-300/60">
+      <div class="relative shrink-0 flex items-stretch border-r border-sage-300/60">
         <button
           type="button"
-          class="flex items-center justify-center w-10 h-full px-2 text-slate-700 hover:bg-emerald-200 transition-colors"
+          class="flex items-center justify-center w-10 h-full px-2 text-ink-700 hover:bg-sage-200 transition-colors"
           :aria-label="planMenuLabel"
           :aria-expanded="planDrawerOpen"
           @click="planDrawerOpen = !planDrawerOpen"
@@ -52,27 +52,27 @@ const planMenuLabel = computed(() =>
         </button>
         <span
           v-if="unsavedChanges"
-          class="pointer-events-none absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-emerald-100"
+          class="pointer-events-none absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-sage-100"
           aria-hidden="true"
         />
       </div>
       <RouterLink
-        class="bg-emerald-200 hover:bg-emerald-300 px-2 py-1 flex-1 text-slate-600 text-center transition-colors flex items-center justify-center"
-        active-class="bg-emerald-300"
+        class="bg-sage-200 hover:bg-sage-300 px-2 py-1 flex-1 text-ink-600 text-center transition-colors flex items-center justify-center"
+        active-class="bg-sage-300"
         :to="guildsTabTo"
       >
         Guilds
       </RouterLink>
       <RouterLink
-        class="bg-emerald-200 hover:bg-emerald-300 px-2 py-1 flex-1 text-slate-600 text-center transition-colors flex items-center justify-center"
-        active-class="bg-emerald-300"
+        class="bg-sage-200 hover:bg-sage-300 px-2 py-1 flex-1 text-ink-600 text-center transition-colors flex items-center justify-center"
+        active-class="bg-sage-300"
         :to="aerialTabTo"
       >
         Aerial
       </RouterLink>
       <RouterLink
-        class="bg-emerald-200 hover:bg-emerald-300 px-2 py-1 flex-1 text-slate-600 text-center transition-colors flex items-center justify-center"
-        active-class="bg-emerald-300"
+        class="bg-sage-200 hover:bg-sage-300 px-2 py-1 flex-1 text-ink-600 text-center transition-colors flex items-center justify-center"
+        active-class="bg-sage-300"
         to="/plants"
       >
         Plants

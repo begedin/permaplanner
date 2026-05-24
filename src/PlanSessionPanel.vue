@@ -31,7 +31,7 @@ const showAerialMapTools = computed(
     <PlanUnsavedIndicator />
     <p
       v-if="showGithubOnlyHint"
-      class="text-xs text-slate-600"
+      class="text-xs text-ink-600"
     >
       Plan backed up on GitHub. Use <strong>Open plan</strong> to also save a copy on this
       device.
@@ -53,19 +53,17 @@ const showAerialMapTools = computed(
       />
     </template>
     <template v-if="showLocalFileActions">
-      <span class="text-xs text-slate-600 truncate">{{
-        permaplannerStore.fileName
-      }}</span>
+      <span class="text-xs text-ink-600 truncate">{{ permaplannerStore.fileName }}</span>
       <button
         type="button"
-        class="bg-green-200 hover:bg-green-300 rounded p-1 text-sm text-slate-800"
+        class="bg-sage-200 hover:bg-sage-300 rounded p-1 text-sm text-ink-800"
         @click="save"
       >
         Save plan
       </button>
       <button
         type="button"
-        class="bg-green-200 hover:bg-green-300 rounded p-1 text-sm text-slate-800"
+        class="bg-sage-200 hover:bg-sage-300 rounded p-1 text-sm text-ink-800"
         @click="saveAs"
       >
         Save as…
@@ -73,14 +71,14 @@ const showAerialMapTools = computed(
     </template>
     <button
       type="button"
-      class="bg-green-200 hover:bg-green-300 rounded p-1 text-sm text-slate-800"
+      class="bg-sage-200 hover:bg-sage-300 rounded p-1 text-sm text-ink-800"
       @click="load"
     >
       Open plan
     </button>
     <button
       type="button"
-      class="bg-green-200 hover:bg-green-300 rounded p-1 text-sm text-slate-800"
+      class="bg-sage-200 hover:bg-sage-300 rounded p-1 text-sm text-ink-800"
       @click="newPlan"
     >
       New plan

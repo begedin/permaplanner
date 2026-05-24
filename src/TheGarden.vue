@@ -184,13 +184,13 @@ const updateGuild = (guild: Guild) => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full min-h-0 bg-emerald-50/40">
+  <div class="flex flex-col h-full min-h-0 bg-parchment-100/50">
     <GuildTabHeader title="Aerial" />
 
     <div class="flex flex-1 min-h-0">
       <aside
         v-if="showThingBar"
-        class="flex flex-col min-h-0 min-w-0 border-r border-slate-200/80 bg-white/60 w-full md:w-72 md:shrink-0"
+        class="flex flex-col min-h-0 min-w-0 border-r border-parchment-400/60 bg-parchment-50/60 w-full md:w-72 md:shrink-0"
         aria-label="Guild list"
       >
         <div class="flex-1 min-h-0 overflow-y-auto p-2 flex flex-col gap-2">
@@ -250,7 +250,7 @@ const updateGuild = (guild: Guild) => {
             y="0"
             :width="worldBounds.width"
             :height="worldBounds.height"
-            class="fill-slate-100"
+            class="fill-parchment-200"
             data-world-stage
           />
           <image

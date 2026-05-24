@@ -36,12 +36,12 @@ const gardenMonthPhenologyCounts = computed(() => {
 const monthBlockClass = (rawCount: number): string => {
   const n = Math.min(5, rawCount);
   const classes = [
-    'bg-slate-200',
-    'bg-emerald-100',
-    'bg-emerald-200',
-    'bg-emerald-300',
-    'bg-emerald-400',
-    'bg-emerald-500',
+    'bg-parchment-300',
+    'bg-sage-100',
+    'bg-sage-200',
+    'bg-sage-300',
+    'bg-sage-400',
+    'bg-sage-500',
   ];
   return classes[n] ?? classes[0]!;
 };
@@ -49,7 +49,7 @@ const monthBlockClass = (rawCount: number): string => {
 
 <template>
   <footer
-    class="shrink-0 border-t border-slate-200 bg-white px-2 py-1.5 text-slate-600 shadow-[0_-1px_3px_rgba(0,0,0,0.04)]"
+    class="shrink-0 border-t border-parchment-300 bg-parchment-50 px-2 py-1.5 text-ink-600 shadow-parchment"
     aria-label="Garden overview"
   >
     <div
@@ -68,7 +68,7 @@ const monthBlockClass = (rawCount: number): string => {
           <span
             v-for="(lab, i) in CATALOG_MONTH_LABELS_2"
             :key="`fh-${i}`"
-            class="flex-1 min-w-0 text-center text-[10px] leading-none font-medium text-slate-500"
+            class="flex-1 min-w-0 text-center text-[10px] leading-none font-medium text-ink-500"
             :title="monthHeaderTooltip(gardenTooltipRows, i, CATALOG_MONTH_LABELS[i])"
             >{{ lab }}</span
           >
@@ -79,7 +79,7 @@ const monthBlockClass = (rawCount: number): string => {
         role="group"
         aria-label="Fruiting by month"
       >
-        <span class="text-[10px] text-slate-500 w-9 shrink-0">Fruit</span>
+        <span class="text-[10px] text-ink-500 w-9 shrink-0">Fruit</span>
         <div
           class="flex flex-row gap-0.5 flex-1 min-w-0"
           role="list"
@@ -88,7 +88,7 @@ const monthBlockClass = (rawCount: number): string => {
             v-for="(count, i) in gardenMonthPhenologyCounts.fruiting"
             :key="`ff-${i}`"
             role="listitem"
-            class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"
+            class="flex-1 min-w-0 rounded-sm h-3 border border-parchment-400/60"
             :class="monthBlockClass(count)"
             :title="
               monthAspectTooltip(
@@ -106,7 +106,7 @@ const monthBlockClass = (rawCount: number): string => {
         role="group"
         aria-label="Blooming by month"
       >
-        <span class="text-[10px] text-slate-500 w-9 shrink-0">Bloom</span>
+        <span class="text-[10px] text-ink-500 w-9 shrink-0">Bloom</span>
         <div
           class="flex flex-row gap-0.5 flex-1 min-w-0"
           role="list"
@@ -115,7 +115,7 @@ const monthBlockClass = (rawCount: number): string => {
             v-for="(count, i) in gardenMonthPhenologyCounts.blooming"
             :key="`fb-${i}`"
             role="listitem"
-            class="flex-1 min-w-0 rounded-sm h-3 border border-slate-200/80"
+            class="flex-1 min-w-0 rounded-sm h-3 border border-parchment-400/60"
             :class="monthBlockClass(count)"
             :title="
               monthAspectTooltip(
