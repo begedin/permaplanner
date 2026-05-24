@@ -129,14 +129,14 @@ const onMigrate = () => {
       >
         <button
           type="button"
-          class="flex-1 min-w-[10rem] paper-surface hover:bg-lavender-50 border border-lavender-200 rounded-lg px-4 py-2.5 text-sm text-left"
+          class="flex-1 min-w-[10rem] paper-card hover:bg-lavender-50/80 hover:border-lavender-300/70 border border-lavender-200/70 rounded-xl px-4 py-2.5 text-sm text-left transition-[background-color,border-color,box-shadow] duration-150 ease-out"
           @click="downloadLocalJson"
         >
           Local plan (.json)
         </button>
         <button
           type="button"
-          class="flex-1 min-w-[10rem] paper-surface hover:bg-lavender-50 border border-lavender-200 rounded-lg px-4 py-2.5 text-sm text-left"
+          class="flex-1 min-w-[10rem] paper-card hover:bg-lavender-50/80 hover:border-lavender-300/70 border border-lavender-200/70 rounded-xl px-4 py-2.5 text-sm text-left transition-[background-color,border-color,box-shadow] duration-150 ease-out"
           @click="downloadGithubShards"
         >
           GitHub shards (config, plants, guilds)
@@ -152,7 +152,7 @@ const onMigrate = () => {
 
     <button
       type="button"
-      class="w-full bg-lavender-600 hover:bg-lavender-700 disabled:opacity-50 text-white rounded-lg px-4 py-3 text-base font-medium"
+      class="w-full btn-soft-lavender px-4 py-3 text-base font-medium"
       :disabled="planMigrationInFlight || !canMigrate"
       @click="onMigrate"
     >

@@ -1899,6 +1899,171 @@
         "end": 5
       },
       "defaultIconId": "flower"
+    },
+    {
+      "id": "elderberry",
+      "name": "Elderberry",
+      "functions": ["edible", "pollinator_attractor", "medicinal"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "adams",
+          "name": "Adams"
+        },
+        {
+          "id": "york",
+          "name": "York"
+        },
+        {
+          "id": "johns",
+          "name": "Johns"
+        },
+        {
+          "id": "haschberg",
+          "name": "Haschberg"
+        }
+      ],
+      "blooming": {
+        "start": 5,
+        "end": 7
+      },
+      "fruiting": {
+        "start": 8,
+        "end": 9
+      },
+      "defaultIconId": "blueberry"
+    },
+    {
+      "id": "asparagus",
+      "name": "Asparagus",
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["herb", "root"],
+      "cultivars": [
+        {
+          "id": "jersey_knight",
+          "name": "Jersey Knight"
+        },
+        {
+          "id": "mary_washington",
+          "name": "Mary Washington"
+        },
+        {
+          "id": "purple_passion",
+          "name": "Purple Passion"
+        },
+        {
+          "id": "gijnlim",
+          "name": "Gijnlim"
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 7
+      },
+      "fruiting": {
+        "start": 4,
+        "end": 6
+      },
+      "defaultIconId": "leaf-herb"
+    },
+    {
+      "id": "pole_bean",
+      "name": "Pole bean",
+      "functions": ["edible", "nitrogen_fixer", "pollinator_attractor"],
+      "layers": ["vine"],
+      "cultivars": [
+        {
+          "id": "kentucky_wonder",
+          "name": "Kentucky Wonder"
+        },
+        {
+          "id": "blue_lake",
+          "name": "Blue Lake"
+        },
+        {
+          "id": "romano",
+          "name": "Romano"
+        },
+        {
+          "id": "rattlesnake",
+          "name": "Rattlesnake"
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 8
+      },
+      "fruiting": {
+        "start": 7,
+        "end": 10
+      },
+      "defaultIconId": "pea"
+    },
+    {
+      "id": "bush_bean",
+      "name": "Bush bean",
+      "functions": ["edible", "nitrogen_fixer", "pollinator_attractor"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "blue_lake",
+          "name": "Blue Lake"
+        },
+        {
+          "id": "provider",
+          "name": "Provider"
+        },
+        {
+          "id": "contender",
+          "name": "Contender"
+        },
+        {
+          "id": "dragons_tongue",
+          "name": "Dragon's Tongue"
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 7
+      },
+      "fruiting": {
+        "start": 7,
+        "end": 9
+      },
+      "defaultIconId": "pea"
+    },
+    {
+      "id": "dianthus",
+      "name": "Pinks (Dianthus)",
+      "functions": ["edible", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb", "ground_cover"],
+      "cultivars": [
+        {
+          "id": "garden_pink",
+          "name": "Garden pink"
+        },
+        {
+          "id": "carnation",
+          "name": "Carnation"
+        },
+        {
+          "id": "cheddar_pink",
+          "name": "Cheddar pink"
+        },
+        {
+          "id": "firewitch",
+          "name": "Firewitch"
+        },
+        {
+          "id": "baths_pink",
+          "name": "Bath's Pink"
+        }
+      ],
+      "blooming": {
+        "start": 5,
+        "end": 9
+      },
+      "defaultIconId": "flower-blossom"
     }
   ]
 }

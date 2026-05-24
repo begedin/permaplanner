@@ -8,7 +8,7 @@ const { unsavedChanges } = storeToRefs(usePermaplannerStore());
 <template>
   <p
     v-if="unsavedChanges"
-    class="px-1.5 py-1 rounded text-xs font-medium text-amber-900 bg-amber-100 border border-amber-200"
+    class="px-1.5 py-1 rounded-lg text-xs font-medium text-amber-900 bg-amber-100/90 border border-amber-200/60"
     role="status"
     aria-live="polite"
   >

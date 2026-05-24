@@ -21,7 +21,8 @@ To add or edit plants, follow [README — Adding plants to the catalog](README.m
 
 ## Unit tests (Vitest)
 
-- Run: `npm run test:unit` (optional path: `npm run test:unit path/to/file.test.ts`). One-off CI-style run: `npx vitest run path/to/file.test.ts`.
+- **Agents / one-off runs (exit when done):** `npx vitest run path/to/file.test.ts` — or the whole suite: `npx vitest run`.
+- **Local dev (watch mode):** `npm run test:unit` runs bare `vitest` and stays open until you quit; do not use this in automated/agent shells.
 - Prefer **`toMatchObject` / `toEqual`** (and expected objects/constants) over many per-field `expect`s and `arr[0]!` access.
 - Full conventions: [`.cursor/skills/vitest-testing-style/SKILL.md`](.cursor/skills/vitest-testing-style/SKILL.md) (Claude Code: stub under `.claude/skills/…` that points there).
 

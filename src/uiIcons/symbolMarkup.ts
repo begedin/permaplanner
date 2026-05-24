@@ -43,4 +43,9 @@ export const UI_ICON_SYMBOL_INNER: Record<UiIconId, string> = {
   'star-outline': `
     <path fill="none" stroke="currentColor" d="M24 11 L27 21 L38 22 L29 29 L32 39 L24 33 L16 39 L19 29 L10 22 L21 21 Z" />
   `,
+  ellipsis: `
+    <circle cx="14" cy="24" r="2.5" fill="currentColor" stroke="none" />
+    <circle cx="24" cy="24" r="2.5" fill="currentColor" stroke="none" />
+    <circle cx="34" cy="24" r="2.5" fill="currentColor" stroke="none" />
+  `,
 };

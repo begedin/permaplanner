@@ -123,7 +123,7 @@ onUnmounted(() => {
       static
       :unmount="false"
       popover="manual"
-      class="combobox-options-popover paper-surface z-20 max-h-60 overflow-auto rounded-md border border-parchment-300 py-1 shadow-parchment-lg focus:outline-none"
+      class="combobox-options-popover paper-card z-20 max-h-60 overflow-auto py-1 focus:outline-none"
     >
       <slot name="options" />
     </ComboboxOptions>

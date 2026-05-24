@@ -1,4 +1,10 @@
 import {
+  coerceGrowthPhase,
+  coercePlantVigor,
+  type GrowthPhase,
+  type PlantVigor,
+} from './guildPlantInstanceStatus';
+import {
   coerceMulchLevel,
   type GardenThing,
   type Guild,
@@ -10,7 +16,13 @@ export type PersistedGuildContent = {
   id: string;
   name: string;
   mulchLevel: MulchLevel;
-  plants: { id: string; name: string; plantId: string }[];
+  plants: {
+    id: string;
+    name: string;
+    plantId: string;
+    growthPhase?: GrowthPhase;
+    vigor?: PlantVigor;
+  }[];
 };
 
 /** Guild map layout in saved files (no plant catalog fields). */
@@ -31,6 +43,8 @@ export const splitGuildsForPersistence = (
       id: p.id,
       name: p.nameOrCultivar,
       plantId: p.plantId,
+      ...(p.growthPhase !== undefined ? { growthPhase: p.growthPhase } : {}),
+      ...(p.vigor !== undefined ? { vigor: p.vigor } : {}),
     })),
   })),
   guildLocations: guilds.map((g) => ({
@@ -65,7 +79,15 @@ const parseContentPlants = (raw: unknown): PersistedGuildContent['plants'] => {
           ? item.nameOrCultivar
           : '';
     const plantId = typeof item.plantId === 'string' ? item.plantId : '';
-    out.push({ id: item.id, name, plantId });
+    const growthPhase = coerceGrowthPhase(item.growthPhase);
+    const vigor = coercePlantVigor(item.vigor);
+    out.push({
+      id: item.id,
+      name,
+      plantId,
+      ...(growthPhase !== undefined ? { growthPhase } : {}),
+      ...(vigor !== undefined ? { vigor } : {}),
+    });
   }
   return out;
 };
@@ -164,6 +186,8 @@ export const mergeGuildsFromPersistence = (
         y: geo?.y ?? 0,
         width: geo?.width ?? 0,
         height: geo?.height ?? 0,
+        ...(p.growthPhase !== undefined ? { growthPhase: p.growthPhase } : {}),
+        ...(p.vigor !== undefined ? { vigor: p.vigor } : {}),
       };
     });
     return {

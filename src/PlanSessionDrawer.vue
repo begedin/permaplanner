@@ -39,7 +39,7 @@ onBeforeUnmount(() => {
     >
       <button
         type="button"
-        class="absolute inset-0 bg-ink-900/25 cursor-default"
+        class="absolute inset-0 bg-ink-900/25 cursor-default transition-opacity duration-200 ease-out"
         aria-label="Close plan menu"
         @click="close"
       />
@@ -55,7 +55,7 @@ onBeforeUnmount(() => {
         >
           <button
             type="button"
-            class="text-sm text-ink-600 hover:text-ink-900 hover:bg-parchment-200 rounded px-2 py-1"
+            class="text-sm text-ink-600 hover:text-ink-900 hover:bg-parchment-200/80 rounded-lg px-2 py-1 transition-colors"
             @click="close"
           >
             Close

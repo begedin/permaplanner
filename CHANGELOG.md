@@ -4,6 +4,8 @@
 
 - [FEATURE] Icon theme
 - [FEATURE] Color theme
+- [DB] Added elderberry, asparagus, pole bean, bush bean, and pinks (Dianthus) to the catalog
+- [TWEAK] Add/Remove buttons on plants
 
 ## 0.10.0
 

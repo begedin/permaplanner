@@ -31,7 +31,7 @@ const connectGithub = () => {
     role="presentation"
   >
     <div
-      class="w-full max-w-lg rounded-xl border border-parchment-300 paper-surface shadow-parchment-lg p-6 sm:p-8"
+      class="w-full max-w-lg rounded-2xl border border-parchment-300/55 paper-surface shadow-parchment-lg p-6 sm:p-8"
       role="dialog"
       :aria-labelledby="
         mode === 'migration' ? 'plan-migration-heading' : 'plan-gate-heading'
@@ -69,7 +69,7 @@ const connectGithub = () => {
 
         <div
           v-if="awaitingReopenFileClick"
-          class="mb-5 p-4 rounded-lg bg-blossom-50 border border-lavender-200 text-sm text-lavender-700"
+          class="mb-5 p-4 rounded-xl bg-blossom-50/90 border border-lavender-200/70 text-sm text-lavender-700"
         >
           <p class="font-medium">Restore your last plan file</p>
           <p
@@ -85,7 +85,7 @@ const connectGithub = () => {
           </p>
           <button
             type="button"
-            class="mt-3 w-full bg-lavender-600 hover:bg-lavender-700 text-white rounded-lg px-4 py-2.5 font-medium"
+            class="mt-3 w-full btn-soft-lavender px-4 py-2.5 font-medium"
             @click="continueReopenPersistedFile"
           >
             Allow access and open
@@ -94,7 +94,7 @@ const connectGithub = () => {
 
         <div
           v-else-if="permaplannerStore.needsFileRelink"
-          class="mb-5 p-4 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-950"
+          class="mb-5 p-4 rounded-xl bg-amber-50/90 border border-amber-200/70 text-sm text-amber-950"
         >
           <p class="font-medium">Re-link your plan file</p>
           <p
@@ -108,7 +108,7 @@ const connectGithub = () => {
           </p>
           <button
             type="button"
-            class="mt-3 w-full bg-amber-600 hover:bg-amber-700 text-white rounded-lg px-4 py-2.5 font-medium"
+            class="mt-3 w-full btn-soft-amber px-4 py-2.5 font-medium"
             @click="load"
           >
             Choose file…
@@ -119,14 +119,14 @@ const connectGithub = () => {
           <h2 class="text-sm font-medium text-ink-700">Save on this device</h2>
           <button
             type="button"
-            class="w-full bg-sage-600 hover:bg-sage-700 text-white rounded-lg px-4 py-3 font-medium text-left"
+            class="w-full btn-soft-primary px-4 py-3 font-medium text-left"
             @click="newPlan"
           >
             Create new plan…
           </button>
           <button
             type="button"
-            class="w-full bg-sage-100 hover:bg-sage-200 text-sage-900 rounded-lg px-4 py-3 font-medium text-left"
+            class="w-full btn-soft-secondary px-4 py-3 font-medium text-left"
             @click="load"
           >
             Open existing plan…
@@ -153,7 +153,7 @@ const connectGithub = () => {
           <button
             v-else
             type="button"
-            class="w-full bg-ink-800 hover:bg-ink-900 text-white rounded-lg px-4 py-3 font-medium text-left"
+            class="w-full btn-soft-ink px-4 py-3 font-medium text-left"
             @click="connectGithub"
           >
             Connect GitHub

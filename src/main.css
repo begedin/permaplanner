@@ -64,4 +64,132 @@
       linear-gradient(180deg, rgba(255, 252, 245, 0.35) 0%, transparent 45%);
     box-shadow: inset 0 1px 2px rgba(61, 47, 36, 0.06);
   }
+
+  /** Paper card — surface plus softened outer edge. */
+  .paper-card {
+    @apply paper-surface rounded-xl border border-parchment-300/55 shadow-parchment transition-[border-color,box-shadow] duration-150 ease-out;
+  }
+
+  /** Clickable paper card (guild list, etc.). */
+  .paper-card-interactive {
+    @apply paper-card cursor-pointer hover:border-sage-300/70 hover:shadow-parchment-lg;
+  }
+
+  .paper-card-selected {
+    @apply ring-2 ring-sage-500/80 ring-offset-1 ring-offset-parchment-100 border-sage-300/60 shadow-parchment-lg;
+  }
+
+  /** Inset chip with softer corners. */
+  .paper-chip {
+    @apply paper-inset rounded-lg border border-parchment-400/45;
+  }
+
+  .input-soft {
+    @apply rounded-lg border border-parchment-300/55 bg-parchment-50/90 transition-[border-color,box-shadow,background-color] duration-150 ease-out focus:border-sage-400/60 focus:outline-none focus:ring-1 focus:ring-sage-400/40;
+  }
+
+  .btn-soft {
+    @apply rounded-xl shadow-parchment transition duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage-400/45 focus-visible:ring-offset-1 focus-visible:ring-offset-parchment-100 active:scale-[0.98] disabled:pointer-events-none;
+    transition-property: color, background-color, border-color, box-shadow, transform;
+  }
+
+  .btn-soft-primary {
+    @apply btn-soft bg-sage-600 hover:bg-sage-700 text-white;
+  }
+
+  .btn-soft-secondary {
+    @apply btn-soft bg-sage-100 hover:bg-sage-200 text-sage-900 border border-sage-300/40;
+  }
+
+  .btn-soft-muted {
+    @apply btn-soft bg-sage-200/90 hover:bg-sage-300 text-ink-800 border border-sage-300/30;
+  }
+
+  .btn-soft-ink {
+    @apply btn-soft bg-ink-800 hover:bg-ink-900 text-white;
+  }
+
+  .btn-soft-lavender {
+    @apply btn-soft bg-lavender-600 hover:bg-lavender-700 text-white;
+  }
+
+  .btn-soft-amber {
+    @apply btn-soft bg-amber-600 hover:bg-amber-700 text-white;
+  }
+
+  .btn-soft-sm {
+    @apply rounded-lg shadow-none active:scale-[0.99];
+  }
+
+  .btn-icon {
+    @apply transition-[color,background-color,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage-400/45 rounded-lg active:scale-95;
+  }
+
+  .btn-danger {
+    @apply btn-icon bg-red-100/90 hover:bg-red-200 text-red-900 border border-red-200/60;
+  }
+
+  .nav-tab {
+    @apply rounded-lg px-2 py-1 flex-1 text-ink-600 text-center flex items-center justify-center hover:bg-sage-200/75 hover:text-ink-800 transition-[color,background-color,box-shadow] duration-150 ease-out;
+  }
+
+  .nav-tab-active {
+    @apply bg-sage-300/85 shadow-parchment text-ink-800 font-medium;
+  }
+
+  .nav-icon-btn {
+    @apply flex items-center justify-center size-7 rounded-lg text-ink-700 hover:bg-sage-200/75 hover:text-ink-900 transition-[color,background-color,box-shadow,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage-400/45 active:scale-95;
+  }
+
+  .nav-icon-btn-active {
+    @apply bg-sage-300/85 shadow-parchment text-ink-900;
+  }
+
+  .selectable-row {
+    @apply flex flex-row items-center gap-1 bg-parchment-300/90 rounded-lg p-1 text-ink-900 border border-parchment-400/40 cursor-pointer transition-[background-color,border-color,box-shadow] duration-150 ease-out hover:bg-parchment-400/90 hover:border-parchment-400/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage-400/45;
+  }
+
+  .selectable-row-active {
+    @apply bg-sage-200/80 border-sage-400/50 shadow-parchment ring-1 ring-sage-400/30;
+  }
+
+  .list-option {
+    @apply cursor-pointer px-2 py-1.5 text-left text-sm text-ink-700 transition-[background-color,color,box-shadow] duration-150 ease-out;
+  }
+
+  .list-option-active {
+    @apply bg-sage-100 text-ink-900;
+  }
+
+  .list-option-selected {
+    @apply bg-sage-200/60 text-ink-900 font-medium ring-1 ring-inset ring-sage-400/25;
+  }
+
+  .icon-picker-btn {
+    @apply p-1 rounded-lg border border-transparent transition-[background-color,border-color,box-shadow] duration-150 ease-out hover:bg-parchment-200 hover:border-parchment-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage-400/45 active:scale-95;
+  }
+
+  .icon-picker-btn-selected {
+    @apply border-blossom-300 bg-blossom-50 shadow-parchment ring-1 ring-blossom-200/60;
+  }
+
+  .status-chip {
+    @apply rounded-lg py-0.5 px-1 text-xs transition-colors duration-150 ease-out;
+  }
+
+  .link-soft {
+    @apply transition-colors duration-150 ease-out hover:text-ink-900;
+  }
+
+  .mulch-star {
+    @apply cursor-pointer inline-flex size-5 items-center justify-center select-none rounded transition-[color,transform] duration-150 ease-out hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80 focus-visible:ring-offset-1;
+  }
+
+  .mulch-star-filled {
+    @apply text-amber-500;
+  }
+
+  .mulch-star-empty {
+    @apply text-parchment-400 hover:text-amber-300;
+  }
 }

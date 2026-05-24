@@ -28,6 +28,43 @@ const sampleGuild: Guild = {
 };
 
 it('splitGuildsForPersistence separates content from map layout', () => {
+  const guildWithStatus: Guild = {
+    ...sampleGuild,
+    plants: [
+      {
+        ...sampleGuild.plants[0]!,
+        growthPhase: 'young',
+        vigor: 4,
+      },
+    ],
+  };
+  const { guilds, guildLocations } = splitGuildsForPersistence([guildWithStatus]);
+  expect(guilds).toEqual([
+    {
+      id: 'g1',
+      name: 'Edge guild',
+      mulchLevel: 3,
+      plants: [
+        {
+          id: 't1',
+          name: 'Granny Smith',
+          plantId: 'apple_granny_smith',
+          growthPhase: 'young',
+          vigor: 4,
+        },
+      ],
+    },
+  ]);
+  expect(guildLocations).toEqual([
+    {
+      id: 'g1',
+      path: [{ x: 10, y: 20 }],
+      plants: [{ id: 't1', x: 1, y: 2, width: 3, height: 4 }],
+    },
+  ]);
+});
+
+it('splitGuildsForPersistence omits unset phase and vigor', () => {
   const { guilds, guildLocations } = splitGuildsForPersistence([sampleGuild]);
   expect(guilds).toEqual([
     {

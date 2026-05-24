@@ -167,9 +167,7 @@ const pullRemote = async () => {
 </script>
 
 <template>
-  <div
-    class="mt-2 p-2 rounded border border-parchment-300 paper-surface text-xs text-ink-700 space-y-2"
-  >
+  <div class="mt-2 p-2 paper-card text-xs text-ink-700 space-y-2">
     <p class="font-medium text-ink-800">GitHub backup</p>
     <p
       v-if="!clientId"
@@ -183,7 +181,7 @@ const pullRemote = async () => {
         <button
           v-if="!connected"
           type="button"
-          class="bg-ink-800 hover:bg-ink-900 text-white rounded p-1.5 text-left"
+          class="btn-soft-ink btn-soft-sm w-full p-1.5 text-left"
           @click="connect"
         >
           Connect GitHub
@@ -216,7 +214,7 @@ const pullRemote = async () => {
             </span>
             <button
               type="button"
-              class="text-ink-500 hover:text-ink-800 underline"
+              class="link-soft text-ink-500 hover:text-ink-800 underline"
               :disabled="remoteLoading || syncing || pulling || repoPushBusy"
               @click="refreshRemoteRevision"
             >
@@ -233,7 +231,7 @@ const pullRemote = async () => {
           <div class="flex flex-col gap-1">
             <button
               type="button"
-              class="bg-parchment-300 hover:bg-parchment-400 rounded p-1.5 text-left disabled:opacity-50"
+              class="btn-soft-muted btn-soft-sm w-full p-1.5 text-left disabled:opacity-50"
               :disabled="syncing || pulling || repoPushBusy"
               @click="pushCurrent"
             >
@@ -241,7 +239,7 @@ const pullRemote = async () => {
             </button>
             <button
               type="button"
-              class="bg-parchment-300 hover:bg-parchment-400 rounded p-1.5 text-left disabled:opacity-50"
+              class="btn-soft-muted btn-soft-sm w-full p-1.5 text-left disabled:opacity-50"
               :disabled="syncing || pulling || repoPushBusy"
               @click="pullRemote"
             >
@@ -249,7 +247,7 @@ const pullRemote = async () => {
             </button>
             <button
               type="button"
-              class="bg-parchment-200 hover:bg-parchment-300 rounded p-1.5 text-left disabled:opacity-50"
+              class="btn-soft-secondary btn-soft-sm w-full p-1.5 text-left disabled:opacity-50"
               :disabled="syncing || pulling || repoPushBusy || remoteLoading"
               @click="disconnect"
             >

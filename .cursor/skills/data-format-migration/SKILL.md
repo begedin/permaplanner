@@ -33,7 +33,7 @@ Current version constant: `PERMAPLANNER_FILE_VERSION` in [`src/permaplannerFileV
 4. **Write** new data at the new version in:
    - `usePermaplannerStore` `snapshot()` (local save)
    - `pushPlanJsonToGithubRepo` (all three shards + config fields)
-5. **Tests** in [`src/permaplannerFileMigrate.test.ts`](../../src/permaplannerFileMigrate.test.ts): at least one fixture at version *n−1* (or unversioned for v0) asserting migrated output; run `npm run test:unit src/permaplannerFileMigrate.test.ts` and any `permaplannerFileFlow` / `githubRepoSync` tests you touch.
+5. **Tests** in [`src/permaplannerFileMigrate.test.ts`](../../src/permaplannerFileMigrate.test.ts): at least one fixture at version *n−1* (or unversioned for v0) asserting migrated output; run `npx vitest run src/permaplannerFileMigrate.test.ts` and any `permaplannerFileFlow` / `githubRepoSync` tests you touch.
 6. **Fixtures**: update `playwright/fixtures/*.json` if they embed plan JSON.
 
 ## Rules

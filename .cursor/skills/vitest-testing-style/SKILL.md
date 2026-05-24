@@ -43,4 +43,6 @@ expect(reloaded.guilds[0]!.id).toBe('g-willow');
 
 ## Running tests
 
-- Unit tests: `npm run test:unit` with an optional file path, e.g. `npm run test:unit src/foo.test.ts`
+- **One-off / agents / CI:** `npx vitest run` (whole suite) or `npx vitest run src/foo.test.ts` (single file). Exits when finished.
+- **Local dev:** `npm run test:unit` runs `vitest` in **watch mode** (re-runs on save; press `q` to quit). Optional path: `npm run test:unit src/foo.test.ts`.
+- In automated shells (Cursor agents, CI), always use `npx vitest run …` — never `npm run test:unit`.

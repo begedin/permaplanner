@@ -56,14 +56,14 @@ const showAerialMapTools = computed(
       <span class="text-xs text-ink-600 truncate">{{ permaplannerStore.fileName }}</span>
       <button
         type="button"
-        class="bg-sage-200 hover:bg-sage-300 rounded p-1 text-sm text-ink-800"
+        class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
         @click="save"
       >
         Save plan
       </button>
       <button
         type="button"
-        class="bg-sage-200 hover:bg-sage-300 rounded p-1 text-sm text-ink-800"
+        class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
         @click="saveAs"
       >
         Save as…
@@ -71,14 +71,14 @@ const showAerialMapTools = computed(
     </template>
     <button
       type="button"
-      class="bg-sage-200 hover:bg-sage-300 rounded p-1 text-sm text-ink-800"
+      class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
       @click="load"
     >
       Open plan
     </button>
     <button
       type="button"
-      class="bg-sage-200 hover:bg-sage-300 rounded p-1 text-sm text-ink-800"
+      class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
       @click="newPlan"
     >
       New plan

@@ -1,4 +1,7 @@
+import type { GrowthPhase, PlantVigor } from './guildPlantInstanceStatus';
 import type { PlantIconId } from './plantIcons/iconIds';
+
+export type { GrowthPhase, PlantVigor } from './guildPlantInstanceStatus';
 
 export const GuildFunction = {
   nitrogen_fixer: 'nitrogen_fixer',
@@ -66,6 +69,10 @@ export type GardenThing = {
   y: number;
   width: number;
   height: number;
+  /** Development phase (Option C: sown → germinated|transplanted → …). */
+  growthPhase?: GrowthPhase;
+  /** Health / vigor (1 = struggling … 5 = thriving). */
+  vigor?: PlantVigor;
 };
 
 /** Guild bed mulch coverage / depth (1 = light, 5 = heavy). */

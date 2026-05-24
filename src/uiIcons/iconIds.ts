@@ -10,6 +10,7 @@ export const UI_ICON_IDS = [
   'document',
   'star',
   'star-outline',
+  'ellipsis',
 ] as const;
 
 export type UiIconId = (typeof UI_ICON_IDS)[number];

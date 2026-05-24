@@ -157,7 +157,7 @@ it('keeps the guild when deletion is cancelled', async () => {
   expect(store.guilds).toEqual([{ ...testGuild, plants: [] }]);
 });
 
-it('does not offer remove-one when there is only one instance', async () => {
+it('shows remove-all control when there is only one instance', async () => {
   const store = useGardenStore();
   store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
   store.guilds = [
@@ -172,6 +172,52 @@ it('does not offer remove-one when there is only one instance', async () => {
   expect(
     card(wrapper).queryByRole('button', { name: 'Remove one plant from bed' }),
   ).toBeNull();
+  expect(
+    card(wrapper).getByRole('button', { name: 'Remove plant from bed' }),
+  ).toBeTruthy();
+  expect(
+    card(wrapper).getByRole('button', { name: 'Add one plant to bed' }),
+  ).toBeTruthy();
+});
+
+it('removes the only instance when remove-all is used', async () => {
+  const store = useGardenStore();
+  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
+  store.guilds = [
+    {
+      ...testGuild,
+      name: 'Bed',
+      plants: [baseThing({ id: 'only', plantId: 'plant' })],
+    },
+  ];
+
+  const wrapper = await renderGuildCard();
+  await fireEvent.click(
+    card(wrapper).getByRole('button', { name: 'Remove plant from bed' }),
+  );
+
+  expect(store.guilds[0].plants).toEqual([]);
+});
+
+it('adds one instance when add-one is used on a single plant row', async () => {
+  const store = useGardenStore();
+  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
+  const only = baseThing({ id: 'only', plantId: 'plant' });
+  store.guilds = [
+    {
+      ...testGuild,
+      name: 'Bed',
+      plants: [only],
+    },
+  ];
+
+  const wrapper = await renderGuildCard();
+  await fireEvent.click(
+    card(wrapper).getByRole('button', { name: 'Add one plant to bed' }),
+  );
+
+  expect(store.guilds[0].plants).toHaveLength(2);
+  expect(store.guilds[0].plants.every((t) => t.plantId === 'plant')).toBe(true);
 });
 
 it('shows map size and an icon remove control when the guild is on the aerial map', async () => {
@@ -343,4 +389,79 @@ it('cancels edit plant without changing the guild', async () => {
     baseThing({ id: 'thing-a', plantId: 'plant' }),
   ]);
   expect(card(wrapper).getByText('Comfrey')).toBeTruthy();
+});
+
+it('expands a plant group to edit per-instance phase and condition', async () => {
+  const store = useGardenStore();
+  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
+  const first = baseThing({ id: 'thing-a', plantId: 'plant' });
+  const second = baseThing({ id: 'thing-b', plantId: 'plant' });
+  store.guilds = [
+    {
+      ...testGuild,
+      name: 'Bed',
+      plants: [first, second],
+    },
+  ];
+
+  const wrapper = await renderGuildCard();
+  expect(card(wrapper).queryByLabelText('Phase')).toBeNull();
+
+  await fireEvent.click(card(wrapper).getByRole('button', { name: 'Expand Comfrey' }));
+
+  const phaseSelects = card(wrapper).getAllByLabelText('Phase');
+  expect(phaseSelects).toHaveLength(2);
+  await fireEvent.change(phaseSelects[0]!, { target: { value: 'young' } });
+  await fireEvent.change(phaseSelects[1]!, { target: { value: 'producing' } });
+
+  expect(store.guilds[0].plants).toMatchObject([
+    { id: 'thing-a', growthPhase: 'young' },
+    { id: 'thing-b', growthPhase: 'producing' },
+  ]);
+
+  const conditionGroups = card(wrapper).getAllByRole('radiogroup', { name: 'Condition' });
+  await fireEvent.click(
+    within(conditionGroups[0]!).getByRole('radio', { name: 'Healthy' }),
+  );
+  expect(store.guilds[0].plants[0]).toMatchObject({ vigor: 4 });
+  await fireEvent.click(
+    within(conditionGroups[0]!).getByRole('radio', { name: 'Healthy' }),
+  );
+  expect(store.guilds[0].plants[0]?.vigor).toBeUndefined();
+});
+
+it('shows average condition in the group header and ignores unset instances', async () => {
+  const store = useGardenStore();
+  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
+  store.guilds = [
+    {
+      ...testGuild,
+      name: 'Bed',
+      plants: [
+        baseThing({ id: 'thing-a', plantId: 'plant', vigor: 4 }),
+        baseThing({ id: 'thing-b', plantId: 'plant' }),
+        baseThing({ id: 'thing-c', plantId: 'plant', vigor: 4 }),
+      ],
+    },
+  ];
+
+  const wrapper = await renderGuildCard();
+  expect(card(wrapper).getByLabelText('Average condition: Healthy')).toBeTruthy();
+});
+
+it('shows a phase icon per instance in the group header, up to eight, then ellipsis', async () => {
+  const store = useGardenStore();
+  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
+  const plants = Array.from({ length: 9 }, (_, i) =>
+    baseThing({
+      id: `thing-${i}`,
+      plantId: 'plant',
+      growthPhase: i % 2 === 0 ? 'young' : undefined,
+    }),
+  );
+  store.guilds = [{ ...testGuild, name: 'Bed', plants }];
+
+  const wrapper = await renderGuildCard();
+  expect(card(wrapper).getAllByRole('img', { name: /^Phase:/ })).toHaveLength(4);
+  expect(card(wrapper).getByLabelText('More plants')).toBeTruthy();
 });

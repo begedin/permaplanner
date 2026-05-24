@@ -105,7 +105,7 @@ const displayPickLabel = (p: unknown): string =>
     </template>
     <template #anchor>
       <ComboboxInput
-        class="w-full rounded-md border border-parchment-400 bg-parchment-50 py-1 pl-2 pr-9 text-sm text-ink-800 focus:border-sage-400 focus:outline-none focus:ring-1 focus:ring-sage-400"
+        class="w-full input-soft py-1 pl-2 pr-9 text-sm text-ink-800"
         :placeholder="placeholder"
         :display-value="displayPickLabel"
         @change="query = ($event.target as HTMLInputElement).value"
@@ -113,7 +113,7 @@ const displayPickLabel = (p: unknown): string =>
       />
       <ComboboxButton
         type="button"
-        class="absolute inset-y-0 right-0 flex items-center px-2 text-ink-500 hover:text-ink-800"
+        class="btn-icon absolute inset-y-0 right-0 flex items-center px-2 text-ink-500 hover:text-ink-800"
         aria-label="Open plant list"
       >
         <UiIcon
@@ -133,7 +133,7 @@ const displayPickLabel = (p: unknown): string =>
         >
           <div
             role="presentation"
-            class="sticky top-0 z-10 border-b border-parchment-300 paper-inset px-2 py-1 text-left text-xs font-semibold text-ink-700"
+            class="sticky top-0 z-10 border-b border-parchment-300/55 paper-chip px-2 py-1 text-left text-xs font-semibold text-ink-700"
           >
             {{ group.speciesName }}
           </div>
@@ -146,9 +146,9 @@ const displayPickLabel = (p: unknown): string =>
           >
             <div
               :class="[
-                'cursor-pointer px-2 py-1.5 text-left text-sm',
-                active ? 'bg-sage-100 text-ink-900' : 'text-ink-700',
-                isSelected ? 'font-medium' : '',
+                'list-option',
+                active && 'list-option-active',
+                isSelected && 'list-option-selected',
               ]"
             >
               {{ pick.rowLabel }}

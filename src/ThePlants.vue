@@ -200,16 +200,15 @@ const customCultivarName = computed({
 });
 </script>
 <template>
-  <div
-    class="paper-surface p-4 grid grid-flow-col items-start gap-8 rounded-md border border-parchment-300 shadow-parchment"
-  >
+  <div class="paper-card p-4 grid grid-flow-col items-start gap-8">
     <div class="flex flex-col gap-1">
       <div
         v-for="plant in garden.plants"
         :key="plant.id"
         role="button"
-        class="flex flex-row items-center gap-1 bg-parchment-300 rounded-md p-1 hover:bg-parchment-400 text-ink-900"
-        :class="{ 'bg-parchment-500': plant.id === plantInEditing.id }"
+        class="selectable-row"
+        :class="{ 'selectable-row-active': plant.id === plantInEditing.id }"
+        :aria-current="plant.id === plantInEditing.id ? 'true' : undefined"
         :title="resolveUserPlant(plant, plantCatalog).name"
         :aria-label="resolveUserPlant(plant, plantCatalog).name"
         @click="edit(plant)"
@@ -223,7 +222,8 @@ const customCultivarName = computed({
           resolveUserPlant(plant, plantCatalog).name
         }}</span>
         <button
-          class="bg-red-200 hover:bg-red-300 p-1 rounded-md text-xs flex items-center justify-center"
+          type="button"
+          class="btn-danger p-1 rounded-lg text-xs flex items-center justify-center"
           aria-label="Delete plant"
           @click.self="remove(plant)"
         >
@@ -231,8 +231,10 @@ const customCultivarName = computed({
         </button>
       </div>
       <button
-        class="flex flex-row items-center gap-1 bg-parchment-300 rounded-md p-1 hover:bg-parchment-400 text-ink-900"
-        :class="{ 'bg-parchment-500': isNew }"
+        type="button"
+        class="selectable-row"
+        :class="{ 'selectable-row-active': isNew }"
+        :aria-current="isNew ? 'true' : undefined"
         @click="newPlant"
       >
         <UiIcon
@@ -254,7 +256,7 @@ const customCultivarName = computed({
     <div class="flex flex-col gap-2 p-2 max-w-md">
       <div class="flex flex-row items-center gap-2">
         <PlantIcon
-          class="w-14 h-14 shrink-0 border border-parchment-300 rounded-md"
+          class="w-14 h-14 shrink-0 border border-parchment-300/55 rounded-xl"
           :plant="resolvedPreview"
         />
         <p class="text-sm text-ink-600">
@@ -267,7 +269,7 @@ const customCultivarName = computed({
         <span class="text-ink-800">Custom species name (optional)</span>
         <input
           v-model="customSpeciesName"
-          class="p-1 border border-parchment-400 rounded-md text-ink-800"
+          class="p-1 input-soft text-ink-800"
           placeholder="Uses catalog name if empty"
         />
       </label>
@@ -275,7 +277,7 @@ const customCultivarName = computed({
         <span class="text-ink-800">Custom cultivar label (optional)</span>
         <input
           v-model="customCultivarName"
-          class="p-1 border border-parchment-400 rounded-md text-ink-800"
+          class="p-1 input-soft text-ink-800"
           placeholder="Uses catalog cultivar if empty"
         />
       </label>
@@ -290,10 +292,8 @@ const customCultivarName = computed({
             v-for="iconId in PLANT_ICON_OPTIONS"
             :key="iconId"
             type="button"
-            class="p-1 rounded border border-transparent hover:bg-parchment-200"
-            :class="
-              resolvedPreview.iconId === iconId && 'border-blossom-300 bg-blossom-50'
-            "
+            class="icon-picker-btn"
+            :class="resolvedPreview.iconId === iconId && 'icon-picker-btn-selected'"
             :aria-pressed="resolvedPreview.iconId === iconId"
             :aria-label="iconId"
             @click="pickIcon(iconId)"
@@ -310,7 +310,7 @@ const customCultivarName = computed({
       <PlantLayers v-model:value="editingLayers" />
 
       <button
-        class="px-2 py-1 rounded-md bg-parchment-300 hover:bg-parchment-400 text-ink-600"
+        class="px-3 py-1.5 btn-soft-muted btn-soft-sm text-sm"
         @click="save"
       >
         {{ isNew ? 'Create' : 'Save' }}

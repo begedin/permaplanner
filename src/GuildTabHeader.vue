@@ -31,7 +31,7 @@ const selectedGuildName = computed(() => {
     >
       <button
         type="button"
-        class="text-ink-800 hover:text-ink-900 shrink-0"
+        class="link-soft text-ink-800 hover:underline shrink-0"
         :aria-label="`Deselect guild, ${title}`"
         @click="clearSelection"
       >
@@ -56,7 +56,7 @@ const selectedGuildName = computed(() => {
     </h1>
     <button
       type="button"
-      class="bg-sage-600 hover:bg-sage-700 text-white rounded px-3 py-1.5 text-sm shrink-0"
+      class="btn-soft-primary px-3 py-1.5 text-sm shrink-0"
       @click="addGuild"
     >
       Add guild

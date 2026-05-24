@@ -88,7 +88,7 @@ const monthBlockClass = (rawCount: number): string => {
             v-for="(count, i) in gardenMonthPhenologyCounts.fruiting"
             :key="`ff-${i}`"
             role="listitem"
-            class="flex-1 min-w-0 rounded-sm h-3 border border-parchment-400/60"
+            class="flex-1 min-w-0 rounded-md h-3 border border-parchment-400/50"
             :class="monthBlockClass(count)"
             :title="
               monthAspectTooltip(
@@ -115,7 +115,7 @@ const monthBlockClass = (rawCount: number): string => {
             v-for="(count, i) in gardenMonthPhenologyCounts.blooming"
             :key="`fb-${i}`"
             role="listitem"
-            class="flex-1 min-w-0 rounded-sm h-3 border border-parchment-400/60"
+            class="flex-1 min-w-0 rounded-md h-3 border border-parchment-400/50"
             :class="monthBlockClass(count)"
             :title="
               monthAspectTooltip(

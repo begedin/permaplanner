@@ -7,9 +7,16 @@ import {
   defaultCatalogPick,
   type CatalogPlantPick,
 } from './catalogPlantPick';
-import type { Guild, MulchLevel, Plant, UserPlant } from './gardenTypes';
+import type { GardenThing, Guild, MulchLevel, Plant, UserPlant } from './gardenTypes';
 import type { GuildFunction, GuildLayer } from './useGardenStore';
 import { formatGuildMapDimensions, pathBounds } from './guildPathBounds';
+import {
+  averagePlantVigor,
+  GROWTH_PHASE_LABEL,
+  GROWTH_PHASES_FOR_SELECT,
+  type GrowthPhase,
+  type PlantVigor,
+} from './guildPlantInstanceStatus';
 import { useGardenStore } from './useGardenStore';
 import { useGuildSelection } from './useGuildSelection';
 import { useMapScaleStore } from './useMapScaleStore';
@@ -20,9 +27,13 @@ import {
   phenologySummaryForPlant,
   resolvePhenology,
 } from './plantCatalog';
+import GrowthPhaseIcon from './GrowthPhaseIcon.vue';
 import GuildCardSectionLabel from './GuildCardSectionLabel.vue';
+import GuildPlantQuantityRemoveButton from './GuildPlantQuantityRemoveButton.vue';
 import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
 import PlantIcon from './PlantIcon.vue';
+import PlantVigorIcon from './PlantVigorIcon.vue';
+import PlantVigorRating from './PlantVigorRating.vue';
 import UiIcon from './uiIcons/UiIcon.vue';
 import {
   functionLabelTooltip,
@@ -35,12 +46,17 @@ import { plantDisplayLabel, plantGuildGroupLabel } from './resolvePlant';
 import { plantCatalog } from './plantCatalog';
 import { uuid } from './utils';
 
+const GROUP_HEADER_MAX_PHASE_ICONS = 8;
+
 type GuildPlantGroupRow = {
   plantId: string;
   label: string;
   count: number;
   thingIds: string[];
   representativeResolved: Plant;
+  headerPhaseSlots: { thingId: string; phase: GrowthPhase }[];
+  showPhaseOverflow: boolean;
+  averageVigor: PlantVigor | null;
 };
 
 const garden = useGardenStore();
@@ -69,6 +85,7 @@ type PlantEditor =
 
 const plantEditor = ref<PlantEditor | null>(null);
 const selectedPick = ref<CatalogPlantPick | null>(null);
+const expandedPlantGroupId = ref<string | null>(null);
 
 const catalogSpecies = () => plantCatalog.species.filter((s) => s.id !== 'unknown');
 
@@ -112,11 +129,18 @@ const removeGuildThingsByIds = (thingIds: string[]) => {
   }
 };
 
-const removeOneGuildThing = (thingIds: string[]) => {
-  if (thingIds.length <= 1) {
+const decrementGuildPlantQuantity = (thingIds: string[]) => {
+  if (thingIds.length > 1) {
+    removeGuildThingsByIds([thingIds[thingIds.length - 1]!]);
     return;
   }
-  removeGuildThingsByIds([thingIds[thingIds.length - 1]!]);
+  if (thingIds.length === 1) {
+    removeGuildThingsByIds(thingIds);
+  }
+};
+
+const addOneGuildThing = (plantId: string) => {
+  garden.addPlantToGuild(guild.value.id, plantId);
 };
 
 const groupedGuildPlants = computed((): GuildPlantGroupRow[] => {
@@ -130,13 +154,28 @@ const groupedGuildPlants = computed((): GuildPlantGroupRow[] => {
     }
     bucket.thingIds.push(thing.id);
   }
-  const rows: GuildPlantGroupRow[] = [...byPlantId.values()].map(({ thingIds, rp }) => ({
-    plantId: rp.id,
-    label: plantGuildGroupLabel(rp),
-    count: thingIds.length,
-    thingIds,
-    representativeResolved: rp,
-  }));
+  const rows: GuildPlantGroupRow[] = [...byPlantId.values()].map(({ thingIds, rp }) => {
+    const things = thingIds
+      .map((id) => guild.value.plants.find((t) => t.id === id))
+      .filter((t): t is GardenThing => t !== undefined);
+    const avgVigor = averagePlantVigor(things.map((t) => t.vigor));
+    return {
+      plantId: rp.id,
+      label: plantGuildGroupLabel(rp),
+      count: thingIds.length,
+      thingIds,
+      representativeResolved: rp,
+      headerPhaseSlots: things
+        .slice(0, GROUP_HEADER_MAX_PHASE_ICONS)
+        .flatMap((t) =>
+          t.growthPhase !== undefined
+            ? [{ thingId: t.id, phase: t.growthPhase }]
+            : [],
+        ),
+      showPhaseOverflow: things.length > GROUP_HEADER_MAX_PHASE_ICONS,
+      averageVigor: avgVigor,
+    };
+  });
   rows.sort((a, b) => {
     const byName = a.representativeResolved.name.localeCompare(
       b.representativeResolved.name,
@@ -332,16 +371,50 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
     void selectGuild(props.guildId);
   }
 };
+
+const togglePlantGroup = (plantId: string) => {
+  expandedPlantGroupId.value = expandedPlantGroupId.value === plantId ? null : plantId;
+};
+
+const isPlantGroupExpanded = (plantId: string): boolean =>
+  expandedPlantGroupId.value === plantId;
+
+const guildThing = (thingId: string): GardenThing | undefined =>
+  guild.value.plants.find((t) => t.id === thingId);
+
+const setThingGrowthPhase = (thingId: string, raw: string) => {
+  const thing = guildThing(thingId);
+  if (!thing) {
+    return;
+  }
+  if (raw === '') {
+    delete thing.growthPhase;
+  } else {
+    thing.growthPhase = raw as GrowthPhase;
+  }
+};
+
+const setThingVigorLevel = (thingId: string, vigor: PlantVigor | undefined) => {
+  const thing = guildThing(thingId);
+  if (!thing) {
+    return;
+  }
+  if (vigor === undefined) {
+    delete thing.vigor;
+  } else {
+    thing.vigor = vigor;
+  }
+};
 </script>
 
 <template>
   <article
-    class="flex flex-col gap-1 items-start justify-start p-2 rounded text-ink-600 paper-surface border border-parchment-300 shadow-parchment hover:border-sage-300 transition-colors w-full"
+    class="flex flex-col gap-1 items-start justify-start p-2 text-ink-600 w-full"
     :class="{
       'h-full': context === 'aerialSidebar' && fillCell,
-      'ring-2 ring-sage-500 ring-offset-1 ring-offset-parchment-100':
-        context === 'aerialSidebar' && selectedGuildId === guildId,
-      'cursor-pointer': context === 'aerialSidebar',
+      'paper-card-interactive': context === 'aerialSidebar',
+      'paper-card-selected': context === 'aerialSidebar' && selectedGuildId === guildId,
+      'paper-card': context === 'guilds',
     }"
     :aria-label="guild.name"
     :aria-current="
@@ -371,7 +444,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             type="button"
             title="Remove from aerial map"
             aria-label="Remove from aerial map"
-            class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-transparent p-0.5 transition-colors hover:bg-amber-100"
+            class="btn-icon inline-flex size-6 shrink-0 items-center justify-center p-0.5 hover:bg-amber-100"
             @click.stop="removeFromAerialMap"
           >
             <UiIcon
@@ -388,7 +461,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
         <span
           v-for="(tag, i) in compactPlantTags"
           :key="`${tag.text}-${i}`"
-          class="text-[11px] leading-tight text-ink-700 paper-inset border border-parchment-400/60 rounded px-1.5 py-0.5"
+          class="text-[11px] leading-tight text-ink-700 paper-chip px-1.5 py-0.5"
           >{{ tag.text }}</span
         >
         <span
@@ -403,7 +476,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
       <div class="flex flex-row items-center justify-between gap-2 w-full flex-wrap">
         <p
           v-if="!placedOnMap"
-          class="text-xs text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded"
+          class="text-xs text-amber-800 bg-amber-100/90 px-1.5 py-0.5 rounded-lg border border-amber-200/60"
         >
           Not on aerial
         </p>
@@ -422,7 +495,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             type="button"
             title="Remove from aerial map"
             aria-label="Remove from aerial map"
-            class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-transparent p-0.5 transition-colors hover:bg-amber-100"
+            class="btn-icon inline-flex size-6 shrink-0 items-center justify-center p-0.5 hover:bg-amber-100"
             @click.stop="removeFromAerialMap"
           >
             <UiIcon
@@ -434,7 +507,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
         <button
           type="button"
           :class="placedOnMap ? '' : 'ml-auto'"
-          class="inline-flex items-center gap-1 text-xs bg-red-100 hover:bg-red-200 text-red-900 rounded px-2 py-0.5"
+          class="btn-danger inline-flex items-center gap-1 text-xs rounded-lg px-2 py-0.5"
           aria-label="Delete"
           @click="removeGuild"
         >
@@ -460,8 +533,8 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             role="radio"
             :aria-checked="guild.mulchLevel === n"
             tabindex="0"
-            class="cursor-pointer inline-flex size-5 items-center justify-center select-none rounded focus:outline-none focus:ring-2 focus:ring-amber-400/80 focus:ring-offset-1"
-            :class="n <= guild.mulchLevel ? 'text-amber-500' : 'text-parchment-400'"
+            class="mulch-star"
+            :class="n <= guild.mulchLevel ? 'mulch-star-filled' : 'mulch-star-empty'"
             :aria-label="`Mulch level ${n} of 5`"
             @click="setMulchLevel(n)"
             @keydown.enter.prevent="setMulchLevel(n)"
@@ -496,7 +569,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             </div>
             <button
               type="button"
-              class="shrink-0 text-sm bg-sage-200 hover:bg-sage-300 disabled:opacity-50 rounded py-1 px-2 text-ink-800"
+              class="shrink-0 text-sm btn-soft-muted btn-soft-sm disabled:opacity-50 py-1 px-2"
               :disabled="!selectedPick"
               aria-label="Save plant in guild"
               @click.stop="onConfirmPlant"
@@ -505,7 +578,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             </button>
             <button
               type="button"
-              class="shrink-0 text-sm bg-parchment-200 hover:bg-parchment-300 rounded py-1 px-2 text-ink-700"
+              class="shrink-0 text-sm btn-soft-secondary btn-soft-sm py-1 px-2"
               aria-label="Cancel editing plant"
               @click.stop="closePlantEditor"
             >
@@ -514,55 +587,144 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           </div>
           <div
             v-else
-            :aria-label="row.count > 1 ? `${row.label} (${row.count})` : row.label"
-            class="pl-1 flex flex-row items-start justify-start w-full gap-1 border-b border-blossom-300 py-0.5"
+            class="w-full border-b border-blossom-300"
           >
-            <PlantIcon
-              :title="row.label"
-              class="size-5 shrink-0 mt-0.5"
-              :plant="row.representativeResolved"
-            />
-            <div class="min-w-0 flex-1 flex flex-col gap-0 text-left">
-              <span class="truncate text-sm leading-tight">
-                {{ row.label
-                }}<template v-if="row.count > 1"> ({{ row.count }}) </template>
-              </span>
-              <span
-                v-if="phenologySummaryForThingIds(row.thingIds)"
-                class="text-[10px] leading-tight text-ink-500"
+            <div class="pl-1 flex flex-row items-center w-full gap-1 py-0.5">
+              <button
+                type="button"
+                class="btn-icon bg-transparent hover:bg-blossom-100 p-0.5 shrink-0"
+                :aria-expanded="isPlantGroupExpanded(row.plantId)"
+                :aria-label="
+                  isPlantGroupExpanded(row.plantId)
+                    ? `Collapse ${row.label}`
+                    : `Expand ${row.label}`
+                "
+                @click.stop="togglePlantGroup(row.plantId)"
               >
-                {{ phenologySummaryForThingIds(row.thingIds) }}
-              </span>
+                <UiIcon
+                  name="chevron-down"
+                  class="size-4 transition-transform duration-150"
+                  :class="isPlantGroupExpanded(row.plantId) ? 'rotate-180' : ''"
+                />
+              </button>
+              <PlantIcon
+                :title="row.label"
+                class="size-5 shrink-0"
+                :plant="row.representativeResolved"
+              />
+              <div class="min-w-0 flex-1 flex flex-col gap-0 text-left">
+                <span class="truncate text-sm leading-tight">
+                  {{ row.label
+                  }}<template v-if="row.count > 1"> ({{ row.count }}) </template>
+                </span>
+                <span
+                  v-if="phenologySummaryForThingIds(row.thingIds)"
+                  class="text-[10px] leading-tight text-ink-500"
+                >
+                  {{ phenologySummaryForThingIds(row.thingIds) }}
+                </span>
+              </div>
+              <div
+                v-if="row.headerPhaseSlots.length > 0 || row.showPhaseOverflow || row.averageVigor"
+                class="flex flex-row items-center gap-0.5 shrink-0"
+              >
+                <GrowthPhaseIcon
+                  v-for="slot in row.headerPhaseSlots"
+                  :key="slot.thingId"
+                  :phase="slot.phase"
+                />
+                <UiIcon
+                  v-if="row.showPhaseOverflow"
+                  name="ellipsis"
+                  class="size-4 shrink-0 text-ink-400"
+                  :title="`${row.count - GROUP_HEADER_MAX_PHASE_ICONS} more plants`"
+                  aria-label="More plants"
+                />
+                <PlantVigorIcon
+                  v-if="row.averageVigor"
+                  :vigor="row.averageVigor"
+                  class="ml-1"
+                />
+              </div>
+              <div class="flex flex-row items-center gap-0 shrink-0">
+                <button
+                  type="button"
+                  title="Edit plant in bed"
+                  aria-label="Edit plant in bed"
+                  class="btn-icon bg-transparent hover:bg-blossom-100 p-0.5 px-1"
+                  @click.stop="openEditPlantEditor(row)"
+                >
+                  <UiIcon name="edit" />
+                </button>
+                <button
+                  type="button"
+                  title="Add one plant to bed"
+                  aria-label="Add one plant to bed"
+                  class="btn-icon bg-transparent hover:bg-sage-100 p-0.5 px-1"
+                  @click.stop="addOneGuildThing(row.plantId)"
+                >
+                  <UiIcon name="add" />
+                </button>
+                <GuildPlantQuantityRemoveButton
+                  :count="row.count"
+                  @decrement="decrementGuildPlantQuantity(row.thingIds)"
+                />
+              </div>
             </div>
-            <div class="flex flex-row items-start gap-0 shrink-0">
-              <button
-                type="button"
-                title="Edit plant in bed"
-                aria-label="Edit plant in bed"
-                class="bg-transparent hover:bg-blossom-100 rounded-md p-1/2 px-1 transition-colors"
-                @click.stop="openEditPlantEditor(row)"
+            <div
+              v-if="isPlantGroupExpanded(row.plantId)"
+              class="flex flex-col gap-1 pb-1 pl-7 pr-1"
+            >
+              <div
+                v-for="(thingId, index) in row.thingIds"
+                :key="thingId"
+                class="flex flex-col gap-1 rounded-lg border border-parchment-300/80 bg-parchment-50/60 px-2 py-1.5"
+                :aria-label="
+                  row.count > 1 ? `${row.label} instance ${index + 1}` : row.label
+                "
               >
-                <UiIcon name="edit" />
-              </button>
-              <button
-                v-if="row.count > 1"
-                type="button"
-                title="Remove one plant from bed"
-                aria-label="Remove one plant from bed"
-                class="bg-transparent hover:bg-amber-100 rounded-md p-1/2 px-1 transition-colors"
-                @click="removeOneGuildThing(row.thingIds)"
-              >
-                <UiIcon name="remove-one" />
-              </button>
-              <button
-                type="button"
-                title="Remove plant from bed"
-                aria-label="Remove plant from bed"
-                class="bg-transparent hover:bg-red-200 rounded-md p-1/2 px-1 transition-colors"
-                @click="removeGuildThingsByIds(row.thingIds)"
-              >
-                <UiIcon name="remove" />
-              </button>
+                <span
+                  v-if="row.count > 1"
+                  class="text-[10px] font-medium text-ink-500"
+                >
+                  #{{ index + 1 }}
+                </span>
+                <div class="flex flex-row flex-wrap items-center gap-x-2 gap-y-1">
+                  <label
+                    class="flex flex-row items-center gap-1 text-[11px] text-ink-600"
+                  >
+                    <span class="shrink-0">Phase</span>
+                    <select
+                      class="min-w-0 max-w-[9.5rem] rounded-md border border-parchment-400/70 bg-white px-1 py-0.5 text-[11px] text-ink-700"
+                      :value="guildThing(thingId)?.growthPhase ?? ''"
+                      @change="
+                        setThingGrowthPhase(
+                          thingId,
+                          ($event.target as HTMLSelectElement).value,
+                        )
+                      "
+                    >
+                      <option value="">—</option>
+                      <option
+                        v-for="phase in GROWTH_PHASES_FOR_SELECT"
+                        :key="phase"
+                        :value="phase"
+                      >
+                        {{ GROWTH_PHASE_LABEL[phase] }}
+                      </option>
+                    </select>
+                  </label>
+                  <label
+                    class="flex flex-row items-center gap-1 text-[11px] text-ink-600"
+                  >
+                    <span class="shrink-0">Condition</span>
+                    <PlantVigorRating
+                      :vigor="guildThing(thingId)?.vigor"
+                      @update:vigor="setThingVigorLevel(thingId, $event)"
+                    />
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </template>
@@ -571,7 +733,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           type="button"
           title="Add plant to guild"
           aria-label="Add plant to guild"
-          class="self-start bg-transparent hover:bg-parchment-200 rounded-md p-1/2 px-1 text-sm leading-none transition-colors border border-dashed border-parchment-400"
+          class="btn-icon self-start bg-transparent hover:bg-parchment-200 p-0.5 px-1 text-sm leading-none border border-dashed border-parchment-400/50"
           @click.stop="openAddPlantEditor"
         >
           <UiIcon name="add" />
@@ -589,7 +751,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           </div>
           <button
             type="button"
-            class="shrink-0 text-sm bg-sage-200 hover:bg-sage-300 disabled:opacity-50 rounded py-1 px-2 text-ink-800"
+            class="shrink-0 text-sm btn-soft-muted btn-soft-sm disabled:opacity-50 py-1 px-2"
             :disabled="!selectedPick"
             aria-label="Add to guild"
             @click.stop="onConfirmPlant"
@@ -598,7 +760,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           </button>
           <button
             type="button"
-            class="shrink-0 text-sm bg-parchment-200 hover:bg-parchment-300 rounded py-1 px-2 text-ink-700"
+            class="shrink-0 text-sm btn-soft-secondary btn-soft-sm py-1 px-2"
             aria-label="Cancel adding plant"
             @click.stop="closePlantEditor"
           >
@@ -611,19 +773,19 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
         <div
           v-for="(f, fnKey) in guildFunctions"
           :key="fnKey"
+          class="status-chip"
           :class="{
             'bg-red-200': f.count == 0,
             'bg-sage-200': f.count == 1,
-            'bg-sage-500': f.count > 1,
+            'bg-sage-500 text-white': f.count > 1,
           }"
-          class="rounded-md p-1/2 px-1 text-xs"
           :aria-label="`${f.label}`"
           :title="functionLabelTooltip(guildTooltipRows, fnKey, f.label)"
         >
           {{ f.label }}
           <span
             v-if="f.count > 1"
-            class="text-ink-500 bg-parchment-300 rounded-md px-1 text-xs"
+            class="text-ink-500 bg-parchment-300/80 rounded-lg px-1 text-xs"
           >
             {{ f.count }}
           </span>
@@ -634,19 +796,19 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
         <div
           v-for="(l, layerKey) in guildLayers"
           :key="layerKey"
+          class="status-chip"
           :class="{
             'bg-red-200': l.count == 0,
             'bg-sage-200': l.count == 1,
-            'bg-sage-500': l.count > 1,
+            'bg-sage-500 text-white': l.count > 1,
           }"
-          class="rounded-md p-1/2 px-1 text-xs"
           :aria-label="`${l.label}`"
           :title="layerLabelTooltip(guildTooltipRows, layerKey, l.label)"
         >
           {{ l.label }}
           <span
             v-if="l.count > 1"
-            class="text-xs text-ink-500 bg-parchment-300 rounded-md px-1"
+            class="text-xs text-ink-500 bg-parchment-300/80 rounded-lg px-1"
           >
             {{ l.count }}
           </span>
@@ -691,7 +853,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             v-for="(count, i) in guildMonthPhenologyCounts.fruiting"
             :key="`f-${i}`"
             role="listitem"
-            class="flex-1 min-w-0 rounded-sm h-3 border border-parchment-400/60"
+            class="flex-1 min-w-0 rounded-md h-3 border border-parchment-400/50"
             :class="guildMonthBlockClass(count)"
             :title="
               monthAspectTooltip(guildTooltipRows, i, 'fruiting', CATALOG_MONTH_LABELS[i])
@@ -713,7 +875,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             v-for="(count, i) in guildMonthPhenologyCounts.blooming"
             :key="`b-${i}`"
             role="listitem"
-            class="flex-1 min-w-0 rounded-sm h-3 border border-parchment-400/60"
+            class="flex-1 min-w-0 rounded-md h-3 border border-parchment-400/50"
             :class="guildMonthBlockClass(count)"
             :title="
               monthAspectTooltip(guildTooltipRows, i, 'blooming', CATALOG_MONTH_LABELS[i])
