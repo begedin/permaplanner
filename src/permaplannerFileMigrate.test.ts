@@ -88,3 +88,30 @@ it('parsePermaplannerDocument returns current version after migration', async ()
   const doc = await parsePermaplannerDocument({ plants: [], guilds: [] });
   expect(doc.version).toBe(PERMAPLANNER_FILE_VERSION);
 });
+
+it('migratePlanDocumentRaw converts plant emoji overrides to iconId', async () => {
+  const migrated = await migratePlanDocumentRaw({
+    version: 3,
+    plants: [
+      {
+        id: 'p1',
+        speciesId: 'comfrey',
+        cultivarId: null,
+        speciesOverride: { emoji: '🪻' },
+      },
+    ],
+    guilds: [],
+    guildLocations: [],
+  });
+  expect(migrated).toMatchObject({
+    version: PERMAPLANNER_FILE_VERSION,
+    plants: [
+      {
+        id: 'p1',
+        speciesId: 'comfrey',
+        cultivarId: null,
+        speciesOverride: { iconId: 'flower-spike' },
+      },
+    ],
+  });
+});

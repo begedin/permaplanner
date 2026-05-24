@@ -121,8 +121,8 @@ it('shows map size and icon remove when the guild is placed on the aerial map', 
     '1.00×0.77',
   );
   expect(
-    wrapper.getByRole('button', { name: 'Remove from aerial map' }).textContent?.trim(),
-  ).toBe('⊖');
+    wrapper.getByRole('button', { name: 'Remove from aerial map' }).querySelector('svg'),
+  ).toBeTruthy();
 });
 
 it('selects the guild in the aerial route when the card is clicked', async () => {

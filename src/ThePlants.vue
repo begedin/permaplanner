@@ -16,9 +16,11 @@ import type {
 } from './useGardenStore';
 import { plantCatalog } from './plantCatalog';
 import { resolveUserPlant } from './resolvePlant';
-import { PLANT_EMOJI_OPTIONS } from './plantEmojiOptions';
+import { PLANT_ICON_OPTIONS } from './plantIconOptions';
+import type { PlantIconId } from './plantIcons/iconIds';
 import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
 import PlantIcon from './PlantIcon.vue';
+import UiIcon from './uiIcons/UiIcon.vue';
 import PlantFunctions from './PlantFunctions.vue';
 import PlantLayers from './PlantLayers.vue';
 
@@ -83,23 +85,23 @@ watch(
   { deep: true, immediate: true },
 );
 
-const pickEmoji = (emoji: string) => {
+const pickIcon = (iconId: PlantIconId) => {
   const natural = resolveUserPlant(
     {
       ...plantInEditing.value,
-      speciesOverride: { ...plantInEditing.value.speciesOverride, emoji: undefined },
+      speciesOverride: { ...plantInEditing.value.speciesOverride, iconId: undefined },
     },
     plantCatalog,
   );
-  if (emoji === natural.emoji) {
+  if (iconId === natural.iconId) {
     const rest = { ...plantInEditing.value.speciesOverride };
-    delete rest.emoji;
+    delete rest.iconId;
     plantInEditing.value.speciesOverride = Object.keys(rest).length ? rest : undefined;
     return;
   }
   plantInEditing.value.speciesOverride = {
     ...plantInEditing.value.speciesOverride,
-    emoji,
+    iconId,
   };
 };
 
@@ -121,8 +123,8 @@ const save = () => {
   if (prevSo?.name) {
     speciesOverride.name = prevSo.name;
   }
-  if (prevSo?.emoji) {
-    speciesOverride.emoji = prevSo.emoji;
+  if (prevSo?.iconId) {
+    speciesOverride.iconId = prevSo.iconId;
   }
   if (JSON.stringify(editingFunctions.value) !== JSON.stringify(natural.functions)) {
     speciesOverride.functions = [...editingFunctions.value];
@@ -219,10 +221,11 @@ const customCultivarName = computed({
           resolveUserPlant(plant, plantCatalog).name
         }}</span>
         <button
-          class="bg-red-200 hover:bg-red-300 p-1 rounded-md text-xs"
+          class="bg-red-200 hover:bg-red-300 p-1 rounded-md text-xs flex items-center justify-center"
+          aria-label="Delete plant"
           @click.self="remove(plant)"
         >
-          🗑️
+          <UiIcon name="trash" />
         </button>
       </div>
       <button
@@ -230,11 +233,10 @@ const customCultivarName = computed({
         :class="{ 'bg-slate-400': isNew }"
         @click="newPlant"
       >
-        <span
-          class="w-7 h-7 flex items-center justify-center text-xl"
-          aria-hidden="true"
-          >➕</span
-        >
+        <UiIcon
+          name="add"
+          class="size-7"
+        />
         <span class="w-28 truncate text-left">{{ isNew ? 'New plant' : 'New' }}</span>
       </button>
     </div>
@@ -283,15 +285,19 @@ const customCultivarName = computed({
           role="list"
         >
           <button
-            v-for="em in PLANT_EMOJI_OPTIONS"
-            :key="em"
+            v-for="iconId in PLANT_ICON_OPTIONS"
+            :key="iconId"
             type="button"
-            class="text-xl p-1 rounded border border-transparent hover:bg-slate-100"
-            :class="resolvedPreview.emoji === em && 'border-sky-400 bg-sky-50'"
-            :aria-pressed="resolvedPreview.emoji === em"
-            @click="pickEmoji(em)"
+            class="p-1 rounded border border-transparent hover:bg-slate-100"
+            :class="resolvedPreview.iconId === iconId && 'border-sky-400 bg-sky-50'"
+            :aria-pressed="resolvedPreview.iconId === iconId"
+            :aria-label="iconId"
+            @click="pickIcon(iconId)"
           >
-            {{ em }}
+            <PlantIcon
+              class="w-7 h-7"
+              :plant="{ ...resolvedPreview, iconId }"
+            />
           </button>
         </div>
       </div>

@@ -15,7 +15,7 @@ const applePlant = (): Plant => ({
   cultivarId: null,
   name: 'Apple',
   cultivar: null,
-  emoji: '🍎',
+  iconId: 'apple',
   functions: ['edible', 'pollinator_attractor'],
   layers: ['overstory'],
 });
@@ -26,7 +26,7 @@ const basilPlant = (): Plant => ({
   cultivarId: null,
   name: 'Basil',
   cultivar: null,
-  emoji: '🌿',
+  iconId: 'leaf-herb',
   functions: ['edible', 'pest_repellent'],
   layers: ['herb'],
 });

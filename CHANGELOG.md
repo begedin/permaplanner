@@ -1,5 +1,9 @@
 # Changelog 
 
+## 0.11.0 
+
+- [FEATURE] Icon theme
+
 ## 0.10.0
 
 - [FEATURE] Improve card layout, edit plants

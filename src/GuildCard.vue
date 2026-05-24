@@ -23,6 +23,7 @@ import {
 import GuildCardSectionLabel from './GuildCardSectionLabel.vue';
 import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
 import PlantIcon from './PlantIcon.vue';
+import UiIcon from './uiIcons/UiIcon.vue';
 import {
   functionLabelTooltip,
   guildPlantTooltipRows,
@@ -370,10 +371,13 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             type="button"
             title="Remove from aerial map"
             aria-label="Remove from aerial map"
-            class="bg-transparent hover:bg-amber-100 rounded-md p-0.5 px-1 text-sm leading-none transition-colors"
+            class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-transparent p-0.5 transition-colors hover:bg-amber-100"
             @click.stop="removeFromAerialMap"
           >
-            ⊖
+            <UiIcon
+              name="unmap"
+              class="size-4"
+            />
           </button>
         </div>
       </div>
@@ -418,10 +422,13 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             type="button"
             title="Remove from aerial map"
             aria-label="Remove from aerial map"
-            class="bg-transparent hover:bg-amber-100 rounded-md p-0.5 px-1 text-sm leading-none transition-colors"
+            class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-transparent p-0.5 transition-colors hover:bg-amber-100"
             @click.stop="removeFromAerialMap"
           >
-            ⊖
+            <UiIcon
+              name="unmap"
+              class="size-4"
+            />
           </button>
         </div>
         <button
@@ -431,11 +438,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           aria-label="Delete"
           @click="removeGuild"
         >
-          <span
-            class="leading-none"
-            aria-hidden="true"
-            >🗑️</span
-          >
+          <UiIcon name="trash" />
           Delete
         </button>
       </div>
@@ -457,14 +460,17 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
             role="radio"
             :aria-checked="guild.mulchLevel === n"
             tabindex="0"
-            class="cursor-pointer text-base leading-none select-none rounded px-0.5 focus:outline-none focus:ring-2 focus:ring-amber-400/80 focus:ring-offset-1"
+            class="cursor-pointer inline-flex size-5 items-center justify-center select-none rounded focus:outline-none focus:ring-2 focus:ring-amber-400/80 focus:ring-offset-1"
             :class="n <= guild.mulchLevel ? 'text-amber-500' : 'text-slate-300'"
             :aria-label="`Mulch level ${n} of 5`"
             @click="setMulchLevel(n)"
             @keydown.enter.prevent="setMulchLevel(n)"
             @keydown.space.prevent="setMulchLevel(n)"
           >
-            ★
+            <UiIcon
+              :name="n <= guild.mulchLevel ? 'star' : 'star-outline'"
+              class="size-full"
+            />
           </span>
         </div>
       </div>
@@ -513,7 +519,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           >
             <PlantIcon
               :title="row.label"
-              class="h-4 w-4 shrink-0 mt-0.5"
+              class="size-5 shrink-0 mt-0.5"
               :plant="row.representativeResolved"
             />
             <div class="min-w-0 flex-1 flex flex-col gap-0 text-left">
@@ -536,7 +542,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
                 class="bg-transparent hover:bg-sky-100 rounded-md p-1/2 px-1 transition-colors"
                 @click.stop="openEditPlantEditor(row)"
               >
-                ✏️
+                <UiIcon name="edit" />
               </button>
               <button
                 v-if="row.count > 1"
@@ -546,7 +552,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
                 class="bg-transparent hover:bg-amber-100 rounded-md p-1/2 px-1 transition-colors"
                 @click="removeOneGuildThing(row.thingIds)"
               >
-                ➖
+                <UiIcon name="remove-one" />
               </button>
               <button
                 type="button"
@@ -555,7 +561,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
                 class="bg-transparent hover:bg-red-200 rounded-md p-1/2 px-1 transition-colors"
                 @click="removeGuildThingsByIds(row.thingIds)"
               >
-                ✖️
+                <UiIcon name="remove" />
               </button>
             </div>
           </div>
@@ -568,7 +574,7 @@ const onAerialListKeydown = (e: KeyboardEvent) => {
           class="self-start bg-transparent hover:bg-slate-100 rounded-md p-1/2 px-1 text-sm leading-none transition-colors border border-dashed border-slate-300"
           @click.stop="openAddPlantEditor"
         >
-          ➕
+          <UiIcon name="add" />
         </button>
         <div
           v-else-if="plantEditor?.kind === 'add'"

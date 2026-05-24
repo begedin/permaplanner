@@ -1,5 +1,6 @@
 import rawCatalog from './data/plantCatalog.json';
 import type { GuildFunction, GuildLayer } from './gardenTypes';
+import type { PlantIconId } from './plantIcons/iconIds';
 
 /** Inclusive calendar months (1 = Jan … 12 = Dec). If `start` > `end`, the range wraps into the next year (e.g. Oct–Apr). */
 export type CatalogMonthPeriod = { start: number; end: number };
@@ -55,7 +56,7 @@ export type CatalogPhenology = {
 export type CatalogCultivar = {
   id: string;
   name: string;
-  defaultEmoji?: string;
+  defaultIconId?: PlantIconId;
   functions?: GuildFunction[];
   layers?: GuildLayer[];
   /** Omit to inherit species. `null` clears inherited species phenology for this aspect. */
@@ -67,7 +68,7 @@ export type CatalogCultivar = {
 export type CatalogSpecies = {
   id: string;
   name: string;
-  defaultEmoji: string;
+  defaultIconId: PlantIconId;
   functions: GuildFunction[];
   layers: GuildLayer[];
   blooming?: CatalogMonthPeriod;

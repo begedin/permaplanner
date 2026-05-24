@@ -12,11 +12,11 @@ it('merges db species → species override → cultivar → cultivar override', 
     id: 'u1',
     speciesId: 'apple',
     cultivarId: 'granny_smith',
-    speciesOverride: { emoji: '🟢' },
+    speciesOverride: { iconId: 'leaf-herb' },
     cultivarOverride: { name: 'GS (mine)' },
   };
   const r = resolveUserPlant(user, plantCatalog);
-  expect(r.emoji).toBe('🟢');
+  expect(r.iconId).toBe('leaf-herb');
   expect(r.cultivar).toBe('GS (mine)');
   expect(r.name).toBe('Apple');
 });
@@ -28,7 +28,7 @@ it('guild group label is species only for default cultivar', () => {
     cultivarId: null,
     name: 'Basil',
     cultivar: null,
-    emoji: '🌿',
+    iconId: 'leaf-herb',
     functions: [],
     layers: [],
   };
@@ -42,7 +42,7 @@ it('guild group label is species and cultivar when a cultivar is selected', () =
     cultivarId: 'genovese',
     name: 'Basil',
     cultivar: 'Genovese',
-    emoji: '🌿',
+    iconId: 'leaf-herb',
     functions: [],
     layers: [],
   };

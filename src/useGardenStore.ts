@@ -16,7 +16,7 @@ const FALLBACK_PLANT: Plant = {
   cultivarId: null,
   name: 'Plant',
   cultivar: null,
-  emoji: '🌱',
+  iconId: 'seedling',
   functions: [],
   layers: [],
 };

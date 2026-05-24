@@ -7,6 +7,7 @@ import type {
   PlantOverrideFields,
   UserPlant,
 } from './gardenTypes';
+import type { PlantIconId } from './plantIcons/iconIds';
 
 const applyScalarOverride = <T extends string>(base: T, o?: T): T =>
   o !== undefined ? o : base;
@@ -21,18 +22,18 @@ const applyLayerOverride = (base: GuildLayer[], o?: GuildLayer[]): GuildLayer[] 
 
 const applyPlantOverrideFields = (
   speciesName: string,
-  emoji: string,
+  iconId: PlantIconId,
   functions: GuildFunction[],
   layers: GuildLayer[],
   o?: PlantOverrideFields,
 ): {
   speciesName: string;
-  emoji: string;
+  iconId: PlantIconId;
   functions: GuildFunction[];
   layers: GuildLayer[];
 } => ({
   speciesName: applyScalarOverride(speciesName, o?.name),
-  emoji: applyScalarOverride(emoji, o?.emoji),
+  iconId: applyScalarOverride(iconId, o?.iconId),
   functions: applyArrayOverride(functions, o?.functions),
   layers: applyLayerOverride(layers, o?.layers),
 });
@@ -47,13 +48,13 @@ export const resolveUserPlant = (
   const species = getSpecies(user.speciesId) ?? catalog.species[0];
 
   let speciesName = species.name;
-  let emoji = species.defaultEmoji;
+  let iconId = species.defaultIconId;
   let functions = [...species.functions];
   let layers = [...species.layers];
 
-  ({ speciesName, emoji, functions, layers } = applyPlantOverrideFields(
+  ({ speciesName, iconId, functions, layers } = applyPlantOverrideFields(
     speciesName,
-    emoji,
+    iconId,
     functions,
     layers,
     user.speciesOverride,
@@ -65,8 +66,8 @@ export const resolveUserPlant = (
     const row = getCultivar(species, user.cultivarId);
     if (row) {
       cultivarName = row.name;
-      if (row.defaultEmoji !== undefined) {
-        emoji = row.defaultEmoji;
+      if (row.defaultIconId !== undefined) {
+        iconId = row.defaultIconId;
       }
       if (row.functions !== undefined) {
         functions = [...row.functions];
@@ -82,8 +83,8 @@ export const resolveUserPlant = (
     if (co.name !== undefined) {
       cultivarName = co.name;
     }
-    if (co.emoji !== undefined) {
-      emoji = co.emoji;
+    if (co.iconId !== undefined) {
+      iconId = co.iconId;
     }
     if (co.functions !== undefined) {
       functions = [...co.functions];
@@ -99,7 +100,7 @@ export const resolveUserPlant = (
     cultivarId: user.cultivarId,
     name: speciesName,
     cultivar: cultivarName,
-    emoji,
+    iconId,
     functions,
     layers,
   };
@@ -113,15 +114,15 @@ const LEGACY_ID_MAP: Record<string, { speciesId: string; cultivarId: string | nu
   comfrey: { speciesId: 'comfrey', cultivarId: null },
 };
 
-const FEATURE_EMOJI: Record<string, string> = {
-  apple: '🍎',
-  banana: '🍌',
-  blueberry: '🫐',
-  cherry: '🍒',
-  lemon: '🍋',
-  orange: '🍊',
-  pear: '🍐',
-  strawberry: '🍓',
+const FEATURE_ICON_ID: Record<string, PlantIconId> = {
+  apple: 'apple',
+  banana: 'banana',
+  blueberry: 'blueberry',
+  cherry: 'cherry',
+  lemon: 'lemon',
+  orange: 'orange',
+  pear: 'pear',
+  strawberry: 'strawberry',
 };
 
 const isGuildFunction = (v: unknown): v is GuildFunction =>
@@ -170,7 +171,8 @@ const legacyToUserPlant = (
     (s) => s.name.toLowerCase() === name.toLowerCase(),
   );
   const feature = row.feature as string | null | undefined;
-  const emoji = feature && FEATURE_EMOJI[feature] ? FEATURE_EMOJI[feature] : '🌱';
+  const iconId =
+    feature && FEATURE_ICON_ID[feature] ? FEATURE_ICON_ID[feature] : 'seedling';
 
   if (speciesHit) {
     const cultivarHit = cultivarStr
@@ -191,7 +193,7 @@ const legacyToUserPlant = (
     cultivarId: null,
     speciesOverride: {
       name,
-      emoji,
+      iconId,
       functions: Array.isArray(row.functions)
         ? row.functions.filter(isGuildFunction)
         : [],

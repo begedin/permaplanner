@@ -1,0 +1,32 @@
+import type { PlantIconId } from './plantIcons/iconIds';
+
+/** Common icon choices for plant markers (user picks one per saved plant). */
+export const PLANT_ICON_OPTIONS = [
+  'seedling',
+  'leaf-herb',
+  'apple',
+  'pear',
+  'peach',
+  'cherry',
+  'strawberry',
+  'blueberry',
+  'lemon',
+  'orange',
+  'banana',
+  'chestnut',
+  'flower',
+  'flower-tropical',
+  'flower-spike',
+  'tree',
+  'evergreen',
+  'pea',
+  'lettuce',
+  'garlic',
+  'onion',
+  'grain',
+  'potted',
+  'grape',
+  'kiwi',
+  'sunflower',
+  'flower-rosette',
+] as const satisfies readonly PlantIconId[];

@@ -1,3 +1,5 @@
+import type { PlantIconId } from './plantIcons/iconIds';
+
 export const GuildFunction = {
   nitrogen_fixer: 'nitrogen_fixer',
   dynamic_accumulator: 'dynamic_accumulator',
@@ -27,7 +29,7 @@ export type GuildLayer = (typeof GuildLayer)[keyof typeof GuildLayer];
 /** Partial fields a user may override (species slot or cultivar slot). */
 export type PlantOverrideFields = {
   name?: string;
-  emoji?: string;
+  iconId?: PlantIconId;
   functions?: GuildFunction[];
   layers?: GuildLayer[];
 };
@@ -51,7 +53,7 @@ export type Plant = {
   cultivarId: string | null;
   name: string;
   cultivar: string | null;
-  emoji: string;
+  iconId: PlantIconId;
   functions: GuildFunction[];
   layers: GuildLayer[];
 };

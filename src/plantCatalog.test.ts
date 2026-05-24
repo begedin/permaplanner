@@ -58,7 +58,7 @@ it('treats cultivar blooming null as clearing inherited species blooming', () =>
   const species: CatalogSpecies = {
     id: 'x',
     name: 'X',
-    defaultEmoji: '🌱',
+    defaultIconId: 'seedling',
     functions: [],
     layers: [],
     cultivars: [],

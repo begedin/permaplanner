@@ -197,8 +197,8 @@ it('shows map size and an icon remove control when the guild is on the aerial ma
   expect(
     card(wrapper)
       .getByRole('button', { name: 'Remove from aerial map' })
-      .textContent?.trim(),
-  ).toBe('⊖');
+      .querySelector('svg'),
+  ).toBeTruthy();
 
   await fireEvent.click(
     card(wrapper).getByRole('button', { name: 'Remove from aerial map' }),
@@ -318,9 +318,7 @@ it('cancels add plant without changing the guild', async () => {
 
   expect(store.guilds[0].plants).toEqual([]);
   expect(card(wrapper).queryByRole('combobox')).toBeNull();
-  expect(
-    card(wrapper).getByRole('button', { name: 'Add plant to guild' }),
-  ).toBeTruthy();
+  expect(card(wrapper).getByRole('button', { name: 'Add plant to guild' })).toBeTruthy();
 });
 
 it('cancels edit plant without changing the guild', async () => {
@@ -344,5 +342,5 @@ it('cancels edit plant without changing the guild', async () => {
   expect(store.guilds[0].plants).toEqual([
     baseThing({ id: 'thing-a', plantId: 'plant' }),
   ]);
-  expect(card(wrapper).getByLabelText('Comfrey')).toBeTruthy();
+  expect(card(wrapper).getByText('Comfrey')).toBeTruthy();
 });
