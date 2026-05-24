@@ -133,6 +133,9 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
   const guilds = ref<Guild[]>([]);
   const syncRevision = ref(0);
 
+  /** `File.lastModified` for the linked plan file (ms since epoch). */
+  const localFileLastModifiedMs = ref<number | undefined>(undefined);
+
   /** Skip auto-save while hydrating from disk or similar bulk updates. */
   const suppressAutosaveDepth = ref(0);
 
@@ -163,12 +166,18 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     return doc;
   };
 
+  const noteLocalFileLastModified = async (handle: FileSystemFileHandle) => {
+    const file = await handle.getFile();
+    localFileLastModifiedMs.value = file.lastModified;
+  };
+
   const writePlanToHandle = async (handle: FileSystemFileHandle) => {
     const text = buildLocalPlanJsonText(snapshot());
     const writable = await handle.createWritable();
     await writable.write(text);
     await writable.close();
     unsavedChanges.value = false;
+    await noteLocalFileLastModified(handle);
     try {
       await persistFileBinding(handle);
     } catch (e) {
@@ -263,6 +272,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       fileHandle.value = handle;
       fileName.value = file.name;
       needsFileRelink.value = false;
+      localFileLastModifiedMs.value = file.lastModified;
     } finally {
       await nextTick();
       suppressAutosaveDepth.value -= 1;
@@ -270,6 +280,15 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       isBulkPlanUpdate.value = false;
       unsavedChanges.value = false;
     }
+  };
+
+  const refreshLocalFileLastModified = async () => {
+    const h = fileHandle.value;
+    if (!h) {
+      localFileLastModifiedMs.value = undefined;
+      return;
+    }
+    await noteLocalFileLastModified(h);
   };
 
   const save = async (handle: FileSystemFileHandle) => {
@@ -285,6 +304,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     try {
       fileHandle.value = undefined;
       fileName.value = undefined;
+      localFileLastModifiedMs.value = undefined;
       needsFileRelink.value = false;
       await clearFileBinding();
       clearPlanMigrationPending();
@@ -343,6 +363,8 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     guilds,
     syncRevision,
     setSyncRevision,
+    localFileLastModifiedMs,
+    refreshLocalFileLastModified,
     applyRemoteRepoSnapshot,
   };
 });

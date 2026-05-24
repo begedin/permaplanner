@@ -113,7 +113,8 @@ export const readGithubClientIdConfig = (): string | undefined => {
   return t || undefined;
 };
 
-const REPO_NAME = 'permaplanner-plan-sync';
+/** Fixed slug for the private backup repo under the signed-in GitHub user. */
+export const GITHUB_PLAN_SYNC_REPO_NAME = 'permaplanner-plan-sync';
 const DEFAULT_BRANCH = 'main';
 const PLANS_DIR = 'plans';
 
@@ -393,9 +394,12 @@ const ensurePlanRepo = async (token: string): Promise<string> => {
   const user = (await userRes.json()) as { login: string };
   const login = user.login;
 
-  const existing = await fetch(`https://api.github.com/repos/${login}/${REPO_NAME}`, {
-    headers: githubHeaders(token),
-  });
+  const existing = await fetch(
+    `https://api.github.com/repos/${login}/${GITHUB_PLAN_SYNC_REPO_NAME}`,
+    {
+      headers: githubHeaders(token),
+    },
+  );
   if (existing.ok) {
     const repo = (await existing.json()) as { full_name: string };
     localStorage.setItem(LS_REPO_FULL_NAME, repo.full_name);
@@ -406,7 +410,7 @@ const ensurePlanRepo = async (token: string): Promise<string> => {
     method: 'POST',
     headers: { ...githubHeaders(token), 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      name: REPO_NAME,
+      name: GITHUB_PLAN_SYNC_REPO_NAME,
       private: true,
       description: 'Permaplanner synced garden plans (JSON files)',
       auto_init: true,
@@ -426,6 +430,48 @@ type ContentFileApi = {
   sha?: string;
   content?: string | null;
   encoding?: string;
+};
+
+type GithubCommitDateCarrier = {
+  commit?: {
+    committer?: { date?: string };
+    author?: { date?: string };
+  };
+};
+
+/** ISO commit timestamp from a list-commits entry or Contents create/update response. */
+export const readGithubCommitDateMs = (body: unknown): number | undefined => {
+  if (!body || typeof body !== 'object') {
+    return undefined;
+  }
+  const commit = (body as GithubCommitDateCarrier).commit;
+  const dateStr = commit?.committer?.date ?? commit?.author?.date;
+  if (typeof dateStr !== 'string') {
+    return undefined;
+  }
+  const ms = Date.parse(dateStr);
+  return Number.isFinite(ms) ? ms : undefined;
+};
+
+const fetchLatestCommitDateMsForRepoPath = async (
+  token: string,
+  fullName: string,
+  path: string,
+): Promise<number | undefined> => {
+  const url = `https://api.github.com/repos/${fullName}/commits?path=${encodeURIComponent(path)}&per_page=1&sha=${DEFAULT_BRANCH}`;
+  const res = await fetch(url, { headers: githubHeaders(token) });
+  if (res.status === 404) {
+    return undefined;
+  }
+  if (!res.ok) {
+    const t = await res.text();
+    failGithubSync('read', path, res.status, t);
+  }
+  const list = (await res.json()) as unknown;
+  if (!Array.isArray(list) || list.length === 0) {
+    return undefined;
+  }
+  return readGithubCommitDateMs(list[0]);
 };
 
 const decodeGithubFileBase64 = (content: string): Uint8Array => {
@@ -694,14 +740,6 @@ const dataUrlMimeForRepoPath = (repoPath: string): string => {
   return 'image/png';
 };
 
-const readSyncRevisionFromConfigJson = (raw: unknown): number => {
-  if (!raw || typeof raw !== 'object') {
-    return 0;
-  }
-  const sr = (raw as Record<string, unknown>).syncRevision;
-  return typeof sr === 'number' && Number.isFinite(sr) ? Math.max(0, Math.floor(sr)) : 0;
-};
-
 export const scanGithubPlanShardsForMigration = async (
   token: string,
   sourceFileName: string | undefined,
@@ -739,21 +777,25 @@ export const scanGithubPlanShardsForMigration = async (
   return Object.keys(out).length > 0 ? out : undefined;
 };
 
-export const fetchRemotePlanSyncRevision = async (
+/** Latest commit time among plan shard files on GitHub (ms since epoch). */
+export const fetchRemotePlanLastUpdatedMs = async (
   token: string,
   sourceFileName: string | undefined,
 ): Promise<number | undefined> => {
   const fullName = await ensurePlanRepo(token);
-  const raw = await getRepoJsonIfExists(
-    token,
-    fullName,
+  const paths = [
     planRepoConfigPath(sourceFileName),
+    planRepoPlantsPath(sourceFileName),
+    planRepoGuildsPath(sourceFileName),
+  ];
+  const dates = await Promise.all(
+    paths.map((path) => fetchLatestCommitDateMsForRepoPath(token, fullName, path)),
   );
-  if (raw === undefined) {
+  const defined = dates.filter((d): d is number => d !== undefined);
+  if (defined.length === 0) {
     return undefined;
   }
-  const rev = readSyncRevisionFromConfigJson(raw);
-  return rev;
+  return Math.max(...defined);
 };
 
 export const pullPlanJsonFromGithubRepo = async (

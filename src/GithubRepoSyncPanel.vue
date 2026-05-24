@@ -2,11 +2,12 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 
+import GithubPlanSyncRepoNote from './GithubPlanSyncRepoNote.vue';
 import {
   beginGithubAuth,
   clearGithubRepoSession,
   completeGithubAuthIfNeeded,
-  fetchRemotePlanSyncRevision,
+  fetchRemotePlanLastUpdatedMs,
   getGithubAccessToken,
   getPlanRepoGardenFolderUrl,
   githubRepoLastSyncError,
@@ -25,7 +26,7 @@ const clientId = computed(() => readGithubClientIdConfig());
 const repoPushBusy = computed(() => githubRepoPushInFlightCount.value > 0);
 
 const permaplannerStore = usePermaplannerStore();
-const { syncRevision } = storeToRefs(permaplannerStore);
+const { localFileLastModifiedMs } = storeToRefs(permaplannerStore);
 
 const authMessage = ref<string | undefined>();
 const syncError = ref<string | undefined>();
@@ -39,12 +40,30 @@ const displayedSyncError = computed(
 const syncing = ref(false);
 const pulling = ref(false);
 const connected = ref(Boolean(getGithubAccessToken()));
-const remoteSyncRevision = ref<number | undefined>(undefined);
+const remoteLastUpdatedMs = ref<number | undefined>(undefined);
 const remoteLoading = ref(false);
 
 const repoFolderUrl = ref<string | undefined>(
   getPlanRepoGardenFolderUrl(permaplannerStore.fileName),
 );
+
+const formatPlanUpdatedAt = (ms: number | undefined): string => {
+  if (ms === undefined) {
+    return '—';
+  }
+  return new Date(ms).toLocaleString();
+};
+
+const localUpdatedLabel = computed(() =>
+  formatPlanUpdatedAt(localFileLastModifiedMs.value),
+);
+
+const remoteUpdatedLabel = computed(() => {
+  if (remoteLoading.value) {
+    return '…';
+  }
+  return formatPlanUpdatedAt(remoteLastUpdatedMs.value);
+});
 
 const updateRepoLink = () => {
   repoFolderUrl.value = getPlanRepoGardenFolderUrl(permaplannerStore.fileName);
@@ -62,22 +81,22 @@ const finishOAuthFromUrl = async () => {
   connected.value = Boolean(getGithubAccessToken());
 };
 
-const refreshRemoteRevision = async () => {
+const refreshRemoteUpdatedAt = async () => {
   const token = getGithubAccessToken();
   if (!token) {
-    remoteSyncRevision.value = undefined;
+    remoteLastUpdatedMs.value = undefined;
     return;
   }
   remoteLoading.value = true;
   syncError.value = undefined;
   try {
-    remoteSyncRevision.value = await fetchRemotePlanSyncRevision(
+    remoteLastUpdatedMs.value = await fetchRemotePlanLastUpdatedMs(
       token,
       permaplannerStore.fileName,
     );
   } catch (e) {
     syncError.value = githubSyncFailureMessage(e);
-    remoteSyncRevision.value = undefined;
+    remoteLastUpdatedMs.value = undefined;
   } finally {
     remoteLoading.value = false;
   }
@@ -85,13 +104,14 @@ const refreshRemoteRevision = async () => {
 
 const onRepoUpdated = () => {
   updateRepoLink();
-  void refreshRemoteRevision();
+  void refreshRemoteUpdatedAt();
 };
 
 onMounted(() => {
   void finishOAuthFromUrl().finally(() => {
     updateRepoLink();
-    void refreshRemoteRevision();
+    void permaplannerStore.refreshLocalFileLastModified();
+    void refreshRemoteUpdatedAt();
   });
   window.addEventListener(planRepoSyncUpdatedEventName, onRepoUpdated);
 });
@@ -101,10 +121,11 @@ onBeforeUnmount(() => {
 });
 
 watch([connected, () => permaplannerStore.fileName], () => {
+  void permaplannerStore.refreshLocalFileLastModified();
   if (connected.value) {
-    void refreshRemoteRevision();
+    void refreshRemoteUpdatedAt();
   } else {
-    remoteSyncRevision.value = undefined;
+    remoteLastUpdatedMs.value = undefined;
   }
 });
 
@@ -119,7 +140,7 @@ const disconnect = () => {
   authMessage.value = undefined;
   syncError.value = undefined;
   githubRepoLastSyncError.value = undefined;
-  remoteSyncRevision.value = undefined;
+  remoteLastUpdatedMs.value = undefined;
 };
 
 const pushCurrent = async () => {
@@ -136,7 +157,7 @@ const pushCurrent = async () => {
       permaplannerStore.fileName,
     );
     updateRepoLink();
-    await refreshRemoteRevision();
+    await refreshRemoteUpdatedAt();
     window.dispatchEvent(new Event(planRepoSyncUpdatedEventName));
   } catch (e) {
     syncError.value = githubSyncFailureMessage(e);
@@ -156,7 +177,7 @@ const pullRemote = async () => {
     const doc = await pullPlanJsonFromGithubRepo(token, permaplannerStore.fileName);
     permaplannerStore.applyRemoteRepoSnapshot(doc);
     updateRepoLink();
-    remoteSyncRevision.value = doc.syncRevision;
+    await refreshRemoteUpdatedAt();
     await checkGithubPlanMigration(permaplannerStore.fileName);
   } catch (e) {
     syncError.value = githubSyncFailureMessage(e);
@@ -178,6 +199,10 @@ const pullRemote = async () => {
     </p>
     <template v-else>
       <div class="flex flex-col gap-1">
+        <GithubPlanSyncRepoNote
+          v-if="!connected"
+          size="xs"
+        />
         <button
           v-if="!connected"
           type="button"
@@ -192,31 +217,18 @@ const pullRemote = async () => {
             :aria-busy="repoPushBusy || syncing || pulling || remoteLoading"
           >
             <span
-              >Local sync: <strong class="text-ink-800">{{ syncRevision }}</strong></span
+              >Local file:
+              <strong class="text-ink-800">{{ localUpdatedLabel }}</strong></span
             >
             <span>
               Remote:
-              <strong
-                v-if="remoteLoading"
-                class="text-ink-500"
-                >…</strong
-              >
-              <strong
-                v-else-if="remoteSyncRevision !== undefined"
-                class="text-ink-800"
-                >{{ remoteSyncRevision }}</strong
-              >
-              <strong
-                v-else
-                class="text-ink-500 font-normal"
-                >—</strong
-              >
+              <strong class="text-ink-800">{{ remoteUpdatedLabel }}</strong>
             </span>
             <button
               type="button"
               class="link-soft text-ink-500 hover:text-ink-800 underline"
               :disabled="remoteLoading || syncing || pulling || repoPushBusy"
-              @click="refreshRemoteRevision"
+              @click="refreshRemoteUpdatedAt"
             >
               Refresh remote
             </button>

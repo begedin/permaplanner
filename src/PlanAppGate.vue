@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
+import GithubPlanSyncRepoNote from './GithubPlanSyncRepoNote.vue';
 import PlanMigrationScreen from './PlanMigrationScreen.vue';
 import { beginGithubAuth, readGithubClientIdConfig } from './githubRepoSync';
 import { planAppGateMode } from './usePlanAppGate';
@@ -150,8 +151,9 @@ const connectGithub = () => {
           >
             GitHub sign-in is not configured for this build.
           </p>
+          <GithubPlanSyncRepoNote v-if="githubClientConfigured" />
           <button
-            v-else
+            v-if="githubClientConfigured"
             type="button"
             class="w-full btn-soft-ink px-4 py-3 font-medium text-left"
             @click="connectGithub"

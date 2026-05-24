@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 
 import {
   buildGithubAuthorizeUrl,
+  GITHUB_PLAN_SYNC_REPO_NAME,
   gitBranchHeadRefSegment,
   githubSyncUserMessage,
   planBackgroundMediaRepoPath,
@@ -10,7 +11,12 @@ import {
   planRepoConfigPath,
   planRepoGuildsPath,
   planRepoPlantsPath,
+  readGithubCommitDateMs,
 } from './githubRepoSync';
+
+it('GITHUB_PLAN_SYNC_REPO_NAME is the fixed backup repo slug', () => {
+  expect(GITHUB_PLAN_SYNC_REPO_NAME).toBe('permaplanner-plan-sync');
+});
 
 it('buildGithubAuthorizeUrl uses repo scope for private repo + Contents API', () => {
   const url = buildGithubAuthorizeUrl({
@@ -50,6 +56,20 @@ it('githubSyncUserMessage for 409 suggests pushing again with local copy', () =>
   );
   expect(message).toMatch(/Push again/i);
   expect(message).not.toMatch(/pull remote/i);
+});
+
+it('readGithubCommitDateMs prefers committer date over author', () => {
+  const ms = readGithubCommitDateMs({
+    commit: {
+      author: { date: '2020-01-01T00:00:00Z' },
+      committer: { date: '2024-06-15T12:30:00Z' },
+    },
+  });
+  expect(ms).toBe(Date.parse('2024-06-15T12:30:00Z'));
+});
+
+it('readGithubCommitDateMs returns undefined for missing commit', () => {
+  expect(readGithubCommitDateMs({ type: 'file' })).toBeUndefined();
 });
 
 it('githubSyncUserMessage prefers GitHub API message for other errors when present', () => {

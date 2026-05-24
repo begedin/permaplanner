@@ -1,5 +1,9 @@
 # Changelog 
 
+## 0.11.2
+
+- [TWEAK] Explain which private GitHub repo is created or reused when connecting
+
 ## 0.11.1
 
 - [FIX] Keep guild selected when refreshing on a `/guilds/:id` or `/aerial/:id` URL
