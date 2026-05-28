@@ -2064,6 +2064,27 @@
         "end": 9
       },
       "defaultIconId": "flower-blossom"
+    },
+    {
+      "id": "sweet_potato",
+      "name": "Sweet potato",
+      "functions": ["edible", "ground_cover"],
+      "layers": ["vine", "ground_cover", "root"],
+      "cultivars": [
+        {
+          "id": "beauregard",
+          "name": "Beauregard"
+        },
+        {
+          "id": "jewel",
+          "name": "Jewel"
+        },
+        {
+          "id": "okinawan",
+          "name": "Okinawan"
+        }
+      ],
+      "defaultIconId": "seedling"
     }
   ]
 }

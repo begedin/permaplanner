@@ -11,7 +11,6 @@ import {
 import type { GithubShardMigrationVersions } from './permaplannerFileMigrate';
 import {
   parsePermaplannerDocument,
-  usePermaplannerStore,
   type PermaplannerFileV1,
 } from './usePermaplannerStore';
 

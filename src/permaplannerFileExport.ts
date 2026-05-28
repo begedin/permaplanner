@@ -4,7 +4,7 @@ import type { PermaplannerFileV1 } from './usePermaplannerStore';
 
 export const buildLocalPlanJsonText = (snapshot: PermaplannerFileV1): string => {
   const { guilds, guildLocations } = splitGuildsForPersistence(snapshot.guilds);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const { guilds: _merged, ...rest } = snapshot;
   return JSON.stringify({ ...rest, guilds, guildLocations }, null, 2);
 };

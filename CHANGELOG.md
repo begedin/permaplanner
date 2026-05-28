@@ -1,5 +1,9 @@
 # Changelog 
 
+## 0.11.3
+
+- [FEATURE] Per-guild notes in guild details (plain text with line breaks and indentation)
+
 ## 0.11.2
 
 - [TWEAK] Explain which private GitHub repo is created or reused when connecting

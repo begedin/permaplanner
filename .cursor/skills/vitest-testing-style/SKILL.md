@@ -3,8 +3,8 @@ name: vitest-testing-style
 description: >-
   Writes and reviews Vitest unit tests in this project using object matchers,
   minimal mocking, and consistent structure. Use when writing or editing
-  Vitest tests, reviewing assertions in *.test.ts, or when the user asks
-  about unit test style.
+  Vitest tests, reviewing assertions in *.test.ts or *.spec.ts, or when the
+  user asks about unit test style.
 ---
 
 # Vitest testing style (permaplanner)
@@ -43,6 +43,6 @@ expect(reloaded.guilds[0]!.id).toBe('g-willow');
 
 ## Running tests
 
-- **One-off / agents / CI:** `npx vitest run` (whole suite) or `npx vitest run src/foo.test.ts` (single file). Exits when finished.
-- **Local dev:** `npm run test:unit` runs `vitest` in **watch mode** (re-runs on save; press `q` to quit). Optional path: `npm run test:unit src/foo.test.ts`.
-- In automated shells (Cursor agents, CI), always use `npx vitest run …` — never `npm run test:unit`.
+- **One-off / agents / CI:** `npm run test:unit` (whole suite) or `npm run test:unit -- src/foo.test.ts` / `src/foo.spec.ts` (single file). Exits when finished.
+- **Local dev:** `npm run test:unit:watch` runs `vitest` in **watch mode** (re-runs on save; press `q` to quit). Optional path: `npm run test:unit:watch -- src/foo.test.ts` / `src/foo.spec.ts`.
+- In automated shells (Cursor agents, CI), use one-shot commands (`npm run test:unit …` or `npx vitest run …`) and never watch mode.

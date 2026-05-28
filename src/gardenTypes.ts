@@ -94,4 +94,5 @@ export type Guild = {
   path: { x: number; y: number }[];
   plants: GardenThing[];
   mulchLevel: MulchLevel;
+  note?: string;
 };

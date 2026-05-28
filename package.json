@@ -1,6 +1,6 @@
 {
   "name": "permaplanner",
-  "version": "0.11.2",
+  "version": "0.11.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,7 +11,8 @@
     "start": "node server/static.mjs",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
-    "test:unit": "vitest",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
     "test:coverage": "vitest --coverage.enabled true",
     "build-only": "vite build",
     "type-check": "vue-tsc --project tsconfig.app.json",

@@ -70,8 +70,7 @@ const monthBlockClass = (rawCount: number): string => {
             :key="`fh-${i}`"
             class="flex-1 min-w-0 text-center text-[10px] leading-none font-medium text-ink-500"
             :title="monthHeaderTooltip(gardenTooltipRows, i, CATALOG_MONTH_LABELS[i])"
-            >{{ lab }}</span
-          >
+          >{{ lab }}</span>
         </div>
       </div>
       <div

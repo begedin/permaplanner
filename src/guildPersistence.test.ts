@@ -7,6 +7,8 @@ import {
   splitGuildFieldsOnDocument,
 } from './guildPersistence';
 import { migrateGuildsShardRaw, migratePlanDocumentRaw } from './permaplannerFileMigrate';
+import { buildLocalPlanJsonText } from './permaplannerFileExport';
+import type { PermaplannerFileV1 } from './usePermaplannerStore';
 import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
 
 const sampleGuild: Guild = {
@@ -88,6 +90,61 @@ it('mergeGuildsFromPersistence round-trips split shards', () => {
   expect(mergeGuildsFromPersistence(split.guilds, split.guildLocations)).toEqual([
     sampleGuild,
   ]);
+});
+
+it('splitGuildsForPersistence omits empty guild notes', () => {
+  const { guilds } = splitGuildsForPersistence([{ ...sampleGuild, note: '' }]);
+  expect(guilds[0]).not.toHaveProperty('note');
+});
+
+it('splitGuildsForPersistence includes non-empty guild notes', () => {
+  const { guilds } = splitGuildsForPersistence([
+    { ...sampleGuild, note: 'North edge planting plan' },
+  ]);
+  expect(guilds[0]).toMatchObject({ note: 'North edge planting plan' });
+});
+
+it('mergeGuildsFromPersistence reads optional guild notes', () => {
+  const split = splitGuildsForPersistence([
+    { ...sampleGuild, note: 'Keep mulch topped up in summer' },
+  ]);
+  expect(mergeGuildsFromPersistence(split.guilds, split.guildLocations)).toEqual([
+    { ...sampleGuild, note: 'Keep mulch topped up in summer' },
+  ]);
+});
+
+it('mergeGuildsFromPersistence drops empty notes from guild shards', () => {
+  const { guildLocations } = splitGuildsForPersistence([sampleGuild]);
+  expect(
+    mergeGuildsFromPersistence(
+      [
+        {
+          id: 'g1',
+          name: 'Edge guild',
+          mulchLevel: 3,
+          note: '',
+          plants: [{ id: 't1', name: 'Granny Smith', plantId: 'apple_granny_smith' }],
+        },
+      ],
+      guildLocations,
+    )[0],
+  ).not.toHaveProperty('note');
+});
+
+it('buildLocalPlanJsonText omits empty guild notes from saved JSON', () => {
+  const snapshot: PermaplannerFileV1 = {
+    version: PERMAPLANNER_FILE_VERSION,
+    syncRevision: 0,
+    plants: [],
+    guilds: [{ ...sampleGuild, note: '' }],
+    mapScale: {
+      start: { x: 0, y: 0 },
+      end: { x: 1, y: 0 },
+      linePhysicalLength: 1,
+    },
+    backgroundOpacity: 0.4,
+  };
+  expect(buildLocalPlanJsonText(snapshot)).not.toContain('"note"');
 });
 
 it('migrateGuildsShardRaw splits v2 merged guilds.json to v3', async () => {

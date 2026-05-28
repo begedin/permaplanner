@@ -216,10 +216,8 @@ const pullRemote = async () => {
             class="flex flex-wrap gap-x-3 gap-y-1 text-ink-600"
             :aria-busy="repoPushBusy || syncing || pulling || remoteLoading"
           >
-            <span
-              >Local file:
-              <strong class="text-ink-800">{{ localUpdatedLabel }}</strong></span
-            >
+            <span>Local file:
+              <strong class="text-ink-800">{{ localUpdatedLabel }}</strong></span>
             <span>
               Remote:
               <strong class="text-ink-800">{{ remoteUpdatedLabel }}</strong>
@@ -277,8 +275,7 @@ const pullRemote = async () => {
           :href="repoFolderUrl"
           target="_blank"
           rel="noopener noreferrer"
-          >Open plan folder on GitHub</a
-        >
+        >Open plan folder on GitHub</a>
       </p>
       <p
         v-if="authMessage"

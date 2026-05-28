@@ -11,11 +11,15 @@ import {
   type MulchLevel,
 } from './gardenTypes';
 
+const persistedGuildNote = (note: unknown): string | undefined =>
+  typeof note === 'string' && note !== '' ? note : undefined;
+
 /** Guild composition in saved files (no map geometry). */
 export type PersistedGuildContent = {
   id: string;
   name: string;
   mulchLevel: MulchLevel;
+  note?: string;
   plants: {
     id: string;
     name: string;
@@ -35,18 +39,22 @@ export type PersistedGuildLocation = {
 export const splitGuildsForPersistence = (
   guilds: Guild[],
 ): { guilds: PersistedGuildContent[]; guildLocations: PersistedGuildLocation[] } => ({
-  guilds: guilds.map((g) => ({
-    id: g.id,
-    name: g.name,
-    mulchLevel: g.mulchLevel,
-    plants: g.plants.map((p) => ({
-      id: p.id,
-      name: p.nameOrCultivar,
-      plantId: p.plantId,
-      ...(p.growthPhase !== undefined ? { growthPhase: p.growthPhase } : {}),
-      ...(p.vigor !== undefined ? { vigor: p.vigor } : {}),
-    })),
-  })),
+  guilds: guilds.map((g) => {
+    const note = persistedGuildNote(g.note);
+    return {
+      id: g.id,
+      name: g.name,
+      mulchLevel: g.mulchLevel,
+      ...(note !== undefined ? { note } : {}),
+      plants: g.plants.map((p) => ({
+        id: p.id,
+        name: p.nameOrCultivar,
+        plantId: p.plantId,
+        ...(p.growthPhase !== undefined ? { growthPhase: p.growthPhase } : {}),
+        ...(p.vigor !== undefined ? { vigor: p.vigor } : {}),
+      })),
+    };
+  }),
   guildLocations: guilds.map((g) => ({
     id: g.id,
     path: g.path,
@@ -123,10 +131,12 @@ const parseGuildContentList = (raw: unknown): PersistedGuildContent[] => {
     if (!isRecord(g) || typeof g.id !== 'string') {
       continue;
     }
+    const note = persistedGuildNote(g.note);
     out.push({
       id: g.id,
       name: typeof g.name === 'string' ? g.name : '',
       mulchLevel: coerceMulchLevel(g.mulchLevel),
+      ...(note !== undefined ? { note } : {}),
       plants: parseContentPlants(g.plants),
     });
   }
@@ -164,10 +174,16 @@ export const mergeGuildsFromPersistence = (
 ): Guild[] => {
   const contents = parseGuildContentList(guildsRaw);
   if (contents.length === 0 && Array.isArray(guildsRaw) && guildsRaw.length > 0) {
-    return (guildsRaw as Guild[]).map((g) => ({
-      ...g,
-      mulchLevel: coerceMulchLevel((g as Record<string, unknown>).mulchLevel),
-    }));
+    return (guildsRaw as Guild[]).map((g) => {
+      const raw = g as Record<string, unknown>;
+      const note = persistedGuildNote(raw.note);
+      const { note: _ignored, ...rest } = g;
+      return {
+        ...rest,
+        mulchLevel: coerceMulchLevel(raw.mulchLevel),
+        ...(note !== undefined ? { note } : {}),
+      };
+    });
   }
 
   const locations = parseGuildLocationList(guildLocationsRaw);
@@ -190,11 +206,13 @@ export const mergeGuildsFromPersistence = (
         ...(p.vigor !== undefined ? { vigor: p.vigor } : {}),
       };
     });
+    const note = persistedGuildNote(c.note);
     return {
       id: c.id,
       name: c.name,
       path: loc?.path ?? [],
       mulchLevel: c.mulchLevel,
+      ...(note !== undefined ? { note } : {}),
       plants,
     };
   });

@@ -111,11 +111,12 @@ const detailMotionStyle = computed((): Record<string, string> => {
           >
             <div
               v-if="selectedGuildId"
-              class="flex-1 min-h-0 overflow-y-auto p-4"
+              class="flex flex-1 min-h-0 flex flex-col p-4 overflow-hidden"
             >
               <GuildCard
                 :guild-id="selectedGuildId"
                 context="guilds"
+                class="flex-1 min-h-0"
               />
             </div>
           </motion.section>

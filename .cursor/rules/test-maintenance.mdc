@@ -8,7 +8,7 @@ alwaysApply: true
 When you change **behavior, UI, or public APIs** in `src/` (Vue components, Pinia stores, composables, utils):
 
 1. **Find tests** — Same-directory `*.test.ts`, or search for the symbol (`grep` / search): component filename, store name, composable name.
-2. **Run them** — `npx vitest run path/to/File.test.ts` (`npm run test:unit` is watch mode and will hang in agent shells). Fix failures before finishing the task.
+2. **Run them** — `npm run test:unit -- path/to/File.test.ts` (or `npx vitest run path/to/File.test.ts`). Do not use `npm run test:unit:watch` in agent shells. Fix failures before finishing the task.
 3. **Update assertions** when the change is intentional (e.g. new `aria-label`, copy, layout split, prop/context). Do not delete coverage just to turn the suite green; replace with assertions on the new contract.
 4. **Split concerns** — If a thin wrapper (e.g. sidebar) delegates to a shared child, tests on the child (`GuildCard`, store) own detailed behavior; wrapper tests stay shallow.
 
