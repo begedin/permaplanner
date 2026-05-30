@@ -1,4 +1,11 @@
-# Changelog 
+# Changelog
+
+## 0.11.4
+
+- [FEATURE] Generate a static GitHub Pages guild viewer per garden at `plans/<garden>/viewer.html` (plain-text guild content baked into HTML for LLM-friendly sharing)
+- [FEATURE] Link to the GitHub Pages guilds view from the GitHub backup sidebar
+- [FIX] Keep the remote backup timestamp after a page refresh
+- [FIX] Resolve guild plant names from plant records when saving locally and to GitHub (avoid stale "Plant" labels)
 
 ## 0.11.3
 

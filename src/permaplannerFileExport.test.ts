@@ -51,3 +51,82 @@ it('buildLocalPlanJsonText writes split guild fields', () => {
     guildLocations: [],
   });
 });
+
+it('buildLocalPlanJsonText resolves guild plant names from plant records', () => {
+  const snapshot: PermaplannerFileV1 = {
+    ...sampleDoc,
+    plants: [
+      {
+        id: 'up-1',
+        speciesId: 'unknown',
+        cultivarId: null,
+        speciesOverride: { name: 'Thai Basil' },
+      },
+    ],
+    guilds: [
+      {
+        id: 'g-1',
+        name: 'Herbs',
+        path: [],
+        mulchLevel: 2,
+        plants: [
+          {
+            id: 'thing-1',
+            plantId: 'up-1',
+            nameOrCultivar: 'Plant',
+            x: 0,
+            y: 0,
+            width: 1,
+            height: 1,
+          },
+        ],
+      },
+    ],
+  };
+
+  const parsed = JSON.parse(buildLocalPlanJsonText(snapshot)) as {
+    guilds: { plants: { name: string }[] }[];
+  };
+  expect(parsed.guilds[0]!.plants[0]!.name).toBe('Thai Basil');
+});
+
+it('buildGithubPlanShardExports resolves guild plant names from plant records', () => {
+  const snapshot: PermaplannerFileV1 = {
+    ...sampleDoc,
+    plants: [
+      {
+        id: 'up-1',
+        speciesId: 'unknown',
+        cultivarId: null,
+        speciesOverride: { name: 'Lemon Balm' },
+      },
+    ],
+    guilds: [
+      {
+        id: 'g-1',
+        name: 'Tea guild',
+        path: [],
+        mulchLevel: 3,
+        plants: [
+          {
+            id: 'thing-1',
+            plantId: 'up-1',
+            nameOrCultivar: 'Plant',
+            x: 0,
+            y: 0,
+            width: 1,
+            height: 1,
+          },
+        ],
+      },
+    ],
+  };
+
+  const shards = buildGithubPlanShardExports(snapshot, {
+    gardenFolderSegment: 'tea-guild',
+  });
+  const guilds = JSON.parse(shards.guildsJson) as {
+    guilds: { plants: { name: string }[] }[];
+  };
+  expect(guilds.guilds[0]!.plants[0]!.name).toBe('Lemon Balm');
+});

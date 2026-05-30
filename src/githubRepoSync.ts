@@ -1,6 +1,8 @@
 import { ref } from 'vue';
 
+import planGardenViewerTemplate from '../public/plan-garden-viewer.template.html?raw';
 import { buildGithubPlanShardExports } from './permaplannerFileExport';
+import { renderPlanGardenViewerHtml } from './planGardenViewer';
 import {
   documentNeedsMigration,
   guildsArrayFromShard,
@@ -21,6 +23,8 @@ export const githubRepoPushInFlightCount = ref(0);
 
 /** Set when a background sync after save fails; cleared on the next successful push. */
 export const githubRepoLastSyncError = ref<string | undefined>();
+/** Most recent known remote commit timestamp (from push response or optimistic fallback). */
+export const githubRepoRemoteLastUpdatedMs = ref<number | undefined>();
 
 export type GithubSyncFailureKind = 'conflict' | 'auth' | 'rejected' | 'generic';
 
@@ -121,6 +125,7 @@ const SS_VERIFIER = 'permaplanner.oauth.github.code_verifier';
 const SS_STATE = 'permaplanner.oauth.github.state';
 const SS_TOKEN = 'permaplanner.github.accessToken';
 const LS_REPO_FULL_NAME = 'permaplanner.github.planRepoFullName';
+const LS_REMOTE_LAST_UPDATED_BY_GARDEN = 'permaplanner.github.remoteLastUpdatedByGarden';
 
 const GITHUB_AUTH = 'https://github.com/login/oauth/authorize';
 const githubOAuthTokenPath = () => '/api/github/oauth/access_token';
@@ -188,6 +193,70 @@ export const planGardenFolderSegment = (fileName: string | undefined): string =>
   return stem || 'plan';
 };
 
+const readRemoteLastUpdatedByGardenMap = (): Record<string, number> => {
+  const raw = localStorage.getItem(LS_REMOTE_LAST_UPDATED_BY_GARDEN);
+  if (!raw) {
+    return {};
+  }
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {};
+    }
+    const out: Record<string, number> = {};
+    for (const [key, value] of Object.entries(parsed)) {
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        out[key] = value;
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+};
+
+const writeRemoteLastUpdatedByGardenMap = (map: Record<string, number>): void => {
+  if (Object.keys(map).length === 0) {
+    localStorage.removeItem(LS_REMOTE_LAST_UPDATED_BY_GARDEN);
+    return;
+  }
+  localStorage.setItem(LS_REMOTE_LAST_UPDATED_BY_GARDEN, JSON.stringify(map));
+};
+
+const readPersistedGithubRepoRemoteLastUpdatedMs = (
+  sourceFileName: string | undefined,
+): number | undefined => {
+  const ms = readRemoteLastUpdatedByGardenMap()[planGardenFolderSegment(sourceFileName)];
+  return ms !== undefined && Number.isFinite(ms) ? ms : undefined;
+};
+
+/** Restore cached remote timestamp for the current garden (survives page refresh). */
+export const loadGithubRepoRemoteLastUpdatedMs = (
+  sourceFileName: string | undefined,
+): void => {
+  githubRepoRemoteLastUpdatedMs.value =
+    readPersistedGithubRepoRemoteLastUpdatedMs(sourceFileName);
+};
+
+/** Remember the latest known remote timestamp for a garden (never moves backward). */
+export const noteGithubRepoRemoteLastUpdatedMs = (
+  sourceFileName: string | undefined,
+  ms: number | undefined,
+): void => {
+  if (ms === undefined || !Number.isFinite(ms)) {
+    return;
+  }
+  const gardenKey = planGardenFolderSegment(sourceFileName);
+  const map = readRemoteLastUpdatedByGardenMap();
+  const prev = map[gardenKey];
+  const next = prev !== undefined ? Math.max(prev, ms) : ms;
+  map[gardenKey] = next;
+  writeRemoteLastUpdatedByGardenMap(map);
+  const current = githubRepoRemoteLastUpdatedMs.value;
+  githubRepoRemoteLastUpdatedMs.value =
+    current !== undefined ? Math.max(current, next) : next;
+};
+
 const gardenDir = (fileName: string | undefined): string =>
   `${PLANS_DIR}/${planGardenFolderSegment(fileName)}`;
 
@@ -202,6 +271,10 @@ export const planRepoGuildsPath = (fileName: string | undefined): string =>
 /** `plans/<garden>/config.json` (version, map scale, background metadata). */
 export const planRepoConfigPath = (fileName: string | undefined): string =>
   `${gardenDir(fileName)}/config.json`;
+
+/** `plans/<garden>/viewer.html` */
+export const planRepoGardenViewerPath = (fileName: string | undefined): string =>
+  `${gardenDir(fileName)}/viewer.html`;
 
 /** Background image path in the same garden folder (Contents API = normal git blob, not LFS). */
 export const planBackgroundMediaRepoPath = (
@@ -221,6 +294,34 @@ export const getPlanRepoGardenFolderUrl = (
   return `https://github.com/${full}/tree/${DEFAULT_BRANCH}/${path}`;
 };
 
+const planRepoGithubPagesBaseUrl = (fullName: string): string => {
+  const [ownerRaw, repoRaw] = fullName.split('/');
+  const owner = ownerRaw?.trim();
+  const repo = repoRaw?.trim();
+  if (!owner || !repo) {
+    return '';
+  }
+  if (repo.toLowerCase() === `${owner.toLowerCase()}.github.io`) {
+    return `https://${owner}.github.io`;
+  }
+  return `https://${owner}.github.io/${repo}`;
+};
+
+/** GitHub Pages URL for a static per-garden viewer page. */
+export const getPlanRepoGardenViewerUrl = (
+  fileName: string | undefined,
+): string | undefined => {
+  const full = localStorage.getItem(LS_REPO_FULL_NAME);
+  if (!full) {
+    return undefined;
+  }
+  const base = planRepoGithubPagesBaseUrl(full);
+  if (!base) {
+    return undefined;
+  }
+  return `${base}/${planRepoGardenViewerPath(fileName)}`;
+};
+
 export const clearGithubRepoSession = (): void => {
   sessionStorage.removeItem(SS_TOKEN);
   sessionStorage.removeItem(SS_VERIFIER);
@@ -228,6 +329,7 @@ export const clearGithubRepoSession = (): void => {
   localStorage.removeItem(LS_REPO_FULL_NAME);
   localStorage.removeItem('permaplanner.github.gistId');
   localStorage.removeItem('permaplanner.github.gistHtmlUrl');
+  githubRepoRemoteLastUpdatedMs.value = undefined;
 };
 
 export const beginGithubAuth = async (): Promise<void> => {
@@ -649,13 +751,18 @@ const createGitTree = async (
   return (JSON.parse(text) as { sha: string }).sha;
 };
 
+type GitCommitCreateResult = {
+  sha: string;
+  committedAtMs: number | undefined;
+};
+
 const createGitCommit = async (
   token: string,
   fullName: string,
   message: string,
   treeSha: string,
   parentCommitSha: string,
-): Promise<string> => {
+): Promise<GitCommitCreateResult> => {
   const res = await fetch(gitApiUrl(fullName, 'commits'), {
     method: 'POST',
     headers: { ...githubHeaders(token), 'Content-Type': 'application/json' },
@@ -669,7 +776,8 @@ const createGitCommit = async (
   if (!res.ok) {
     failGithubSync('write', 'git/commits', res.status, text);
   }
-  return (JSON.parse(text) as { sha: string }).sha;
+  const body = JSON.parse(text) as { sha: string };
+  return { sha: body.sha, committedAtMs: readGithubCommitDateMs(body) };
 };
 
 const updateGitBranchRef = async (
@@ -699,7 +807,7 @@ const commitPlanFilesViaGitApi = async (
   fullName: string,
   files: GitPlanBlobFile[],
   message: string,
-): Promise<void> => {
+): Promise<number | undefined> => {
   const refLabel = `refs/${gitBranchHeadRefSegment()}`;
   const maxAttempts = 3;
 
@@ -715,7 +823,7 @@ const commitPlanFilesViaGitApi = async (
       sha: blobShas[index]!,
     }));
     const treeSha = await createGitTree(token, fullName, head.treeSha, treeEntries);
-    const commitSha = await createGitCommit(
+    const { sha: commitSha, committedAtMs } = await createGitCommit(
       token,
       fullName,
       message,
@@ -724,19 +832,24 @@ const commitPlanFilesViaGitApi = async (
     );
     const refResult = await updateGitBranchRef(token, fullName, commitSha);
     if (refResult === 'ok') {
-      return;
+      return committedAtMs;
     }
   }
 
   failGithubSync('write', refLabel, 409, 'Branch head changed while pushing.');
 };
 
+const backgroundRepoPathMimeByExt: Record<string, string> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  webp: 'image/webp',
+  gif: 'image/gif',
+};
+
 const dataUrlMimeForRepoPath = (repoPath: string): string => {
-  const ext = repoPath.split('.').pop()?.toLowerCase() ?? 'png';
-  if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
-  if (ext === 'webp') return 'image/webp';
-  if (ext === 'gif') return 'image/gif';
-  return 'image/png';
+  const ext = repoPath.split('.').pop()?.toLowerCase() ?? '';
+  return backgroundRepoPathMimeByExt[ext] ?? 'image/png';
 };
 
 export const scanGithubPlanShardsForMigration = async (
@@ -795,6 +908,19 @@ export const fetchRemotePlanLastUpdatedMs = async (
     return undefined;
   }
   return Math.max(...defined);
+};
+
+/** Fetch remote shard commit times and merge with any cached value. */
+export const refreshGithubRepoRemoteLastUpdatedMs = async (
+  token: string,
+  sourceFileName: string | undefined,
+): Promise<number | undefined> => {
+  loadGithubRepoRemoteLastUpdatedMs(sourceFileName);
+  const fetched = await fetchRemotePlanLastUpdatedMs(token, sourceFileName);
+  if (fetched !== undefined) {
+    noteGithubRepoRemoteLastUpdatedMs(sourceFileName, fetched);
+  }
+  return githubRepoRemoteLastUpdatedMs.value;
 };
 
 export const pullPlanJsonFromGithubRepo = async (
@@ -856,7 +982,7 @@ const pushPlanJsonToGithubRepoOnce = async (
   token: string,
   snapshot: PermaplannerFileV1,
   sourceFileName: string | undefined,
-): Promise<void> => {
+): Promise<number | undefined> => {
   const fullName = await ensurePlanRepo(token);
   const configPath = planRepoConfigPath(sourceFileName);
 
@@ -877,14 +1003,24 @@ const pushPlanJsonToGithubRepoOnce = async (
     gardenFolderSegment: segment,
     backgroundImagePath,
   });
+  const guildsForViewer = (JSON.parse(guildsJson) as { guilds?: unknown }).guilds;
+  const staticViewerHtml = renderPlanGardenViewerHtml(
+    planGardenViewerTemplate,
+    segment,
+    guildsForViewer,
+  );
 
   gitFiles.push(
     { path: planRepoPlantsPath(sourceFileName), contentBase64: utf8ToBase64(plantsJson) },
     { path: planRepoGuildsPath(sourceFileName), contentBase64: utf8ToBase64(guildsJson) },
     { path: configPath, contentBase64: utf8ToBase64(configJson) },
+    {
+      path: planRepoGardenViewerPath(sourceFileName),
+      contentBase64: utf8ToBase64(staticViewerHtml),
+    },
   );
 
-  await commitPlanFilesViaGitApi(token, fullName, gitFiles, `Update plan (${segment})`);
+  return commitPlanFilesViaGitApi(token, fullName, gitFiles, `Update plan (${segment})`);
 };
 
 export const pushPlanJsonToGithubRepo = async (
@@ -901,7 +1037,15 @@ export const pushPlanJsonToGithubRepo = async (
         do {
           const job = queuedPushPlan!;
           queuedPushPlan = null;
-          await pushPlanJsonToGithubRepoOnce(job.token, job.snapshot, job.sourceFileName);
+          const committedAtMs = await pushPlanJsonToGithubRepoOnce(
+            job.token,
+            job.snapshot,
+            job.sourceFileName,
+          );
+          noteGithubRepoRemoteLastUpdatedMs(
+            job.sourceFileName,
+            committedAtMs ?? Date.now(),
+          );
         } while (queuedPushPlan);
         githubRepoLastSyncError.value = undefined;
       } finally {

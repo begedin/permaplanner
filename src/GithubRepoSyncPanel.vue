@@ -7,11 +7,14 @@ import {
   beginGithubAuth,
   clearGithubRepoSession,
   completeGithubAuthIfNeeded,
-  fetchRemotePlanLastUpdatedMs,
   getGithubAccessToken,
   getPlanRepoGardenFolderUrl,
+  getPlanRepoGardenViewerUrl,
   githubRepoLastSyncError,
+  githubRepoRemoteLastUpdatedMs,
   githubRepoPushInFlightCount,
+  loadGithubRepoRemoteLastUpdatedMs,
+  refreshGithubRepoRemoteLastUpdatedMs,
   GithubSyncError,
   planRepoSyncUpdatedEventName,
   pullPlanJsonFromGithubRepo,
@@ -46,6 +49,9 @@ const remoteLoading = ref(false);
 const repoFolderUrl = ref<string | undefined>(
   getPlanRepoGardenFolderUrl(permaplannerStore.fileName),
 );
+const repoViewerUrl = ref<string | undefined>(
+  getPlanRepoGardenViewerUrl(permaplannerStore.fileName),
+);
 
 const formatPlanUpdatedAt = (ms: number | undefined): string => {
   if (ms === undefined) {
@@ -62,11 +68,18 @@ const remoteUpdatedLabel = computed(() => {
   if (remoteLoading.value) {
     return '…';
   }
-  return formatPlanUpdatedAt(remoteLastUpdatedMs.value);
+  const bestKnownRemoteMs = Math.max(
+    remoteLastUpdatedMs.value ?? Number.NEGATIVE_INFINITY,
+    githubRepoRemoteLastUpdatedMs.value ?? Number.NEGATIVE_INFINITY,
+  );
+  return formatPlanUpdatedAt(
+    Number.isFinite(bestKnownRemoteMs) ? bestKnownRemoteMs : undefined,
+  );
 });
 
 const updateRepoLink = () => {
   repoFolderUrl.value = getPlanRepoGardenFolderUrl(permaplannerStore.fileName);
+  repoViewerUrl.value = getPlanRepoGardenViewerUrl(permaplannerStore.fileName);
 };
 
 watch(() => permaplannerStore.fileName, updateRepoLink);
@@ -85,18 +98,18 @@ const refreshRemoteUpdatedAt = async () => {
   const token = getGithubAccessToken();
   if (!token) {
     remoteLastUpdatedMs.value = undefined;
+    githubRepoRemoteLastUpdatedMs.value = undefined;
     return;
   }
   remoteLoading.value = true;
   syncError.value = undefined;
   try {
-    remoteLastUpdatedMs.value = await fetchRemotePlanLastUpdatedMs(
+    remoteLastUpdatedMs.value = await refreshGithubRepoRemoteLastUpdatedMs(
       token,
       permaplannerStore.fileName,
     );
   } catch (e) {
     syncError.value = githubSyncFailureMessage(e);
-    remoteLastUpdatedMs.value = undefined;
   } finally {
     remoteLoading.value = false;
   }
@@ -108,6 +121,10 @@ const onRepoUpdated = () => {
 };
 
 onMounted(() => {
+  if (connected.value) {
+    loadGithubRepoRemoteLastUpdatedMs(permaplannerStore.fileName);
+    remoteLastUpdatedMs.value = githubRepoRemoteLastUpdatedMs.value;
+  }
   void finishOAuthFromUrl().finally(() => {
     updateRepoLink();
     void permaplannerStore.refreshLocalFileLastModified();
@@ -123,6 +140,8 @@ onBeforeUnmount(() => {
 watch([connected, () => permaplannerStore.fileName], () => {
   void permaplannerStore.refreshLocalFileLastModified();
   if (connected.value) {
+    loadGithubRepoRemoteLastUpdatedMs(permaplannerStore.fileName);
+    remoteLastUpdatedMs.value = githubRepoRemoteLastUpdatedMs.value;
     void refreshRemoteUpdatedAt();
   } else {
     remoteLastUpdatedMs.value = undefined;
@@ -141,6 +160,7 @@ const disconnect = () => {
   syncError.value = undefined;
   githubRepoLastSyncError.value = undefined;
   remoteLastUpdatedMs.value = undefined;
+  githubRepoRemoteLastUpdatedMs.value = undefined;
 };
 
 const pushCurrent = async () => {
@@ -216,8 +236,10 @@ const pullRemote = async () => {
             class="flex flex-wrap gap-x-3 gap-y-1 text-ink-600"
             :aria-busy="repoPushBusy || syncing || pulling || remoteLoading"
           >
-            <span>Local file:
-              <strong class="text-ink-800">{{ localUpdatedLabel }}</strong></span>
+            <span>
+              Local file:
+              <strong class="text-ink-800">{{ localUpdatedLabel }}</strong>
+            </span>
             <span>
               Remote:
               <strong class="text-ink-800">{{ remoteUpdatedLabel }}</strong>
@@ -275,7 +297,22 @@ const pullRemote = async () => {
           :href="repoFolderUrl"
           target="_blank"
           rel="noopener noreferrer"
-        >Open plan folder on GitHub</a>
+        >
+          Open plan folder on GitHub
+        </a>
+      </p>
+      <p
+        v-if="repoViewerUrl"
+        class="pt-0.5"
+      >
+        <a
+          class="text-sage-800 hover:text-sage-800 underline break-all"
+          :href="repoViewerUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open GitHub Pages guilds view
+        </a>
       </p>
       <p
         v-if="authMessage"
