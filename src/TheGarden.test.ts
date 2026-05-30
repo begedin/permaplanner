@@ -11,6 +11,7 @@ import { useGardenStore } from './useGardenStore';
 import GardenGuild from './GardenGuild.vue';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { useSceneStore } from './useSceneStore';
+import { resetGuildSearch } from './useGuildSearch';
 
 beforeAll(() => {
   Object.defineProperties(window.navigator, {
@@ -22,6 +23,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ stubActions: false, createSpy: vi.fn }));
+  resetGuildSearch();
   vi.spyOn(window, 'confirm').mockReturnValue(true);
   const store = usePermaplannerStore();
   store.fileName = 'test';
@@ -67,6 +69,23 @@ it('shows the aerial header and guild list in the left sidebar', async () => {
   expect(screen.getByRole('complementary', { name: 'Guild list' })).toBeTruthy();
   expect(screen.getByRole('article', { name: 'A guild' })).toBeTruthy();
   expect(screen.getByRole('region', { name: 'Aerial map' })).toBeTruthy();
+});
+
+it('filters guilds in the sidebar by search query', async () => {
+  const store = useGardenStore();
+  store.guilds = [
+    { id: 'guild', name: 'A guild', mulchLevel: 1, plants: [], path: [] },
+    { id: 'guild-2', name: 'Another guild', mulchLevel: 1, plants: [], path: [] },
+  ];
+  await renderGarden();
+
+  await fireEvent.update(
+    screen.getByRole('searchbox', { name: 'Search guilds' }),
+    'Another',
+  );
+
+  expect(screen.getByRole('article', { name: 'Another guild' })).toBeTruthy();
+  expect(screen.queryByRole('article', { name: 'A guild' })).toBeNull();
 });
 
 it('deletes the selected guild on Delete only when confirmed', async () => {

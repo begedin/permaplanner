@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
 
+import HighlightText from './HighlightText.vue';
 import {
   buildCatalogPickGroups,
   catalogPickForSpeciesCultivar,
@@ -18,6 +19,7 @@ import {
   type PlantVigor,
 } from './guildPlantInstanceStatus';
 import { useGardenStore } from './useGardenStore';
+import { useGuildSearch } from './useGuildSearch';
 import { useGuildSelection } from './useGuildSelection';
 import { useMapScaleStore } from './useMapScaleStore';
 import {
@@ -62,6 +64,7 @@ type GuildPlantGroupRow = {
 const garden = useGardenStore();
 const mapScale = useMapScaleStore();
 const { selectedGuildId, selectGuild } = useGuildSelection();
+const { searchQuery } = useGuildSearch();
 
 const props = defineProps<{
   guildId: string;
@@ -379,7 +382,8 @@ const guildMonthBlockClass = (rawCount: number): string => {
 
 const compactPlantTags = computed(() =>
   groupedGuildPlants.value.map((row) => ({
-    text: row.count > 1 ? `${row.label} ×${row.count}` : row.label,
+    label: row.label,
+    count: row.count,
   })),
 );
 
@@ -455,7 +459,10 @@ const setThingVigorLevel = (thingId: string, vigor: PlantVigor | undefined) => {
     <template v-if="context === 'aerialSidebar'">
       <div class="flex flex-row items-start justify-between gap-2 w-full">
         <p class="font-medium text-ink-800 min-w-0 flex-1">
-          {{ guild.name }}
+          <HighlightText
+            :text="guild.name"
+            :query="searchQuery"
+          />
         </p>
         <div
           v-if="placedOnMap"
@@ -488,9 +495,14 @@ const setThingVigorLevel = (thingId: string, vigor: PlantVigor | undefined) => {
       >
         <span
           v-for="(tag, i) in compactPlantTags"
-          :key="`${tag.text}-${i}`"
+          :key="`${tag.label}-${i}`"
           class="text-[11px] leading-tight text-ink-700 paper-chip px-1.5 py-0.5"
-        >{{ tag.text }}</span>
+        >
+          <HighlightText
+            :text="tag.label"
+            :query="searchQuery"
+          /><template v-if="tag.count > 1"> ×{{ tag.count }}</template>
+        </span>
         <span
           v-if="compactPlantTags.length === 0"
           class="text-xs text-ink-400 italic"
@@ -642,8 +654,10 @@ const setThingVigorLevel = (thingId: string, vigor: PlantVigor | undefined) => {
                   />
                   <div class="min-w-0 flex-1 flex flex-col gap-0 text-left">
                     <span class="truncate text-sm leading-tight">
-                      {{ row.label
-                      }}<template v-if="row.count > 1"> ({{ row.count }}) </template>
+                      <HighlightText
+                        :text="row.label"
+                        :query="searchQuery"
+                      /><template v-if="row.count > 1"> ({{ row.count }}) </template>
                     </span>
                     <span
                       v-if="phenologySummaryForThingIds(row.thingIds)"

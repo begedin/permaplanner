@@ -7,9 +7,9 @@ import {
 } from './guildPlantInstanceStatus';
 
 it('averageGrowthPhase ignores unset values', () => {
-  expect(
-    averageGrowthPhase([GrowthPhase.young, undefined, GrowthPhase.producing]),
-  ).toBe(GrowthPhase.established);
+  expect(averageGrowthPhase([GrowthPhase.young, undefined, GrowthPhase.producing])).toBe(
+    GrowthPhase.established,
+  );
 });
 
 it('averageGrowthPhase breaks ties at the same order by majority', () => {

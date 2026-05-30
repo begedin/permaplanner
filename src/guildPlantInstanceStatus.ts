@@ -76,8 +76,7 @@ export const averageGrowthPhase = (
   if (set.length === 0) {
     return null;
   }
-  const avgOrder =
-    set.reduce((sum, p) => sum + GROWTH_PHASE_ORDER[p], 0) / set.length;
+  const avgOrder = set.reduce((sum, p) => sum + GROWTH_PHASE_ORDER[p], 0) / set.length;
   const targetOrder = Math.round(avgOrder);
   const atOrder = GROWTH_PHASES_FOR_SELECT.filter(
     (p) => GROWTH_PHASE_ORDER[p] === targetOrder,

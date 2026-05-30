@@ -165,6 +165,10 @@
     @apply bg-sage-200/60 text-ink-900 font-medium ring-1 ring-inset ring-sage-400/25;
   }
 
+  .search-highlight {
+    @apply rounded-sm bg-amber-200/80 text-inherit;
+  }
+
   .icon-picker-btn {
     @apply p-1 rounded-lg border border-transparent transition-[background-color,border-color,box-shadow] duration-150 ease-out hover:bg-parchment-200 hover:border-parchment-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage-400/45 active:scale-95;
   }

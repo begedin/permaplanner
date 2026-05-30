@@ -11,6 +11,6 @@ test.describe('plant creator', () => {
     await page.getByPlaceholder('Uses catalog name if empty').fill('Apple');
     await page.getByRole('button', { name: 'Create' }).click();
 
-    await expect(page.getByRole('button', { name: 'Apple' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Apple', exact: true })).toBeVisible();
   });
 });

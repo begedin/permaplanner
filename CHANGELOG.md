@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.12.0
+
+- [FEATURE] Search guilds by name, plants, and notes on the Guilds tab (fuzzy match via Fuse.js; name ranked above plants and notes)
+- [FEATURE] Highlight matched text in the guild list while searching
+- [TWEAK] Focus guild search with ⌘F / Ctrl+F or `/` (platform-specific hint in the search placeholder)
+
 ## 0.11.4
 
 - [FEATURE] Generate a static GitHub Pages guild viewer per garden at `plans/<garden>/viewer.html` (plain-text guild content baked into HTML for LLM-friendly sharing)

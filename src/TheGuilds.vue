@@ -7,6 +7,7 @@ import GuildCard from './GuildCard.vue';
 import GuildTabHeader from './GuildTabHeader.vue';
 import ThingBarGuild from './ThingBarGuild.vue';
 import { useGardenStore } from './useGardenStore';
+import { useGuildSearch } from './useGuildSearch';
 import { useGuildSelection } from './useGuildSelection';
 
 const guildListGridStyle = {
@@ -19,6 +20,7 @@ const guildLayoutTransition = {
 
 const garden = useGardenStore();
 const { selectedGuildId } = useGuildSelection();
+const { searchQuery, filteredGuilds, hasSearchQuery } = useGuildSearch();
 
 const isMdUp = useMediaQuery('(min-width: 768px)');
 const showMobileDetail = computed(() => Boolean(selectedGuildId.value));
@@ -46,13 +48,23 @@ const detailMotionStyle = computed((): Record<string, string> => {
 
 <template>
   <div class="flex flex-col h-full min-h-0 bg-parchment-100/50">
-    <GuildTabHeader title="Guilds" />
+    <GuildTabHeader
+      v-model:search-query="searchQuery"
+      title="Guilds"
+    />
 
     <div
       v-if="garden.guilds.length === 0"
       class="p-4 text-ink-600 text-sm"
     >
       No guilds yet. Click <strong>Add guild</strong> to create one.
+    </div>
+
+    <div
+      v-else-if="filteredGuilds.length === 0 && hasSearchQuery"
+      class="p-4 text-ink-600 text-sm"
+    >
+      No guilds match “{{ searchQuery.trim() }}”.
     </div>
 
     <div
@@ -84,7 +96,7 @@ const detailMotionStyle = computed((): Record<string, string> => {
               :style="guildListGridStyle"
             >
               <motion.div
-                v-for="guild in garden.guilds"
+                v-for="guild in filteredGuilds"
                 :key="guild.id"
                 layout
                 :initial="false"
@@ -111,7 +123,7 @@ const detailMotionStyle = computed((): Record<string, string> => {
           >
             <div
               v-if="selectedGuildId"
-              class="flex flex-1 min-h-0 flex flex-col p-4 overflow-hidden"
+              class="flex flex-1 min-h-0 flex-col p-4 overflow-hidden"
             >
               <GuildCard
                 :guild-id="selectedGuildId"

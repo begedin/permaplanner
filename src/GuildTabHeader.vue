@@ -1,15 +1,25 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { useEventListener } from '@vueuse/core';
+import { computed, ref } from 'vue';
 
+import HighlightText from './HighlightText.vue';
+import { guildSearchInputPlaceholder } from './guildSearchContext';
 import { useGardenStore } from './useGardenStore';
 import { useGuildSelection } from './useGuildSelection';
 
-defineProps<{
+const props = defineProps<{
   title: string;
+  searchQuery?: string;
+}>();
+
+const emit = defineEmits<{
+  'update:searchQuery': [value: string];
 }>();
 
 const garden = useGardenStore();
 const { selectedGuildId, clearSelection, addGuild } = useGuildSelection();
+const searchInputRef = ref<HTMLInputElement | null>(null);
+const searchPlaceholder = guildSearchInputPlaceholder();
 
 const selectedGuildName = computed(() => {
   const id = selectedGuildId.value;
@@ -17,6 +27,41 @@ const selectedGuildName = computed(() => {
     return undefined;
   }
   return garden.guilds.find((g) => g.id === id)?.name;
+});
+
+const focusSearch = () => {
+  searchInputRef.value?.focus();
+  searchInputRef.value?.select();
+};
+
+useEventListener(document, 'keydown', (e) => {
+  if (props.searchQuery === undefined) {
+    return;
+  }
+
+  const modFind = (e.metaKey || e.ctrlKey) && e.key === 'f';
+  const slash = e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey;
+  if (!modFind && !slash) {
+    return;
+  }
+
+  if (slash) {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) {
+      const tag = active.tagName;
+      if (
+        tag === 'INPUT' ||
+        tag === 'TEXTAREA' ||
+        tag === 'SELECT' ||
+        active.isContentEditable
+      ) {
+        return;
+      }
+    }
+  }
+
+  e.preventDefault();
+  focusSearch();
 });
 </script>
 
@@ -44,7 +89,12 @@ const selectedGuildName = computed(() => {
       <span
         class="text-ink-800 truncate"
         aria-current="page"
-      >{{ selectedGuildName }}</span>
+      >
+        <HighlightText
+          :text="selectedGuildName"
+          :query="searchQuery ?? ''"
+        />
+      </span>
     </nav>
     <h1
       v-else
@@ -52,6 +102,20 @@ const selectedGuildName = computed(() => {
     >
       {{ title }}
     </h1>
+    <label
+      v-if="searchQuery !== undefined"
+      class="order-last w-full min-w-0 sm:order-none sm:w-auto sm:min-w-[14rem]"
+    >
+      <span class="sr-only">Search guilds</span>
+      <input
+        ref="searchInputRef"
+        type="search"
+        class="w-full input-soft py-1.5 px-2 text-sm text-ink-800"
+        :placeholder="searchPlaceholder"
+        :value="searchQuery"
+        @input="emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
+      />
+    </label>
     <button
       type="button"
       class="btn-soft-primary px-3 py-1.5 text-sm shrink-0"

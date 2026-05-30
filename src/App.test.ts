@@ -10,14 +10,18 @@ vi.mock('./usePlanAppGate', () => ({
   showMainApp: { value: true },
 }));
 
-vi.mock('./usePlanSession', () => ({
-  usePlanSession: () => ({
-    load: vi.fn(),
-    newPlan: vi.fn(),
-    save: vi.fn(),
-    saveAs: vi.fn(),
-  }),
-}));
+vi.mock('./usePlanSession', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./usePlanSession')>();
+  return {
+    ...actual,
+    usePlanSession: () => ({
+      load: vi.fn(),
+      newPlan: vi.fn(),
+      save: vi.fn(),
+      saveAs: vi.fn(),
+    }),
+  };
+});
 
 const router = createGuildTestRouter();
 

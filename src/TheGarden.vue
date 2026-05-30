@@ -13,6 +13,7 @@ import { useElementSize } from '@vueuse/core';
 import GuildTabHeader from './GuildTabHeader.vue';
 import OnboardingText from './OnboardingText.vue';
 import ThingBarGuild from './ThingBarGuild.vue';
+import { useGuildSearch } from './useGuildSearch';
 import { useGuildSelection } from './useGuildSelection';
 import ReferenceLine from './ReferenceLine.vue';
 import { useOnboardingStore } from './useOnboardingStore';
@@ -130,6 +131,7 @@ useScene(container, worldStage);
 
 const garden = useGardenStore();
 const { selectedGuildId, selectGuild, clearSelection } = useGuildSelection();
+const { searchQuery, filteredGuilds, hasSearchQuery } = useGuildSearch();
 
 const placedGuilds = computed(() => garden.guilds.filter((g) => g.path.length > 0));
 
@@ -185,7 +187,10 @@ const updateGuild = (guild: Guild) => {
 
 <template>
   <div class="flex flex-col h-full min-h-0 bg-parchment-100/50">
-    <GuildTabHeader title="Aerial" />
+    <GuildTabHeader
+      v-model:search-query="searchQuery"
+      title="Aerial"
+    />
 
     <div class="flex flex-1 min-h-0">
       <aside
@@ -193,9 +198,18 @@ const updateGuild = (guild: Guild) => {
         class="flex flex-col min-h-0 min-w-0 border-r border-parchment-400/60 paper-surface w-full md:w-72 md:shrink-0"
         aria-label="Guild list"
       >
-        <div class="flex-1 min-h-0 overflow-y-auto p-2 flex flex-col gap-2">
+        <div
+          v-if="filteredGuilds.length === 0 && hasSearchQuery"
+          class="p-4 text-ink-600 text-sm"
+        >
+          No guilds match “{{ searchQuery.trim() }}”.
+        </div>
+        <div
+          v-else
+          class="flex-1 min-h-0 overflow-y-auto p-2 flex flex-col gap-2"
+        >
           <ThingBarGuild
-            v-for="guild in garden.guilds"
+            v-for="guild in filteredGuilds"
             :id="guild.id"
             :key="guild.id"
           />
