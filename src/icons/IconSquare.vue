@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { ICON_CANVAS } from './iconGeometry';
+  import { ICON_CANVAS } from './iconGeometry';
 
-defineOptions({ inheritAttrs: false });
+  defineOptions({ inheritAttrs: false });
 
-defineProps<{
-  href: string;
-}>();
+  defineProps<{
+    href: string;
+  }>();
 </script>
 <template>
   <svg

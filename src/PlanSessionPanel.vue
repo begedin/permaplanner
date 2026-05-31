@@ -1,29 +1,29 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRoute } from 'vue-router';
+  import { computed } from 'vue';
+  import { useRoute } from 'vue-router';
 
-import GithubRepoSyncPanel from './GithubRepoSyncPanel.vue';
-import PlanUnsavedIndicator from './PlanUnsavedIndicator.vue';
-import ToolSlider from './ToolSlider.vue';
-import { isGithubStorageLinked } from './githubRepoSync';
-import { useMapScaleStore } from './useMapScaleStore';
-import { usePermaplannerStore } from './usePermaplannerStore';
-import { usePlanSession } from './usePlanSession';
-import { isAerialRoute } from './router';
+  import GithubRepoSyncPanel from './GithubRepoSyncPanel.vue';
+  import PlanUnsavedIndicator from './PlanUnsavedIndicator.vue';
+  import ToolSlider from './ToolSlider.vue';
+  import { isGithubStorageLinked } from './githubRepoSync';
+  import { useMapScaleStore } from './useMapScaleStore';
+  import { usePermaplannerStore } from './usePermaplannerStore';
+  import { usePlanSession } from './usePlanSession';
+  import { isAerialRoute } from './router';
 
-const permaplannerStore = usePermaplannerStore();
-const mapScale = useMapScaleStore();
-const route = useRoute();
+  const permaplannerStore = usePermaplannerStore();
+  const mapScale = useMapScaleStore();
+  const route = useRoute();
 
-const { load, newPlan, save, saveAs } = usePlanSession();
+  const { load, newPlan, save, saveAs } = usePlanSession();
 
-const showLocalFileActions = computed(() => Boolean(permaplannerStore.fileName));
-const showGithubOnlyHint = computed(
-  () => !permaplannerStore.fileName && isGithubStorageLinked(),
-);
-const showAerialMapTools = computed(
-  () => showLocalFileActions.value && isAerialRoute(route.name),
-);
+  const showLocalFileActions = computed(() => Boolean(permaplannerStore.fileName));
+  const showGithubOnlyHint = computed(
+    () => !permaplannerStore.fileName && isGithubStorageLinked(),
+  );
+  const showAerialMapTools = computed(
+    () => showLocalFileActions.value && isAerialRoute(route.name),
+  );
 </script>
 
 <template>

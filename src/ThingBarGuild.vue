@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import GuildCard from './GuildCard.vue';
+  import GuildCard from './GuildCard.vue';
 
-defineProps<{
-  id: string;
-  fillCell?: boolean;
-}>();
+  defineProps<{
+    id: string;
+    fillCell?: boolean;
+  }>();
 </script>
 
 <template>

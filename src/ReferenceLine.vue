@@ -1,105 +1,105 @@
 <script lang="ts" setup>
-import { computed, watch } from 'vue';
-import { useMapScaleStore } from './useMapScaleStore';
-import { useOnboardingStore } from './useOnboardingStore';
-import { useSceneStore } from './useSceneStore';
+  import { computed, watch } from 'vue';
+  import { useMapScaleStore } from './useMapScaleStore';
+  import { useOnboardingStore } from './useOnboardingStore';
+  import { useSceneStore } from './useSceneStore';
 
-const store = useMapScaleStore();
-const onboarding = useOnboardingStore();
-const scene = useSceneStore();
+  const store = useMapScaleStore();
+  const onboarding = useOnboardingStore();
+  const scene = useSceneStore();
 
-const startMoveScaleStart = () => {
-  store.start.x = scene.worldX;
-  store.start.y = scene.worldY;
+  const startMoveScaleStart = () => {
+    store.start.x = scene.worldX;
+    store.start.y = scene.worldY;
 
-  const controller = new AbortController();
+    const controller = new AbortController();
 
-  document.addEventListener(
-    'mousemove',
-    () => {
-      store.start.x = scene.worldX;
-      store.start.y = scene.worldY;
-      if (onboarding.onboardingState === 'initial') {
-        onboarding.advanceOnboarding();
-      }
+    document.addEventListener(
+      'mousemove',
+      () => {
+        store.start.x = scene.worldX;
+        store.start.y = scene.worldY;
+        if (onboarding.onboardingState === 'initial') {
+          onboarding.advanceOnboarding();
+        }
+      },
+      { signal: controller.signal },
+    );
+
+    document.addEventListener(
+      'mouseup',
+      () => {
+        if (
+          onboarding.onboardingState === 'movingFirst' ||
+          onboarding.onboardingState === 'movingSecond'
+        ) {
+          onboarding.advanceOnboarding();
+        }
+        controller.abort();
+      },
+      { signal: controller.signal },
+    );
+  };
+
+  const startMoveScaleEnd = () => {
+    store.end.x = scene.worldX;
+    store.end.y = scene.worldY;
+
+    const controller = new AbortController();
+
+    document.addEventListener(
+      'mousemove',
+      () => {
+        store.end.x = scene.worldX;
+        store.end.y = scene.worldY;
+
+        if (
+          (store.end.x !== store.start.x || store.end.y !== store.start.y) &&
+          onboarding.onboardingState !== 'movingFirst' &&
+          onboarding.onboardingState !== 'movingSecond'
+        ) {
+          onboarding.advanceOnboarding();
+        }
+      },
+      { signal: controller.signal },
+    );
+
+    document.addEventListener(
+      'mouseup',
+      () => {
+        if (
+          onboarding.onboardingState === 'movingFirst' ||
+          onboarding.onboardingState === 'movingSecond'
+        ) {
+          onboarding.advanceOnboarding();
+        }
+        controller.abort();
+      },
+      { signal: controller.signal },
+    );
+  };
+
+  let timeout = 0;
+
+  watch(
+    () => store.linePhysicalLength,
+    (l) => {
+      if (l === 1) return;
+      onboarding.onboardingState = 'settingLength';
+      window.clearTimeout(timeout);
+      timeout = window.setTimeout(() => {
+        onboarding.onboardingState = 'done';
+      }, 1000);
     },
-    { signal: controller.signal },
   );
 
-  document.addEventListener(
-    'mouseup',
-    () => {
-      if (
-        onboarding.onboardingState === 'movingFirst' ||
-        onboarding.onboardingState === 'movingSecond'
-      ) {
-        onboarding.advanceOnboarding();
-      }
-      controller.abort();
-    },
-    { signal: controller.signal },
-  );
-};
+  const centroid = computed(() => {
+    const { x1, y1, x2, y2 } = store.line;
+    const x = Math.abs((x1 + x2) / 2);
+    const y = Math.abs((y1 + y2) / 2);
 
-const startMoveScaleEnd = () => {
-  store.end.x = scene.worldX;
-  store.end.y = scene.worldY;
-
-  const controller = new AbortController();
-
-  document.addEventListener(
-    'mousemove',
-    () => {
-      store.end.x = scene.worldX;
-      store.end.y = scene.worldY;
-
-      if (
-        (store.end.x !== store.start.x || store.end.y !== store.start.y) &&
-        onboarding.onboardingState !== 'movingFirst' &&
-        onboarding.onboardingState !== 'movingSecond'
-      ) {
-        onboarding.advanceOnboarding();
-      }
-    },
-    { signal: controller.signal },
-  );
-
-  document.addEventListener(
-    'mouseup',
-    () => {
-      if (
-        onboarding.onboardingState === 'movingFirst' ||
-        onboarding.onboardingState === 'movingSecond'
-      ) {
-        onboarding.advanceOnboarding();
-      }
-      controller.abort();
-    },
-    { signal: controller.signal },
-  );
-};
-
-let timeout = 0;
-
-watch(
-  () => store.linePhysicalLength,
-  (l) => {
-    if (l === 1) return;
-    onboarding.onboardingState = 'settingLength';
-    window.clearTimeout(timeout);
-    timeout = window.setTimeout(() => {
-      onboarding.onboardingState = 'done';
-    }, 1000);
-  },
-);
-
-const centroid = computed(() => {
-  const { x1, y1, x2, y2 } = store.line;
-  const x = Math.abs((x1 + x2) / 2);
-  const y = Math.abs((y1 + y2) / 2);
-
-  return { x, y };
-});
+    return { x, y };
+  });
 </script>
 <template>
   <line

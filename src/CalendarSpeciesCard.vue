@@ -1,38 +1,38 @@
 <script lang="ts" setup>
-import {
-  formatSpeciesCounts,
-  type GardenSpeciesSidebarRow,
-} from './calendarGardenPlants';
-import HighlightText from './HighlightText.vue';
-import type { GuildPlantTooltipRow } from './guildPlantTooltips';
-import PlantIcon from './PlantIcon.vue';
-import PlantPhenologyCalendar from './PlantPhenologyCalendar.vue';
-import type { Plant } from './gardenTypes';
-import { useCalendarSelection } from './useCalendarSelection';
+  import {
+    formatSpeciesCounts,
+    type GardenSpeciesSidebarRow,
+  } from './calendarGardenPlants';
+  import HighlightText from './HighlightText.vue';
+  import type { GuildPlantTooltipRow } from './guildPlantTooltips';
+  import PlantIcon from './PlantIcon.vue';
+  import PlantPhenologyCalendar from './PlantPhenologyCalendar.vue';
+  import type { Plant } from './gardenTypes';
+  import { useCalendarSelection } from './useCalendarSelection';
 
-defineProps<{
-  row: GardenSpeciesSidebarRow;
-  tooltipRows: GuildPlantTooltipRow[];
-  searchQuery: string;
-  fillCell?: boolean;
-}>();
+  defineProps<{
+    row: GardenSpeciesSidebarRow;
+    tooltipRows: GuildPlantTooltipRow[];
+    searchQuery: string;
+    fillCell?: boolean;
+  }>();
 
-const emit = defineEmits<{
-  select: [speciesId: string];
-}>();
+  const emit = defineEmits<{
+    select: [speciesId: string];
+  }>();
 
-const { selectedSpeciesId } = useCalendarSelection();
+  const { selectedSpeciesId } = useCalendarSelection();
 
-const iconPlant = (row: GardenSpeciesSidebarRow): Plant => ({
-  id: row.speciesId,
-  speciesId: row.speciesId,
-  cultivarId: null,
-  name: row.name,
-  cultivar: null,
-  iconId: row.iconId,
-  functions: [],
-  layers: [],
-});
+  const iconPlant = (row: GardenSpeciesSidebarRow): Plant => ({
+    id: row.speciesId,
+    speciesId: row.speciesId,
+    cultivarId: null,
+    name: row.name,
+    cultivar: null,
+    iconId: row.iconId,
+    functions: [],
+    layers: [],
+  });
 </script>
 
 <template>

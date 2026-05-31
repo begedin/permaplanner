@@ -1,90 +1,90 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+  import { computed } from 'vue';
 
-import {
-  buildGithubPlanShardExports,
-  buildLocalPlanJsonText,
-  downloadTextAsFile,
-} from './permaplannerFileExport';
-import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
-import { getGithubAccessToken, planGardenFolderSegment } from './githubRepoSync';
-import { usePermaplannerStore } from './usePermaplannerStore';
-import {
-  performPlanMigration,
-  planMigrationError,
-  planMigrationInFlight,
-  planMigrationPending,
-} from './usePlanMigration';
+  import {
+    buildGithubPlanShardExports,
+    buildLocalPlanJsonText,
+    downloadTextAsFile,
+  } from './permaplannerFileExport';
+  import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
+  import { getGithubAccessToken, planGardenFolderSegment } from './githubRepoSync';
+  import { usePermaplannerStore } from './usePermaplannerStore';
+  import {
+    performPlanMigration,
+    planMigrationError,
+    planMigrationInFlight,
+    planMigrationPending,
+  } from './usePlanMigration';
 
-const permaplannerStore = usePermaplannerStore();
+  const permaplannerStore = usePermaplannerStore();
 
-const pending = computed(() => planMigrationPending.value);
+  const pending = computed(() => planMigrationPending.value);
 
-const localPending = computed(() => pending.value?.localFromVersion !== undefined);
-const githubPending = computed(() => {
-  const g = pending.value?.github;
-  return (
-    g !== undefined &&
-    (g.config !== undefined || g.plants !== undefined || g.guilds !== undefined)
-  );
-});
-
-const canMigrateLocal = computed(
-  () => !localPending.value || permaplannerStore.fileHandle !== undefined,
-);
-const canMigrateGithub = computed(
-  () =>
-    !githubPending.value ||
-    (Boolean(permaplannerStore.fileName) && Boolean(getGithubAccessToken())),
-);
-
-const canMigrate = computed(() => canMigrateLocal.value && canMigrateGithub.value);
-
-const migrateHint = computed(() => {
-  if (localPending.value && !permaplannerStore.fileHandle) {
-    return 'Restore file access (or open your plan) before migrating the local copy.';
-  }
-  if (githubPending.value && !permaplannerStore.fileName) {
-    return 'Save your plan to a file before migrating the GitHub copy.';
-  }
-  if (githubPending.value && !getGithubAccessToken()) {
-    return 'Connect to GitHub before migrating the synced copy.';
-  }
-  return undefined;
-});
-
-const downloadBaseName = computed(() => {
-  const stem = permaplannerStore.fileName?.replace(/\.json$/i, '') ?? 'plan';
-  return stem;
-});
-
-const hasLoadedPlan = computed(() => permaplannerStore.fileName !== undefined);
-
-const downloadLocalJson = () => {
-  const text = buildLocalPlanJsonText(permaplannerStore.snapshot());
-  downloadTextAsFile(
-    `${downloadBaseName.value}-v${PERMAPLANNER_FILE_VERSION}.json`,
-    text,
-  );
-};
-
-const downloadGithubShards = () => {
-  const segment = planGardenFolderSegment(permaplannerStore.fileName);
-  const { configJson, plantsJson, guildsJson } = buildGithubPlanShardExports(
-    permaplannerStore.snapshot(),
-    { gardenFolderSegment: segment },
-  );
-  const prefix = `${segment}-v${PERMAPLANNER_FILE_VERSION}`;
-  downloadTextAsFile(`${prefix}-config.json`, configJson);
-  downloadTextAsFile(`${prefix}-plants.json`, plantsJson);
-  downloadTextAsFile(`${prefix}-guilds.json`, guildsJson);
-};
-
-const onMigrate = () => {
-  void performPlanMigration().catch(() => {
-    /* planMigrationError is set */
+  const localPending = computed(() => pending.value?.localFromVersion !== undefined);
+  const githubPending = computed(() => {
+    const g = pending.value?.github;
+    return (
+      g !== undefined &&
+      (g.config !== undefined || g.plants !== undefined || g.guilds !== undefined)
+    );
   });
-};
+
+  const canMigrateLocal = computed(
+    () => !localPending.value || permaplannerStore.fileHandle !== undefined,
+  );
+  const canMigrateGithub = computed(
+    () =>
+      !githubPending.value ||
+      (Boolean(permaplannerStore.fileName) && Boolean(getGithubAccessToken())),
+  );
+
+  const canMigrate = computed(() => canMigrateLocal.value && canMigrateGithub.value);
+
+  const migrateHint = computed(() => {
+    if (localPending.value && !permaplannerStore.fileHandle) {
+      return 'Restore file access (or open your plan) before migrating the local copy.';
+    }
+    if (githubPending.value && !permaplannerStore.fileName) {
+      return 'Save your plan to a file before migrating the GitHub copy.';
+    }
+    if (githubPending.value && !getGithubAccessToken()) {
+      return 'Connect to GitHub before migrating the synced copy.';
+    }
+    return undefined;
+  });
+
+  const downloadBaseName = computed(() => {
+    const stem = permaplannerStore.fileName?.replace(/\.json$/i, '') ?? 'plan';
+    return stem;
+  });
+
+  const hasLoadedPlan = computed(() => permaplannerStore.fileName !== undefined);
+
+  const downloadLocalJson = () => {
+    const text = buildLocalPlanJsonText(permaplannerStore.snapshot());
+    downloadTextAsFile(
+      `${downloadBaseName.value}-v${PERMAPLANNER_FILE_VERSION}.json`,
+      text,
+    );
+  };
+
+  const downloadGithubShards = () => {
+    const segment = planGardenFolderSegment(permaplannerStore.fileName);
+    const { configJson, plantsJson, guildsJson } = buildGithubPlanShardExports(
+      permaplannerStore.snapshot(),
+      { gardenFolderSegment: segment },
+    );
+    const prefix = `${segment}-v${PERMAPLANNER_FILE_VERSION}`;
+    downloadTextAsFile(`${prefix}-config.json`, configJson);
+    downloadTextAsFile(`${prefix}-plants.json`, plantsJson);
+    downloadTextAsFile(`${prefix}-guilds.json`, guildsJson);
+  };
+
+  const onMigrate = () => {
+    void performPlanMigration().catch(() => {
+      /* planMigrationError is set */
+    });
+  };
 </script>
 
 <template>
@@ -110,14 +110,14 @@ const onMigrate = () => {
       <li v-if="githubPending">
         GitHub sync
         <span v-if="pending?.github?.config !== undefined">
-          · config v{{ pending.github.config }}</span
-        >
+          · config v{{ pending.github.config }}
+        </span>
         <span v-if="pending?.github?.plants !== undefined">
-          · plants v{{ pending.github.plants }}</span
-        >
+          · plants v{{ pending.github.plants }}
+        </span>
         <span v-if="pending?.github?.guilds !== undefined">
-          · guilds v{{ pending.github.guilds }}</span
-        >
+          · guilds v{{ pending.github.guilds }}
+        </span>
       </li>
     </ul>
 

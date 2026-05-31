@@ -1,50 +1,50 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
+  import { computed } from 'vue';
 
-import {
-  CATALOG_MONTH_LABELS,
-  CATALOG_MONTH_LABELS_2,
-  fruitBloomMonthCountsForPhenologies,
-  resolvePhenology,
-} from './plantCatalog';
-import {
-  guildPlantTooltipRows,
-  monthAspectTooltip,
-  monthHeaderTooltip,
-} from './guildPlantTooltips';
-import { useGardenStore } from './useGardenStore';
+  import {
+    CATALOG_MONTH_LABELS,
+    CATALOG_MONTH_LABELS_2,
+    fruitBloomMonthCountsForPhenologies,
+    resolvePhenology,
+  } from './plantCatalog';
+  import {
+    guildPlantTooltipRows,
+    monthAspectTooltip,
+    monthHeaderTooltip,
+  } from './guildPlantTooltips';
+  import { useGardenStore } from './useGardenStore';
 
-const garden = useGardenStore();
+  const garden = useGardenStore();
 
-const gardenTooltipRows = computed(() =>
-  guildPlantTooltipRows(
-    garden.guilds.flatMap((guild) => guild.plants.map((thing) => thing.plantId)),
-    (plantId) => garden.resolvedPlant(plantId),
-  ),
-);
-
-const gardenMonthPhenologyCounts = computed(() => {
-  const phenologies = garden.guilds.flatMap((guild) =>
-    guild.plants.map((thing) => {
-      const rp = garden.resolvedPlant(thing.plantId);
-      return resolvePhenology(rp.speciesId, rp.cultivarId);
-    }),
+  const gardenTooltipRows = computed(() =>
+    guildPlantTooltipRows(
+      garden.guilds.flatMap((guild) => guild.plants.map((thing) => thing.plantId)),
+      (plantId) => garden.resolvedPlant(plantId),
+    ),
   );
-  return fruitBloomMonthCountsForPhenologies(phenologies);
-});
 
-const monthBlockClass = (rawCount: number): string => {
-  const n = Math.min(5, rawCount);
-  const classes = [
-    'bg-parchment-300',
-    'bg-sage-100',
-    'bg-sage-200',
-    'bg-sage-300',
-    'bg-sage-400',
-    'bg-sage-500',
-  ];
-  return classes[n] ?? classes[0]!;
-};
+  const gardenMonthPhenologyCounts = computed(() => {
+    const phenologies = garden.guilds.flatMap((guild) =>
+      guild.plants.map((thing) => {
+        const rp = garden.resolvedPlant(thing.plantId);
+        return resolvePhenology(rp.speciesId, rp.cultivarId);
+      }),
+    );
+    return fruitBloomMonthCountsForPhenologies(phenologies);
+  });
+
+  const monthBlockClass = (rawCount: number): string => {
+    const n = Math.min(5, rawCount);
+    const classes = [
+      'bg-parchment-300',
+      'bg-sage-100',
+      'bg-sage-200',
+      'bg-sage-300',
+      'bg-sage-400',
+      'bg-sage-500',
+    ];
+    return classes[n] ?? classes[0]!;
+  };
 </script>
 
 <template>
@@ -70,8 +70,9 @@ const monthBlockClass = (rawCount: number): string => {
             :key="`fh-${i}`"
             class="flex-1 min-w-0 text-center text-[10px] leading-none font-medium text-ink-500"
             :title="monthHeaderTooltip(gardenTooltipRows, i, CATALOG_MONTH_LABELS[i])"
-            >{{ lab }}</span
           >
+            {{ lab }}
+          </span>
         </div>
       </div>
       <div

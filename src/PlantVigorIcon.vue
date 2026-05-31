@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { PLANT_VIGOR_LABEL, type PlantVigor } from './guildPlantInstanceStatus';
-import UiIcon from './uiIcons/UiIcon.vue';
+  import { PLANT_VIGOR_LABEL, type PlantVigor } from './guildPlantInstanceStatus';
+  import UiIcon from './uiIcons/UiIcon.vue';
 
-defineProps<{
-  vigor: PlantVigor;
-}>();
+  defineProps<{
+    vigor: PlantVigor;
+  }>();
 </script>
 <template>
   <span

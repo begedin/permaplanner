@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
-import { usePermaplannerStore } from './usePermaplannerStore';
+  import { storeToRefs } from 'pinia';
+  import { usePermaplannerStore } from './usePermaplannerStore';
 
-const { unsavedChanges } = storeToRefs(usePermaplannerStore());
+  const { unsavedChanges } = storeToRefs(usePermaplannerStore());
 </script>
 
 <template>

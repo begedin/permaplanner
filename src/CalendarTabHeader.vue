@@ -1,24 +1,25 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+  import { ref } from 'vue';
 
-import HighlightText from './HighlightText.vue';
-import { searchInputPlaceholder } from './searchContext';
-import { useCalendarSelection } from './useCalendarSelection';
-import { useSearchFocusHotkeys } from './useSearchFocusHotkeys';
+  import HighlightText from './HighlightText.vue';
+  import { searchInputPlaceholder } from './searchContext';
+  import { useCalendarSelection } from './useCalendarSelection';
+  import { useSearchFocusHotkeys } from './useSearchFocusHotkeys';
 
-defineProps<{
-  searchQuery: string;
-}>();
+  defineProps<{
+    searchQuery: string;
+  }>();
 
-const emit = defineEmits<{
-  'update:searchQuery': [value: string];
-}>();
+  const emit = defineEmits<{
+    'update:searchQuery': [value: string];
+  }>();
 
-const { selectedSpeciesId, selectedSpeciesName, clearSelection } = useCalendarSelection();
-const searchInputRef = ref<HTMLInputElement | null>(null);
-const searchPlaceholder = searchInputPlaceholder();
+  const { selectedSpeciesId, selectedSpeciesName, clearSelection } =
+    useCalendarSelection();
+  const searchInputRef = ref<HTMLInputElement | null>(null);
+  const searchPlaceholder = searchInputPlaceholder();
 
-useSearchFocusHotkeys(searchInputRef, () => true);
+  useSearchFocusHotkeys(searchInputRef, () => true);
 </script>
 
 <template>
@@ -41,8 +42,9 @@ useSearchFocusHotkeys(searchInputRef, () => true);
       <span
         class="text-ink-400 shrink-0"
         aria-hidden="true"
-        >/</span
       >
+        /
+      </span>
       <span
         class="text-ink-800 truncate"
         aria-current="page"

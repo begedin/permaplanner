@@ -19,6 +19,16 @@ export default tseslint.config(
     rules: {
       'vue/html-self-closing': 'off',
       'vue/singleline-html-element-content-newline': 'off',
+      // Keep in sync with .prettierrc.mjs (tabWidth, bracketSameLine, singleAttributePerLine).
+      'vue/html-indent': ['warn', 2, { baseIndent: 1, attribute: 1 }],
+      'vue/html-closing-bracket-newline': [
+        'warn',
+        {
+          singleline: 'never',
+          multiline: 'always',
+          selfClosingTag: { singleline: 'never', multiline: 'always' },
+        },
+      ],
       '@typescript-eslint/no-unused-vars': [
         'error',
         {

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { ICON_SYMBOL_TRANSFORM } from '../icons/iconGeometry';
-import { UI_ICON_IDS } from './iconIds';
-import { UI_ICON_SYMBOL_INNER } from './symbolMarkup';
+  import { ICON_SYMBOL_TRANSFORM } from '../icons/iconGeometry';
+  import { UI_ICON_IDS } from './iconIds';
+  import { UI_ICON_SYMBOL_INNER } from './symbolMarkup';
 </script>
 <template>
   <svg

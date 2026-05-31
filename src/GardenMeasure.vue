@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-defineProps<{
-  box: { x: number; y: number; width: number; height: number };
-  unitLengthPx: number;
-}>();
+  defineProps<{
+    box: { x: number; y: number; width: number; height: number };
+    unitLengthPx: number;
+  }>();
 </script>
 <template>
   <text

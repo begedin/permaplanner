@@ -1,16 +1,16 @@
 <script setup lang="ts">
-withDefaults(
-  defineProps<{
-    label: string;
-    value: number;
-    min?: number;
-    max?: number;
-    step?: number;
-  }>(),
-  { min: 0, max: 100, step: 1 },
-);
+  withDefaults(
+    defineProps<{
+      label: string;
+      value: number;
+      min?: number;
+      max?: number;
+      step?: number;
+    }>(),
+    { min: 0, max: 100, step: 1 },
+  );
 
-const emit = defineEmits<{ (e: 'update:value', value: number): void }>();
+  const emit = defineEmits<{ (e: 'update:value', value: number): void }>();
 </script>
 <template>
   <label class="text-ink-600 flex flex-col gap-1">

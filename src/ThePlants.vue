@@ -1,203 +1,214 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { v4 as uuidV4 } from 'uuid';
-import {
-  buildCatalogPickGroups,
-  catalogPickForSpeciesCultivar,
-  defaultCatalogPick,
-  type CatalogPlantPick,
-} from './catalogPlantPick';
-import { useGardenStore } from './useGardenStore';
-import type {
-  GuildFunction,
-  GuildLayer,
-  PlantOverrideFields,
-  UserPlant,
-} from './useGardenStore';
-import { plantCatalog } from './plantCatalog';
-import { resolveUserPlant } from './resolvePlant';
-import { PLANT_ICON_OPTIONS } from './plantIconOptions';
-import type { PlantIconId } from './plantIcons/iconIds';
-import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
-import PlantIcon from './PlantIcon.vue';
-import UiIcon from './uiIcons/UiIcon.vue';
-import PlantFunctions from './PlantFunctions.vue';
-import PlantLayers from './PlantLayers.vue';
+  import { computed, ref, watch } from 'vue';
+  import { v4 as uuidV4 } from 'uuid';
+  import {
+    buildCatalogPickGroups,
+    catalogPickForSpeciesCultivar,
+    defaultCatalogPick,
+    type CatalogPlantPick,
+  } from './catalogPlantPick';
+  import { useGardenStore } from './useGardenStore';
+  import type {
+    GuildFunction,
+    GuildLayer,
+    PlantOverrideFields,
+    UserPlant,
+  } from './useGardenStore';
+  import { plantCatalog } from './plantCatalog';
+  import { resolveUserPlant } from './resolvePlant';
+  import { PLANT_ICON_OPTIONS } from './plantIconOptions';
+  import type { PlantIconId } from './plantIcons/iconIds';
+  import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
+  import PlantIcon from './PlantIcon.vue';
+  import UiIcon from './uiIcons/UiIcon.vue';
+  import PlantFunctions from './PlantFunctions.vue';
+  import PlantLayers from './PlantLayers.vue';
 
-const garden = useGardenStore();
+  const garden = useGardenStore();
 
-const knownSpecies = computed(() =>
-  plantCatalog.species.filter((s) => s.id !== 'unknown'),
-);
-
-const makeNewUserPlant = (): UserPlant => {
-  const pick = defaultCatalogPick(knownSpecies.value);
-  if (!pick) {
-    throw new Error('Plant catalog has no species');
-  }
-  return {
-    id: uuidV4(),
-    speciesId: pick.speciesId,
-    cultivarId: pick.cultivarId,
+  const plantRowLabel = (plant: UserPlant): string => {
+    const resolved = resolveUserPlant(plant, plantCatalog);
+    return resolved.cultivar || resolved.name;
   };
-};
 
-const plantInEditing = ref<UserPlant>(makeNewUserPlant());
+  const knownSpecies = computed(() =>
+    plantCatalog.species.filter((s) => s.id !== 'unknown'),
+  );
 
-const resolvedPreview = computed(() =>
-  resolveUserPlant(plantInEditing.value, plantCatalog),
-);
-
-const editingCatalogPick = computed({
-  get: (): CatalogPlantPick => {
-    const groups = buildCatalogPickGroups(knownSpecies.value);
-    const hit = catalogPickForSpeciesCultivar(
-      groups,
-      plantInEditing.value.speciesId,
-      plantInEditing.value.cultivarId ?? null,
-    );
-    const fallback = defaultCatalogPick(knownSpecies.value);
-    return hit ?? fallback!;
-  },
-  set: (pick: CatalogPlantPick | null) => {
+  const makeNewUserPlant = (): UserPlant => {
+    const pick = defaultCatalogPick(knownSpecies.value);
     if (!pick) {
-      return;
+      throw new Error('Plant catalog has no species');
     }
-    plantInEditing.value.speciesId = pick.speciesId;
-    plantInEditing.value.cultivarId = pick.cultivarId;
-  },
-});
-
-const editingFunctions = ref<GuildFunction[]>([]);
-const editingLayers = ref<GuildLayer[]>([]);
-
-const syncGuildFieldsFromResolved = () => {
-  const r = resolveUserPlant(plantInEditing.value, plantCatalog);
-  editingFunctions.value = [...r.functions];
-  editingLayers.value = [...r.layers];
-};
-
-watch(
-  () => plantInEditing.value,
-  () => {
-    syncGuildFieldsFromResolved();
-  },
-  { deep: true, immediate: true },
-);
-
-const pickIcon = (iconId: PlantIconId) => {
-  const natural = resolveUserPlant(
-    {
-      ...plantInEditing.value,
-      speciesOverride: { ...plantInEditing.value.speciesOverride, iconId: undefined },
-    },
-    plantCatalog,
-  );
-  if (iconId === natural.iconId) {
-    const rest = { ...plantInEditing.value.speciesOverride };
-    delete rest.iconId;
-    plantInEditing.value.speciesOverride = Object.keys(rest).length ? rest : undefined;
-    return;
-  }
-  plantInEditing.value.speciesOverride = {
-    ...plantInEditing.value.speciesOverride,
-    iconId,
+    return {
+      id: uuidV4(),
+      speciesId: pick.speciesId,
+      cultivarId: pick.cultivarId,
+    };
   };
-};
 
-const save = () => {
-  const natural = resolveUserPlant(
-    {
-      ...plantInEditing.value,
-      speciesOverride: {
-        ...plantInEditing.value.speciesOverride,
-        functions: undefined,
-        layers: undefined,
+  const plantInEditing = ref<UserPlant>(makeNewUserPlant());
+
+  const resolvedPreview = computed(() =>
+    resolveUserPlant(plantInEditing.value, plantCatalog),
+  );
+
+  const editingCatalogPick = computed({
+    get: (): CatalogPlantPick => {
+      const groups = buildCatalogPickGroups(knownSpecies.value);
+      const hit = catalogPickForSpeciesCultivar(
+        groups,
+        plantInEditing.value.speciesId,
+        plantInEditing.value.cultivarId ?? null,
+      );
+      const fallback = defaultCatalogPick(knownSpecies.value);
+      return hit ?? fallback!;
+    },
+    set: (pick: CatalogPlantPick | null) => {
+      if (!pick) {
+        return;
+      }
+      plantInEditing.value.speciesId = pick.speciesId;
+      plantInEditing.value.cultivarId = pick.cultivarId;
+    },
+  });
+
+  const editingFunctions = ref<GuildFunction[]>([]);
+  const editingLayers = ref<GuildLayer[]>([]);
+
+  const syncGuildFieldsFromResolved = () => {
+    const r = resolveUserPlant(plantInEditing.value, plantCatalog);
+    editingFunctions.value = [...r.functions];
+    editingLayers.value = [...r.layers];
+  };
+
+  watch(
+    () => plantInEditing.value,
+    () => {
+      syncGuildFieldsFromResolved();
+    },
+    { deep: true, immediate: true },
+  );
+
+  const pickIcon = (iconId: PlantIconId) => {
+    const natural = resolveUserPlant(
+      {
+        ...plantInEditing.value,
+        speciesOverride: { ...plantInEditing.value.speciesOverride, iconId: undefined },
       },
-    },
-    plantCatalog,
-  );
-
-  const prevSo = plantInEditing.value.speciesOverride;
-  const speciesOverride: PlantOverrideFields = {};
-  if (prevSo?.name) {
-    speciesOverride.name = prevSo.name;
-  }
-  if (prevSo?.iconId) {
-    speciesOverride.iconId = prevSo.iconId;
-  }
-  if (JSON.stringify(editingFunctions.value) !== JSON.stringify(natural.functions)) {
-    speciesOverride.functions = [...editingFunctions.value];
-  }
-  if (JSON.stringify(editingLayers.value) !== JSON.stringify(natural.layers)) {
-    speciesOverride.layers = [...editingLayers.value];
-  }
-  plantInEditing.value.speciesOverride = Object.keys(speciesOverride).length
-    ? speciesOverride
-    : undefined;
-
-  const index = garden.plants.findIndex((p) => p.id === plantInEditing.value.id);
-  const toSave = { ...plantInEditing.value };
-  if (index === -1) {
-    garden.plants.push(toSave);
-  } else {
-    garden.plants.splice(index, 1, toSave);
-  }
-};
-
-const edit = (plant: UserPlant) => {
-  plantInEditing.value = {
-    ...plant,
-    speciesOverride: plant.speciesOverride ? { ...plant.speciesOverride } : undefined,
-    cultivarOverride: plant.cultivarOverride ? { ...plant.cultivarOverride } : undefined,
-  };
-  syncGuildFieldsFromResolved();
-};
-
-const newPlant = () => {
-  plantInEditing.value = makeNewUserPlant();
-  syncGuildFieldsFromResolved();
-};
-
-const remove = (plant: UserPlant) => {
-  garden.plants = garden.plants.filter((p) => p.id !== plant.id);
-};
-
-const isNew = computed(
-  () => garden.plants.findIndex((p) => p.id === plantInEditing.value.id) === -1,
-);
-
-const customSpeciesName = computed({
-  get: () => plantInEditing.value.speciesOverride?.name ?? '',
-  set: (v: string) => {
-    if (!v.trim()) {
+      plantCatalog,
+    );
+    if (iconId === natural.iconId) {
       const rest = { ...plantInEditing.value.speciesOverride };
-      delete rest.name;
+      delete rest.iconId;
       plantInEditing.value.speciesOverride = Object.keys(rest).length ? rest : undefined;
       return;
     }
     plantInEditing.value.speciesOverride = {
       ...plantInEditing.value.speciesOverride,
-      name: v.trim(),
+      iconId,
     };
-  },
-});
+  };
 
-const customCultivarName = computed({
-  get: () => plantInEditing.value.cultivarOverride?.name ?? '',
-  set: (v: string) => {
-    if (!v.trim()) {
-      const rest = { ...plantInEditing.value.cultivarOverride };
-      delete rest.name;
-      plantInEditing.value.cultivarOverride = Object.keys(rest).length ? rest : undefined;
-      return;
+  const save = () => {
+    const natural = resolveUserPlant(
+      {
+        ...plantInEditing.value,
+        speciesOverride: {
+          ...plantInEditing.value.speciesOverride,
+          functions: undefined,
+          layers: undefined,
+        },
+      },
+      plantCatalog,
+    );
+
+    const prevSo = plantInEditing.value.speciesOverride;
+    const speciesOverride: PlantOverrideFields = {};
+    if (prevSo?.name) {
+      speciesOverride.name = prevSo.name;
     }
-    plantInEditing.value.cultivarOverride = {
-      ...plantInEditing.value.cultivarOverride,
-      name: v.trim(),
+    if (prevSo?.iconId) {
+      speciesOverride.iconId = prevSo.iconId;
+    }
+    if (JSON.stringify(editingFunctions.value) !== JSON.stringify(natural.functions)) {
+      speciesOverride.functions = [...editingFunctions.value];
+    }
+    if (JSON.stringify(editingLayers.value) !== JSON.stringify(natural.layers)) {
+      speciesOverride.layers = [...editingLayers.value];
+    }
+    plantInEditing.value.speciesOverride = Object.keys(speciesOverride).length
+      ? speciesOverride
+      : undefined;
+
+    const index = garden.plants.findIndex((p) => p.id === plantInEditing.value.id);
+    const toSave = { ...plantInEditing.value };
+    if (index === -1) {
+      garden.plants.push(toSave);
+    } else {
+      garden.plants.splice(index, 1, toSave);
+    }
+  };
+
+  const edit = (plant: UserPlant) => {
+    plantInEditing.value = {
+      ...plant,
+      speciesOverride: plant.speciesOverride ? { ...plant.speciesOverride } : undefined,
+      cultivarOverride: plant.cultivarOverride
+        ? { ...plant.cultivarOverride }
+        : undefined,
     };
-  },
-});
+    syncGuildFieldsFromResolved();
+  };
+
+  const newPlant = () => {
+    plantInEditing.value = makeNewUserPlant();
+    syncGuildFieldsFromResolved();
+  };
+
+  const remove = (plant: UserPlant) => {
+    garden.plants = garden.plants.filter((p) => p.id !== plant.id);
+  };
+
+  const isNew = computed(
+    () => garden.plants.findIndex((p) => p.id === plantInEditing.value.id) === -1,
+  );
+
+  const customSpeciesName = computed({
+    get: () => plantInEditing.value.speciesOverride?.name ?? '',
+    set: (v: string) => {
+      if (!v.trim()) {
+        const rest = { ...plantInEditing.value.speciesOverride };
+        delete rest.name;
+        plantInEditing.value.speciesOverride = Object.keys(rest).length
+          ? rest
+          : undefined;
+        return;
+      }
+      plantInEditing.value.speciesOverride = {
+        ...plantInEditing.value.speciesOverride,
+        name: v.trim(),
+      };
+    },
+  });
+
+  const customCultivarName = computed({
+    get: () => plantInEditing.value.cultivarOverride?.name ?? '',
+    set: (v: string) => {
+      if (!v.trim()) {
+        const rest = { ...plantInEditing.value.cultivarOverride };
+        delete rest.name;
+        plantInEditing.value.cultivarOverride = Object.keys(rest).length
+          ? rest
+          : undefined;
+        return;
+      }
+      plantInEditing.value.cultivarOverride = {
+        ...plantInEditing.value.cultivarOverride,
+        name: v.trim(),
+      };
+    },
+  });
 </script>
 <template>
   <div class="paper-card p-4 grid grid-flow-col items-start gap-8">
@@ -217,10 +228,7 @@ const customCultivarName = computed({
           class="w-7 h-7"
           :plant="resolveUserPlant(plant, plantCatalog)"
         />
-        <span class="w-28 truncate text-left">{{
-          resolveUserPlant(plant, plantCatalog).cultivar ||
-          resolveUserPlant(plant, plantCatalog).name
-        }}</span>
+        <span class="w-28 truncate text-left">{{ plantRowLabel(plant) }}</span>
         <button
           type="button"
           class="btn-danger p-1 rounded-lg text-xs flex items-center justify-center"

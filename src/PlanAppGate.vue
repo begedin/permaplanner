@@ -1,29 +1,29 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+  import { computed } from 'vue';
 
-import GithubPlanSyncRepoNote from './GithubPlanSyncRepoNote.vue';
-import PlanMigrationScreen from './PlanMigrationScreen.vue';
-import { beginGithubAuth, readGithubClientIdConfig } from './githubRepoSync';
-import { planAppGateMode } from './usePlanAppGate';
-import { usePlanSession } from './usePlanSession';
-import { usePermaplannerStore } from './usePermaplannerStore';
+  import GithubPlanSyncRepoNote from './GithubPlanSyncRepoNote.vue';
+  import PlanMigrationScreen from './PlanMigrationScreen.vue';
+  import { beginGithubAuth, readGithubClientIdConfig } from './githubRepoSync';
+  import { planAppGateMode } from './usePlanAppGate';
+  import { usePlanSession } from './usePlanSession';
+  import { usePermaplannerStore } from './usePermaplannerStore';
 
-const mode = planAppGateMode;
+  const mode = planAppGateMode;
 
-const permaplannerStore = usePermaplannerStore();
-const githubClientConfigured = computed(() => Boolean(readGithubClientIdConfig()));
+  const permaplannerStore = usePermaplannerStore();
+  const githubClientConfigured = computed(() => Boolean(readGithubClientIdConfig()));
 
-const {
-  awaitingReopenFileClick,
-  expectedRelinkName,
-  continueReopenPersistedFile,
-  load,
-  newPlan,
-} = usePlanSession();
+  const {
+    awaitingReopenFileClick,
+    expectedRelinkName,
+    continueReopenPersistedFile,
+    load,
+    newPlan,
+  } = usePlanSession();
 
-const connectGithub = () => {
-  void beginGithubAuth();
-};
+  const connectGithub = () => {
+    void beginGithubAuth();
+  };
 </script>
 
 <template>

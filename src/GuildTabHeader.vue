@@ -1,35 +1,35 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+  import { computed, ref } from 'vue';
 
-import HighlightText from './HighlightText.vue';
-import { searchInputPlaceholder } from './searchContext';
-import { useGardenStore } from './useGardenStore';
-import { useGuildSelection } from './useGuildSelection';
-import { useSearchFocusHotkeys } from './useSearchFocusHotkeys';
+  import HighlightText from './HighlightText.vue';
+  import { searchInputPlaceholder } from './searchContext';
+  import { useGardenStore } from './useGardenStore';
+  import { useGuildSelection } from './useGuildSelection';
+  import { useSearchFocusHotkeys } from './useSearchFocusHotkeys';
 
-const props = defineProps<{
-  title: string;
-  searchQuery?: string;
-}>();
+  const props = defineProps<{
+    title: string;
+    searchQuery?: string;
+  }>();
 
-const emit = defineEmits<{
-  'update:searchQuery': [value: string];
-}>();
+  const emit = defineEmits<{
+    'update:searchQuery': [value: string];
+  }>();
 
-const garden = useGardenStore();
-const { selectedGuildId, clearSelection, addGuild } = useGuildSelection();
-const searchInputRef = ref<HTMLInputElement | null>(null);
-const searchPlaceholder = searchInputPlaceholder();
+  const garden = useGardenStore();
+  const { selectedGuildId, clearSelection, addGuild } = useGuildSelection();
+  const searchInputRef = ref<HTMLInputElement | null>(null);
+  const searchPlaceholder = searchInputPlaceholder();
 
-const selectedGuildName = computed(() => {
-  const id = selectedGuildId.value;
-  if (!id) {
-    return undefined;
-  }
-  return garden.guilds.find((g) => g.id === id)?.name;
-});
+  const selectedGuildName = computed(() => {
+    const id = selectedGuildId.value;
+    if (!id) {
+      return undefined;
+    }
+    return garden.guilds.find((g) => g.id === id)?.name;
+  });
 
-useSearchFocusHotkeys(searchInputRef, () => props.searchQuery !== undefined);
+  useSearchFocusHotkeys(searchInputRef, () => props.searchQuery !== undefined);
 </script>
 
 <template>
@@ -52,8 +52,9 @@ useSearchFocusHotkeys(searchInputRef, () => props.searchQuery !== undefined);
       <span
         class="text-ink-400 shrink-0"
         aria-hidden="true"
-        >/</span
       >
+        /
+      </span>
       <span
         class="text-ink-800 truncate"
         aria-current="page"

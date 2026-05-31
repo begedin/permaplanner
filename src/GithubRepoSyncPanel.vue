@@ -1,210 +1,210 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { storeToRefs } from 'pinia';
+  import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+  import { storeToRefs } from 'pinia';
 
-import GithubPlanSyncRepoNote from './GithubPlanSyncRepoNote.vue';
-import {
-  beginGithubAuth,
-  clearGithubRepoSession,
-  completeGithubAuthIfNeeded,
-  getGithubAccessToken,
-  getPlanRepoGardenFolderUrl,
-  getPlanRepoGardenViewerUrl,
-  githubRepoLastSyncError,
-  githubRepoRemoteLastUpdatedMs,
-  githubRepoPushInFlightCount,
-  loadGithubRepoRemoteLastUpdatedMs,
-  refreshGithubRepoRemoteLastUpdatedMs,
-  GithubSyncError,
-  planRepoSyncUpdatedEventName,
-  pullPlanJsonFromGithubRepo,
-  pushPlanJsonToGithubRepo,
-  readGithubClientIdConfig,
-} from './githubRepoSync';
-import { checkGithubPlanMigration } from './usePlanMigration';
-import { usePermaplannerStore } from './usePermaplannerStore';
+  import GithubPlanSyncRepoNote from './GithubPlanSyncRepoNote.vue';
+  import {
+    beginGithubAuth,
+    clearGithubRepoSession,
+    completeGithubAuthIfNeeded,
+    getGithubAccessToken,
+    getPlanRepoGardenFolderUrl,
+    getPlanRepoGardenViewerUrl,
+    githubRepoLastSyncError,
+    githubRepoRemoteLastUpdatedMs,
+    githubRepoPushInFlightCount,
+    loadGithubRepoRemoteLastUpdatedMs,
+    refreshGithubRepoRemoteLastUpdatedMs,
+    GithubSyncError,
+    planRepoSyncUpdatedEventName,
+    pullPlanJsonFromGithubRepo,
+    pushPlanJsonToGithubRepo,
+    readGithubClientIdConfig,
+  } from './githubRepoSync';
+  import { checkGithubPlanMigration } from './usePlanMigration';
+  import { usePermaplannerStore } from './usePermaplannerStore';
 
-const clientId = computed(() => readGithubClientIdConfig());
+  const clientId = computed(() => readGithubClientIdConfig());
 
-const repoPushBusy = computed(() => githubRepoPushInFlightCount.value > 0);
+  const repoPushBusy = computed(() => githubRepoPushInFlightCount.value > 0);
 
-const permaplannerStore = usePermaplannerStore();
-const { localFileLastModifiedMs } = storeToRefs(permaplannerStore);
+  const permaplannerStore = usePermaplannerStore();
+  const { localFileLastModifiedMs } = storeToRefs(permaplannerStore);
 
-const authMessage = ref<string | undefined>();
-const syncError = ref<string | undefined>();
+  const authMessage = ref<string | undefined>();
+  const syncError = ref<string | undefined>();
 
-const githubSyncFailureMessage = (e: unknown): string =>
-  e instanceof GithubSyncError ? e.message : e instanceof Error ? e.message : String(e);
+  const githubSyncFailureMessage = (e: unknown): string =>
+    e instanceof GithubSyncError ? e.message : e instanceof Error ? e.message : String(e);
 
-const displayedSyncError = computed(
-  () => syncError.value ?? githubRepoLastSyncError.value,
-);
-const syncing = ref(false);
-const pulling = ref(false);
-const connected = ref(Boolean(getGithubAccessToken()));
-const remoteLastUpdatedMs = ref<number | undefined>(undefined);
-const remoteLoading = ref(false);
-
-const repoFolderUrl = ref<string | undefined>(
-  getPlanRepoGardenFolderUrl(permaplannerStore.fileName),
-);
-const repoViewerUrl = ref<string | undefined>(
-  getPlanRepoGardenViewerUrl(permaplannerStore.fileName),
-);
-
-const formatPlanUpdatedAt = (ms: number | undefined): string => {
-  if (ms === undefined) {
-    return '—';
-  }
-  return new Date(ms).toLocaleString();
-};
-
-const localUpdatedLabel = computed(() =>
-  formatPlanUpdatedAt(localFileLastModifiedMs.value),
-);
-
-const remoteUpdatedLabel = computed(() => {
-  if (remoteLoading.value) {
-    return '…';
-  }
-  const bestKnownRemoteMs = Math.max(
-    remoteLastUpdatedMs.value ?? Number.NEGATIVE_INFINITY,
-    githubRepoRemoteLastUpdatedMs.value ?? Number.NEGATIVE_INFINITY,
+  const displayedSyncError = computed(
+    () => syncError.value ?? githubRepoLastSyncError.value,
   );
-  return formatPlanUpdatedAt(
-    Number.isFinite(bestKnownRemoteMs) ? bestKnownRemoteMs : undefined,
+  const syncing = ref(false);
+  const pulling = ref(false);
+  const connected = ref(Boolean(getGithubAccessToken()));
+  const remoteLastUpdatedMs = ref<number | undefined>(undefined);
+  const remoteLoading = ref(false);
+
+  const repoFolderUrl = ref<string | undefined>(
+    getPlanRepoGardenFolderUrl(permaplannerStore.fileName),
   );
-});
+  const repoViewerUrl = ref<string | undefined>(
+    getPlanRepoGardenViewerUrl(permaplannerStore.fileName),
+  );
 
-const updateRepoLink = () => {
-  repoFolderUrl.value = getPlanRepoGardenFolderUrl(permaplannerStore.fileName);
-  repoViewerUrl.value = getPlanRepoGardenViewerUrl(permaplannerStore.fileName);
-};
+  const formatPlanUpdatedAt = (ms: number | undefined): string => {
+    if (ms === undefined) {
+      return '—';
+    }
+    return new Date(ms).toLocaleString();
+  };
 
-watch(() => permaplannerStore.fileName, updateRepoLink);
+  const localUpdatedLabel = computed(() =>
+    formatPlanUpdatedAt(localFileLastModifiedMs.value),
+  );
 
-const finishOAuthFromUrl = async () => {
-  const r = await completeGithubAuthIfNeeded();
-  if (r === 'connected') {
-    authMessage.value = 'Connected to GitHub.';
-  } else if (r === 'error') {
-    authMessage.value = 'GitHub sign-in did not complete. Try again.';
-  }
-  connected.value = Boolean(getGithubAccessToken());
-};
+  const remoteUpdatedLabel = computed(() => {
+    if (remoteLoading.value) {
+      return '…';
+    }
+    const bestKnownRemoteMs = Math.max(
+      remoteLastUpdatedMs.value ?? Number.NEGATIVE_INFINITY,
+      githubRepoRemoteLastUpdatedMs.value ?? Number.NEGATIVE_INFINITY,
+    );
+    return formatPlanUpdatedAt(
+      Number.isFinite(bestKnownRemoteMs) ? bestKnownRemoteMs : undefined,
+    );
+  });
 
-const refreshRemoteUpdatedAt = async () => {
-  const token = getGithubAccessToken();
-  if (!token) {
+  const updateRepoLink = () => {
+    repoFolderUrl.value = getPlanRepoGardenFolderUrl(permaplannerStore.fileName);
+    repoViewerUrl.value = getPlanRepoGardenViewerUrl(permaplannerStore.fileName);
+  };
+
+  watch(() => permaplannerStore.fileName, updateRepoLink);
+
+  const finishOAuthFromUrl = async () => {
+    const r = await completeGithubAuthIfNeeded();
+    if (r === 'connected') {
+      authMessage.value = 'Connected to GitHub.';
+    } else if (r === 'error') {
+      authMessage.value = 'GitHub sign-in did not complete. Try again.';
+    }
+    connected.value = Boolean(getGithubAccessToken());
+  };
+
+  const refreshRemoteUpdatedAt = async () => {
+    const token = getGithubAccessToken();
+    if (!token) {
+      remoteLastUpdatedMs.value = undefined;
+      githubRepoRemoteLastUpdatedMs.value = undefined;
+      return;
+    }
+    remoteLoading.value = true;
+    syncError.value = undefined;
+    try {
+      remoteLastUpdatedMs.value = await refreshGithubRepoRemoteLastUpdatedMs(
+        token,
+        permaplannerStore.fileName,
+      );
+    } catch (e) {
+      syncError.value = githubSyncFailureMessage(e);
+    } finally {
+      remoteLoading.value = false;
+    }
+  };
+
+  const onRepoUpdated = () => {
+    updateRepoLink();
+    void refreshRemoteUpdatedAt();
+  };
+
+  onMounted(() => {
+    if (connected.value) {
+      loadGithubRepoRemoteLastUpdatedMs(permaplannerStore.fileName);
+      remoteLastUpdatedMs.value = githubRepoRemoteLastUpdatedMs.value;
+    }
+    void finishOAuthFromUrl().finally(() => {
+      updateRepoLink();
+      void permaplannerStore.refreshLocalFileLastModified();
+      void refreshRemoteUpdatedAt();
+    });
+    window.addEventListener(planRepoSyncUpdatedEventName, onRepoUpdated);
+  });
+
+  onBeforeUnmount(() => {
+    window.removeEventListener(planRepoSyncUpdatedEventName, onRepoUpdated);
+  });
+
+  watch([connected, () => permaplannerStore.fileName], () => {
+    void permaplannerStore.refreshLocalFileLastModified();
+    if (connected.value) {
+      loadGithubRepoRemoteLastUpdatedMs(permaplannerStore.fileName);
+      remoteLastUpdatedMs.value = githubRepoRemoteLastUpdatedMs.value;
+      void refreshRemoteUpdatedAt();
+    } else {
+      remoteLastUpdatedMs.value = undefined;
+    }
+  });
+
+  const connect = () => {
+    authMessage.value = undefined;
+    void beginGithubAuth();
+  };
+
+  const disconnect = () => {
+    clearGithubRepoSession();
+    connected.value = false;
+    authMessage.value = undefined;
+    syncError.value = undefined;
+    githubRepoLastSyncError.value = undefined;
     remoteLastUpdatedMs.value = undefined;
     githubRepoRemoteLastUpdatedMs.value = undefined;
-    return;
-  }
-  remoteLoading.value = true;
-  syncError.value = undefined;
-  try {
-    remoteLastUpdatedMs.value = await refreshGithubRepoRemoteLastUpdatedMs(
-      token,
-      permaplannerStore.fileName,
-    );
-  } catch (e) {
-    syncError.value = githubSyncFailureMessage(e);
-  } finally {
-    remoteLoading.value = false;
-  }
-};
+  };
 
-const onRepoUpdated = () => {
-  updateRepoLink();
-  void refreshRemoteUpdatedAt();
-};
+  const pushCurrent = async () => {
+    const token = getGithubAccessToken();
+    if (!token) {
+      return;
+    }
+    syncError.value = undefined;
+    syncing.value = true;
+    try {
+      await pushPlanJsonToGithubRepo(
+        token,
+        permaplannerStore.snapshot(),
+        permaplannerStore.fileName,
+      );
+      updateRepoLink();
+      await refreshRemoteUpdatedAt();
+      window.dispatchEvent(new Event(planRepoSyncUpdatedEventName));
+    } catch (e) {
+      syncError.value = githubSyncFailureMessage(e);
+    } finally {
+      syncing.value = false;
+    }
+  };
 
-onMounted(() => {
-  if (connected.value) {
-    loadGithubRepoRemoteLastUpdatedMs(permaplannerStore.fileName);
-    remoteLastUpdatedMs.value = githubRepoRemoteLastUpdatedMs.value;
-  }
-  void finishOAuthFromUrl().finally(() => {
-    updateRepoLink();
-    void permaplannerStore.refreshLocalFileLastModified();
-    void refreshRemoteUpdatedAt();
-  });
-  window.addEventListener(planRepoSyncUpdatedEventName, onRepoUpdated);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener(planRepoSyncUpdatedEventName, onRepoUpdated);
-});
-
-watch([connected, () => permaplannerStore.fileName], () => {
-  void permaplannerStore.refreshLocalFileLastModified();
-  if (connected.value) {
-    loadGithubRepoRemoteLastUpdatedMs(permaplannerStore.fileName);
-    remoteLastUpdatedMs.value = githubRepoRemoteLastUpdatedMs.value;
-    void refreshRemoteUpdatedAt();
-  } else {
-    remoteLastUpdatedMs.value = undefined;
-  }
-});
-
-const connect = () => {
-  authMessage.value = undefined;
-  void beginGithubAuth();
-};
-
-const disconnect = () => {
-  clearGithubRepoSession();
-  connected.value = false;
-  authMessage.value = undefined;
-  syncError.value = undefined;
-  githubRepoLastSyncError.value = undefined;
-  remoteLastUpdatedMs.value = undefined;
-  githubRepoRemoteLastUpdatedMs.value = undefined;
-};
-
-const pushCurrent = async () => {
-  const token = getGithubAccessToken();
-  if (!token) {
-    return;
-  }
-  syncError.value = undefined;
-  syncing.value = true;
-  try {
-    await pushPlanJsonToGithubRepo(
-      token,
-      permaplannerStore.snapshot(),
-      permaplannerStore.fileName,
-    );
-    updateRepoLink();
-    await refreshRemoteUpdatedAt();
-    window.dispatchEvent(new Event(planRepoSyncUpdatedEventName));
-  } catch (e) {
-    syncError.value = githubSyncFailureMessage(e);
-  } finally {
-    syncing.value = false;
-  }
-};
-
-const pullRemote = async () => {
-  const token = getGithubAccessToken();
-  if (!token) {
-    return;
-  }
-  syncError.value = undefined;
-  pulling.value = true;
-  try {
-    const doc = await pullPlanJsonFromGithubRepo(token, permaplannerStore.fileName);
-    permaplannerStore.applyRemoteRepoSnapshot(doc);
-    updateRepoLink();
-    await refreshRemoteUpdatedAt();
-    await checkGithubPlanMigration(permaplannerStore.fileName);
-  } catch (e) {
-    syncError.value = githubSyncFailureMessage(e);
-  } finally {
-    pulling.value = false;
-  }
-};
+  const pullRemote = async () => {
+    const token = getGithubAccessToken();
+    if (!token) {
+      return;
+    }
+    syncError.value = undefined;
+    pulling.value = true;
+    try {
+      const doc = await pullPlanJsonFromGithubRepo(token, permaplannerStore.fileName);
+      permaplannerStore.applyRemoteRepoSnapshot(doc);
+      updateRepoLink();
+      await refreshRemoteUpdatedAt();
+      await checkGithubPlanMigration(permaplannerStore.fileName);
+    } catch (e) {
+      syncError.value = githubSyncFailureMessage(e);
+    } finally {
+      pulling.value = false;
+    }
+  };
 </script>
 
 <template>

@@ -1,97 +1,97 @@
 <script lang="ts" setup>
-import { ComboboxButton, ComboboxInput, ComboboxOption } from '@headlessui/vue';
-import { computed, inject, ref, watch } from 'vue';
+  import { ComboboxButton, ComboboxInput, ComboboxOption } from '@headlessui/vue';
+  import { computed, inject, ref, watch } from 'vue';
 
-import { comboboxPanelOpenKey } from './comboboxPanelOpen';
+  import { comboboxPanelOpenKey } from './comboboxPanelOpen';
 
-import AutoPositionedCombobox from './AutoPositionedCombobox.vue';
-import UiIcon from './uiIcons/UiIcon.vue';
-import {
-  buildCatalogPickGroups,
-  type CatalogPickGroup,
-  type CatalogPlantPick,
-} from './catalogPlantPick';
-import { plantCatalog } from './plantCatalog';
+  import AutoPositionedCombobox from './AutoPositionedCombobox.vue';
+  import UiIcon from './uiIcons/UiIcon.vue';
+  import {
+    buildCatalogPickGroups,
+    type CatalogPickGroup,
+    type CatalogPlantPick,
+  } from './catalogPlantPick';
+  import { plantCatalog } from './plantCatalog';
 
-const props = withDefaults(
-  defineProps<{
-    modelValue: CatalogPlantPick | null;
-    /** Visually hidden; for screen readers */
-    label?: string;
-    placeholder?: string;
-  }>(),
-  {
-    label: 'Species and cultivar',
-    placeholder: 'Search plants…',
-  },
-);
+  const props = withDefaults(
+    defineProps<{
+      modelValue: CatalogPlantPick | null;
+      /** Visually hidden; for screen readers */
+      label?: string;
+      placeholder?: string;
+    }>(),
+    {
+      label: 'Species and cultivar',
+      placeholder: 'Search plants…',
+    },
+  );
 
-const emit = defineEmits<{
-  'update:modelValue': [value: CatalogPlantPick | null];
-  submit: [];
-}>();
+  const emit = defineEmits<{
+    'update:modelValue': [value: CatalogPlantPick | null];
+    submit: [];
+  }>();
 
-const comboboxPanelOpen = inject(comboboxPanelOpenKey, null);
+  const comboboxPanelOpen = inject(comboboxPanelOpenKey, null);
 
-const onComboboxEnter = (e: KeyboardEvent) => {
-  if (comboboxPanelOpen?.value) {
-    return;
-  }
-  e.preventDefault();
-  emit('submit');
-};
-
-const catalogSpecies = computed(() =>
-  plantCatalog.species.filter((s) => s.id !== 'unknown'),
-);
-
-const query = ref('');
-
-const allPickGroups = computed((): CatalogPickGroup[] =>
-  buildCatalogPickGroups(catalogSpecies.value),
-);
-
-const filteredPickGroups = computed((): CatalogPickGroup[] => {
-  const q = query.value.trim().toLowerCase();
-  if (!q) {
-    return allPickGroups.value;
-  }
-  return allPickGroups.value
-    .map((g) => {
-      const speciesMatch = g.speciesName.toLowerCase().includes(q);
-      const picks = speciesMatch
-        ? g.picks
-        : g.picks.filter(
-            (p) =>
-              p.rowLabel.toLowerCase().includes(q) ||
-              p.inputLabel.toLowerCase().includes(q),
-          );
-      return { ...g, picks };
-    })
-    .filter((g) => g.picks.length > 0);
-});
-
-watch(
-  allPickGroups,
-  (groups) => {
-    const cur = props.modelValue;
-    if (cur && groups.some((g) => g.picks.some((p) => p.id === cur.id))) {
+  const onComboboxEnter = (e: KeyboardEvent) => {
+    if (comboboxPanelOpen?.value) {
       return;
     }
-    emit('update:modelValue', groups[0]?.picks[0] ?? null);
-  },
-  { immediate: true },
-);
+    e.preventDefault();
+    emit('submit');
+  };
 
-watch(
-  () => props.modelValue?.id,
-  () => {
-    query.value = '';
-  },
-);
+  const catalogSpecies = computed(() =>
+    plantCatalog.species.filter((s) => s.id !== 'unknown'),
+  );
 
-const displayPickLabel = (p: unknown): string =>
-  (p as CatalogPlantPick | null)?.inputLabel ?? '';
+  const query = ref('');
+
+  const allPickGroups = computed((): CatalogPickGroup[] =>
+    buildCatalogPickGroups(catalogSpecies.value),
+  );
+
+  const filteredPickGroups = computed((): CatalogPickGroup[] => {
+    const q = query.value.trim().toLowerCase();
+    if (!q) {
+      return allPickGroups.value;
+    }
+    return allPickGroups.value
+      .map((g) => {
+        const speciesMatch = g.speciesName.toLowerCase().includes(q);
+        const picks = speciesMatch
+          ? g.picks
+          : g.picks.filter(
+              (p) =>
+                p.rowLabel.toLowerCase().includes(q) ||
+                p.inputLabel.toLowerCase().includes(q),
+            );
+        return { ...g, picks };
+      })
+      .filter((g) => g.picks.length > 0);
+  });
+
+  watch(
+    allPickGroups,
+    (groups) => {
+      const cur = props.modelValue;
+      if (cur && groups.some((g) => g.picks.some((p) => p.id === cur.id))) {
+        return;
+      }
+      emit('update:modelValue', groups[0]?.picks[0] ?? null);
+    },
+    { immediate: true },
+  );
+
+  watch(
+    () => props.modelValue?.id,
+    () => {
+      query.value = '';
+    },
+  );
+
+  const displayPickLabel = (p: unknown): string =>
+    (p as CatalogPlantPick | null)?.inputLabel ?? '';
 </script>
 
 <template>

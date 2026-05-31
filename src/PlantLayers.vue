@@ -1,29 +1,29 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { GuildLayer } from './useGardenStore';
+  import { computed } from 'vue';
+  import { GuildLayer } from './useGardenStore';
 
-const props = withDefaults(defineProps<{ value: GuildLayer[] }>(), {
-  value: () => [] as GuildLayer[],
-});
-const emit = defineEmits<{ (e: 'update:value', value: GuildLayer[]): void }>();
+  const props = withDefaults(defineProps<{ value: GuildLayer[] }>(), {
+    value: () => [] as GuildLayer[],
+  });
+  const emit = defineEmits<{ (e: 'update:value', value: GuildLayer[]): void }>();
 
-const layers = computed(() =>
-  Object.values(GuildLayer).map((l) => ({
-    value: l,
-    checked: props.value.includes(l),
-    label: l.replace('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
-  })),
-);
+  const layers = computed(() =>
+    Object.values(GuildLayer).map((l) => ({
+      value: l,
+      checked: props.value.includes(l),
+      label: l.replace('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
+    })),
+  );
 
-const toggle = (value: GuildLayer) => {
-  const newValues = [...props.value];
-  if (newValues.includes(value)) {
-    newValues.splice(newValues.indexOf(value), 1);
-  } else {
-    newValues.push(value);
-  }
-  emit('update:value', newValues);
-};
+  const toggle = (value: GuildLayer) => {
+    const newValues = [...props.value];
+    if (newValues.includes(value)) {
+      newValues.splice(newValues.indexOf(value), 1);
+    } else {
+      newValues.push(value);
+    }
+    emit('update:value', newValues);
+  };
 </script>
 
 <template>

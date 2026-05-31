@@ -1,32 +1,32 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { storeToRefs } from 'pinia';
+  import { computed, ref } from 'vue';
+  import { storeToRefs } from 'pinia';
 
-import AppFooter from './AppFooter.vue';
-import PlanAppGate from './PlanAppGate.vue';
-import PlanSessionDrawer from './PlanSessionDrawer.vue';
-import PlantIconSprite from './plantIcons/PlantIconSprite.vue';
-import UiIcon from './uiIcons/UiIcon.vue';
-import UiIconSprite from './uiIcons/UiIconSprite.vue';
-import PlantParts from './PlantParts.vue';
-import { showMainApp } from './usePlanAppGate';
-import { usePermaplannerStore } from './usePermaplannerStore';
-import { usePlanSession } from './usePlanSession';
-import { useCalendarSelection } from './useCalendarSelection';
-import { useGuildSelection } from './useGuildSelection';
-import { routeNames } from './router';
+  import AppFooter from './AppFooter.vue';
+  import PlanAppGate from './PlanAppGate.vue';
+  import PlanSessionDrawer from './PlanSessionDrawer.vue';
+  import PlantIconSprite from './plantIcons/PlantIconSprite.vue';
+  import UiIcon from './uiIcons/UiIcon.vue';
+  import UiIconSprite from './uiIcons/UiIconSprite.vue';
+  import PlantParts from './PlantParts.vue';
+  import { showMainApp } from './usePlanAppGate';
+  import { usePermaplannerStore } from './usePermaplannerStore';
+  import { usePlanSession } from './usePlanSession';
+  import { useCalendarSelection } from './useCalendarSelection';
+  import { useGuildSelection } from './useGuildSelection';
+  import { routeNames } from './router';
 
-usePlanSession();
+  usePlanSession();
 
-const { guildsTabTo, aerialTabTo } = useGuildSelection();
-const { calendarTabTo } = useCalendarSelection();
+  const { guildsTabTo, aerialTabTo } = useGuildSelection();
+  const { calendarTabTo } = useCalendarSelection();
 
-const planDrawerOpen = ref(false);
-const { unsavedChanges } = storeToRefs(usePermaplannerStore());
+  const planDrawerOpen = ref(false);
+  const { unsavedChanges } = storeToRefs(usePermaplannerStore());
 
-const planMenuLabel = computed(() =>
-  unsavedChanges.value ? 'Plan and sync, unsaved changes' : 'Plan and sync',
-);
+  const planMenuLabel = computed(() =>
+    unsavedChanges.value ? 'Plan and sync, unsaved changes' : 'Plan and sync',
+  );
 </script>
 <template>
   <PlantParts />

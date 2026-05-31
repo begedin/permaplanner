@@ -1,111 +1,118 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
-import { useMediaQuery } from '@vueuse/core';
-import { LayoutGroup, motion } from 'motion-v';
-import { computed } from 'vue';
+  import { storeToRefs } from 'pinia';
+  import { useMediaQuery } from '@vueuse/core';
+  import { LayoutGroup, motion } from 'motion-v';
+  import { computed } from 'vue';
 
-import {
-  formatSpeciesCounts,
-  guildSpeciesCounts,
-  guildSpeciesTooltipRows,
-  listCalendarCultivarsForSpecies,
-} from './calendarGardenPlants';
-import CalendarSpeciesCard from './CalendarSpeciesCard.vue';
-import CalendarTabHeader from './CalendarTabHeader.vue';
-import GrowthPhaseIcon from './GrowthPhaseIcon.vue';
-import GuildCardSectionLabel from './GuildCardSectionLabel.vue';
-import PlantIcon from './PlantIcon.vue';
-import PlantPhenologyCalendar from './PlantPhenologyCalendar.vue';
-import PlantVigorIcon from './PlantVigorIcon.vue';
-import UiIcon from './uiIcons/UiIcon.vue';
-import { phenologySummaryForPlant } from './plantCatalog';
-import { useCalendarSearchStore } from './useCalendarSearchStore';
-import { useCalendarSelection } from './useCalendarSelection';
-import { useGardenStore } from './useGardenStore';
+  import {
+    type CalendarCultivarRow,
+    formatSpeciesCounts,
+    guildSpeciesCounts,
+    guildSpeciesTooltipRows,
+    listCalendarCultivarsForSpecies,
+  } from './calendarGardenPlants';
+  import CalendarSpeciesCard from './CalendarSpeciesCard.vue';
+  import CalendarTabHeader from './CalendarTabHeader.vue';
+  import GrowthPhaseIcon from './GrowthPhaseIcon.vue';
+  import GuildCardSectionLabel from './GuildCardSectionLabel.vue';
+  import PlantIcon from './PlantIcon.vue';
+  import PlantPhenologyCalendar from './PlantPhenologyCalendar.vue';
+  import PlantVigorIcon from './PlantVigorIcon.vue';
+  import UiIcon from './uiIcons/UiIcon.vue';
+  import { phenologySummaryForPlant } from './plantCatalog';
+  import { useCalendarSearchStore } from './useCalendarSearchStore';
+  import { useCalendarSelection } from './useCalendarSelection';
+  import { useGardenStore } from './useGardenStore';
 
-const calendarSidebarWidth = '20rem';
+  const calendarSidebarWidth = '20rem';
 
-const calendarListGridStyle = {
-  gridTemplateColumns: 'repeat(auto-fill, minmax(17rem, 1fr))',
-};
+  const calendarListGridStyle = {
+    gridTemplateColumns: 'repeat(auto-fill, minmax(17rem, 1fr))',
+  };
 
-const gardenLayoutTransition = {
-  layout: { type: 'spring', stiffness: 400, damping: 38 },
-} as const;
+  const gardenLayoutTransition = {
+    layout: { type: 'spring', stiffness: 400, damping: 38 },
+  } as const;
 
-const resolveGardenPlant = (id: string) => garden.resolvedPlant(id);
+  const cultivarRowShowsHeaderExtras = (row: CalendarCultivarRow): boolean =>
+    row.headerPhaseSlots.length > 0 || row.showPhaseOverflow || row.averageVigor !== null;
 
-const garden = useGardenStore();
-const { selectedSpeciesId, selectSpecies } = useCalendarSelection();
-const { searchQuery, speciesRows, filteredSpeciesRows, hasSearchQuery } = storeToRefs(
-  useCalendarSearchStore(),
-);
+  const resolveGardenPlant = (id: string) => garden.resolvedPlant(id);
 
-const isMdUp = useMediaQuery('(min-width: 768px)');
-const showMobileDetail = computed(() => Boolean(selectedSpeciesId.value));
-
-const selectedSpeciesRow = computed(() =>
-  speciesRows.value.find((row) => row.speciesId === selectedSpeciesId.value),
-);
-
-const cultivarRows = computed(() => {
-  const speciesId = selectedSpeciesId.value;
-  if (!speciesId) {
-    return [];
-  }
-  return listCalendarCultivarsForSpecies(garden.plants, speciesId, garden.guilds, (id) =>
-    garden.resolvedPlant(id),
+  const garden = useGardenStore();
+  const { selectedSpeciesId, selectSpecies } = useCalendarSelection();
+  const { searchQuery, speciesRows, filteredSpeciesRows, hasSearchQuery } = storeToRefs(
+    useCalendarSearchStore(),
   );
-});
 
-const selectedSummaryCounts = computed(() => {
-  const speciesId = selectedSpeciesId.value;
-  if (!speciesId) {
-    return { cultivarCount: 0, plantCount: 0 };
-  }
-  return guildSpeciesCounts(garden.guilds, speciesId, (id) => garden.resolvedPlant(id));
-});
+  const isMdUp = useMediaQuery('(min-width: 768px)');
+  const showMobileDetail = computed(() => Boolean(selectedSpeciesId.value));
 
-const detailAggregatedTooltipRows = computed(() => {
-  const speciesId = selectedSpeciesId.value;
-  if (!speciesId) {
-    return [];
-  }
-  return guildSpeciesTooltipRows(garden.guilds, speciesId, resolveGardenPlant);
-});
+  const selectedSpeciesRow = computed(() =>
+    speciesRows.value.find((row) => row.speciesId === selectedSpeciesId.value),
+  );
 
-const speciesTooltipRowsById = computed(() =>
-  Object.fromEntries(
-    speciesRows.value.map((row) => [
-      row.speciesId,
-      guildSpeciesTooltipRows(garden.guilds, row.speciesId, resolveGardenPlant),
-    ]),
-  ),
-);
+  const cultivarRows = computed(() => {
+    const speciesId = selectedSpeciesId.value;
+    if (!speciesId) {
+      return [];
+    }
+    return listCalendarCultivarsForSpecies(
+      garden.plants,
+      speciesId,
+      garden.guilds,
+      (id) => garden.resolvedPlant(id),
+    );
+  });
 
-const asideMotionStyle = computed((): Record<string, string> => {
-  if (!isMdUp.value) {
-    return {};
-  }
-  if (selectedSpeciesId.value) {
-    return {
-      flex: `0 0 ${calendarSidebarWidth}`,
-      width: calendarSidebarWidth,
-      maxWidth: calendarSidebarWidth,
-    };
-  }
-  return { flex: '1 1 0%', minWidth: '0' };
-});
+  const selectedSummaryCounts = computed(() => {
+    const speciesId = selectedSpeciesId.value;
+    if (!speciesId) {
+      return { cultivarCount: 0, plantCount: 0 };
+    }
+    return guildSpeciesCounts(garden.guilds, speciesId, (id) => garden.resolvedPlant(id));
+  });
 
-const detailMotionStyle = computed((): Record<string, string> => {
-  if (!isMdUp.value) {
-    return {};
-  }
-  if (selectedSpeciesId.value) {
+  const detailAggregatedTooltipRows = computed(() => {
+    const speciesId = selectedSpeciesId.value;
+    if (!speciesId) {
+      return [];
+    }
+    return guildSpeciesTooltipRows(garden.guilds, speciesId, resolveGardenPlant);
+  });
+
+  const speciesTooltipRowsById = computed(() =>
+    Object.fromEntries(
+      speciesRows.value.map((row) => [
+        row.speciesId,
+        guildSpeciesTooltipRows(garden.guilds, row.speciesId, resolveGardenPlant),
+      ]),
+    ),
+  );
+
+  const asideMotionStyle = computed((): Record<string, string> => {
+    if (!isMdUp.value) {
+      return {};
+    }
+    if (selectedSpeciesId.value) {
+      return {
+        flex: `0 0 ${calendarSidebarWidth}`,
+        width: calendarSidebarWidth,
+        maxWidth: calendarSidebarWidth,
+      };
+    }
     return { flex: '1 1 0%', minWidth: '0' };
-  }
-  return { flex: '0 0 0%', width: '0%', minWidth: '0', overflow: 'hidden' };
-});
+  });
+
+  const detailMotionStyle = computed((): Record<string, string> => {
+    if (!isMdUp.value) {
+      return {};
+    }
+    if (selectedSpeciesId.value) {
+      return { flex: '1 1 0%', minWidth: '0' };
+    }
+    return { flex: '0 0 0%', width: '0%', minWidth: '0', overflow: 'hidden' };
+  });
 </script>
 
 <template>
@@ -265,11 +272,7 @@ const detailMotionStyle = computed((): Record<string, string> => {
                       </span>
                     </div>
                     <div
-                      v-if="
-                        row.headerPhaseSlots.length > 0 ||
-                        row.showPhaseOverflow ||
-                        row.averageVigor
-                      "
+                      v-if="cultivarRowShowsHeaderExtras(row)"
                       class="flex flex-row items-center gap-0.5 shrink-0"
                       aria-label="Plant condition"
                     >

@@ -1,34 +1,34 @@
 <script setup lang="ts">
-import { onBeforeUnmount, watch } from 'vue';
+  import { onBeforeUnmount, watch } from 'vue';
 
-import PlanSessionPanel from './PlanSessionPanel.vue';
+  import PlanSessionPanel from './PlanSessionPanel.vue';
 
-const open = defineModel<boolean>('open', { default: false });
+  const open = defineModel<boolean>('open', { default: false });
 
-const close = () => {
-  open.value = false;
-};
+  const close = () => {
+    open.value = false;
+  };
 
-const onKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Escape' && open.value) {
-    close();
-  }
-};
-
-watch(
-  () => open.value,
-  (isOpen) => {
-    if (isOpen) {
-      document.addEventListener('keydown', onKeydown);
-    } else {
-      document.removeEventListener('keydown', onKeydown);
+  const onKeydown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape' && open.value) {
+      close();
     }
-  },
-);
+  };
 
-onBeforeUnmount(() => {
-  document.removeEventListener('keydown', onKeydown);
-});
+  watch(
+    () => open.value,
+    (isOpen) => {
+      if (isOpen) {
+        document.addEventListener('keydown', onKeydown);
+      } else {
+        document.removeEventListener('keydown', onKeydown);
+      }
+    },
+  );
+
+  onBeforeUnmount(() => {
+    document.removeEventListener('keydown', onKeydown);
+  });
 </script>
 
 <template>

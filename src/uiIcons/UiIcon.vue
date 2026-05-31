@@ -1,16 +1,16 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
+  import { computed } from 'vue';
 
-import IconSquare from '../icons/IconSquare.vue';
-import type { UiIconId } from './iconIds';
+  import IconSquare from '../icons/IconSquare.vue';
+  import type { UiIconId } from './iconIds';
 
-defineOptions({ inheritAttrs: false });
+  defineOptions({ inheritAttrs: false });
 
-const props = defineProps<{
-  name: UiIconId;
-}>();
+  const props = defineProps<{
+    name: UiIconId;
+  }>();
 
-const symbolHref = computed(() => `#ui-icon-${props.name}`);
+  const symbolHref = computed(() => `#ui-icon-${props.name}`);
 </script>
 <template>
   <IconSquare

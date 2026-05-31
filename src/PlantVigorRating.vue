@@ -1,22 +1,22 @@
 <script lang="ts" setup>
-import {
-  PLANT_VIGOR_LABEL,
-  PLANT_VIGORS_FOR_SELECT,
-  type PlantVigor,
-} from './guildPlantInstanceStatus';
-import UiIcon from './uiIcons/UiIcon.vue';
+  import {
+    PLANT_VIGOR_LABEL,
+    PLANT_VIGORS_FOR_SELECT,
+    type PlantVigor,
+  } from './guildPlantInstanceStatus';
+  import UiIcon from './uiIcons/UiIcon.vue';
 
-const props = defineProps<{
-  vigor?: PlantVigor;
-}>();
+  const props = defineProps<{
+    vigor?: PlantVigor;
+  }>();
 
-const emit = defineEmits<{
-  'update:vigor': [value: PlantVigor | undefined];
-}>();
+  const emit = defineEmits<{
+    'update:vigor': [value: PlantVigor | undefined];
+  }>();
 
-const selectVigor = (level: PlantVigor) => {
-  emit('update:vigor', props.vigor === level ? undefined : level);
-};
+  const selectVigor = (level: PlantVigor) => {
+    emit('update:vigor', props.vigor === level ? undefined : level);
+  };
 </script>
 <template>
   <span

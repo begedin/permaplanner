@@ -1,49 +1,49 @@
 <script setup lang="ts">
-import { useMediaQuery } from '@vueuse/core';
-import { LayoutGroup, motion } from 'motion-v';
-import { computed } from 'vue';
+  import { useMediaQuery } from '@vueuse/core';
+  import { LayoutGroup, motion } from 'motion-v';
+  import { computed } from 'vue';
 
-import GuildCard from './GuildCard.vue';
-import GuildTabHeader from './GuildTabHeader.vue';
-import ThingBarGuild from './ThingBarGuild.vue';
-import { useGardenStore } from './useGardenStore';
-import { useGuildSearch } from './useGuildSearch';
-import { useGuildSelection } from './useGuildSelection';
+  import GuildCard from './GuildCard.vue';
+  import GuildTabHeader from './GuildTabHeader.vue';
+  import ThingBarGuild from './ThingBarGuild.vue';
+  import { useGardenStore } from './useGardenStore';
+  import { useGuildSearch } from './useGuildSearch';
+  import { useGuildSelection } from './useGuildSelection';
 
-const guildListGridStyle = {
-  gridTemplateColumns: 'repeat(auto-fill, minmax(17rem, 1fr))',
-};
+  const guildListGridStyle = {
+    gridTemplateColumns: 'repeat(auto-fill, minmax(17rem, 1fr))',
+  };
 
-const guildLayoutTransition = {
-  layout: { type: 'spring', stiffness: 400, damping: 38 },
-} as const;
+  const guildLayoutTransition = {
+    layout: { type: 'spring', stiffness: 400, damping: 38 },
+  } as const;
 
-const garden = useGardenStore();
-const { selectedGuildId } = useGuildSelection();
-const { searchQuery, filteredGuilds, hasSearchQuery } = useGuildSearch();
+  const garden = useGardenStore();
+  const { selectedGuildId } = useGuildSelection();
+  const { searchQuery, filteredGuilds, hasSearchQuery } = useGuildSearch();
 
-const isMdUp = useMediaQuery('(min-width: 768px)');
-const showMobileDetail = computed(() => Boolean(selectedGuildId.value));
+  const isMdUp = useMediaQuery('(min-width: 768px)');
+  const showMobileDetail = computed(() => Boolean(selectedGuildId.value));
 
-const asideMotionStyle = computed((): Record<string, string> => {
-  if (!isMdUp.value) {
-    return {};
-  }
-  if (selectedGuildId.value) {
-    return { flex: '0 0 20rem', width: '20rem', maxWidth: '20rem' };
-  }
-  return { flex: '1 1 0%', minWidth: '0' };
-});
-
-const detailMotionStyle = computed((): Record<string, string> => {
-  if (!isMdUp.value) {
-    return {};
-  }
-  if (selectedGuildId.value) {
+  const asideMotionStyle = computed((): Record<string, string> => {
+    if (!isMdUp.value) {
+      return {};
+    }
+    if (selectedGuildId.value) {
+      return { flex: '0 0 20rem', width: '20rem', maxWidth: '20rem' };
+    }
     return { flex: '1 1 0%', minWidth: '0' };
-  }
-  return { flex: '0 0 0%', width: '0%', minWidth: '0', overflow: 'hidden' };
-});
+  });
+
+  const detailMotionStyle = computed((): Record<string, string> => {
+    if (!isMdUp.value) {
+      return {};
+    }
+    if (selectedGuildId.value) {
+      return { flex: '1 1 0%', minWidth: '0' };
+    }
+    return { flex: '0 0 0%', width: '0%', minWidth: '0', overflow: 'hidden' };
+  });
 </script>
 
 <template>

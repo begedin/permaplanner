@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.1
+
+- [TWEAK] Keep ESLint `vue/html-indent` and `vue/html-closing-bracket-newline` enabled; document matching Prettier options in `.prettierrc.mjs` and `eslint.config.mjs` instead of disabling those rules via `eslint-config-prettier`
+- [TWEAK] Reformat Vue templates so Prettier and ESLint agree (block content inside wrapped tags; small script helpers for long attributes)
+- [REFACTOR] Remove dead code (`isCalendarRoute`, unused Playwright helper) and inline or unexport single-use helpers across app and sync modules
+- [REFACTOR] Drop unused `focusSearch` return from search-focus hotkey composable
+
 ## 0.12.0
 
 - [DB] Updated Drogana Yellow sweet cherry cultivar name and phenology (late May bloom, late June–early August fruit)

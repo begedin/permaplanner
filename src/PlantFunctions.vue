@@ -1,29 +1,29 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { GuildFunction } from './useGardenStore';
+  import { computed } from 'vue';
+  import { GuildFunction } from './useGardenStore';
 
-const props = withDefaults(defineProps<{ value: GuildFunction[] }>(), {
-  value: () => [],
-});
-const emit = defineEmits<{ (e: 'update:value', value: GuildFunction[]): void }>();
+  const props = withDefaults(defineProps<{ value: GuildFunction[] }>(), {
+    value: () => [],
+  });
+  const emit = defineEmits<{ (e: 'update:value', value: GuildFunction[]): void }>();
 
-const functions = computed(() =>
-  Object.values(GuildFunction).map((f) => ({
-    value: f,
-    checked: props.value.includes(f),
-    label: f.replace('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
-  })),
-);
+  const functions = computed(() =>
+    Object.values(GuildFunction).map((f) => ({
+      value: f,
+      checked: props.value.includes(f),
+      label: f.replace('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
+    })),
+  );
 
-const toggle = (value: GuildFunction) => {
-  const newValues = [...props.value];
-  if (newValues.includes(value)) {
-    newValues.splice(newValues.indexOf(value), 1);
-  } else {
-    newValues.push(value);
-  }
-  emit('update:value', newValues);
-};
+  const toggle = (value: GuildFunction) => {
+    const newValues = [...props.value];
+    if (newValues.includes(value)) {
+      newValues.splice(newValues.indexOf(value), 1);
+    } else {
+      newValues.push(value);
+    }
+    emit('update:value', newValues);
+  };
 </script>
 
 <template>

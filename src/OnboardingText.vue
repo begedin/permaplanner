@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ x: number; y: number; onboardingState: string }>();
+  defineProps<{ x: number; y: number; onboardingState: string }>();
 </script>
 <template>
   <text

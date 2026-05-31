@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { ICON_CANVAS, ICON_SYMBOL_TRANSFORM } from './icons/iconGeometry';
-import { GROWTH_PHASE_LABEL, type GrowthPhase } from './guildPlantInstanceStatus';
+  import { ICON_CANVAS, ICON_SYMBOL_TRANSFORM } from './icons/iconGeometry';
+  import { GROWTH_PHASE_LABEL, type GrowthPhase } from './guildPlantInstanceStatus';
 
-defineProps<{
-  phase: GrowthPhase;
-}>();
+  defineProps<{
+    phase: GrowthPhase;
+  }>();
 </script>
 <template>
   <svg
