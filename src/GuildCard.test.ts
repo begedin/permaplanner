@@ -3,6 +3,7 @@ import { cleanup, fireEvent } from '@testing-library/vue';
 import { flushPromises, mount } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { createMemoryHistory } from 'vue-router';
 
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
@@ -16,7 +17,7 @@ import GuildCard from './GuildCard.vue';
 import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
 import type { GardenThing, Guild } from './gardenTypes';
 import { plantCatalog } from './plantCatalog';
-import { createGuildTestRouter } from './testGuildRouter';
+import { createAppRouter } from './router';
 import { useGardenStore } from './useGardenStore';
 
 const popoverShim = {
@@ -75,7 +76,7 @@ const renderGuildCard = async (
     context: 'guilds',
   },
 ) => {
-  const router = createGuildTestRouter();
+  const router = createAppRouter(createMemoryHistory());
   await router.push(
     props.context === 'guilds' ? `/guilds/${props.guildId}` : `/aerial/${props.guildId}`,
   );

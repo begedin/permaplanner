@@ -5,8 +5,10 @@ import { setActivePinia } from 'pinia';
 import { mount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 
+import { createMemoryHistory } from 'vue-router';
+
 import TheGarden from './TheGarden.vue';
-import { createGuildTestRouter } from './testGuildRouter';
+import { createAppRouter, routeNames, routeParam } from './router';
 import { useGardenStore } from './useGardenStore';
 import GardenGuild from './GardenGuild.vue';
 import { usePermaplannerStore } from './usePermaplannerStore';
@@ -35,7 +37,7 @@ afterEach(() => {
 });
 
 const renderGarden = async (path = '/aerial') => {
-  const router = createGuildTestRouter();
+  const router = createAppRouter(createMemoryHistory());
   await router.push(path);
   await router.isReady();
   return { router, view: render(TheGarden, { global: { plugins: [router] } }) };
@@ -53,8 +55,8 @@ it('deselects when the aerial page title is clicked', async () => {
   await flushPromises();
   await router.isReady();
 
-  expect(router.currentRoute.value.name).toBe('aerial');
-  expect(router.currentRoute.value.params.guildId).toBeUndefined();
+  expect(router.currentRoute.value.name).toBe(routeNames.aerial);
+  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBeUndefined();
 });
 
 it('shows the aerial header and guild list in the left sidebar', async () => {
@@ -106,8 +108,8 @@ it('deletes the selected guild on Delete only when confirmed', async () => {
   expect(store.guilds).toEqual([]);
   await flushPromises();
   await router.isReady();
-  expect(router.currentRoute.value.name).toBe('aerial');
-  expect(router.currentRoute.value.params.guildId).toBeUndefined();
+  expect(router.currentRoute.value.name).toBe(routeNames.aerial);
+  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBeUndefined();
 });
 
 it('switches selection to another guild and discards the previous edit', async () => {
@@ -156,7 +158,7 @@ it('switches selection to another guild and discards the previous edit', async (
   await flushPromises();
   await router.isReady();
 
-  expect(router.currentRoute.value.params.guildId).toBe('b');
+  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe('b');
   expect(store.guilds.find((g) => g.id === 'a')?.path).toEqual(bedA.path);
 });
 
@@ -172,7 +174,7 @@ it('deselects when placement is cancelled', async () => {
   await placement?.vm.$emit('cancel');
   await flushPromises();
   await router.isReady();
-  expect(router.currentRoute.value.name).toBe('aerial');
-  expect(router.currentRoute.value.params.guildId).toBeUndefined();
+  expect(router.currentRoute.value.name).toBe(routeNames.aerial);
+  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBeUndefined();
   expect(store.hoveredId).toBeUndefined();
 });

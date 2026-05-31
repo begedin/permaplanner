@@ -12,11 +12,14 @@ import PlantParts from './PlantParts.vue';
 import { showMainApp } from './usePlanAppGate';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanSession } from './usePlanSession';
+import { useCalendarSelection } from './useCalendarSelection';
 import { useGuildSelection } from './useGuildSelection';
+import { routeNames } from './router';
 
 usePlanSession();
 
 const { guildsTabTo, aerialTabTo } = useGuildSelection();
+const { calendarTabTo } = useCalendarSelection();
 
 const planDrawerOpen = ref(false);
 const { unsavedChanges } = storeToRefs(usePermaplannerStore());
@@ -74,9 +77,16 @@ const planMenuLabel = computed(() =>
       <RouterLink
         class="nav-tab"
         active-class="nav-tab-active"
-        to="/plants"
+        :to="{ name: routeNames.plants }"
       >
         Plants
+      </RouterLink>
+      <RouterLink
+        class="nav-tab"
+        active-class="nav-tab-active"
+        :to="calendarTabTo"
+      >
+        Calendar
       </RouterLink>
     </nav>
 

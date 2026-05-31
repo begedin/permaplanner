@@ -37,10 +37,44 @@ export const putImageIntoClipboard = async (page: Page): Promise<void> => {
   });
 };
 
+/** Primary tab links in the top nav (not in-page RouterLinks). */
+export const openNavTab = async (page: Page, name: string): Promise<void> => {
+  await page.getByRole('navigation').getByRole('link', { name, exact: true }).click();
+};
+
+/** Pick a catalog species/cultivar row from a combobox. */
+export const pickCatalogPlant = async (
+  page: Page,
+  query: string,
+  rowLabel = 'Default',
+  comboboxName = 'Catalog species and cultivar',
+): Promise<void> => {
+  await page.getByRole('button', { name: 'Open plant list' }).click();
+  const combobox = page.getByRole('combobox', { name: comboboxName });
+  await combobox.fill(query);
+  await page.getByRole('option', { name: rowLabel }).click();
+};
+
+/** Add a catalog plant to the open guild detail panel. */
+export const addPlantToGuild = async (
+  page: Page,
+  query: string,
+  rowLabel = 'Default',
+): Promise<void> => {
+  const guildDetails = page.getByRole('region', { name: 'Guild details' });
+  await guildDetails.getByRole('button', { name: 'Add plant to guild' }).click();
+  await pickCatalogPlant(page, query, rowLabel, 'Species and cultivar');
+  await guildDetails.getByRole('button', { name: 'Add to guild' }).click();
+};
+
 /** Full-screen gate is gone and primary nav is usable. */
 export const waitForMainApp = async (page: Page): Promise<void> => {
-  await expect(page.getByRole('link', { name: 'Guilds' })).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByRole('heading', { name: 'Choose where to save your plan' })).toBeHidden();
+  await expect(page.getByRole('navigation').getByRole('link', { name: 'Guilds' })).toBeVisible({
+    timeout: 20_000,
+  });
+  await expect(
+    page.getByRole('heading', { name: 'Choose where to save your plan' }),
+  ).toBeHidden();
 };
 
 /** Opens the top-bar plan menu (save, open, map tools on aerial). */

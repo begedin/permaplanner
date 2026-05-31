@@ -4,8 +4,10 @@ import { flushPromises } from '@vue/test-utils';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
 
+import { createMemoryHistory } from 'vue-router';
+
 import TheGuilds from './TheGuilds.vue';
-import { createGuildTestRouter } from './testGuildRouter';
+import { createAppRouter, routeNames, routeParam } from './router';
 import { useGardenStore } from './useGardenStore';
 import { resetGuildSearch } from './useGuildSearch';
 
@@ -17,7 +19,7 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 const seedGuilds = async (initialPath = '/guilds') => {
-  const router = createGuildTestRouter();
+  const router = createAppRouter(createMemoryHistory());
   const store = useGardenStore();
   store.guilds = [
     { id: 'a', name: 'Alpha guild', plants: [], path: [], mulchLevel: 1 },
@@ -47,7 +49,7 @@ it('selects a guild from the list and shows full details', async () => {
   await flushPromises();
   await router.isReady();
 
-  expect(router.currentRoute.value.params.guildId).toBe('b');
+  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe('b');
   expect(screen.getByRole('button', { name: 'Delete' })).toBeTruthy();
   expect(screen.getByRole('navigation', { name: 'Breadcrumb' }).textContent).toContain(
     'Beta guild',
@@ -63,8 +65,8 @@ it('deselects when the page title is clicked', async () => {
   await flushPromises();
   await router.isReady();
 
-  expect(router.currentRoute.value.name).toBe('guilds');
-  expect(router.currentRoute.value.params.guildId).toBeUndefined();
+  expect(router.currentRoute.value.name).toBe(routeNames.guilds);
+  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBeUndefined();
   expect(store.hoveredId).toBeUndefined();
   expect(screen.getByRole('heading', { name: 'Guilds', level: 1 })).toBeTruthy();
 });
@@ -145,7 +147,7 @@ it('highlights matched text in guild list results', async () => {
 });
 
 it('add guild navigates with the new guild in the route', async () => {
-  const router = createGuildTestRouter();
+  const router = createAppRouter(createMemoryHistory());
   await router.push('/guilds');
   await router.isReady();
   render(TheGuilds, { global: { plugins: [router] } });
@@ -155,7 +157,9 @@ it('add guild navigates with the new guild in the route', async () => {
   await router.isReady();
 
   const store = useGardenStore();
-  expect(router.currentRoute.value.name).toBe('guilds-detail');
-  expect(router.currentRoute.value.params.guildId).toBe(store.guilds[0]!.id);
+  expect(router.currentRoute.value.name).toBe(routeNames.guildsDetail);
+  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe(
+    store.guilds[0]!.id,
+  );
   expect(screen.getByRole('button', { name: 'Delete' })).toBeTruthy();
 });

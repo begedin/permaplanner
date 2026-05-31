@@ -7,7 +7,7 @@ import {
   searchGuilds,
   spanHighlightRanges,
 } from './guildSearch';
-import { guildSearchInputPlaceholder } from './guildSearchContext';
+import { searchInputPlaceholder } from './searchContext';
 
 const testPlant = (overrides: Partial<Plant> & Pick<Plant, 'id' | 'name'>): Plant => ({
   speciesId: 'species',
@@ -150,6 +150,6 @@ it('spans disjoint fuzzy indices into one highlight', () => {
 });
 
 it('uses platform-specific shortcuts in the search placeholder', () => {
-  expect(guildSearchInputPlaceholder(true)).toBe('"⌘+F" or "/" to search');
-  expect(guildSearchInputPlaceholder(false)).toBe('"Ctrl+F" or "/" to search');
+  expect(searchInputPlaceholder(true)).toBe('"⌘+F" or "/" to search');
+  expect(searchInputPlaceholder(false)).toBe('"Ctrl+F" or "/" to search');
 });

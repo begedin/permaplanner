@@ -1,35 +1,24 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 
 import HighlightText from './HighlightText.vue';
 import { searchInputPlaceholder } from './searchContext';
-import { useGardenStore } from './useGardenStore';
-import { useGuildSelection } from './useGuildSelection';
+import { useCalendarSelection } from './useCalendarSelection';
 import { useSearchFocusHotkeys } from './useSearchFocusHotkeys';
 
-const props = defineProps<{
-  title: string;
-  searchQuery?: string;
+defineProps<{
+  searchQuery: string;
 }>();
 
 const emit = defineEmits<{
   'update:searchQuery': [value: string];
 }>();
 
-const garden = useGardenStore();
-const { selectedGuildId, clearSelection, addGuild } = useGuildSelection();
+const { selectedSpeciesId, selectedSpeciesName, clearSelection } = useCalendarSelection();
 const searchInputRef = ref<HTMLInputElement | null>(null);
 const searchPlaceholder = searchInputPlaceholder();
 
-const selectedGuildName = computed(() => {
-  const id = selectedGuildId.value;
-  if (!id) {
-    return undefined;
-  }
-  return garden.guilds.find((g) => g.id === id)?.name;
-});
-
-useSearchFocusHotkeys(searchInputRef, () => props.searchQuery !== undefined);
+useSearchFocusHotkeys(searchInputRef, () => true);
 </script>
 
 <template>
@@ -37,17 +26,17 @@ useSearchFocusHotkeys(searchInputRef, () => props.searchQuery !== undefined);
     class="flex flex-row flex-wrap items-center justify-between gap-2 shrink-0 border-b border-parchment-400/60 paper-surface px-4 py-3"
   >
     <nav
-      v-if="selectedGuildId && selectedGuildName"
+      v-if="selectedSpeciesId && selectedSpeciesName"
       aria-label="Breadcrumb"
       class="flex flex-row items-center gap-1.5 min-w-0 text-lg font-medium"
     >
       <button
         type="button"
         class="link-soft text-ink-800 hover:underline shrink-0"
-        :aria-label="`Deselect guild, ${title}`"
+        aria-label="Deselect plant, Calendar"
         @click="clearSelection"
       >
-        {{ title }}
+        Calendar
       </button>
       <span
         class="text-ink-400 shrink-0"
@@ -58,8 +47,8 @@ useSearchFocusHotkeys(searchInputRef, () => props.searchQuery !== undefined);
         aria-current="page"
       >
         <HighlightText
-          :text="selectedGuildName"
-          :query="searchQuery ?? ''"
+          :text="selectedSpeciesName"
+          :query="searchQuery"
         />
       </span>
     </nav>
@@ -67,13 +56,10 @@ useSearchFocusHotkeys(searchInputRef, () => props.searchQuery !== undefined);
       v-else
       class="text-lg font-medium text-ink-800"
     >
-      {{ title }}
+      Calendar
     </h1>
-    <label
-      v-if="searchQuery !== undefined"
-      class="order-last w-full min-w-0 sm:order-none sm:w-auto sm:min-w-[14rem]"
-    >
-      <span class="sr-only">Search guilds</span>
+    <label class="order-last w-full min-w-0 sm:order-none sm:w-auto sm:min-w-[14rem]">
+      <span class="sr-only">Search garden plants</span>
       <input
         ref="searchInputRef"
         type="search"
@@ -83,12 +69,5 @@ useSearchFocusHotkeys(searchInputRef, () => props.searchQuery !== undefined);
         @input="emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
       />
     </label>
-    <button
-      type="button"
-      class="btn-soft-primary px-3 py-1.5 text-sm shrink-0"
-      @click="addGuild"
-    >
-      Add guild
-    </button>
   </div>
 </template>

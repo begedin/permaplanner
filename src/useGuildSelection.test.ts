@@ -1,12 +1,14 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
-import { defineComponent } from 'vue';
+import { defineComponent, type ComputedRef } from 'vue';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
 
+import { createMemoryHistory } from 'vue-router';
+
 import GuildTabHeader from './GuildTabHeader.vue';
-import { createGuildTestRouter } from './testGuildRouter';
+import { createAppRouter, routeNames, routeParam } from './router';
 import { isRestoringSession } from './usePlanSession';
 import { useGardenStore } from './useGardenStore';
 import { useGuildSelection } from './useGuildSelection';
@@ -29,15 +31,15 @@ const SelectionProbe = defineComponent({
 
 it('keeps the guild route while the plan session is restoring', async () => {
   isRestoringSession.value = true;
-  const router = createGuildTestRouter();
+  const router = createAppRouter(createMemoryHistory());
 
-  await router.push({ name: 'guilds-detail', params: { guildId: 'alpha' } });
+  await router.push({ name: routeNames.guildsDetail, params: { guildId: 'alpha' } });
   await router.isReady();
   render(SelectionProbe, { global: { plugins: [router] } });
   await flushPromises();
 
-  expect(router.currentRoute.value.name).toBe('guilds-detail');
-  expect(router.currentRoute.value.params.guildId).toBe('alpha');
+  expect(router.currentRoute.value.name).toBe(routeNames.guildsDetail);
+  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe('alpha');
 
   const store = useGardenStore();
   store.guilds = [{ id: 'alpha', name: 'Alpha', path: [], plants: [], mulchLevel: 1 }];
@@ -49,29 +51,29 @@ it('keeps the guild route while the plan session is restoring', async () => {
 
 it('clears an unknown guild route after the plan session finishes restoring', async () => {
   isRestoringSession.value = true;
-  const router = createGuildTestRouter();
+  const router = createAppRouter(createMemoryHistory());
 
-  await router.push({ name: 'aerial-detail', params: { guildId: 'missing' } });
+  await router.push({ name: routeNames.aerialDetail, params: { guildId: 'missing' } });
   await router.isReady();
   render(SelectionProbe, { global: { plugins: [router] } });
   await flushPromises();
 
-  expect(router.currentRoute.value.name).toBe('aerial-detail');
+  expect(router.currentRoute.value.name).toBe(routeNames.aerialDetail);
 
   isRestoringSession.value = false;
   await flushPromises();
   await router.isReady();
 
-  expect(router.currentRoute.value.name).toBe('aerial');
-  expect(router.currentRoute.value.params.guildId).toBeUndefined();
+  expect(router.currentRoute.value.name).toBe(routeNames.aerial);
+  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBeUndefined();
 });
 
 it('reads the guild route param on the guilds tab', async () => {
-  const router = createGuildTestRouter();
+  const router = createAppRouter(createMemoryHistory());
   const store = useGardenStore();
   store.guilds = [{ id: 'alpha', name: 'Alpha', path: [], plants: [], mulchLevel: 1 }];
 
-  await router.push({ name: 'guilds-detail', params: { guildId: 'alpha' } });
+  await router.push({ name: routeNames.guildsDetail, params: { guildId: 'alpha' } });
   await router.isReady();
   render(SelectionProbe, { global: { plugins: [router] } });
 
@@ -79,11 +81,11 @@ it('reads the guild route param on the guilds tab', async () => {
 });
 
 it('reads the guild route param on the aerial tab', async () => {
-  const router = createGuildTestRouter();
+  const router = createAppRouter(createMemoryHistory());
   const store = useGardenStore();
   store.guilds = [{ id: 'g1', name: 'Bed', path: [], plants: [], mulchLevel: 1 }];
 
-  await router.push({ name: 'aerial-detail', params: { guildId: 'g1' } });
+  await router.push({ name: routeNames.aerialDetail, params: { guildId: 'g1' } });
   await router.isReady();
   render(SelectionProbe, { global: { plugins: [router] } });
 
@@ -91,7 +93,7 @@ it('reads the guild route param on the aerial tab', async () => {
 });
 
 it('add guild navigates to the guilds tab with the new guild selected', async () => {
-  const router = createGuildTestRouter();
+  const router = createAppRouter(createMemoryHistory());
   await router.push('/aerial');
   await router.isReady();
 
@@ -106,48 +108,78 @@ it('add guild navigates to the guilds tab with the new guild selected', async ()
 
   const store = useGardenStore();
   expect(store.guilds).toMatchObject([{ name: 'New guild' }]);
-  expect(router.currentRoute.value.name).toBe('guilds-detail');
-  expect(router.currentRoute.value.params.guildId).toBe(store.guilds[0]!.id);
+  expect(router.currentRoute.value.name).toBe(routeNames.guildsDetail);
+  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe(
+    store.guilds[0]!.id,
+  );
 });
 
 it('points the guilds tab link at the selected guild from aerial', async () => {
-  const router = createGuildTestRouter();
+  const router = createAppRouter(createMemoryHistory());
   const store = useGardenStore();
   store.guilds = [{ id: 'g1', name: 'Bed', path: [], plants: [], mulchLevel: 1 }];
 
-  await router.push({ name: 'aerial-detail', params: { guildId: 'g1' } });
+  await router.push({ name: routeNames.aerialDetail, params: { guildId: 'g1' } });
   await router.isReady();
+
+  let guildsTabTo!: ComputedRef<
+    ReturnType<typeof useGuildSelection>['guildsTabTo']['value']
+  >;
+  let aerialTabTo!: ComputedRef<
+    ReturnType<typeof useGuildSelection>['aerialTabTo']['value']
+  >;
 
   const CrossTabProbe = defineComponent({
     setup() {
-      const { guildsTabTo, aerialTabTo } = useGuildSelection();
-      return { guildsTabTo, aerialTabTo };
+      const selection = useGuildSelection();
+      guildsTabTo = selection.guildsTabTo;
+      aerialTabTo = selection.aerialTabTo;
+      return () => null;
     },
-    template:
-      '<p>{{ guildsTabTo.name }}-{{ aerialTabTo.name }}-{{ aerialTabTo.params.guildId }}</p>',
   });
 
   render(CrossTabProbe, { global: { plugins: [router] } });
-  expect(screen.getByText('guilds-detail-aerial-detail-g1')).toBeTruthy();
+  expect(guildsTabTo.value).toEqual({
+    name: routeNames.guildsDetail,
+    params: { guildId: 'g1' },
+  });
+  expect(aerialTabTo.value).toEqual({
+    name: routeNames.aerialDetail,
+    params: { guildId: 'g1' },
+  });
 });
 
 it('points the aerial tab link at the selected guild from guilds', async () => {
-  const router = createGuildTestRouter();
+  const router = createAppRouter(createMemoryHistory());
   const store = useGardenStore();
   store.guilds = [{ id: 'g1', name: 'Bed', path: [], plants: [], mulchLevel: 1 }];
 
-  await router.push({ name: 'guilds-detail', params: { guildId: 'g1' } });
+  await router.push({ name: routeNames.guildsDetail, params: { guildId: 'g1' } });
   await router.isReady();
+
+  let guildsTabTo!: ComputedRef<
+    ReturnType<typeof useGuildSelection>['guildsTabTo']['value']
+  >;
+  let aerialTabTo!: ComputedRef<
+    ReturnType<typeof useGuildSelection>['aerialTabTo']['value']
+  >;
 
   const CrossTabProbe = defineComponent({
     setup() {
-      const { guildsTabTo, aerialTabTo } = useGuildSelection();
-      return { guildsTabTo, aerialTabTo };
+      const selection = useGuildSelection();
+      guildsTabTo = selection.guildsTabTo;
+      aerialTabTo = selection.aerialTabTo;
+      return () => null;
     },
-    template:
-      '<p>{{ guildsTabTo.params.guildId }}-{{ aerialTabTo.name }}-{{ aerialTabTo.params.guildId }}</p>',
   });
 
   render(CrossTabProbe, { global: { plugins: [router] } });
-  expect(screen.getByText('g1-aerial-detail-g1')).toBeTruthy();
+  expect(guildsTabTo.value).toEqual({
+    name: routeNames.guildsDetail,
+    params: { guildId: 'g1' },
+  });
+  expect(aerialTabTo.value).toEqual({
+    name: routeNames.aerialDetail,
+    params: { guildId: 'g1' },
+  });
 });

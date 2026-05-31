@@ -98,19 +98,51 @@
         },
         {
           "id": "apistar",
-          "name": "Apistar"
+          "name": "Apistar",
+          "blooming": {
+            "start": 4,
+            "end": 5
+          },
+          "fruiting": {
+            "start": 11,
+            "end": 12
+          }
         },
         {
           "id": "amaty",
-          "name": "Amaty"
+          "name": "Amaty",
+          "blooming": {
+            "start": 4,
+            "end": 5
+          },
+          "fruiting": {
+            "start": 9,
+            "end": 9
+          }
         },
         {
           "id": "francuska_kozarka",
-          "name": "Francuska kožarka (French russet)"
+          "name": "Francuska kožarka (French russet)",
+          "blooming": {
+            "start": 4,
+            "end": 5
+          },
+          "fruiting": {
+            "start": 9,
+            "end": 10
+          }
         },
         {
           "id": "carmeliter_reinette",
-          "name": "Carmeliter Reinette"
+          "name": "Carmeliter Reinette",
+          "blooming": {
+            "start": 4,
+            "end": 5
+          },
+          "fruiting": {
+            "start": 10,
+            "end": 11
+          }
         }
       ],
       "blooming": {
@@ -927,23 +959,63 @@
       "cultivars": [
         {
           "id": "moorpark",
-          "name": "Moorpark"
+          "name": "Moorpark",
+          "blooming": {
+            "start": 3,
+            "end": 3
+          },
+          "fruiting": {
+            "start": 7,
+            "end": 8
+          }
         },
         {
           "id": "tilton",
-          "name": "Tilton"
+          "name": "Tilton",
+          "blooming": {
+            "start": 4,
+            "end": 4
+          },
+          "fruiting": {
+            "start": 7,
+            "end": 7
+          }
         },
         {
           "id": "goldcot",
-          "name": "Goldcot"
+          "name": "Goldcot",
+          "blooming": {
+            "start": 4,
+            "end": 4
+          },
+          "fruiting": {
+            "start": 7,
+            "end": 7
+          }
         },
         {
           "id": "aprisali",
-          "name": "Aprisali"
+          "name": "Aprisali",
+          "blooming": {
+            "start": 3,
+            "end": 4
+          },
+          "fruiting": {
+            "start": 7,
+            "end": 7
+          }
         },
         {
           "id": "korai_piros",
-          "name": "Korai piros (Early red)"
+          "name": "Korai piros (Early red)",
+          "blooming": {
+            "start": 3,
+            "end": 3
+          },
+          "fruiting": {
+            "start": 6,
+            "end": 7
+          }
         }
       ],
       "blooming": {
@@ -1038,19 +1110,43 @@
         },
         {
           "id": "yellow_drogan",
-          "name": "Yellow Drogan"
+          "name": "Drogana Yellow",
+          "blooming": {
+            "start": 5,
+            "end": 5
+          },
+          "fruiting": {
+            "start": 6,
+            "end": 8
+          }
         },
         {
           "id": "stella",
-          "name": "Stella"
+          "name": "Stella",
+          "fruiting": {
+            "start": 7,
+            "end": 7
+          }
         },
         {
           "id": "lapins",
-          "name": "Lapins"
+          "name": "Lapins",
+          "fruiting": {
+            "start": 7,
+            "end": 7
+          }
         },
         {
           "id": "new_star",
-          "name": "New Star"
+          "name": "New Star",
+          "blooming": {
+            "start": 4,
+            "end": 4
+          },
+          "fruiting": {
+            "start": 6,
+            "end": 6
+          }
         },
         {
           "id": "from_seed",
@@ -1079,11 +1175,27 @@
         },
         {
           "id": "north_star",
-          "name": "North Star"
+          "name": "North Star",
+          "blooming": {
+            "start": 5,
+            "end": 5
+          },
+          "fruiting": {
+            "start": 6,
+            "end": 6
+          }
         },
         {
           "id": "morello",
-          "name": "Morello"
+          "name": "Morello",
+          "blooming": {
+            "start": 5,
+            "end": 5
+          },
+          "fruiting": {
+            "start": 7,
+            "end": 8
+          }
         },
         {
           "id": "from_seed",

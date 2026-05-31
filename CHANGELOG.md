@@ -2,9 +2,14 @@
 
 ## 0.12.0
 
+- [DB] Updated Drogana Yellow sweet cherry cultivar name and phenology (late May bloom, late June–early August fruit)
+- [DB] Set distinct bloom and fruit calendars for Amaty, Apistar, Carmeliter Reinette, and Francuska kožarka apples
+- [DB] Verified sweet and sour cherry cultivar phenology; added overrides where cultivars differ from species defaults
+- [DB] Verified apricot cultivar phenology (early Korai piros, late-blooming Tilton/Goldcot, extended Moorpark harvest)
+- [FEATURE] Calendar tab: browse garden plants by species with search, cultivar and instance counts, aggregated season calendar, and per-cultivar condition and calendars
 - [FEATURE] Search guilds by name, plants, and notes on the Guilds tab (fuzzy match via Fuse.js; name ranked above plants and notes)
 - [FEATURE] Highlight matched text in the guild list while searching
-- [TWEAK] Focus guild search with ⌘F / Ctrl+F or `/` (platform-specific hint in the search placeholder)
+- [TWEAK] Focus guild and calendar search with ⌘F / Ctrl+F or `/` (platform-specific hint in the search placeholder)
 
 ## 0.11.4
 

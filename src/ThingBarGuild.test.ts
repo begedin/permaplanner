@@ -4,8 +4,10 @@ import { flushPromises } from '@vue/test-utils';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
 
+import { createMemoryHistory } from 'vue-router';
+
 import ThingBarGuild from './ThingBarGuild.vue';
-import { createGuildTestRouter } from './testGuildRouter';
+import { createAppRouter, routeNames, routeParam } from './router';
 import { useGardenStore } from './useGardenStore';
 
 beforeEach(() => {
@@ -13,7 +15,7 @@ beforeEach(() => {
 });
 
 const renderOnAerial = async () => {
-  const router = createGuildTestRouter();
+  const router = createAppRouter(createMemoryHistory());
   await router.push('/aerial');
   await router.isReady();
   return router;
@@ -51,7 +53,7 @@ it('shows guild name, compact plant tags, and season section', async () => {
     },
   ];
   const router = await renderOnAerial();
-  await router.push({ name: 'aerial-detail', params: { guildId: 'guild' } });
+  await router.push({ name: routeNames.aerialDetail, params: { guildId: 'guild' } });
 
   const wrapper = render(ThingBarGuild, {
     props: { id: 'guild' },
@@ -85,7 +87,7 @@ it('marks the card as current when this guild is selected on the map', async () 
     },
   ];
   const router = await renderOnAerial();
-  await router.push({ name: 'aerial-detail', params: { guildId: 'guild' } });
+  await router.push({ name: routeNames.aerialDetail, params: { guildId: 'guild' } });
 
   const wrapper = render(ThingBarGuild, {
     props: { id: 'guild' },
@@ -157,6 +159,6 @@ it('selects the guild in the aerial route when the card is clicked', async () =>
   await flushPromises();
   await router.isReady();
 
-  expect(router.currentRoute.value.name).toBe('aerial-detail');
-  expect(router.currentRoute.value.params.guildId).toBe('guild');
+  expect(router.currentRoute.value.name).toBe(routeNames.aerialDetail);
+  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe('guild');
 });

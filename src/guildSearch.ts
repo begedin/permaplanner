@@ -3,6 +3,21 @@ import Fuse, { type IFuseOptions } from 'fuse.js';
 import type { Guild, Plant } from './gardenTypes';
 import { plantDisplayLabel } from './resolvePlant';
 
+export const defaultFuzzySearchOptions = {
+  threshold: 0.35,
+  ignoreLocation: true,
+  minMatchCharLength: 2,
+  includeScore: true,
+  includeMatches: true,
+} as const satisfies Pick<
+  IFuseOptions<unknown>,
+  | 'threshold'
+  | 'ignoreLocation'
+  | 'minMatchCharLength'
+  | 'includeScore'
+  | 'includeMatches'
+>;
+
 export type GuildSearchRecord = {
   guildId: string;
   name: string;
@@ -16,11 +31,7 @@ export const guildFuseOptions: IFuseOptions<GuildSearchRecord> = {
     { name: 'plantLabels', weight: 0.3 },
     { name: 'note', weight: 0.1 },
   ],
-  threshold: 0.35,
-  ignoreLocation: true,
-  minMatchCharLength: 2,
-  includeScore: true,
-  includeMatches: true,
+  ...defaultFuzzySearchOptions,
 };
 
 /** Shared fuzzy settings for per-field highlight (`Fuse.match`). */
@@ -54,24 +65,38 @@ export const buildGuildSearchRecord = (
   };
 };
 
+export const searchByFuse = <TRecord, TResult>(
+  records: TRecord[],
+  query: string,
+  options: IFuseOptions<TRecord>,
+  mapHit: (record: TRecord) => TResult | undefined,
+): TResult[] => {
+  const q = query.trim();
+  if (!q) {
+    return records
+      .map(mapHit)
+      .filter((item): item is NonNullable<TResult> => item !== undefined);
+  }
+
+  const fuse = new Fuse(records, options);
+  return fuse
+    .search(q)
+    .map((hit) => mapHit(hit.item))
+    .filter((item): item is NonNullable<TResult> => item !== undefined);
+};
+
 export const searchGuilds = (
   guilds: Guild[],
   query: string,
   resolvePlant: (plantId: string) => Plant,
 ): Guild[] => {
-  const q = query.trim();
-  if (!q) {
-    return guilds;
-  }
-
-  const records = guilds.map((g) => buildGuildSearchRecord(g, resolvePlant));
-  const fuse = new Fuse(records, guildFuseOptions);
   const byId = new Map(guilds.map((g) => [g.id, g]));
-
-  return fuse
-    .search(q)
-    .map((hit) => byId.get(hit.item.guildId))
-    .filter((g): g is Guild => g !== undefined);
+  return searchByFuse(
+    guilds.map((g) => buildGuildSearchRecord(g, resolvePlant)),
+    query,
+    guildFuseOptions,
+    (record) => byId.get(record.guildId),
+  );
 };
 
 export type HighlightSegment = {
