@@ -6,19 +6,27 @@ import {
 } from './helpers';
 
 const waitForPlanRestoredOrSetup = async (page: Page) => {
-  const setupHeading = page.getByRole('heading', { name: 'Choose where to save your plan' });
+  const setupHeading = page.getByRole('heading', {
+    name: 'Choose where to save your plan',
+  });
   await Promise.race([
     setupHeading.waitFor({ state: 'visible', timeout: 20_000 }),
     waitForMainApp(page),
   ]);
 };
 
-test('new plan, edit map scale, save, reload — plan and map scale restore', async ({ page }) => {
+test('new plan, edit map scale, save, reload — plan and map scale restore', async ({
+  page,
+}) => {
   await installOpfsPlanFileHandleE2E(page);
   await page.goto('/aerial');
   await waitForPlanRestoredOrSetup(page);
 
-  if (await page.getByRole('heading', { name: 'Choose where to save your plan' }).isVisible()) {
+  if (
+    await page
+      .getByRole('heading', { name: 'Choose where to save your plan' })
+      .isVisible()
+  ) {
     await page.getByRole('button', { name: 'Create new plan…' }).click();
     await waitForMainApp(page);
   }
@@ -42,7 +50,9 @@ test('new plan, edit map scale, save, reload — plan and map scale restore', as
       page.evaluate(async () => {
         const root = await navigator.storage.getDirectory();
         const file = await (await root.getFileHandle('e2e-plan.json')).getFile();
-        const doc = JSON.parse(await file.text()) as { mapScale?: { linePhysicalLength?: number } };
+        const doc = JSON.parse(await file.text()) as {
+          mapScale?: { linePhysicalLength?: number };
+        };
         return doc.mapScale?.linePhysicalLength;
       }),
     )

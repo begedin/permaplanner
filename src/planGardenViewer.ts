@@ -45,41 +45,6 @@ const vigorLabel: Record<number, string> = {
 const viewerGuilds = (rawGuilds: unknown): ViewerGuild[] =>
   Array.isArray(rawGuilds) ? (rawGuilds as ViewerGuild[]) : [];
 
-const plantNameText = (plant: ViewerGuildPlant): string => {
-  if (typeof plant.name === 'string' && plant.name.trim()) {
-    return plant.name.trim();
-  }
-  if (typeof plant.nameOrCultivar === 'string' && plant.nameOrCultivar.trim()) {
-    return plant.nameOrCultivar.trim();
-  }
-  if (typeof plant.plantId === 'string' && plant.plantId.trim()) {
-    return plant.plantId.trim();
-  }
-  return '(unknown plant)';
-};
-
-const plantConditionText = (plant: ViewerGuildPlant): string => {
-  const vigorNum = Number(plant.vigor);
-  if (Number.isFinite(vigorNum) && vigorNum >= 1 && vigorNum <= 5) {
-    const rounded = Math.round(vigorNum);
-    return `${vigorLabel[rounded] ?? 'unknown'} (${rounded}/5)`;
-  }
-  if (typeof plant.condition === 'string' && plant.condition.trim()) {
-    return plant.condition.trim();
-  }
-  return 'unknown';
-};
-
-const plantStageText = (plant: ViewerGuildPlant): string => {
-  if (typeof plant.growthPhase === 'string') {
-    return phaseLabel[plant.growthPhase] ?? plant.growthPhase;
-  }
-  if (typeof plant.stage === 'string' && plant.stage.trim()) {
-    return plant.stage.trim();
-  }
-  return 'unknown';
-};
-
 const plantsPlainText = (plants: unknown): string => {
   if (!Array.isArray(plants) || plants.length === 0) {
     return '  - (none)';
@@ -87,10 +52,32 @@ const plantsPlainText = (plants: unknown): string => {
   return plants
     .map((plantUnknown) => {
       const plant = plantUnknown as ViewerGuildPlant;
+      const name =
+        typeof plant.name === 'string' && plant.name.trim()
+          ? plant.name.trim()
+          : typeof plant.nameOrCultivar === 'string' && plant.nameOrCultivar.trim()
+            ? plant.nameOrCultivar.trim()
+            : typeof plant.plantId === 'string' && plant.plantId.trim()
+              ? plant.plantId.trim()
+              : '(unknown plant)';
+      const vigorNum = Number(plant.vigor);
+      let condition = 'unknown';
+      if (Number.isFinite(vigorNum) && vigorNum >= 1 && vigorNum <= 5) {
+        const rounded = Math.round(vigorNum);
+        condition = `${vigorLabel[rounded] ?? 'unknown'} (${rounded}/5)`;
+      } else if (typeof plant.condition === 'string' && plant.condition.trim()) {
+        condition = plant.condition.trim();
+      }
+      const stage =
+        typeof plant.growthPhase === 'string'
+          ? (phaseLabel[plant.growthPhase] ?? plant.growthPhase)
+          : typeof plant.stage === 'string' && plant.stage.trim()
+            ? plant.stage.trim()
+            : 'unknown';
       return [
-        `  - ${escapeHtml(plantNameText(plant))}`,
-        `    - condition: ${escapeHtml(plantConditionText(plant))}`,
-        `    - stage: ${escapeHtml(plantStageText(plant))}`,
+        `  - ${escapeHtml(name)}`,
+        `    - condition: ${escapeHtml(condition)}`,
+        `    - stage: ${escapeHtml(stage)}`,
       ].join('\n');
     })
     .join('\n');

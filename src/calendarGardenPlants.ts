@@ -44,8 +44,6 @@ export const formatSpeciesCounts = (
   return `${cultivars} · ${plants}`;
 };
 
-const cultivarKey = (cultivarId: string | null): string => cultivarId ?? '__default__';
-
 /** Counts from guild bed placements only (not the Plants catalog). */
 export const guildSpeciesCounts = (
   guilds: readonly Guild[],
@@ -61,7 +59,7 @@ export const guildSpeciesCounts = (
       continue;
     }
     plantCount++;
-    cultivarKeys.add(cultivarKey(rp.cultivarId));
+    cultivarKeys.add(rp.cultivarId ?? '__default__');
   }
 
   return { cultivarCount: cultivarKeys.size, plantCount };
@@ -80,19 +78,6 @@ export const guildSpeciesTooltipRows = (
       .map((thing) => thing.plantId),
     resolvePlant,
   );
-
-const compareSpeciesSidebarRows = (
-  a: GardenSpeciesSidebarRow,
-  b: GardenSpeciesSidebarRow,
-): number => {
-  if (b.cultivarCount !== a.cultivarCount) {
-    return b.cultivarCount - a.cultivarCount;
-  }
-  if (a.producesFruit !== b.producesFruit) {
-    return a.producesFruit ? -1 : 1;
-  }
-  return a.name.localeCompare(b.name);
-};
 
 export const listGardenSpecies = (
   guilds: readonly Guild[],
@@ -149,7 +134,15 @@ export const listGardenSpecies = (
         cultivarLabels: [...bucket.cultivarLabels].sort().join(' '),
       };
     })
-    .sort(compareSpeciesSidebarRows);
+    .sort((a, b) => {
+      if (b.cultivarCount !== a.cultivarCount) {
+        return b.cultivarCount - a.cultivarCount;
+      }
+      if (a.producesFruit !== b.producesFruit) {
+        return a.producesFruit ? -1 : 1;
+      }
+      return a.name.localeCompare(b.name);
+    });
 };
 
 export const speciesIsPlacedInGuilds = (

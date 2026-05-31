@@ -128,11 +128,7 @@ const LS_REPO_FULL_NAME = 'permaplanner.github.planRepoFullName';
 const LS_REMOTE_LAST_UPDATED_BY_GARDEN = 'permaplanner.github.remoteLastUpdatedByGarden';
 
 const GITHUB_AUTH = 'https://github.com/login/oauth/authorize';
-const githubOAuthTokenPath = () => '/api/github/oauth/access_token';
-
-export const githubRepoRedirectPath = () => '/guilds';
-
-const redirectUri = () => `${window.location.origin}${githubRepoRedirectPath()}`;
+const redirectUri = () => `${window.location.origin}/guilds`;
 
 const base64Url = (buf: ArrayBuffer): string => {
   const bin = String.fromCharCode(...new Uint8Array(buf));
@@ -393,7 +389,7 @@ export const completeGithubAuthIfNeeded = async (): Promise<
 
   let json: TokenResponse;
   try {
-    const res = await fetch(githubOAuthTokenPath(), {
+    const res = await fetch('/api/github/oauth/access_token', {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -889,11 +885,12 @@ export const scanGithubPlanShardsForMigration = async (
   return Object.keys(out).length > 0 ? out : undefined;
 };
 
-/** Latest commit time among plan shard files on GitHub (ms since epoch). */
-export const fetchRemotePlanLastUpdatedMs = async (
+/** Fetch remote shard commit times and merge with any cached value. */
+export const refreshGithubRepoRemoteLastUpdatedMs = async (
   token: string,
   sourceFileName: string | undefined,
 ): Promise<number | undefined> => {
+  loadGithubRepoRemoteLastUpdatedMs(sourceFileName);
   const fullName = await ensurePlanRepo(token);
   const paths = [
     planRepoConfigPath(sourceFileName),
@@ -904,19 +901,7 @@ export const fetchRemotePlanLastUpdatedMs = async (
     paths.map((path) => fetchLatestCommitDateMsForRepoPath(token, fullName, path)),
   );
   const defined = dates.filter((d): d is number => d !== undefined);
-  if (defined.length === 0) {
-    return undefined;
-  }
-  return Math.max(...defined);
-};
-
-/** Fetch remote shard commit times and merge with any cached value. */
-export const refreshGithubRepoRemoteLastUpdatedMs = async (
-  token: string,
-  sourceFileName: string | undefined,
-): Promise<number | undefined> => {
-  loadGithubRepoRemoteLastUpdatedMs(sourceFileName);
-  const fetched = await fetchRemotePlanLastUpdatedMs(token, sourceFileName);
+  const fetched = defined.length === 0 ? undefined : Math.max(...defined);
   if (fetched !== undefined) {
     noteGithubRepoRemoteLastUpdatedMs(sourceFileName, fetched);
   }

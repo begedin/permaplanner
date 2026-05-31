@@ -219,7 +219,7 @@ const customCultivarName = computed({
         />
         <span class="w-28 truncate text-left">{{
           resolveUserPlant(plant, plantCatalog).cultivar ||
-            resolveUserPlant(plant, plantCatalog).name
+          resolveUserPlant(plant, plantCatalog).name
         }}</span>
         <button
           type="button"

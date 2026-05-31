@@ -66,28 +66,20 @@ export const layerLabelTooltip = (
 
 type PhenologyAspect = 'fruiting' | 'blooming';
 
-const rowsForMonthAspect = (
-  rows: GuildPlantTooltipRow[],
-  monthIndex: number,
-  aspect: PhenologyAspect,
-): GuildPlantTooltipRow[] => {
-  const month = monthIndex + 1;
-  return rows.filter((r) => {
-    const period = r.phenology[aspect];
-    return period !== undefined && isMonthInCatalogPeriod(month, period);
-  });
-};
-
 export const monthAspectTooltip = (
   rows: GuildPlantTooltipRow[],
   monthIndex: number,
   aspect: PhenologyAspect,
   monthName: string,
 ): string => {
+  const month = monthIndex + 1;
   const aspectLabel = aspect === 'fruiting' ? 'fruit' : 'bloom';
   return formatRows(
     `${monthName} ${aspectLabel}`,
-    rowsForMonthAspect(rows, monthIndex, aspect),
+    rows.filter((r) => {
+      const period = r.phenology[aspect];
+      return period !== undefined && isMonthInCatalogPeriod(month, period);
+    }),
   );
 };
 

@@ -267,8 +267,8 @@ const detailMotionStyle = computed((): Record<string, string> => {
                     <div
                       v-if="
                         row.headerPhaseSlots.length > 0 ||
-                          row.showPhaseOverflow ||
-                          row.averageVigor
+                        row.showPhaseOverflow ||
+                        row.averageVigor
                       "
                       class="flex flex-row items-center gap-0.5 shrink-0"
                       aria-label="Plant condition"

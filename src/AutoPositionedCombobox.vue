@@ -100,7 +100,8 @@ onUnmounted(() => {
     <span
       class="hidden"
       aria-hidden="true"
-    >{{ syncPanelOpen(open) }}</span>
+      >{{ syncPanelOpen(open) }}</span
+    >
     <ComboboxLabel
       v-if="$slots.label"
       class="sr-only"

@@ -41,7 +41,8 @@ useSearchFocusHotkeys(searchInputRef, () => true);
       <span
         class="text-ink-400 shrink-0"
         aria-hidden="true"
-      >/</span>
+        >/</span
+      >
       <span
         class="text-ink-800 truncate"
         aria-current="page"

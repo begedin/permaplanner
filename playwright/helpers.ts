@@ -20,39 +20,9 @@ export const pasteAerialPhotoOntoMap = async (page: Page): Promise<void> => {
   });
 };
 
-export const putImageIntoClipboard = async (page: Page): Promise<void> => {
-  await page.evaluate(async () => {
-    const dataURLtoFile = async (dataurl: string): Promise<File> => {
-      const result = await fetch(dataurl);
-      const blob = await result.blob();
-      return new File([blob], 'hello.png', { type: 'image/png' });
-    };
-
-    dataURLtoFile(
-      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAIAAADTED8xAAADMElEQVR4nOzVwQnAIBQFQYXff81RUkQCOyDj1YOPnbXWPmeTRef+/3O/OyBjzh3CD95BfqICMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMO0TAAD//2Anhf4QtqobAAAAAElFTkSuQmCC',
-    ).then((file) => {
-      const item = new ClipboardItem({ 'image/png': file });
-      navigator.clipboard.write([item]);
-    });
-  });
-};
-
 /** Primary tab links in the top nav (not in-page RouterLinks). */
 export const openNavTab = async (page: Page, name: string): Promise<void> => {
   await page.getByRole('navigation').getByRole('link', { name, exact: true }).click();
-};
-
-/** Pick a catalog species/cultivar row from a combobox. */
-export const pickCatalogPlant = async (
-  page: Page,
-  query: string,
-  rowLabel = 'Default',
-  comboboxName = 'Catalog species and cultivar',
-): Promise<void> => {
-  await page.getByRole('button', { name: 'Open plant list' }).click();
-  const combobox = page.getByRole('combobox', { name: comboboxName });
-  await combobox.fill(query);
-  await page.getByRole('option', { name: rowLabel }).click();
 };
 
 /** Add a catalog plant to the open guild detail panel. */
@@ -63,13 +33,18 @@ export const addPlantToGuild = async (
 ): Promise<void> => {
   const guildDetails = page.getByRole('region', { name: 'Guild details' });
   await guildDetails.getByRole('button', { name: 'Add plant to guild' }).click();
-  await pickCatalogPlant(page, query, rowLabel, 'Species and cultivar');
+  await page.getByRole('button', { name: 'Open plant list' }).click();
+  const combobox = page.getByRole('combobox', { name: 'Species and cultivar' });
+  await combobox.fill(query);
+  await page.getByRole('option', { name: rowLabel }).click();
   await guildDetails.getByRole('button', { name: 'Add to guild' }).click();
 };
 
 /** Full-screen gate is gone and primary nav is usable. */
 export const waitForMainApp = async (page: Page): Promise<void> => {
-  await expect(page.getByRole('navigation').getByRole('link', { name: 'Guilds' })).toBeVisible({
+  await expect(
+    page.getByRole('navigation').getByRole('link', { name: 'Guilds' }),
+  ).toBeVisible({
     timeout: 20_000,
   });
   await expect(
@@ -83,8 +58,12 @@ export const openPlanSessionDrawer = async (page: Page): Promise<void> => {
   await expect(page.getByRole('dialog', { name: 'Plan and sync' })).toBeVisible();
 };
 
-export const stubSaveFilePicker = async (page: Page, fileName: string) => {
-  const newPath = path.join(helpersDir, 'fixtures', fileName);
+/** Dismiss the setup gate by creating a new plan (requires save picker stub). */
+export const createNewPlanThroughGate = async (
+  page: Page,
+  fixtureFileName = 'new.json',
+): Promise<void> => {
+  const newPath = path.join(helpersDir, 'fixtures', fixtureFileName);
   const bytes = fs.readFileSync(newPath);
   await page.evaluate(
     async ({ content, saveName }) => {
@@ -100,16 +79,8 @@ export const stubSaveFilePicker = async (page: Page, fileName: string) => {
             } as unknown as FileSystemWritableFileStream),
         } as unknown as FileSystemFileHandle);
     },
-    { content: [...bytes], saveName: fileName },
+    { content: [...bytes], saveName: fixtureFileName },
   );
-};
-
-/** Dismiss the setup gate by creating a new plan (requires save picker stub). */
-export const createNewPlanThroughGate = async (
-  page: Page,
-  fixtureFileName = 'new.json',
-): Promise<void> => {
-  await stubSaveFilePicker(page, fixtureFileName);
   await page.getByRole('button', { name: 'Create new plan…' }).click();
   await waitForMainApp(page);
 };
@@ -146,8 +117,6 @@ export const onboard = async (page: Page): Promise<void> => {
   await page.keyboard.press('Escape');
 };
 
-const readEmptyPlan = (): string => fs.readFileSync(emptyPlanPath, 'utf-8');
-
 /**
  * Seeds Origin Private File System with a real FileSystemFileHandle and stubs the
  * picker APIs to return it. Chromium can persist that handle in IndexedDB, so save →
@@ -160,7 +129,7 @@ const readEmptyPlan = (): string => fs.readFileSync(emptyPlanPath, 'utf-8');
  * injected argument exist there; do not reference outer-scope variables.
  */
 export const installOpfsPlanFileHandleE2E = async (page: Page) => {
-  const initial = readEmptyPlan();
+  const initial = fs.readFileSync(emptyPlanPath, 'utf-8');
   await page.addInitScript((minText: string) => {
     const fileName = 'e2e-plan.json';
     const seededKey = 'permaplanner:e2e:opfs-seeded';

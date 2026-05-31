@@ -63,7 +63,8 @@ const monthBlockClass = (rawCount: number): string => {
           class="flex-1 min-w-0 text-center leading-none font-medium text-ink-500"
           :class="compact ? 'text-[8px]' : 'text-[10px]'"
           :title="monthHeaderTooltip(tooltipRows, i, CATALOG_MONTH_LABELS[i])"
-        >{{ lab }}</span>
+          >{{ lab }}</span
+        >
       </div>
     </div>
     <div
@@ -75,7 +76,8 @@ const monthBlockClass = (rawCount: number): string => {
       <span
         class="text-ink-500 shrink-0"
         :class="compact ? 'text-[8px] w-7' : 'text-[10px] w-9'"
-      >Fruit</span>
+        >Fruit</span
+      >
       <div
         class="flex flex-row flex-1 min-w-0"
         :class="compact ? 'gap-px' : 'gap-0.5'"
@@ -100,7 +102,8 @@ const monthBlockClass = (rawCount: number): string => {
       <span
         class="text-ink-500 shrink-0"
         :class="compact ? 'text-[8px] w-7' : 'text-[10px] w-9'"
-      >Bloom</span>
+        >Bloom</span
+      >
       <div
         class="flex flex-row flex-1 min-w-0"
         :class="compact ? 'gap-px' : 'gap-0.5'"

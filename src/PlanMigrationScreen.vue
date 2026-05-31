@@ -110,11 +110,14 @@ const onMigrate = () => {
       <li v-if="githubPending">
         GitHub sync
         <span v-if="pending?.github?.config !== undefined">
-          · config v{{ pending.github.config }}</span>
+          · config v{{ pending.github.config }}</span
+        >
         <span v-if="pending?.github?.plants !== undefined">
-          · plants v{{ pending.github.plants }}</span>
+          · plants v{{ pending.github.plants }}</span
+        >
         <span v-if="pending?.github?.guilds !== undefined">
-          · guilds v{{ pending.github.guilds }}</span>
+          · guilds v{{ pending.github.guilds }}</span
+        >
       </li>
     </ul>
 

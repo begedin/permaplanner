@@ -54,7 +54,9 @@ test.describe('drawing features', () => {
     await page.mouse.up();
     await page.keyboard.press('Enter');
 
-    expect(await page.locator('[data-main-svg] polygon').count()).toBeGreaterThanOrEqual(2);
+    expect(await page.locator('[data-main-svg] polygon').count()).toBeGreaterThanOrEqual(
+      2,
+    );
     await expect(
       page.locator('[data-main-svg] polygon').last().getAttribute('points'),
     ).not.toEqual(currentPoints);

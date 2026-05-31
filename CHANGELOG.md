@@ -30,7 +30,7 @@
 
 - [FIX] Keep guild selected when refreshing on a `/guilds/:id` or `/aerial/:id` URL
 
-## 0.11.0 
+## 0.11.0
 
 - [FEATURE] Icon theme
 - [FEATURE] Color theme
@@ -54,7 +54,7 @@
 - [DB] Added Carmeliter Reinette apple cultivar and Loch Ness blackberry cultivar to the catalog
 - [FEATURE] Confirmation prompt when deleting guild
 
-## 0.7.0 
+## 0.7.0
 
 - [FEATURE] New app layout
 
@@ -95,7 +95,7 @@
 
 ## 0.3.0
 
-### A full revamp of the UI. 
+### A full revamp of the UI.
 
 - The app is now primarily a guild manager with aerial view and location being secondary.
 - Github Sync has been added
@@ -103,10 +103,7 @@
 - Plant designer has been removed
 - Global plant database has been added, with the option of extending locally
 
-
-
 ## 0.1.0
 
 - [FEATURE] allow adding plants to garden bed
 - [REFACTOR] Deduplicate drawing code
-

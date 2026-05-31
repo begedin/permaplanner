@@ -33,9 +33,6 @@ export const isGuildsRoute = (name: unknown): boolean =>
 export const isAerialRoute = (name: unknown): boolean =>
   name === routeNames.aerial || name === routeNames.aerialDetail;
 
-export const isCalendarRoute = (name: unknown): boolean =>
-  name === routeNames.calendar || name === routeNames.calendarDetail;
-
 export const routeParam = (params: unknown, key: string): string | undefined => {
   const value = (params as Record<string, unknown>)[key];
   return typeof value === 'string' && value.length > 0 ? value : undefined;

@@ -20,7 +20,8 @@ const segments = computed(() => highlightSegments(props.text, props.query ?? '')
       <mark
         v-if="segment.match"
         class="search-highlight"
-      >{{ segment.text }}</mark>
+        >{{ segment.text }}</mark
+      >
       <template v-else>{{ segment.text }}</template>
     </template>
   </span>

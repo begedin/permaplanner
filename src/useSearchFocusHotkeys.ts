@@ -5,11 +5,6 @@ export const useSearchFocusHotkeys = (
   inputRef: Ref<HTMLInputElement | null>,
   enabled: () => boolean,
 ) => {
-  const focusSearch = () => {
-    inputRef.value?.focus();
-    inputRef.value?.select();
-  };
-
   useEventListener(document, 'keydown', (e) => {
     if (!enabled()) {
       return;
@@ -37,8 +32,7 @@ export const useSearchFocusHotkeys = (
     }
 
     e.preventDefault();
-    focusSearch();
+    inputRef.value?.focus();
+    inputRef.value?.select();
   });
-
-  return { focusSearch };
 };

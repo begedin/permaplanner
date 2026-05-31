@@ -73,7 +73,7 @@ const migrateOverrideFields = (raw: unknown): Record<string, unknown> | undefine
   return Object.keys(o).length ? o : undefined;
 };
 
-export const migrateUserPlantRow = (raw: unknown): unknown => {
+const migrateUserPlantRow = (raw: unknown): unknown => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
     return raw;
   }

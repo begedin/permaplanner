@@ -139,24 +139,6 @@ const yieldToBrowser = (): Promise<void> =>
     });
   });
 
-/**
- * Storing a handle right after `createWritable().close()` can throw DataCloneError
- * in Chromium; yield first so the handle can be re-serialized to IndexedDB.
- */
-export const putFileHandle = async (handle: FileSystemFileHandle): Promise<void> => {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readwrite');
-    const store = tx.objectStore(STORE);
-    const request = store.put(handle, HANDLE_KEY);
-    request.onerror = () => {
-      reject(request.error ?? new Error('IndexedDB put failed'));
-    };
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error ?? new Error('IndexedDB transaction failed'));
-  });
-};
-
 export const getFileHandle = async (): Promise<FileSystemFileHandle | undefined> => {
   if (typeof indexedDB === 'undefined') {
     return undefined;
@@ -169,7 +151,24 @@ export const getFileHandle = async (): Promise<FileSystemFileHandle | undefined>
   }
 };
 
-export const clearFileHandleFromIdb = async (): Promise<void> => {
+export const persistFileBinding = async (handle: FileSystemFileHandle) => {
+  await yieldToBrowser();
+  const db = await openDb();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    const store = tx.objectStore(STORE);
+    const request = store.put(handle, HANDLE_KEY);
+    request.onerror = () => {
+      reject(request.error ?? new Error('IndexedDB put failed'));
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error ?? new Error('IndexedDB transaction failed'));
+  });
+  setPersistedBoundFileName(handle.name);
+};
+
+export const clearFileBinding = async () => {
+  clearPersistedBoundFileName();
   try {
     const db = await openDb();
     await new Promise<void>((resolve, reject) => {
@@ -185,17 +184,6 @@ export const clearFileHandleFromIdb = async (): Promise<void> => {
   } catch {
     // no DB or already empty
   }
-};
-
-export const persistFileBinding = async (handle: FileSystemFileHandle) => {
-  await yieldToBrowser();
-  await putFileHandle(handle);
-  setPersistedBoundFileName(handle.name);
-};
-
-export const clearFileBinding = async () => {
-  clearPersistedBoundFileName();
-  await clearFileHandleFromIdb();
 };
 
 /** When permission is `prompt`, may call `requestPermission` — use from a user gesture. */

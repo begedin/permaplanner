@@ -22,13 +22,6 @@ export const documentNeedsMigration = (raw: unknown): boolean =>
 export const migratePlanDocumentRaw = (raw: unknown): Promise<Record<string, unknown>> =>
   runMigrations(raw, { loaders: planMigrationLoaders, label: 'plan document' });
 
-export const migratePlantsShardRaw = (raw: unknown): Promise<Record<string, unknown>> =>
-  runMigrations(raw, {
-    loaders: plantsShardMigrationLoaders,
-    label: 'plants.json',
-    arrayKey: 'plants',
-  });
-
 export const migrateGuildsShardRaw = (raw: unknown): Promise<Record<string, unknown>> =>
   runMigrations(raw, {
     loaders: guildsShardMigrationLoaders,
@@ -37,7 +30,11 @@ export const migrateGuildsShardRaw = (raw: unknown): Promise<Record<string, unkn
   });
 
 export const plantsArrayFromShard = async (raw: unknown): Promise<unknown> => {
-  const doc = await migratePlantsShardRaw(raw);
+  const doc = await runMigrations(raw, {
+    loaders: plantsShardMigrationLoaders,
+    label: 'plants.json',
+    arrayKey: 'plants',
+  });
   return doc.plants ?? [];
 };
 

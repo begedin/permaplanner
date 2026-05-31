@@ -506,7 +506,8 @@ const setThingVigorLevel = (thingId: string, vigor: PlantVigor | undefined) => {
         <span
           v-if="compactPlantTags.length === 0"
           class="text-xs text-ink-400 italic"
-        >No plants</span>
+          >No plants</span
+        >
       </div>
     </template>
 
@@ -669,8 +670,8 @@ const setThingVigorLevel = (thingId: string, vigor: PlantVigor | undefined) => {
                   <div
                     v-if="
                       row.headerPhaseSlots.length > 0 ||
-                        row.showPhaseOverflow ||
-                        row.averageVigor
+                      row.showPhaseOverflow ||
+                      row.averageVigor
                     "
                     class="flex flex-row items-center gap-0.5 shrink-0"
                   >
@@ -880,7 +881,8 @@ const setThingVigorLevel = (thingId: string, vigor: PlantVigor | undefined) => {
                 :key="`mh-${i}`"
                 class="flex-1 min-w-0 text-center text-[10px] leading-none font-medium text-ink-500"
                 :title="monthHeaderTooltip(guildTooltipRows, i, CATALOG_MONTH_LABELS[i])"
-              >{{ lab }}</span>
+                >{{ lab }}</span
+              >
             </div>
           </div>
           <div
@@ -972,7 +974,8 @@ const setThingVigorLevel = (thingId: string, vigor: PlantVigor | undefined) => {
             :key="`mh-${i}`"
             class="flex-1 min-w-0 text-center text-[10px] leading-none font-medium text-ink-500"
             :title="monthHeaderTooltip(guildTooltipRows, i, CATALOG_MONTH_LABELS[i])"
-          >{{ lab }}</span>
+            >{{ lab }}</span
+          >
         </div>
       </div>
       <div

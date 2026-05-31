@@ -17,21 +17,17 @@ export const calendarFuseOptions: IFuseOptions<CalendarSpeciesSearchRecord> = {
   ...defaultFuzzySearchOptions,
 };
 
-export const buildCalendarSpeciesSearchRecord = (
-  row: GardenSpeciesSidebarRow,
-): CalendarSpeciesSearchRecord => ({
-  speciesId: row.speciesId,
-  name: row.name,
-  cultivarLabels: row.cultivarLabels,
-});
-
 export const searchGardenSpecies = (
   rows: GardenSpeciesSidebarRow[],
   query: string,
 ): GardenSpeciesSidebarRow[] => {
   const byId = new Map(rows.map((row) => [row.speciesId, row]));
   return searchByFuse(
-    rows.map(buildCalendarSpeciesSearchRecord),
+    rows.map((row) => ({
+      speciesId: row.speciesId,
+      name: row.name,
+      cultivarLabels: row.cultivarLabels,
+    })),
     query,
     calendarFuseOptions,
     (record) => byId.get(record.speciesId),

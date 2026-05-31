@@ -106,28 +106,8 @@ export type HighlightSegment = {
 
 type InclusiveRange = [number, number];
 
-export const fuzzyMatchRanges = (
-  text: string,
-  query: string,
-  options: Pick<
-    IFuseOptions<unknown>,
-    'threshold' | 'ignoreLocation' | 'minMatchCharLength' | 'includeMatches'
-  > = guildFuzzyMatchOptions,
-): InclusiveRange[] => {
-  const q = query.trim();
-  if (!q || !text) {
-    return [];
-  }
-
-  const result = Fuse.match(q, text, options);
-  if (!result.isMatch || !result.indices) {
-    return [];
-  }
-
-  return [...result.indices];
-};
-
-export const mergeInclusiveRanges = (ranges: InclusiveRange[]): InclusiveRange[] => {
+/** Span disjoint fuzzy indices into one contiguous highlight. */
+export const spanHighlightRanges = (ranges: InclusiveRange[]): InclusiveRange[] => {
   if (ranges.length === 0) {
     return [];
   }
@@ -145,12 +125,6 @@ export const mergeInclusiveRanges = (ranges: InclusiveRange[]): InclusiveRange[]
     }
   }
 
-  return merged;
-};
-
-/** Span disjoint fuzzy indices into one contiguous highlight. */
-export const spanHighlightRanges = (ranges: InclusiveRange[]): InclusiveRange[] => {
-  const merged = mergeInclusiveRanges(ranges);
   if (merged.length <= 1) {
     return merged;
   }
@@ -159,7 +133,15 @@ export const spanHighlightRanges = (ranges: InclusiveRange[]): InclusiveRange[] 
 };
 
 export const highlightSegments = (text: string, query: string): HighlightSegment[] => {
-  const ranges = spanHighlightRanges(fuzzyMatchRanges(text, query));
+  const q = query.trim();
+  let fuzzyRanges: InclusiveRange[] = [];
+  if (q && text) {
+    const result = Fuse.match(q, text, guildFuzzyMatchOptions);
+    if (result.isMatch && result.indices) {
+      fuzzyRanges = [...result.indices];
+    }
+  }
+  const ranges = spanHighlightRanges(fuzzyRanges);
   if (ranges.length === 0) {
     return [{ text, match: false }];
   }
