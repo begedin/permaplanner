@@ -9,7 +9,7 @@
   import { useMapScaleStore } from './useMapScaleStore';
   import { usePermaplannerStore } from './usePermaplannerStore';
   import { usePlanSession } from './usePlanSession';
-  import { isAerialRoute } from './router';
+  import { isAerialRoute, routeNames } from './router';
 
   const permaplannerStore = usePermaplannerStore();
   const mapScale = useMapScaleStore();
@@ -84,5 +84,13 @@
       New plan
     </button>
     <GithubRepoSyncPanel />
+    <p class="pt-1 text-center text-[11px] text-ink-500">
+      <RouterLink
+        class="underline decoration-parchment-400 underline-offset-2 hover:text-ink-700"
+        :to="{ name: routeNames.privacy }"
+      >
+        Privacy
+      </RouterLink>
+    </p>
   </div>
 </template>

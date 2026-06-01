@@ -4,6 +4,7 @@
   import GithubPlanSyncRepoNote from './GithubPlanSyncRepoNote.vue';
   import PlanMigrationScreen from './PlanMigrationScreen.vue';
   import { beginGithubAuth, readGithubClientIdConfig } from './githubRepoSync';
+  import { routeNames } from './router';
   import { planAppGateMode } from './usePlanAppGate';
   import { usePlanSession } from './usePlanSession';
   import { usePermaplannerStore } from './usePermaplannerStore';
@@ -161,6 +162,15 @@
             Connect GitHub
           </button>
         </section>
+
+        <p class="mt-6 text-center text-xs text-ink-500">
+          <RouterLink
+            class="underline decoration-parchment-400 underline-offset-2 hover:text-ink-700"
+            :to="{ name: routeNames.privacy }"
+          >
+            Privacy
+          </RouterLink>
+        </p>
       </template>
     </div>
   </div>

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.13.0
+
+- [FEATURE] Privacy statement at `/privacy` (local-first data, GitHub sync, Fly.io hosting, and EEA/UK rights)
+- [FEATURE] Privacy links on the plan setup gate and in the plan drawer
+
 ## 0.12.1
 
 - [TWEAK] Keep ESLint `vue/html-indent` and `vue/html-closing-bracket-newline` enabled; document matching Prettier options in `.prettierrc.mjs` and `eslint.config.mjs` instead of disabling those rules via `eslint-config-prettier`

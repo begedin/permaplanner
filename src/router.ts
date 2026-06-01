@@ -10,6 +10,7 @@ import { watch } from 'vue';
 
 import { speciesIsPlacedInGuilds } from './calendarGardenPlants';
 import type { Guild, Plant } from './gardenTypes';
+import PrivacyPolicy from './PrivacyPolicy.vue';
 import TheCalendar from './TheCalendar.vue';
 import TheGarden from './TheGarden.vue';
 import TheGuilds from './TheGuilds.vue';
@@ -25,6 +26,7 @@ export const routeNames = {
   plants: 'plants',
   calendar: 'calendar',
   calendarDetail: 'calendar-detail',
+  privacy: 'privacy',
 } as const;
 
 export const isGuildsRoute = (name: unknown): boolean =>
@@ -99,6 +101,7 @@ const routes: RouteRecordRaw[] = [
     name: routeNames.calendarDetail,
     component: TheCalendar,
   },
+  { path: '/privacy', name: routeNames.privacy, component: PrivacyPolicy },
   { path: '/:pathMatch(.*)*', redirect: '/guilds' },
 ];
 

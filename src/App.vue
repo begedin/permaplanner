@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue';
   import { storeToRefs } from 'pinia';
+  import { useRoute } from 'vue-router';
 
   import AppFooter from './AppFooter.vue';
   import PlanAppGate from './PlanAppGate.vue';
@@ -18,6 +19,9 @@
 
   usePlanSession();
 
+  const route = useRoute();
+  const isPrivacyPage = computed(() => route.name === routeNames.privacy);
+
   const { guildsTabTo, aerialTabTo } = useGuildSelection();
   const { calendarTabTo } = useCalendarSelection();
 
@@ -32,12 +36,10 @@
   <PlantParts />
   <PlantIconSprite />
   <UiIconSprite />
-  <PlanAppGate v-if="!showMainApp" />
-  <div
-    v-else
-    class="flex flex-col h-full min-h-0"
-  >
+  <PlanAppGate v-if="!showMainApp && !isPrivacyPage" />
+  <div class="flex flex-col h-full min-h-0">
     <nav
+      v-if="showMainApp && !isPrivacyPage"
       class="flex flex-row h-9 shrink-0 items-center z-20 bg-sage-100/95 border-b border-sage-300/40 px-1 gap-0.5"
     >
       <div class="relative shrink-0 flex items-center px-0.5 border-r border-sage-300/40">
@@ -90,12 +92,15 @@
       </RouterLink>
     </nav>
 
-    <PlanSessionDrawer v-model:open="planDrawerOpen" />
+    <PlanSessionDrawer
+      v-if="showMainApp && !isPrivacyPage"
+      v-model:open="planDrawerOpen"
+    />
 
     <div class="flex-1 min-h-0 overflow-auto w-full">
       <RouterView />
     </div>
 
-    <AppFooter />
+    <AppFooter v-if="showMainApp && !isPrivacyPage" />
   </div>
 </template>
