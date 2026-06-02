@@ -5,10 +5,7 @@ import {
   GITHUB_PLAN_SYNC_REPO_NAME,
   gitBranchHeadRefSegment,
   getPlanRepoGardenViewerUrl,
-  githubRepoRemoteLastUpdatedMs,
   githubSyncUserMessage,
-  loadGithubRepoRemoteLastUpdatedMs,
-  noteGithubRepoRemoteLastUpdatedMs,
   planBackgroundMediaRepoPath,
   planGardenFolderSegment,
   planPathSegment,
@@ -51,15 +48,15 @@ it('gitBranchHeadRefSegment is heads/branch for the Git ref API', () => {
   expect(gitBranchHeadRefSegment()).toBe('heads/main');
 });
 
-it('githubSyncUserMessage for 409 suggests pushing again with local copy', () => {
+it('githubSyncUserMessage for 409 suggests pulling remote before saving again', () => {
   const message = githubSyncUserMessage(
     'write',
     'refs/heads/main',
     409,
     '{"message":"Update is not a fast forward"}',
   );
-  expect(message).toMatch(/Push again/i);
-  expect(message).not.toMatch(/pull remote/i);
+  expect(message).toMatch(/Pull remote/i);
+  expect(message).not.toMatch(/overwrite/i);
 });
 
 it('readGithubCommitDateMs prefers committer date over author', () => {
@@ -98,26 +95,6 @@ it('getPlanRepoGardenViewerUrl uses owner.github.io/<repo>/viewer.html for proje
     );
   } finally {
     window.localStorage.removeItem('permaplanner.github.planRepoFullName');
-  }
-});
-
-it('noteGithubRepoRemoteLastUpdatedMs persists per garden and survives load', () => {
-  const key = 'permaplanner.github.remoteLastUpdatedByGarden';
-  localStorage.removeItem(key);
-  githubRepoRemoteLastUpdatedMs.value = undefined;
-  try {
-    noteGithubRepoRemoteLastUpdatedMs('garden.json', 1_700_000_000_000);
-    expect(githubRepoRemoteLastUpdatedMs.value).toBe(1_700_000_000_000);
-
-    githubRepoRemoteLastUpdatedMs.value = undefined;
-    loadGithubRepoRemoteLastUpdatedMs('garden.json');
-    expect(githubRepoRemoteLastUpdatedMs.value).toBe(1_700_000_000_000);
-
-    noteGithubRepoRemoteLastUpdatedMs('garden.json', 1_600_000_000_000);
-    expect(githubRepoRemoteLastUpdatedMs.value).toBe(1_700_000_000_000);
-  } finally {
-    localStorage.removeItem(key);
-    githubRepoRemoteLastUpdatedMs.value = undefined;
   }
 });
 

@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/vue';
+import { flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
@@ -55,16 +56,17 @@ it('closes when the backdrop is clicked', async () => {
   expect(emitted()['update:open']).toEqual([[false]]);
 });
 
-it('shows unsaved indicator inside the drawer when there are changes', () => {
+it('shows unsaved indicator inside the drawer when there are changes', async () => {
   const store = usePermaplannerStore();
   store.fileHandle = { name: 'plan.json' } as FileSystemFileHandle;
   const coordinator = usePlanSaveCoordinator();
-  coordinator.syncPersistedBaseline();
+  coordinator.markIntegrationsSaved();
   store.plants.push({
     id: 'p1',
     speciesId: 'comfrey',
     cultivarId: null,
   });
+  await flushPromises();
 
   renderDrawer({ open: true });
 

@@ -8,6 +8,7 @@
     completeGithubAuthIfNeeded,
     getGithubAccessToken,
     githubRepoPushInFlightCount,
+    loadGithubRemoteSaveBaseline,
     pullPlanJsonFromGithubRepo,
   } from './githubRepoSync';
   import { githubSaveFailureMessage } from './planSaveIntegrations/github';
@@ -36,7 +37,15 @@
     }
     connected.value = Boolean(getGithubAccessToken());
     if (r === 'connected') {
-      planSaveCoordinator.syncPersistedBaseline(['github']);
+      planSaveCoordinator.markIntegrationsSaved(['github']);
+      const token = getGithubAccessToken();
+      if (token && permaplannerStore.fileName) {
+        try {
+          await loadGithubRemoteSaveBaseline(token, permaplannerStore.fileName);
+        } catch {
+          /* baseline fetch is best-effort on connect */
+        }
+      }
     }
     void planSaveCoordinator.refreshDetails('github');
   };
@@ -90,7 +99,8 @@
     try {
       const doc = await pullPlanJsonFromGithubRepo(token, permaplannerStore.fileName);
       permaplannerStore.applyRemoteRepoSnapshot(doc);
-      planSaveCoordinator.syncPersistedBaseline(['github']);
+      planSaveCoordinator.markIntegrationsSaved(['github']);
+      await loadGithubRemoteSaveBaseline(token, permaplannerStore.fileName);
       await checkGithubPlanMigration(permaplannerStore.fileName);
     } catch (e) {
       actionError.value = githubSaveFailureMessage(e);

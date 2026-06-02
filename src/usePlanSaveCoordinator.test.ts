@@ -1,6 +1,7 @@
+import { flushPromises } from '@vue/test-utils';
 import { setActivePinia } from 'pinia';
 import { createPinia } from 'pinia';
-import { beforeEach, expect, it, vi } from 'vitest';
+import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 
 import { resetPlanSaveSerialQueueForTests } from './planSaveSerialQueue';
 import { usePermaplannerStore } from './usePermaplannerStore';
@@ -11,26 +12,36 @@ beforeEach(() => {
   resetPlanSaveSerialQueueForTests();
 });
 
-it('starts saved after syncPersistedBaseline until the plan changes', () => {
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+it('leading autosave saves soon after the first edit in a burst', async () => {
   const store = usePermaplannerStore();
-  store.fileHandle = { name: 'garden.json' } as FileSystemFileHandle;
+  const write = vi.fn().mockResolvedValue(undefined);
+  const close = vi.fn().mockResolvedValue(undefined);
+  const createWritable = vi.fn().mockResolvedValue({ write, close });
+  const getFile = vi.fn().mockResolvedValue({ lastModified: 1000 });
+  store.fileHandle = {
+    name: 'garden.json',
+    createWritable,
+    getFile,
+  } as unknown as FileSystemFileHandle;
 
   const coordinator = usePlanSaveCoordinator();
-  coordinator.syncPersistedBaseline();
-
-  expect(coordinator.views).toMatchObject([{ id: 'local-file', status: 'saved' }]);
-  expect(coordinator.hasUnsavedChanges).toBe(false);
+  coordinator.markIntegrationsSaved();
 
   store.plants.push({
     id: 'p1',
     speciesId: 'comfrey',
     cultivarId: null,
   });
+  await flushPromises();
 
-  expect(coordinator.views).toMatchObject([{ id: 'local-file', status: 'unsaved' }]);
+  expect(createWritable).toHaveBeenCalledTimes(1);
 });
 
-it('does not mark linked destinations unsaved before syncPersistedBaseline', () => {
+it('does not mark linked destinations unsaved before markIntegrationsSaved', () => {
   const store = usePermaplannerStore();
   store.fileHandle = { name: 'garden.json' } as FileSystemFileHandle;
 
@@ -57,12 +68,13 @@ it('flushes local save through the local-file integration', async () => {
   } as unknown as FileSystemFileHandle;
 
   const coordinator = usePlanSaveCoordinator();
-  coordinator.syncPersistedBaseline();
+  coordinator.markIntegrationsSaved();
   store.plants.push({
     id: 'p1',
     speciesId: 'comfrey',
     cultivarId: null,
   });
+  await flushPromises();
 
   await coordinator.scheduleFlush();
 
@@ -70,7 +82,7 @@ it('flushes local save through the local-file integration', async () => {
   expect(coordinator.views.find((v) => v.id === 'local-file')?.status).toBe('saved');
 });
 
-it('scheduleFlushAfterLocalWrite does not write when nothing changed', async () => {
+it('saveAllLinkedIntegrations writes local file even when nothing changed', async () => {
   const store = usePermaplannerStore();
   const write = vi.fn().mockResolvedValue(undefined);
   const close = vi.fn().mockResolvedValue(undefined);
@@ -83,12 +95,71 @@ it('scheduleFlushAfterLocalWrite does not write when nothing changed', async () 
   } as unknown as FileSystemFileHandle;
 
   const coordinator = usePlanSaveCoordinator();
-  coordinator.syncPersistedBaseline();
+  coordinator.markIntegrationsSaved();
+  createWritable.mockClear();
+
+  await coordinator.saveAllLinkedIntegrations();
+
+  expect(createWritable).toHaveBeenCalled();
+});
+
+it('scheduleFlushAfterLocalWrite skips when nothing changed', async () => {
+  const store = usePermaplannerStore();
+  const write = vi.fn().mockResolvedValue(undefined);
+  const close = vi.fn().mockResolvedValue(undefined);
+  const createWritable = vi.fn().mockResolvedValue({ write, close });
+  const getFile = vi.fn().mockResolvedValue({ lastModified: 1000 });
+  store.fileHandle = {
+    name: 'garden.json',
+    createWritable,
+    getFile,
+  } as unknown as FileSystemFileHandle;
+
+  const coordinator = usePlanSaveCoordinator();
+  coordinator.markIntegrationsSaved();
   createWritable.mockClear();
 
   await coordinator.scheduleFlushAfterLocalWrite();
 
   expect(createWritable).not.toHaveBeenCalled();
+});
+
+it('autosave trailing edge saves after the debounce when edits continue in a burst', async () => {
+  const store = usePermaplannerStore();
+  const write = vi.fn().mockResolvedValue(undefined);
+  const close = vi.fn().mockResolvedValue(undefined);
+  const createWritable = vi.fn().mockResolvedValue({ write, close });
+  const getFile = vi.fn().mockResolvedValue({ lastModified: 1000 });
+  store.fileHandle = {
+    name: 'garden.json',
+    createWritable,
+    getFile,
+  } as unknown as FileSystemFileHandle;
+
+  const coordinator = usePlanSaveCoordinator();
+  coordinator.markIntegrationsSaved();
+
+  store.plants.push({
+    id: 'p1',
+    speciesId: 'comfrey',
+    cultivarId: null,
+  });
+  await flushPromises();
+  await flushPromises();
+  expect(createWritable).toHaveBeenCalledTimes(1);
+
+  store.plants.push({
+    id: 'p2',
+    speciesId: 'yarrow',
+    cultivarId: null,
+  });
+  await flushPromises();
+  expect(createWritable).toHaveBeenCalledTimes(1);
+
+  await new Promise((resolve) => setTimeout(resolve, 60));
+  await flushPromises();
+
+  expect(createWritable).toHaveBeenCalledTimes(2);
 });
 
 it('serializes overlapping flush and single-integration saves', async () => {
@@ -107,12 +178,13 @@ it('serializes overlapping flush and single-integration saves', async () => {
   } as unknown as FileSystemFileHandle;
 
   const coordinator = usePlanSaveCoordinator();
-  coordinator.syncPersistedBaseline();
+  coordinator.markIntegrationsSaved();
   store.plants.push({
     id: 'p1',
     speciesId: 'comfrey',
     cultivarId: null,
   });
+  await flushPromises();
 
   const flushDone = coordinator.scheduleFlush();
   const singleDone = coordinator.saveIntegration('local-file');

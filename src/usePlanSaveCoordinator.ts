@@ -1,4 +1,3 @@
-import { watchDebounced } from '@vueuse/core';
 import { defineStore, storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
@@ -10,7 +9,6 @@ import type {
 } from './planSaveIntegration';
 import { planSaveIntegrations } from './planSaveIntegrations';
 import { githubSaveFailureMessage } from './planSaveIntegrations/github';
-import { planSnapshotDigest } from './planSnapshotDigest';
 import { runPlanSaveSerial } from './planSaveSerialQueue';
 import { isPlanMigrationPending } from './usePlanMigration';
 import { useMapScaleStore } from './useMapScaleStore';
@@ -26,6 +24,9 @@ const defaultRuntime = (): IntegrationRuntime => ({
   details: [],
   saving: false,
 });
+
+/** Delay before the trailing autosave after the last edit in a burst. */
+const AUTOSAVE_DEBOUNCE_MS = import.meta.env.VITEST ? 50 : 20_000;
 
 export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
   const permaplannerStore = usePermaplannerStore();
@@ -52,12 +53,13 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
 
   const expandedIds = ref<Set<PlanSaveIntegrationId>>(new Set());
 
-  /** False until the plan is loaded and baselines are recorded (avoids false "unsaved" on refresh). */
+  /** False until the plan is loaded and destinations are marked saved (avoids false "unsaved" on refresh). */
   const trackingEnabled = ref(false);
 
-  const persistedDigestById = ref<Partial<Record<PlanSaveIntegrationId, string>>>({});
+  /** Bumped on each user edit; integrations save through the current generation. */
+  const editGeneration = ref(0);
 
-  const currentDigest = () => planSnapshotDigest(permaplannerStore.snapshot());
+  const savedAtGenerationById = ref<Partial<Record<PlanSaveIntegrationId, number>>>({});
 
   const saveContext = () => ({
     snapshot: () => permaplannerStore.snapshot(),
@@ -87,11 +89,7 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     if (!integration.isAvailable() || !integration.isLinked()) {
       return false;
     }
-    const persisted = persistedDigestById.value[id];
-    if (persisted === undefined) {
-      return false;
-    }
-    return currentDigest() !== persisted;
+    return savedAtGenerationById.value[id] !== editGeneration.value;
   };
 
   const integrationStatus = (id: PlanSaveIntegrationId): PlanSaveIntegrationStatus => {
@@ -133,42 +131,65 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     );
   };
 
-  /** Call after loading or pulling a plan so integrations start as saved. */
-  const syncPersistedBaseline = (ids?: PlanSaveIntegrationId[]) => {
-    const digest = currentDigest();
+  /** Call after loading or pulling a plan so linked destinations start as saved. */
+  const markIntegrationsSaved = (ids?: PlanSaveIntegrationId[]) => {
     const targets =
       ids ??
       planSaveIntegrations
         .filter((i) => i.isAvailable() && i.isLinked())
         .map((i) => i.id);
-    const next = { ...persistedDigestById.value };
+    const next = { ...savedAtGenerationById.value };
     for (const id of targets) {
-      next[id] = digest;
+      next[id] = editGeneration.value;
       setRuntime(id, { errorMessage: undefined });
     }
-    persistedDigestById.value = next;
+    savedAtGenerationById.value = next;
     trackingEnabled.value = true;
   };
 
-  const noteDestinationSaved = (id: PlanSaveIntegrationId) => {
+  const noteDestinationSaved = (
+    id: PlanSaveIntegrationId,
+    savedGeneration: number = editGeneration.value,
+  ) => {
     if (!integrationFor(id).isLinked()) {
       return;
     }
-    persistedDigestById.value = {
-      ...persistedDigestById.value,
-      [id]: currentDigest(),
+    savedAtGenerationById.value = {
+      ...savedAtGenerationById.value,
+      [id]: savedGeneration,
     };
     setRuntime(id, { errorMessage: undefined, saving: false });
     void refreshDetails(id);
   };
 
-  /** Record local write, then push other linked destinations only when their digest differs. */
+  /** Record local write, then push other linked destinations. */
   const scheduleFlushAfterLocalWrite = (): Promise<void> => {
     noteDestinationSaved('local-file');
     return scheduleFlush();
   };
 
   let inFlightFlush: Promise<void> | null = null;
+
+  let autosaveTrailingTimer: ReturnType<typeof setTimeout> | undefined;
+  let autosaveBurstActive = false;
+
+  const scheduleAutosaveFlush = () => {
+    if (autosaveTrailingTimer !== undefined) {
+      clearTimeout(autosaveTrailingTimer);
+      autosaveTrailingTimer = undefined;
+    }
+
+    if (!autosaveBurstActive) {
+      autosaveBurstActive = true;
+      scheduleFlush();
+    }
+
+    autosaveTrailingTimer = setTimeout(() => {
+      autosaveBurstActive = false;
+      autosaveTrailingTimer = undefined;
+      scheduleFlush();
+    }, AUTOSAVE_DEBOUNCE_MS);
+  };
 
   const saveIntegrationNow = async (id: PlanSaveIntegrationId) => {
     const integration = integrationFor(id);
@@ -178,9 +199,11 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
 
     setRuntime(id, { saving: true, errorMessage: undefined });
 
+    const generationAtStart = editGeneration.value;
+
     try {
       await integration.save(saveContext());
-      noteDestinationSaved(id);
+      noteDestinationSaved(id, generationAtStart);
     } catch (e) {
       const message = id === 'github' ? githubSaveFailureMessage(e) : String(e);
       if (id === 'github') {
@@ -199,24 +222,31 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
       (i) => i.isAvailable() && i.isLinked() && isIntegrationDirty(i.id),
     );
 
-  const flushLinkedSavesNow = async () => {
+  const flushLinkedSavesNow = async (options?: { force?: boolean }) => {
     if (
       !trackingEnabled.value ||
       permaplannerStore.suppressAutosaveDepth > 0 ||
-      isPlanMigrationPending.value ||
-      !anyDirty()
+      isPlanMigrationPending.value
     ) {
+      return;
+    }
+    if (!options?.force && !anyDirty()) {
       return;
     }
 
     const linked = planSaveIntegrations.filter((i) => i.isAvailable() && i.isLinked());
     for (const integration of linked) {
-      if (!isIntegrationDirty(integration.id)) {
+      if (!options?.force && !isIntegrationDirty(integration.id)) {
         continue;
       }
       await saveIntegrationNow(integration.id);
     }
   };
+
+  const saveAllLinkedIntegrationsNow = async () => flushLinkedSavesNow({ force: true });
+
+  const saveAllLinkedIntegrations = (): Promise<void> =>
+    runPlanSaveSerial(() => saveAllLinkedIntegrationsNow());
 
   const scheduleFlush = (): Promise<void> => {
     if (!anyDirty()) {
@@ -249,10 +279,9 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
 
   const isExpanded = (id: PlanSaveIntegrationId) => expandedIds.value.has(id);
 
-  const planDigest = computed(() => currentDigest());
-
   const views = computed((): PlanSaveIntegrationView[] => {
-    void planDigest.value;
+    void editGeneration.value;
+    void savedAtGenerationById.value;
     return planSaveIntegrations
       .filter((i) => i.isAvailable())
       .map((integration) => {
@@ -293,7 +322,7 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     window.addEventListener(planRepoSyncUpdatedEventName, onRepoUpdated);
   }
 
-  watchDebounced(
+  watch(
     [
       guilds,
       plants,
@@ -315,9 +344,10 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
       ) {
         return;
       }
-      scheduleFlush();
+      editGeneration.value += 1;
+      scheduleAutosaveFlush();
     },
-    { deep: true, debounce: 300, maxWait: 2000, flush: 'post' },
+    { deep: true, flush: 'post' },
   );
 
   return {
@@ -328,10 +358,11 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     toggleExpanded,
     retry,
     saveIntegration,
+    saveAllLinkedIntegrations,
     scheduleFlush,
     refreshDetails,
     refreshAllDetails,
-    syncPersistedBaseline,
+    markIntegrationsSaved,
     noteDestinationSaved,
     scheduleFlushAfterLocalWrite,
   };

@@ -23,7 +23,10 @@ export const githubRepoPushInFlightCount = ref(0);
 
 /** Set when a background sync after save fails; cleared on the next successful push. */
 export const githubRepoLastSyncError = ref<string | undefined>();
-/** Most recent known remote commit timestamp (from push response or optimistic fallback). */
+/**
+ * In-memory remote save timestamp for the current garden: loaded from GitHub on plan load,
+ * checked before push, updated after a successful push. Not persisted locally.
+ */
 export const githubRepoRemoteLastUpdatedMs = ref<number | undefined>();
 
 export type GithubSyncFailureKind = 'conflict' | 'auth' | 'rejected' | 'generic';
@@ -66,7 +69,7 @@ export const githubSyncUserMessage = (
   bodyText: string,
 ): string => {
   if (status === 409) {
-    return 'GitHub was updated while saving your plan. Push again to overwrite with your local copy.';
+    return 'GitHub was updated in another session. Pull remote to load that version, then save again.';
   }
   if (status === 404) {
     return operation === 'write'
@@ -125,7 +128,6 @@ const SS_VERIFIER = 'permaplanner.oauth.github.code_verifier';
 const SS_STATE = 'permaplanner.oauth.github.state';
 const SS_TOKEN = 'permaplanner.github.accessToken';
 const LS_REPO_FULL_NAME = 'permaplanner.github.planRepoFullName';
-const LS_REMOTE_LAST_UPDATED_BY_GARDEN = 'permaplanner.github.remoteLastUpdatedByGarden';
 
 const GITHUB_AUTH = 'https://github.com/login/oauth/authorize';
 const redirectUri = () => `${window.location.origin}/guilds`;
@@ -187,70 +189,6 @@ export const planGardenFolderSegment = (fileName: string | undefined): string =>
     .replace(/\.json$/i, '')
     .slice(0, 120);
   return stem || 'plan';
-};
-
-const readRemoteLastUpdatedByGardenMap = (): Record<string, number> => {
-  const raw = localStorage.getItem(LS_REMOTE_LAST_UPDATED_BY_GARDEN);
-  if (!raw) {
-    return {};
-  }
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      return {};
-    }
-    const out: Record<string, number> = {};
-    for (const [key, value] of Object.entries(parsed)) {
-      if (typeof value === 'number' && Number.isFinite(value)) {
-        out[key] = value;
-      }
-    }
-    return out;
-  } catch {
-    return {};
-  }
-};
-
-const writeRemoteLastUpdatedByGardenMap = (map: Record<string, number>): void => {
-  if (Object.keys(map).length === 0) {
-    localStorage.removeItem(LS_REMOTE_LAST_UPDATED_BY_GARDEN);
-    return;
-  }
-  localStorage.setItem(LS_REMOTE_LAST_UPDATED_BY_GARDEN, JSON.stringify(map));
-};
-
-const readPersistedGithubRepoRemoteLastUpdatedMs = (
-  sourceFileName: string | undefined,
-): number | undefined => {
-  const ms = readRemoteLastUpdatedByGardenMap()[planGardenFolderSegment(sourceFileName)];
-  return ms !== undefined && Number.isFinite(ms) ? ms : undefined;
-};
-
-/** Restore cached remote timestamp for the current garden (survives page refresh). */
-export const loadGithubRepoRemoteLastUpdatedMs = (
-  sourceFileName: string | undefined,
-): void => {
-  githubRepoRemoteLastUpdatedMs.value =
-    readPersistedGithubRepoRemoteLastUpdatedMs(sourceFileName);
-};
-
-/** Remember the latest known remote timestamp for a garden (never moves backward). */
-export const noteGithubRepoRemoteLastUpdatedMs = (
-  sourceFileName: string | undefined,
-  ms: number | undefined,
-): void => {
-  if (ms === undefined || !Number.isFinite(ms)) {
-    return;
-  }
-  const gardenKey = planGardenFolderSegment(sourceFileName);
-  const map = readRemoteLastUpdatedByGardenMap();
-  const prev = map[gardenKey];
-  const next = prev !== undefined ? Math.max(prev, ms) : ms;
-  map[gardenKey] = next;
-  writeRemoteLastUpdatedByGardenMap(map);
-  const current = githubRepoRemoteLastUpdatedMs.value;
-  githubRepoRemoteLastUpdatedMs.value =
-    current !== undefined ? Math.max(current, next) : next;
 };
 
 const gardenDir = (fileName: string | undefined): string =>
@@ -805,33 +743,28 @@ const commitPlanFilesViaGitApi = async (
   message: string,
 ): Promise<number | undefined> => {
   const refLabel = `refs/${gitBranchHeadRefSegment()}`;
-  const maxAttempts = 3;
-
-  for (let i = 0; i < maxAttempts; i++) {
-    const head = await getGitBranchHead(token, fullName);
-    const blobShas = await Promise.all(
-      files.map((file) => createGitBlob(token, fullName, file.contentBase64)),
-    );
-    const treeEntries: GitTreeEntry[] = files.map((file, index) => ({
-      path: file.path,
-      mode: '100644',
-      type: 'blob',
-      sha: blobShas[index]!,
-    }));
-    const treeSha = await createGitTree(token, fullName, head.treeSha, treeEntries);
-    const { sha: commitSha, committedAtMs } = await createGitCommit(
-      token,
-      fullName,
-      message,
-      treeSha,
-      head.commitSha,
-    );
-    const refResult = await updateGitBranchRef(token, fullName, commitSha);
-    if (refResult === 'ok') {
-      return committedAtMs;
-    }
+  const head = await getGitBranchHead(token, fullName);
+  const blobShas = await Promise.all(
+    files.map((file) => createGitBlob(token, fullName, file.contentBase64)),
+  );
+  const treeEntries: GitTreeEntry[] = files.map((file, index) => ({
+    path: file.path,
+    mode: '100644',
+    type: 'blob',
+    sha: blobShas[index]!,
+  }));
+  const treeSha = await createGitTree(token, fullName, head.treeSha, treeEntries);
+  const { sha: commitSha, committedAtMs } = await createGitCommit(
+    token,
+    fullName,
+    message,
+    treeSha,
+    head.commitSha,
+  );
+  const refResult = await updateGitBranchRef(token, fullName, commitSha);
+  if (refResult === 'ok') {
+    return committedAtMs;
   }
-
   failGithubSync('write', refLabel, 409, 'Branch head changed while pushing.');
 };
 
@@ -885,12 +818,10 @@ export const scanGithubPlanShardsForMigration = async (
   return Object.keys(out).length > 0 ? out : undefined;
 };
 
-/** Fetch remote shard commit times and merge with any cached value. */
-export const refreshGithubRepoRemoteLastUpdatedMs = async (
+const fetchGithubRepoRemoteLastUpdatedMs = async (
   token: string,
   sourceFileName: string | undefined,
 ): Promise<number | undefined> => {
-  loadGithubRepoRemoteLastUpdatedMs(sourceFileName);
   const fullName = await ensurePlanRepo(token);
   const paths = [
     planRepoConfigPath(sourceFileName),
@@ -901,11 +832,42 @@ export const refreshGithubRepoRemoteLastUpdatedMs = async (
     paths.map((path) => fetchLatestCommitDateMsForRepoPath(token, fullName, path)),
   );
   const defined = dates.filter((d): d is number => d !== undefined);
-  const fetched = defined.length === 0 ? undefined : Math.max(...defined);
-  if (fetched !== undefined) {
-    noteGithubRepoRemoteLastUpdatedMs(sourceFileName, fetched);
+  return defined.length === 0 ? undefined : Math.max(...defined);
+};
+
+/** Fetch remote timestamp from GitHub and store as the save baseline (call on plan load). */
+export const loadGithubRemoteSaveBaseline = async (
+  token: string,
+  sourceFileName: string | undefined,
+): Promise<void> => {
+  githubRepoRemoteLastUpdatedMs.value = await fetchGithubRepoRemoteLastUpdatedMs(
+    token,
+    sourceFileName,
+  );
+};
+
+/** Fetch current remote timestamp for display; does not change the save baseline. */
+export const refreshGithubRepoRemoteLastUpdatedMs = async (
+  token: string,
+  sourceFileName: string | undefined,
+): Promise<number | undefined> =>
+  fetchGithubRepoRemoteLastUpdatedMs(token, sourceFileName);
+
+const assertGithubRemoteUnchanged = async (
+  token: string,
+  sourceFileName: string | undefined,
+): Promise<void> => {
+  const current = await fetchGithubRepoRemoteLastUpdatedMs(token, sourceFileName);
+  const baseline = githubRepoRemoteLastUpdatedMs.value;
+  if (baseline === current) {
+    return;
   }
-  return githubRepoRemoteLastUpdatedMs.value;
+  failGithubSync(
+    'write',
+    planRepoConfigPath(sourceFileName),
+    409,
+    'Remote plan changed since load.',
+  );
 };
 
 export const pullPlanJsonFromGithubRepo = async (
@@ -968,6 +930,7 @@ const pushPlanJsonToGithubRepoOnce = async (
   snapshot: PermaplannerFileV1,
   sourceFileName: string | undefined,
 ): Promise<number | undefined> => {
+  await assertGithubRemoteUnchanged(token, sourceFileName);
   const fullName = await ensurePlanRepo(token);
   const configPath = planRepoConfigPath(sourceFileName);
 
@@ -1026,10 +989,11 @@ export const pushPlanJsonToGithubRepo = async (
           job.snapshot,
           job.sourceFileName,
         );
-        noteGithubRepoRemoteLastUpdatedMs(
-          job.sourceFileName,
-          committedAtMs ?? Date.now(),
-        );
+        if (committedAtMs !== undefined) {
+          githubRepoRemoteLastUpdatedMs.value = committedAtMs;
+        } else {
+          await loadGithubRemoteSaveBaseline(job.token, job.sourceFileName);
+        }
       } while (queuedPushPlan);
       githubRepoLastSyncError.value = undefined;
     } finally {

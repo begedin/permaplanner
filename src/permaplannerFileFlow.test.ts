@@ -4,6 +4,7 @@ import { setActivePinia } from 'pinia';
 import { createPinia } from 'pinia';
 
 import { usePermaplannerStore } from './usePermaplannerStore';
+import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
 import type { Guild } from './gardenTypes';
 
 vi.mock('./sessionFileHandle', () => ({
@@ -86,7 +87,7 @@ it('new plan, save, change, save, then load again like after a refresh', async (
   });
 });
 
-it('auto-saves guild changes to the linked file after the debounce', async () => {
+it('auto-saves guild changes to the linked file on the leading autosave edge', async () => {
   vi.useFakeTimers();
   const makeHandle = (): FileSystemFileHandle => {
     return {
@@ -116,6 +117,9 @@ it('auto-saves guild changes to the linked file after the debounce', async () =>
   await store.resetToNewPlan();
   await store.save(makeHandle());
 
+  const coordinator = usePlanSaveCoordinator();
+  coordinator.markIntegrationsSaved();
+
   const autoGuild: Guild = {
     id: 'g-auto',
     name: 'Autosaved guild',
@@ -125,7 +129,6 @@ it('auto-saves guild changes to the linked file after the debounce', async () =>
   };
   store.guilds = [autoGuild];
   await flushPromises();
-  await vi.advanceTimersByTimeAsync(350);
 
   setActivePinia(createPinia());
   const reloaded = usePermaplannerStore();

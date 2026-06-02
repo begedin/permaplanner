@@ -37,9 +37,10 @@ export const githubPlanSaveIntegration: PlanSaveIntegration = {
     let remoteMs = githubRepoRemoteLastUpdatedMs.value;
     if (token) {
       try {
-        remoteMs = await refreshGithubRepoRemoteLastUpdatedMs(token, fileName);
+        remoteMs =
+          (await refreshGithubRepoRemoteLastUpdatedMs(token, fileName)) ?? remoteMs;
       } catch {
-        /* keep cached / persisted timestamp */
+        /* keep in-memory baseline for display */
       }
     }
 

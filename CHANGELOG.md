@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.14.0
+
+- [REFACTOR] Plan save tracking no longer uses a content digest; edits mark all linked destinations unsaved and autosave flushes every linked integration together
+- [FIX] GitHub save conflicts compare the remote commit timestamp (loaded when the plan opens, checked before push, kept in memory) instead of retrying branch ref updates to overwrite
+- [FIX] GitHub sync no longer stores remote save timestamps in localStorage
+- [FIX] "Save plan" always writes the local file and pushes to GitHub when connected, even if nothing changed since the last save
+- [TWEAK] Autosave waits 20 seconds after the last edit (leading edge saves soon after editing starts; trailing edge saves again after a pause)
+- [FIX] GitHub conflict message directs you to pull remote instead of pushing to overwrite
+
 ## 0.13.1
 
 - [DB] Added globe artichoke, leaf celery (Par-Cel), Swiss chard (Rhubarb Chard), kidney weed, white willow, lamb's lettuce, and wild rocket to the catalog

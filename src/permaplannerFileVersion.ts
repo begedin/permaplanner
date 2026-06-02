@@ -1,12 +1,7 @@
 /** Current on-disk / GitHub plan document version (monolithic file and repo shards). */
 export const PERMAPLANNER_FILE_VERSION = 5 as const;
 
-export type PermaplannerFileVersion =
-  | typeof PERMAPLANNER_FILE_VERSION
-  | 1
-  | 2
-  | 3
-  | 4;
+export type PermaplannerFileVersion = typeof PERMAPLANNER_FILE_VERSION | 1 | 2 | 3 | 4;
 
 export const readDocumentVersion = (raw: unknown): number => {
   if (!raw || typeof raw !== 'object') {

@@ -2289,7 +2289,12 @@
     {
       "id": "white_willow",
       "name": "White willow",
-      "functions": ["dynamic_accumulator", "medicinal", "mulcher", "pollinator_attractor"],
+      "functions": [
+        "dynamic_accumulator",
+        "medicinal",
+        "mulcher",
+        "pollinator_attractor"
+      ],
       "layers": ["overstory"],
       "cultivars": [
         {

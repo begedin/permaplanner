@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/vue';
+import { flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
@@ -52,16 +53,17 @@ it('opens the plan drawer from the top bar icon', async () => {
   expect(screen.getByRole('dialog', { name: 'Plan and sync' })).toBeTruthy();
 });
 
-it('shows an unsaved dot on the plan menu button', () => {
+it('shows an unsaved dot on the plan menu button', async () => {
   const store = usePermaplannerStore();
   store.fileHandle = { name: 'plan.json' } as FileSystemFileHandle;
   const coordinator = usePlanSaveCoordinator();
-  coordinator.syncPersistedBaseline();
+  coordinator.markIntegrationsSaved();
   store.plants.push({
     id: 'p1',
     speciesId: 'comfrey',
     cultivarId: null,
   });
+  await flushPromises();
   renderApp();
 
   expect(

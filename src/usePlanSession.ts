@@ -1,7 +1,12 @@
 /* global FileSystemFileHandle */
 import { computed, ref } from 'vue';
 
-import { completeGithubAuthIfNeeded } from './githubRepoSync';
+import {
+  completeGithubAuthIfNeeded,
+  getGithubAccessToken,
+  loadGithubRemoteSaveBaseline,
+  readGithubClientIdConfig,
+} from './githubRepoSync';
 import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
 import { checkGithubPlanMigration } from './usePlanMigration';
 import { usePermaplannerStore } from './usePermaplannerStore';
@@ -32,12 +37,24 @@ export const usePlanSession = () => {
 
   const expectedRelinkName = computed(() => getPersistedBoundFileName());
 
-  /** After writing the local file: sync GitHub only if plan content changed since last push. */
-  const syncRemotesAfterLocalSave = () =>
-    planSaveCoordinator.scheduleFlushAfterLocalWrite();
+  const loadGithubBaselineIfLinked = async () => {
+    if (!readGithubClientIdConfig()) {
+      return;
+    }
+    const token = getGithubAccessToken();
+    if (!token || !permaplannerStore.fileName) {
+      return;
+    }
+    try {
+      await loadGithubRemoteSaveBaseline(token, permaplannerStore.fileName);
+    } catch (e) {
+      console.error('[permaplanner] Could not load GitHub remote save baseline:', e);
+    }
+  };
 
-  const afterPlanLoaded = () => {
-    planSaveCoordinator.syncPersistedBaseline();
+  const afterPlanLoaded = async () => {
+    planSaveCoordinator.markIntegrationsSaved();
+    await loadGithubBaselineIfLinked();
   };
 
   const tryRestorePersistedFile = async () => {
@@ -50,7 +67,7 @@ export const usePlanSession = () => {
     }
     try {
       await permaplannerStore.load(handle, { skipBindingPersist: true });
-      afterPlanLoaded();
+      await afterPlanLoaded();
     } catch (e) {
       if (isFilePermissionError(e)) {
         pendingReopenFileHandle.value = handle;
@@ -75,7 +92,7 @@ export const usePlanSession = () => {
         return;
       }
       await permaplannerStore.load(h, { skipBindingPersist: true });
-      afterPlanLoaded();
+      await afterPlanLoaded();
       await checkGithubPlanMigration(permaplannerStore.fileName);
     } catch (e) {
       console.error('[permaplanner] Could not open file after permission grant:', e);
@@ -97,7 +114,7 @@ export const usePlanSession = () => {
     try {
       const [fileHandle] = await window.showOpenFilePicker(options);
       await permaplannerStore.load(fileHandle);
-      afterPlanLoaded();
+      await afterPlanLoaded();
       await checkGithubPlanMigration(permaplannerStore.fileName);
     } catch (e) {
       console.error(e);
@@ -111,7 +128,8 @@ export const usePlanSession = () => {
       const fileHandle = await window.showSaveFilePicker(options);
       await permaplannerStore.resetToNewPlan();
       await permaplannerStore.save(fileHandle);
-      planSaveCoordinator.syncPersistedBaseline(['local-file']);
+      planSaveCoordinator.markIntegrationsSaved(['local-file']);
+      await loadGithubBaselineIfLinked();
       await planSaveCoordinator.saveIntegration('github');
     } catch (e) {
       console.error(e);
@@ -125,8 +143,8 @@ export const usePlanSession = () => {
         (await window.showSaveFilePicker(fileOptions(permaplannerStore.fileName)));
       permaplannerStore.fileHandle = fileHandle;
       permaplannerStore.fileName = fileHandle.name;
-      await permaplannerStore.save(fileHandle);
-      await syncRemotesAfterLocalSave();
+      permaplannerStore.needsFileRelink = false;
+      await planSaveCoordinator.saveAllLinkedIntegrations();
     } catch (e) {
       console.error(e);
     }
@@ -136,8 +154,10 @@ export const usePlanSession = () => {
     try {
       const options = fileOptions(permaplannerStore.fileName);
       const fileHandle = await window.showSaveFilePicker(options);
-      await permaplannerStore.save(fileHandle);
-      await syncRemotesAfterLocalSave();
+      permaplannerStore.fileHandle = fileHandle;
+      permaplannerStore.fileName = fileHandle.name;
+      permaplannerStore.needsFileRelink = false;
+      await planSaveCoordinator.saveAllLinkedIntegrations();
     } catch (e) {
       console.error(e);
     }
@@ -174,6 +194,5 @@ export const usePlanSession = () => {
     newPlan,
     save,
     saveAs,
-    syncRemotesAfterLocalSave,
   };
 };
