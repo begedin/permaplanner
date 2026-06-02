@@ -517,7 +517,7 @@
 
     <template v-if="context === 'guilds'">
       <div class="flex flex-col flex-1 min-h-0 w-full gap-1">
-        <div class="flex flex-col gap-1 w-full min-h-0 overflow-y-auto shrink -mx-2 px-2">
+        <div class="flex flex-col gap-1 w-full min-h-0 overflow-y-auto shrink -ml-2 pl-2">
           <div class="flex flex-row items-center justify-between gap-2 w-full flex-wrap">
             <p
               v-if="!placedOnMap"

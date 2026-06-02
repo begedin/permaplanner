@@ -598,6 +598,10 @@
         {
           "id": "zeolights",
           "name": "Zeolights"
+        },
+        {
+          "id": "geisha_girl",
+          "name": "Geisha Girl"
         }
       ],
       "blooming": {
@@ -673,6 +677,10 @@
         {
           "id": "signet",
           "name": "Signet marigold"
+        },
+        {
+          "id": "orange_flame",
+          "name": "Orange Flame"
         }
       ],
       "blooming": {
@@ -2197,6 +2205,149 @@
         }
       ],
       "defaultIconId": "seedling"
+    },
+    {
+      "id": "globe_artichoke",
+      "name": "Globe artichoke",
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "green_globe",
+          "name": "Green Globe"
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 8
+      },
+      "fruiting": {
+        "start": 4,
+        "end": 6
+      },
+      "defaultIconId": "flower-rosette"
+    },
+    {
+      "id": "leaf_celery",
+      "name": "Leaf celery",
+      "functions": ["edible", "pest_repellent", "pollinator_attractor"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "par_cel",
+          "name": "Par-Cel"
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 8
+      },
+      "fruiting": {
+        "start": 5,
+        "end": 10
+      },
+      "defaultIconId": "leaf-herb"
+    },
+    {
+      "id": "swiss_chard",
+      "name": "Swiss chard",
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "rhubarb_chard",
+          "name": "Rhubarb Chard"
+        }
+      ],
+      "blooming": {
+        "start": 7,
+        "end": 8
+      },
+      "fruiting": {
+        "start": 5,
+        "end": 11
+      },
+      "defaultIconId": "leaf-herb"
+    },
+    {
+      "id": "dichondra_repens",
+      "name": "Kidney weed (Dichondra repens)",
+      "functions": ["ground_cover"],
+      "layers": ["ground_cover"],
+      "cultivars": [
+        {
+          "id": "common",
+          "name": "Common"
+        }
+      ],
+      "blooming": {
+        "start": 5,
+        "end": 8
+      },
+      "defaultIconId": "seedling"
+    },
+    {
+      "id": "white_willow",
+      "name": "White willow",
+      "functions": ["dynamic_accumulator", "medicinal", "mulcher", "pollinator_attractor"],
+      "layers": ["overstory"],
+      "cultivars": [
+        {
+          "id": "common",
+          "name": "Common"
+        }
+      ],
+      "blooming": {
+        "start": 4,
+        "end": 5
+      },
+      "fruiting": {
+        "start": 6,
+        "end": 7
+      },
+      "defaultIconId": "tree"
+    },
+    {
+      "id": "lambs_lettuce",
+      "name": "Lamb's lettuce",
+      "functions": ["edible", "ground_cover", "pollinator_attractor"],
+      "layers": ["herb", "ground_cover"],
+      "cultivars": [
+        {
+          "id": "common",
+          "name": "Common"
+        }
+      ],
+      "blooming": {
+        "start": 4,
+        "end": 6
+      },
+      "fruiting": {
+        "start": 10,
+        "end": 4
+      },
+      "defaultIconId": "lettuce"
+    },
+    {
+      "id": "wild_rocket",
+      "name": "Wild rocket",
+      "functions": ["edible", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "common",
+          "name": "Common"
+        }
+      ],
+      "blooming": {
+        "start": 5,
+        "end": 9
+      },
+      "fruiting": {
+        "start": 4,
+        "end": 10
+      },
+      "defaultIconId": "leaf-herb"
     }
   ]
 }

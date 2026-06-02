@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.13.1
+
+- [DB] Added globe artichoke, leaf celery (Par-Cel), Swiss chard (Rhubarb Chard), kidney weed, white willow, lamb's lettuce, and wild rocket to the catalog
+- [DB] Added Geisha Girl calendula and Orange Flame French marigold cultivars
+
 ## 0.13.0
 
 - [FEATURE] Privacy statement at `/privacy` (local-first data, GitHub sync, Fly.io hosting, and EEA/UK rights)
