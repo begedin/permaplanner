@@ -69,6 +69,7 @@ export const buildGithubPlanShardExports = (
       syncRevision: normalized.syncRevision,
       mapScale: normalized.mapScale,
       backgroundOpacity: normalized.backgroundOpacity,
+      onboardingState: normalized.onboardingState,
       ...(options.backgroundImagePath !== undefined
         ? { backgroundImagePath: options.backgroundImagePath }
         : {}),

@@ -18,6 +18,7 @@ const sampleDoc: PermaplannerFileV1 = {
     linePhysicalLength: 5,
   },
   backgroundOpacity: 0.5,
+  onboardingState: 'done',
 };
 
 it('buildLocalPlanJsonText includes current version', () => {
@@ -31,6 +32,7 @@ it('buildGithubPlanShardExports versions each shard file', () => {
   });
   expect(JSON.parse(shards.configJson)).toMatchObject({
     version: PERMAPLANNER_FILE_VERSION,
+    onboardingState: 'done',
   });
   expect(JSON.parse(shards.plantsJson)).toMatchObject({
     version: PERMAPLANNER_FILE_VERSION,

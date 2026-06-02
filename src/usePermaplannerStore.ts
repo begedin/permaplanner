@@ -1,6 +1,5 @@
-import { watchDebounced } from '@vueuse/core';
-import { defineStore, storeToRefs } from 'pinia';
-import { nextTick, ref, watch } from 'vue';
+import { defineStore } from 'pinia';
+import { nextTick, ref } from 'vue';
 import { type Guild, type UserPlant } from './gardenTypes';
 import { assert } from './utils';
 import { plantCatalog } from './plantCatalog';
@@ -18,6 +17,11 @@ import {
   isPlanMigrationPending,
   noteLocalPlanMigrationIfNeeded,
 } from './usePlanMigration';
+import {
+  DEFAULT_ONBOARDING_STATE,
+  normalizeOnboardingState,
+  type OnboardingState,
+} from './onboardingTypes';
 import { clearFileBinding, persistFileBinding } from './sessionFileHandle';
 
 export type PermaplannerFileV1 = {
@@ -36,6 +40,7 @@ export type PermaplannerFileV1 = {
   backgroundImage?: string;
   /** Repo-relative image path (GitHub sync export only); local saves omit this. */
   backgroundImagePath?: string;
+  onboardingState: OnboardingState;
 };
 
 const defaultUserPlants = (): UserPlant[] => [];
@@ -71,6 +76,7 @@ export const parsePermaplannerDocument = async (
     guilds: mergeGuildsFromPersistence(data.guilds, data.guildLocations),
     mapScale: defaultMapScaleSnapshot(),
     backgroundOpacity: 0.4,
+    onboardingState: normalizeOnboardingState(data.onboardingState),
   };
   if (backgroundImageFromFile !== undefined) {
     base.backgroundImage = backgroundImageFromFile;
@@ -132,6 +138,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
   const plants = ref<UserPlant[]>(defaultUserPlants());
   const guilds = ref<Guild[]>([]);
   const syncRevision = ref(0);
+  const onboardingState = ref<OnboardingState>(DEFAULT_ONBOARDING_STATE);
 
   /** `File.lastModified` for the linked plan file (ms since epoch). */
   const localFileLastModifiedMs = ref<number | undefined>(undefined);
@@ -141,9 +148,6 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
 
   /** True while replacing plan state so reactive updates do not count as user edits. */
   const isBulkPlanUpdate = ref(false);
-
-  /** Plan differs from the last successful write to disk (or never saved). */
-  const unsavedChanges = ref(false);
 
   const snapshot = (): PermaplannerFileV1 => {
     const mapScale = useMapScaleStore();
@@ -159,6 +163,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
         linePhysicalLength: mapScale.linePhysicalLength,
       },
       backgroundOpacity: backgroundOpacity.value,
+      onboardingState: onboardingState.value,
     };
     if (bg !== undefined) {
       doc.backgroundImage = bg;
@@ -176,7 +181,6 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     const writable = await handle.createWritable();
     await writable.write(text);
     await writable.close();
-    unsavedChanges.value = false;
     await noteLocalFileLastModified(handle);
     try {
       await persistFileBinding(handle);
@@ -185,61 +189,13 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     }
   };
 
-  const flushAutosave = async () => {
+  const flushLocalSave = async () => {
     const h = fileHandle.value;
     if (!h || suppressAutosaveDepth.value > 0 || isPlanMigrationPending.value) {
       return;
     }
-    try {
-      await writePlanToHandle(h);
-    } catch (e) {
-      console.error('[permaplanner] Auto-save failed:', e);
-    }
+    await writePlanToHandle(h);
   };
-
-  const mapScaleStore = useMapScaleStore();
-  const {
-    start: mapStart,
-    end: mapEnd,
-    linePhysicalLength: mapLinePhysicalLength,
-  } = storeToRefs(mapScaleStore);
-
-  watch(
-    [
-      guilds,
-      plants,
-      backgroundOpacity,
-      backgroundImageDataUrl,
-      syncRevision,
-      mapStart,
-      mapEnd,
-      mapLinePhysicalLength,
-    ],
-    () => {
-      if (suppressAutosaveDepth.value > 0 || isBulkPlanUpdate.value) {
-        return;
-      }
-      unsavedChanges.value = true;
-    },
-    { deep: true, flush: 'post' },
-  );
-
-  watchDebounced(
-    [
-      guilds,
-      plants,
-      backgroundOpacity,
-      backgroundImageDataUrl,
-      syncRevision,
-      mapStart,
-      mapEnd,
-      mapLinePhysicalLength,
-    ],
-    () => {
-      void flushAutosave();
-    },
-    { deep: true, debounce: 300, maxWait: 2000, flush: 'post' },
-  );
 
   type LoadOptions = { skipBindingPersist?: boolean };
 
@@ -267,6 +223,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       plants.value = data.plants;
       guilds.value = data.guilds ?? [];
       syncRevision.value = data.syncRevision;
+      onboardingState.value = data.onboardingState;
       applyToMapScale(data);
 
       fileHandle.value = handle;
@@ -278,7 +235,6 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       suppressAutosaveDepth.value -= 1;
       await nextTick();
       isBulkPlanUpdate.value = false;
-      unsavedChanges.value = false;
     }
   };
 
@@ -313,13 +269,13 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       plants.value = defaultUserPlants();
       guilds.value = [];
       syncRevision.value = 0;
+      onboardingState.value = DEFAULT_ONBOARDING_STATE;
       useMapScaleStore().resetToDefaults();
     } finally {
       await nextTick();
       suppressAutosaveDepth.value -= 1;
       await nextTick();
       isBulkPlanUpdate.value = false;
-      unsavedChanges.value = false;
     }
   };
 
@@ -338,13 +294,13 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       plants.value = doc.plants ?? defaultUserPlants();
       guilds.value = doc.guilds ?? [];
       syncRevision.value = doc.syncRevision;
+      onboardingState.value = doc.onboardingState;
       applyToMapScale(doc);
     } finally {
       suppressAutosaveDepth.value -= 1;
     }
     void nextTick(() => {
       isBulkPlanUpdate.value = false;
-      unsavedChanges.value = false;
     });
   };
 
@@ -353,7 +309,9 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     save,
     resetToNewPlan,
     snapshot,
-    unsavedChanges,
+    flushLocalSave,
+    suppressAutosaveDepth,
+    isBulkPlanUpdate,
     fileName,
     fileHandle,
     needsFileRelink,
@@ -362,6 +320,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     plants,
     guilds,
     syncRevision,
+    onboardingState,
     setSyncRevision,
     localFileLastModifiedMs,
     refreshLocalFileLastModified,

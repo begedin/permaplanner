@@ -6,10 +6,16 @@ import { createRouter, createWebHistory } from 'vue-router';
 
 import PlanSessionDrawer from './PlanSessionDrawer.vue';
 import { usePermaplannerStore } from './usePermaplannerStore';
+import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
+
+import { routeNames } from './router';
 
 const router = createRouter({
   history: createWebHistory(),
-  routes: [{ path: '/', component: { template: '<div />' } }],
+  routes: [
+    { path: '/', component: { template: '<div />' } },
+    { path: '/privacy', name: routeNames.privacy, component: { template: '<div />' } },
+  ],
 });
 
 beforeEach(async () => {
@@ -51,9 +57,16 @@ it('closes when the backdrop is clicked', async () => {
 
 it('shows unsaved indicator inside the drawer when there are changes', () => {
   const store = usePermaplannerStore();
-  store.unsavedChanges = true;
+  store.fileHandle = { name: 'plan.json' } as FileSystemFileHandle;
+  const coordinator = usePlanSaveCoordinator();
+  coordinator.syncPersistedBaseline();
+  store.plants.push({
+    id: 'p1',
+    speciesId: 'comfrey',
+    cultivarId: null,
+  });
 
   renderDrawer({ open: true });
 
-  expect(screen.getByRole('status').textContent).toContain('Unsaved changes');
+  expect(screen.getByText(/Unsaved changes on one or more destinations/)).toBeTruthy();
 });

@@ -89,6 +89,43 @@ it('parsePermaplannerDocument returns current version after migration', async ()
   expect(doc.version).toBe(PERMAPLANNER_FILE_VERSION);
 });
 
+it('migratePlanDocumentRaw v4 → v5 adds onboardingState done for existing plans', async () => {
+  const migrated = await migratePlanDocumentRaw({
+    version: 4,
+    syncRevision: 0,
+    plants: [],
+    guilds: [],
+    guildLocations: [],
+    mapScale: {
+      start: { x: 0, y: 0 },
+      end: { x: 1, y: 0 },
+      linePhysicalLength: 1,
+    },
+    backgroundOpacity: 0.4,
+  });
+  expect(migrated).toMatchObject({
+    version: PERMAPLANNER_FILE_VERSION,
+    onboardingState: 'done',
+  });
+});
+
+it('parsePermaplannerDocument keeps a valid onboardingState from the file', async () => {
+  const doc = await parsePermaplannerDocument({
+    version: 4,
+    syncRevision: 0,
+    plants: [],
+    guilds: [],
+    onboardingState: 'movingFirst',
+    mapScale: {
+      start: { x: 0, y: 0 },
+      end: { x: 1, y: 0 },
+      linePhysicalLength: 1,
+    },
+    backgroundOpacity: 0.4,
+  });
+  expect(doc.onboardingState).toBe('movingFirst');
+});
+
 it('migratePlanDocumentRaw converts plant emoji overrides to iconId', async () => {
   const migrated = await migratePlanDocumentRaw({
     version: 3,

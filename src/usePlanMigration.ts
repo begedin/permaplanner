@@ -12,6 +12,7 @@ import {
   readDocumentVersion,
   type GithubShardMigrationVersions,
 } from './permaplannerFileMigrate';
+import { runPlanSaveSerial } from './planSaveSerialQueue';
 import { usePermaplannerStore } from './usePermaplannerStore';
 
 export type { GithubShardMigrationVersions };
@@ -107,27 +108,29 @@ export const performPlanMigration = async (): Promise<void> => {
   planMigrationError.value = undefined;
 
   try {
-    if (pending!.localFromVersion !== undefined) {
-      const handle = store.fileHandle;
-      if (!handle) {
-        throw new Error(
-          'Open or restore your plan file before migrating the local copy.',
-        );
+    await runPlanSaveSerial(async () => {
+      if (pending!.localFromVersion !== undefined) {
+        const handle = store.fileHandle;
+        if (!handle) {
+          throw new Error(
+            'Open or restore your plan file before migrating the local copy.',
+          );
+        }
+        await store.save(handle);
       }
-      await store.save(handle);
-    }
 
-    if (githubShardPending(pending!.github)) {
-      const token = getGithubAccessToken();
-      if (!token) {
-        throw new Error('Connect to GitHub before migrating the synced copy.');
+      if (githubShardPending(pending!.github)) {
+        const token = getGithubAccessToken();
+        if (!token) {
+          throw new Error('Connect to GitHub before migrating the synced copy.');
+        }
+        const planFileName = store.fileName;
+        if (!planFileName) {
+          throw new Error('Save your plan to a file before migrating the GitHub copy.');
+        }
+        await pushPlanJsonToGithubRepo(token, store.snapshot(), planFileName);
       }
-      const planFileName = store.fileName;
-      if (!planFileName) {
-        throw new Error('Save your plan to a file before migrating the GitHub copy.');
-      }
-      await pushPlanJsonToGithubRepo(token, store.snapshot(), planFileName);
-    }
+    });
 
     clearPlanMigrationPending();
     window.dispatchEvent(new Event(planRepoSyncUpdatedEventName));

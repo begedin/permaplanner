@@ -517,7 +517,7 @@
 
     <template v-if="context === 'guilds'">
       <div class="flex flex-col flex-1 min-h-0 w-full gap-1">
-        <div class="flex flex-col gap-1 w-full min-h-0 overflow-y-auto shrink">
+        <div class="flex flex-col gap-1 w-full min-h-0 overflow-y-auto shrink -mx-2 px-2">
           <div class="flex flex-row items-center justify-between gap-2 w-full flex-wrap">
             <p
               v-if="!placedOnMap"
@@ -815,50 +815,54 @@
               </button>
             </div>
           </div>
-          <div class="flex flex-row flex-wrap gap-1 w-full">
+          <div class="flex flex-col gap-1 w-full">
             <GuildCardSectionLabel>Functions</GuildCardSectionLabel>
-            <div
-              v-for="(f, fnKey) in guildFunctions"
-              :key="fnKey"
-              class="status-chip"
-              :class="{
-                'bg-red-200': f.count == 0,
-                'bg-sage-200': f.count == 1,
-                'bg-sage-500 text-white': f.count > 1,
-              }"
-              :aria-label="`${f.label}`"
-              :title="functionLabelTooltip(guildTooltipRows, fnKey, f.label)"
-            >
-              {{ f.label }}
-              <span
-                v-if="f.count > 1"
-                class="text-ink-500 bg-parchment-300/80 rounded-lg px-1 text-xs"
+            <div class="flex flex-row flex-wrap gap-1 w-full">
+              <div
+                v-for="(f, fnKey) in guildFunctions"
+                :key="fnKey"
+                class="status-chip"
+                :class="{
+                  'bg-red-200': f.count == 0,
+                  'bg-sage-200': f.count == 1,
+                  'bg-sage-500 text-white': f.count > 1,
+                }"
+                :aria-label="`${f.label}`"
+                :title="functionLabelTooltip(guildTooltipRows, fnKey, f.label)"
               >
-                {{ f.count }}
-              </span>
+                {{ f.label }}
+                <span
+                  v-if="f.count > 1"
+                  class="text-ink-500 bg-parchment-300/80 rounded-lg px-1 text-xs"
+                >
+                  {{ f.count }}
+                </span>
+              </div>
             </div>
           </div>
-          <div class="flex flex-row flex-wrap gap-1 w-full">
+          <div class="flex flex-col gap-1 w-full">
             <GuildCardSectionLabel>Layers</GuildCardSectionLabel>
-            <div
-              v-for="(l, layerKey) in guildLayers"
-              :key="layerKey"
-              class="status-chip"
-              :class="{
-                'bg-red-200': l.count == 0,
-                'bg-sage-200': l.count == 1,
-                'bg-sage-500 text-white': l.count > 1,
-              }"
-              :aria-label="`${l.label}`"
-              :title="layerLabelTooltip(guildTooltipRows, layerKey, l.label)"
-            >
-              {{ l.label }}
-              <span
-                v-if="l.count > 1"
-                class="text-xs text-ink-500 bg-parchment-300/80 rounded-lg px-1"
+            <div class="flex flex-row flex-wrap gap-1 w-full">
+              <div
+                v-for="(l, layerKey) in guildLayers"
+                :key="layerKey"
+                class="status-chip"
+                :class="{
+                  'bg-red-200': l.count == 0,
+                  'bg-sage-200': l.count == 1,
+                  'bg-sage-500 text-white': l.count > 1,
+                }"
+                :aria-label="`${l.label}`"
+                :title="layerLabelTooltip(guildTooltipRows, layerKey, l.label)"
               >
-                {{ l.count }}
-              </span>
+                {{ l.label }}
+                <span
+                  v-if="l.count > 1"
+                  class="text-xs text-ink-500 bg-parchment-300/80 rounded-lg px-1"
+                >
+                  {{ l.count }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -958,6 +962,7 @@
     <div
       v-if="context === 'aerialSidebar'"
       class="flex flex-col gap-1 w-full"
+      :class="{ 'mt-auto': fillCell }"
       aria-label="Guild fruit and bloom by month"
     >
       <GuildCardSectionLabel>Season</GuildCardSectionLabel>

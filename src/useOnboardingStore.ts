@@ -1,30 +1,14 @@
-import { useStorage } from '@vueuse/core';
-import { defineStore } from 'pinia';
+import { defineStore, storeToRefs } from 'pinia';
+
+import { advanceOnboardingState } from './onboardingTypes';
+import { usePermaplannerStore } from './usePermaplannerStore';
 
 export const useOnboardingStore = defineStore('onboarding', () => {
-  const onboardingSteps = [
-    'initial',
-    'movingFirst',
-    'movedFirst',
-    'movingSecond',
-    'movedSecond',
-    'settingLength',
-    'done',
-  ] as const;
-
-  const onboardingState = useStorage<
-    | 'initial'
-    | 'movingFirst'
-    | 'movedFirst'
-    | 'movingSecond'
-    | 'movedSecond'
-    | 'settingLength'
-    | 'done'
-  >('onboardingState', 'initial');
+  const permaplannerStore = usePermaplannerStore();
+  const { onboardingState } = storeToRefs(permaplannerStore);
 
   const advanceOnboarding = () => {
-    const currentIndex = onboardingSteps.indexOf(onboardingState.value);
-    onboardingState.value = onboardingSteps[currentIndex + 1] || 'done';
+    onboardingState.value = advanceOnboardingState(onboardingState.value);
   };
 
   return {

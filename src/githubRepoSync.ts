@@ -1015,30 +1015,28 @@ export const pushPlanJsonToGithubRepo = async (
 ): Promise<void> => {
   queuedPushPlan = { token, snapshot, sourceFileName };
 
-  if (!pushPlanRunner) {
-    pushPlanRunner = (async () => {
-      githubRepoPushInFlightCount.value += 1;
-      try {
-        do {
-          const job = queuedPushPlan!;
-          queuedPushPlan = null;
-          const committedAtMs = await pushPlanJsonToGithubRepoOnce(
-            job.token,
-            job.snapshot,
-            job.sourceFileName,
-          );
-          noteGithubRepoRemoteLastUpdatedMs(
-            job.sourceFileName,
-            committedAtMs ?? Date.now(),
-          );
-        } while (queuedPushPlan);
-        githubRepoLastSyncError.value = undefined;
-      } finally {
-        githubRepoPushInFlightCount.value -= 1;
-        pushPlanRunner = null;
-      }
-    })();
-  }
+  pushPlanRunner ??= (async () => {
+    githubRepoPushInFlightCount.value += 1;
+    try {
+      do {
+        const job = queuedPushPlan!;
+        queuedPushPlan = null;
+        const committedAtMs = await pushPlanJsonToGithubRepoOnce(
+          job.token,
+          job.snapshot,
+          job.sourceFileName,
+        );
+        noteGithubRepoRemoteLastUpdatedMs(
+          job.sourceFileName,
+          committedAtMs ?? Date.now(),
+        );
+      } while (queuedPushPlan);
+      githubRepoLastSyncError.value = undefined;
+    } finally {
+      githubRepoPushInFlightCount.value -= 1;
+      pushPlanRunner = null;
+    }
+  })();
 
   return pushPlanRunner;
 };

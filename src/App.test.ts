@@ -6,6 +6,7 @@ import { createMemoryHistory } from 'vue-router';
 import App from './App.vue';
 import { createAppRouter, routeNames } from './router';
 import { usePermaplannerStore } from './usePermaplannerStore';
+import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
 
 vi.mock('./usePlanAppGate', () => ({
   showMainApp: { value: true },
@@ -52,7 +53,15 @@ it('opens the plan drawer from the top bar icon', async () => {
 });
 
 it('shows an unsaved dot on the plan menu button', () => {
-  usePermaplannerStore().unsavedChanges = true;
+  const store = usePermaplannerStore();
+  store.fileHandle = { name: 'plan.json' } as FileSystemFileHandle;
+  const coordinator = usePlanSaveCoordinator();
+  coordinator.syncPersistedBaseline();
+  store.plants.push({
+    id: 'p1',
+    speciesId: 'comfrey',
+    cultivarId: null,
+  });
   renderApp();
 
   expect(

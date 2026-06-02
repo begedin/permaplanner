@@ -4,6 +4,16 @@
 
 - [FEATURE] Privacy statement at `/privacy` (local-first data, GitHub sync, Fly.io hosting, and EEA/UK rights)
 - [FEATURE] Privacy links on the plan setup gate and in the plan drawer
+- [REFACTOR] Plan save coordinator fans out autosave to linked destinations (local file, GitHub) with per-integration status in the plan drawer
+- [FIX] Serialize all plan saves (local file then GitHub, one job at a time) to avoid concurrent GitHub push conflicts
+- [FIX] Plan save status uses content digest (baseline on load) so refresh no longer shows false "unsaved" or spurious GitHub pushes
+- [FIX] "Save plan" no longer forces a GitHub push when the plan is unchanged; digest matches on-disk export shape
+- [FEATURE] Persist aerial onboarding progress in the plan file (and GitHub `config.json`), not browser local storage
+- [DB] Plan format v5: `onboardingState` on monolithic saves and config shard; existing plans default to `done`
+- [FEATURE] Expandable save destinations in the plan drawer (timestamps, GitHub links, retry on failure)
+- [TWEAK] Pin the season calendar to the bottom of guild list cards in browse mode
+- [FIX] Size guild list rows to their content instead of stretching cards to fill the viewport
+- [FIX] Align Plants, Functions, and Layers section titles with Season and Note on the guild detail card
 
 ## 0.12.1
 

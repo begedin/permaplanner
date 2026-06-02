@@ -143,6 +143,7 @@ it('buildLocalPlanJsonText omits empty guild notes from saved JSON', () => {
       linePhysicalLength: 1,
     },
     backgroundOpacity: 0.4,
+    onboardingState: 'done',
   };
   expect(buildLocalPlanJsonText(snapshot)).not.toContain('"note"');
 });

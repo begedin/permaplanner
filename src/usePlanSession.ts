@@ -1,9 +1,9 @@
 /* global FileSystemFileHandle */
 import { computed, ref } from 'vue';
 
-import { completeGithubAuthIfNeeded, syncIfRepoLinked } from './githubRepoSync';
+import { completeGithubAuthIfNeeded } from './githubRepoSync';
+import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
 import { checkGithubPlanMigration } from './usePlanMigration';
-import { useOnboardingStore } from './useOnboardingStore';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import {
   ensureReadAccess,
@@ -28,12 +28,16 @@ const isFilePermissionError = (e: unknown): boolean =>
 
 export const usePlanSession = () => {
   const permaplannerStore = usePermaplannerStore();
-  const onboarding = useOnboardingStore();
+  const planSaveCoordinator = usePlanSaveCoordinator(); // starts autosave fan-out
 
   const expectedRelinkName = computed(() => getPersistedBoundFileName());
 
-  const syncRepoAfterLocalSave = () => {
-    void syncIfRepoLinked(permaplannerStore.snapshot(), permaplannerStore.fileName);
+  /** After writing the local file: sync GitHub only if plan content changed since last push. */
+  const syncRemotesAfterLocalSave = () =>
+    planSaveCoordinator.scheduleFlushAfterLocalWrite();
+
+  const afterPlanLoaded = () => {
+    planSaveCoordinator.syncPersistedBaseline();
   };
 
   const tryRestorePersistedFile = async () => {
@@ -46,6 +50,7 @@ export const usePlanSession = () => {
     }
     try {
       await permaplannerStore.load(handle, { skipBindingPersist: true });
+      afterPlanLoaded();
     } catch (e) {
       if (isFilePermissionError(e)) {
         pendingReopenFileHandle.value = handle;
@@ -70,6 +75,7 @@ export const usePlanSession = () => {
         return;
       }
       await permaplannerStore.load(h, { skipBindingPersist: true });
+      afterPlanLoaded();
       await checkGithubPlanMigration(permaplannerStore.fileName);
     } catch (e) {
       console.error('[permaplanner] Could not open file after permission grant:', e);
@@ -91,6 +97,7 @@ export const usePlanSession = () => {
     try {
       const [fileHandle] = await window.showOpenFilePicker(options);
       await permaplannerStore.load(fileHandle);
+      afterPlanLoaded();
       await checkGithubPlanMigration(permaplannerStore.fileName);
     } catch (e) {
       console.error(e);
@@ -104,8 +111,8 @@ export const usePlanSession = () => {
       const fileHandle = await window.showSaveFilePicker(options);
       await permaplannerStore.resetToNewPlan();
       await permaplannerStore.save(fileHandle);
-      syncRepoAfterLocalSave();
-      onboarding.onboardingState = 'initial';
+      planSaveCoordinator.syncPersistedBaseline(['local-file']);
+      await planSaveCoordinator.saveIntegration('github');
     } catch (e) {
       console.error(e);
     }
@@ -119,7 +126,7 @@ export const usePlanSession = () => {
       permaplannerStore.fileHandle = fileHandle;
       permaplannerStore.fileName = fileHandle.name;
       await permaplannerStore.save(fileHandle);
-      syncRepoAfterLocalSave();
+      await syncRemotesAfterLocalSave();
     } catch (e) {
       console.error(e);
     }
@@ -130,7 +137,7 @@ export const usePlanSession = () => {
       const options = fileOptions(permaplannerStore.fileName);
       const fileHandle = await window.showSaveFilePicker(options);
       await permaplannerStore.save(fileHandle);
-      syncRepoAfterLocalSave();
+      await syncRemotesAfterLocalSave();
     } catch (e) {
       console.error(e);
     }
@@ -138,6 +145,9 @@ export const usePlanSession = () => {
 
   const runBootstrap = async () => {
     try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('onboardingState');
+      }
       await completeGithubAuthIfNeeded();
       await tryRestorePersistedFile();
       await checkGithubPlanMigration(
@@ -164,6 +174,6 @@ export const usePlanSession = () => {
     newPlan,
     save,
     saveAs,
-    syncRepoAfterLocalSave,
+    syncRemotesAfterLocalSave,
   };
 };

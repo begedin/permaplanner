@@ -91,7 +91,9 @@
               :transition="guildLayoutTransition"
               class="guild-list flex-1 min-h-0 overflow-y-auto p-2 grid gap-2"
               :class="
-                selectedGuildId ? 'guild-list--single-col auto-rows-min' : 'items-stretch'
+                selectedGuildId
+                  ? 'guild-list--single-col auto-rows-min'
+                  : 'items-stretch auto-rows-min content-start'
               "
               :style="guildListGridStyle"
             >

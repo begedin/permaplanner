@@ -2,8 +2,7 @@
   import { computed } from 'vue';
   import { useRoute } from 'vue-router';
 
-  import GithubRepoSyncPanel from './GithubRepoSyncPanel.vue';
-  import PlanUnsavedIndicator from './PlanUnsavedIndicator.vue';
+  import PlanSaveIntegrationsList from './PlanSaveIntegrationsList.vue';
   import ToolSlider from './ToolSlider.vue';
   import { isGithubStorageLinked } from './githubRepoSync';
   import { useMapScaleStore } from './useMapScaleStore';
@@ -15,7 +14,7 @@
   const mapScale = useMapScaleStore();
   const route = useRoute();
 
-  const { load, newPlan, save, saveAs } = usePlanSession();
+  const { load, newPlan, save } = usePlanSession();
 
   const showLocalFileActions = computed(() => Boolean(permaplannerStore.fileName));
   const showGithubOnlyHint = computed(
@@ -28,7 +27,7 @@
 
 <template>
   <div class="flex flex-col items-stretch gap-2">
-    <PlanUnsavedIndicator />
+    <PlanSaveIntegrationsList />
     <p
       v-if="showGithubOnlyHint"
       class="text-xs text-ink-600"
@@ -61,13 +60,6 @@
       >
         Save plan
       </button>
-      <button
-        type="button"
-        class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
-        @click="saveAs"
-      >
-        Save as…
-      </button>
     </template>
     <button
       type="button"
@@ -83,7 +75,6 @@
     >
       New plan
     </button>
-    <GithubRepoSyncPanel />
     <p class="pt-1 text-center text-[11px] text-ink-500">
       <RouterLink
         class="underline decoration-parchment-400 underline-offset-2 hover:text-ink-700"

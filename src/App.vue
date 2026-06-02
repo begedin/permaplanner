@@ -11,7 +11,7 @@
   import UiIconSprite from './uiIcons/UiIconSprite.vue';
   import PlantParts from './PlantParts.vue';
   import { showMainApp } from './usePlanAppGate';
-  import { usePermaplannerStore } from './usePermaplannerStore';
+  import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
   import { usePlanSession } from './usePlanSession';
   import { useCalendarSelection } from './useCalendarSelection';
   import { useGuildSelection } from './useGuildSelection';
@@ -26,10 +26,10 @@
   const { calendarTabTo } = useCalendarSelection();
 
   const planDrawerOpen = ref(false);
-  const { unsavedChanges } = storeToRefs(usePermaplannerStore());
+  const { hasUnsavedChanges } = storeToRefs(usePlanSaveCoordinator());
 
   const planMenuLabel = computed(() =>
-    unsavedChanges.value ? 'Plan and sync, unsaved changes' : 'Plan and sync',
+    hasUnsavedChanges.value ? 'Plan and sync, unsaved changes' : 'Plan and sync',
   );
 </script>
 <template>
@@ -57,7 +57,7 @@
           />
         </button>
         <span
-          v-if="unsavedChanges"
+          v-if="hasUnsavedChanges"
           class="pointer-events-none absolute top-0.5 right-0.5 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-sage-100"
           aria-hidden="true"
         />
