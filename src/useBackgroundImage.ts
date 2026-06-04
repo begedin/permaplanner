@@ -1,5 +1,6 @@
 import { computed, ref, watch } from 'vue';
 import { usePermaplannerStore } from './usePermaplannerStore';
+import { usePlanCommandHistory } from './usePlanCommandHistory';
 
 export const useBackgroundImage = () => {
   const permaplannerStore = usePermaplannerStore();
@@ -60,7 +61,9 @@ export const useBackgroundImage = () => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => {
-          permaplannerStore.backgroundImageDataUrl = reader.result as string;
+          usePlanCommandHistory().runMutation(() => {
+            permaplannerStore.backgroundImageDataUrl = reader.result as string;
+          });
         };
       },
 

@@ -23,6 +23,7 @@ import {
   type OnboardingState,
 } from './onboardingTypes';
 import { clearFileBinding, persistFileBinding } from './sessionFileHandle';
+import { usePlanCommandHistory } from './usePlanCommandHistory';
 
 export type PermaplannerFileV1 = {
   version: PermaplannerFileVersion;
@@ -230,6 +231,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       fileName.value = file.name;
       needsFileRelink.value = false;
       localFileLastModifiedMs.value = file.lastModified;
+      usePlanCommandHistory().clear();
     } finally {
       await nextTick();
       suppressAutosaveDepth.value -= 1;
@@ -271,6 +273,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       syncRevision.value = 0;
       onboardingState.value = DEFAULT_ONBOARDING_STATE;
       useMapScaleStore().resetToDefaults();
+      usePlanCommandHistory().clear();
     } finally {
       await nextTick();
       suppressAutosaveDepth.value -= 1;
@@ -296,6 +299,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       syncRevision.value = doc.syncRevision;
       onboardingState.value = doc.onboardingState;
       applyToMapScale(doc);
+      usePlanCommandHistory().clear();
     } finally {
       suppressAutosaveDepth.value -= 1;
     }

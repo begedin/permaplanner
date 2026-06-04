@@ -19,6 +19,7 @@
   import { useOnboardingStore } from './useOnboardingStore';
   import { isGithubStorageLinked } from './githubRepoSync';
   import { usePermaplannerStore } from './usePermaplannerStore';
+  import { usePlanCommandHistory } from './usePlanCommandHistory';
 
   const permaplannerStore = usePermaplannerStore();
 
@@ -133,6 +134,7 @@
   useScene(container, worldStage);
 
   const garden = useGardenStore();
+  const commandHistory = usePlanCommandHistory();
   const { selectedGuildId, selectGuild, clearSelection } = useGuildSelection();
   const { searchQuery, filteredGuilds, hasSearchQuery } = useGuildSearch();
 
@@ -179,11 +181,13 @@
   });
 
   const updateGuild = (guild: Guild) => {
-    const index = garden.guilds.findIndex((g) => g.id === guild.id);
-    if (index === -1) {
-      return;
-    }
-    garden.guilds[index] = guild;
+    commandHistory.runMutation(() => {
+      const index = garden.guilds.findIndex((g) => g.id === guild.id);
+      if (index === -1) {
+        return;
+      }
+      garden.guilds[index] = guild;
+    });
     void clearSelection();
   };
 </script>

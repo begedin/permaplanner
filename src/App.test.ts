@@ -7,6 +7,7 @@ import { createMemoryHistory } from 'vue-router';
 import App from './App.vue';
 import { createAppRouter, routeNames } from './router';
 import { usePermaplannerStore } from './usePermaplannerStore';
+import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
 
 vi.mock('./usePlanAppGate', () => ({
@@ -58,10 +59,12 @@ it('shows an unsaved dot on the plan menu button', async () => {
   store.fileHandle = { name: 'plan.json' } as FileSystemFileHandle;
   const coordinator = usePlanSaveCoordinator();
   coordinator.markIntegrationsSaved();
-  store.plants.push({
-    id: 'p1',
-    speciesId: 'comfrey',
-    cultivarId: null,
+  usePlanCommandHistory().runMutation(() => {
+    store.plants.push({
+      id: 'p1',
+      speciesId: 'comfrey',
+      cultivarId: null,
+    });
   });
   await flushPromises();
   renderApp();

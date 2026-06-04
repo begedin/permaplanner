@@ -1,4 +1,4 @@
-import { defineStore, storeToRefs } from 'pinia';
+import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
 import { githubRepoLastSyncError, planRepoSyncUpdatedEventName } from './githubRepoSync';
@@ -11,7 +11,6 @@ import { planSaveIntegrations } from './planSaveIntegrations';
 import { githubSaveFailureMessage } from './planSaveIntegrations/github';
 import { runPlanSaveSerial } from './planSaveSerialQueue';
 import { isPlanMigrationPending } from './usePlanMigration';
-import { useMapScaleStore } from './useMapScaleStore';
 import { usePermaplannerStore } from './usePermaplannerStore';
 
 type IntegrationRuntime = {
@@ -26,25 +25,10 @@ const defaultRuntime = (): IntegrationRuntime => ({
 });
 
 /** Delay before the trailing autosave after the last edit in a burst. */
-const AUTOSAVE_DEBOUNCE_MS = import.meta.env.VITEST ? 50 : 20_000;
+const AUTOSAVE_DEBOUNCE_MS = import.meta.env.VITEST ? 50 : 5000;
 
 export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
   const permaplannerStore = usePermaplannerStore();
-  const {
-    guilds,
-    plants,
-    backgroundOpacity,
-    backgroundImageDataUrl,
-    syncRevision,
-    onboardingState,
-    fileName,
-  } = storeToRefs(permaplannerStore);
-  const mapScaleStore = useMapScaleStore();
-  const {
-    start: mapStart,
-    end: mapEnd,
-    linePhysicalLength: mapLinePhysicalLength,
-  } = storeToRefs(mapScaleStore);
 
   const runtimeById = ref<Record<PlanSaveIntegrationId, IntegrationRuntime>>({
     'local-file': defaultRuntime(),
@@ -63,7 +47,7 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
 
   const saveContext = () => ({
     snapshot: () => permaplannerStore.snapshot(),
-    fileName: () => fileName.value,
+    fileName: () => permaplannerStore.fileName,
   });
 
   const integrationFor = (id: PlanSaveIntegrationId) => {
@@ -322,33 +306,20 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     window.addEventListener(planRepoSyncUpdatedEventName, onRepoUpdated);
   }
 
-  watch(
-    [
-      guilds,
-      plants,
-      backgroundOpacity,
-      backgroundImageDataUrl,
-      syncRevision,
-      onboardingState,
-      mapStart,
-      mapEnd,
-      mapLinePhysicalLength,
-    ],
-    () => {
-      if (!trackingEnabled.value) {
-        return;
-      }
-      if (
-        permaplannerStore.suppressAutosaveDepth > 0 ||
-        permaplannerStore.isBulkPlanUpdate
-      ) {
-        return;
-      }
-      editGeneration.value += 1;
-      scheduleAutosaveFlush();
-    },
-    { deep: true, flush: 'post' },
-  );
+  /** Call when a user edit command is applied (including undo/redo). */
+  const onEditApplied = () => {
+    if (!trackingEnabled.value) {
+      return;
+    }
+    if (
+      permaplannerStore.suppressAutosaveDepth > 0 ||
+      permaplannerStore.isBulkPlanUpdate
+    ) {
+      return;
+    }
+    editGeneration.value += 1;
+    scheduleAutosaveFlush();
+  };
 
   return {
     views,
@@ -365,5 +336,6 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     markIntegrationsSaved,
     noteDestinationSaved,
     scheduleFlushAfterLocalWrite,
+    onEditApplied,
   };
 });

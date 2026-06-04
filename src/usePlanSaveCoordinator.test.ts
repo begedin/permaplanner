@@ -5,6 +5,7 @@ import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 
 import { resetPlanSaveSerialQueueForTests } from './planSaveSerialQueue';
 import { usePermaplannerStore } from './usePermaplannerStore';
+import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
 
 beforeEach(() => {
@@ -31,10 +32,12 @@ it('leading autosave saves soon after the first edit in a burst', async () => {
   const coordinator = usePlanSaveCoordinator();
   coordinator.markIntegrationsSaved();
 
-  store.plants.push({
-    id: 'p1',
-    speciesId: 'comfrey',
-    cultivarId: null,
+  usePlanCommandHistory().runMutation(() => {
+    store.plants.push({
+      id: 'p1',
+      speciesId: 'comfrey',
+      cultivarId: null,
+    });
   });
   await flushPromises();
 
@@ -46,10 +49,12 @@ it('does not mark linked destinations unsaved before markIntegrationsSaved', () 
   store.fileHandle = { name: 'garden.json' } as FileSystemFileHandle;
 
   const coordinator = usePlanSaveCoordinator();
-  store.plants.push({
-    id: 'p1',
-    speciesId: 'comfrey',
-    cultivarId: null,
+  usePlanCommandHistory().runMutation(() => {
+    store.plants.push({
+      id: 'p1',
+      speciesId: 'comfrey',
+      cultivarId: null,
+    });
   });
 
   expect(coordinator.hasUnsavedChanges).toBe(false);
@@ -69,10 +74,12 @@ it('flushes local save through the local-file integration', async () => {
 
   const coordinator = usePlanSaveCoordinator();
   coordinator.markIntegrationsSaved();
-  store.plants.push({
-    id: 'p1',
-    speciesId: 'comfrey',
-    cultivarId: null,
+  usePlanCommandHistory().runMutation(() => {
+    store.plants.push({
+      id: 'p1',
+      speciesId: 'comfrey',
+      cultivarId: null,
+    });
   });
   await flushPromises();
 
@@ -139,19 +146,23 @@ it('autosave trailing edge saves after the debounce when edits continue in a bur
   const coordinator = usePlanSaveCoordinator();
   coordinator.markIntegrationsSaved();
 
-  store.plants.push({
-    id: 'p1',
-    speciesId: 'comfrey',
-    cultivarId: null,
+  usePlanCommandHistory().runMutation(() => {
+    store.plants.push({
+      id: 'p1',
+      speciesId: 'comfrey',
+      cultivarId: null,
+    });
   });
   await flushPromises();
   await flushPromises();
   expect(createWritable).toHaveBeenCalledTimes(1);
 
-  store.plants.push({
-    id: 'p2',
-    speciesId: 'yarrow',
-    cultivarId: null,
+  usePlanCommandHistory().runMutation(() => {
+    store.plants.push({
+      id: 'p2',
+      speciesId: 'yarrow',
+      cultivarId: null,
+    });
   });
   await flushPromises();
   expect(createWritable).toHaveBeenCalledTimes(1);
@@ -179,10 +190,12 @@ it('serializes overlapping flush and single-integration saves', async () => {
 
   const coordinator = usePlanSaveCoordinator();
   coordinator.markIntegrationsSaved();
-  store.plants.push({
-    id: 'p1',
-    speciesId: 'comfrey',
-    cultivarId: null,
+  usePlanCommandHistory().runMutation(() => {
+    store.plants.push({
+      id: 'p1',
+      speciesId: 'comfrey',
+      cultivarId: null,
+    });
   });
   await flushPromises();
 

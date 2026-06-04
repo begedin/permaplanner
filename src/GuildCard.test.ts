@@ -107,10 +107,9 @@ const baseThing = (
 it('updates guild note from the note textarea', async () => {
   const store = useGardenStore();
   const wrapper = await renderGuildCard();
-  fireEvent.update(
-    card(wrapper).getByRole('textbox', { name: 'Guild note' }),
-    'Bed notes',
-  );
+  const note = card(wrapper).getByRole('textbox', { name: 'Guild note' });
+  fireEvent.update(note, 'Bed notes');
+  fireEvent.blur(note);
   expect(store.guilds[0]).toMatchObject({ note: 'Bed notes' });
 });
 
@@ -118,7 +117,9 @@ it('clears guild note when the textarea is emptied', async () => {
   const store = useGardenStore();
   store.guilds[0] = { ...testGuild, note: 'Old note' };
   const wrapper = await renderGuildCard();
-  fireEvent.update(card(wrapper).getByRole('textbox', { name: 'Guild note' }), '');
+  const note = card(wrapper).getByRole('textbox', { name: 'Guild note' });
+  fireEvent.update(note, '');
+  fireEvent.blur(note);
   expect(store.guilds[0]).not.toHaveProperty('note');
 });
 
@@ -126,7 +127,9 @@ it('updates guild name from the name input', async () => {
   const store = useGardenStore();
   store.guilds[0]!.name = 'Old';
   const wrapper = await renderGuildCard();
-  fireEvent.update(card(wrapper).getByDisplayValue('Old'), 'New');
+  const name = card(wrapper).getByDisplayValue('Old');
+  fireEvent.update(name, 'New');
+  fireEvent.blur(name);
   expect(store.guilds[0]).toMatchObject({ name: 'New' });
 });
 

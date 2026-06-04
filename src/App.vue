@@ -13,11 +13,13 @@
   import { showMainApp } from './usePlanAppGate';
   import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
   import { usePlanSession } from './usePlanSession';
+  import { usePlanUndoRedoHotkeys } from './usePlanUndoRedoHotkeys';
   import { useCalendarSelection } from './useCalendarSelection';
   import { useGuildSelection } from './useGuildSelection';
   import { routeNames } from './router';
 
   usePlanSession();
+  usePlanUndoRedoHotkeys();
 
   const route = useRoute();
   const isPrivacyPage = computed(() => route.name === routeNames.privacy);

@@ -88,7 +88,10 @@
             href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement"
             rel="noopener noreferrer"
             target="_blank"
-          >GitHub’s privacy statement</a>. We do not copy your synced plans onto our servers.
+          >
+            GitHub’s privacy statement
+          </a>
+          . We do not copy your synced plans onto our servers.
         </p>
         <p class="mt-2">
           Signing in uses GitHub OAuth. Our server forwards the authorization exchange to
@@ -142,7 +145,9 @@
             href="https://fly.io/legal/privacy-policy/"
             rel="noopener noreferrer"
             target="_blank"
-          >Fly.io</a>
+          >
+            Fly.io
+          </a>
           with primary compute in Amsterdam (<code class="text-xs">ams</code> region).
           Fly.io acts as a hosting provider (processor) when delivering the app and may
           process the technical data described above.
@@ -186,7 +191,9 @@
             href="https://github.com/begedin/permaplanner/issues"
             rel="noopener noreferrer"
             target="_blank"
-          >GitHub issues</a>
+          >
+            GitHub issues
+          </a>
           on the project repository.
         </p>
       </section>

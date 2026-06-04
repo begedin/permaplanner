@@ -10,7 +10,11 @@
     { min: 0, max: 100, step: 1 },
   );
 
-  const emit = defineEmits<{ (e: 'update:value', value: number): void }>();
+  const emit = defineEmits<{
+    (e: 'update:value', value: number): void;
+    (e: 'edit-start'): void;
+    (e: 'commit:value', value: number): void;
+  }>();
 </script>
 <template>
   <label class="text-ink-600 flex flex-col gap-1">
@@ -23,8 +27,12 @@
         :step="step"
         :value="value"
         class="flex-grow flex-shrink w-3/4"
+        @pointerdown="emit('edit-start')"
         @input="
           emit('update:value', parseFloat(($event.target as HTMLInputElement).value))
+        "
+        @change="
+          emit('commit:value', parseFloat(($event.target as HTMLInputElement).value))
         "
       />
       <div class="w-8">{{ value }}</div>

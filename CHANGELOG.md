@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.15.0
+
+- [DB] Added service tree (Sorbus domestica) to the catalog
+- [DB] Added Josta jostaberry cultivar
+- [DB] Added oregano to the catalog
+- [FEATURE] Undo and redo for plan edits (guilds, plants, map scale, background opacity, reference line, and related aerial onboarding steps)
+- [FEATURE] Undo and Redo buttons in the guild tab header
+- [FEATURE] Undo with ⌘Z / Ctrl+Z; redo with ⌘⇧Z / Ctrl+Shift+Z or Ctrl+Y (skipped while typing in a field)
+- [TWEAK] Autosave waits 5 seconds after the last edit (leading edge saves soon after editing starts; trailing edge saves again after a pause)
+
 ## 0.14.0
 
 - [REFACTOR] Plan save tracking no longer uses a content digest; edits mark all linked destinations unsaved and autosave flushes every linked integration together

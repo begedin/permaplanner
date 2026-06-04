@@ -427,6 +427,14 @@
       "layers": ["shrub"],
       "cultivars": [
         {
+          "id": "josta",
+          "name": "Josta",
+          "fruiting": {
+            "start": 6,
+            "end": 7
+          }
+        },
+        {
           "id": "ymerina",
           "name": "Ymerina"
         },
@@ -715,6 +723,27 @@
         {
           "id": "venezia",
           "name": "Venezia"
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 9
+      },
+      "defaultIconId": "leaf-herb"
+    },
+    {
+      "id": "oregano",
+      "name": "Oregano",
+      "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "greek",
+          "name": "Greek (Origanum vulgare subsp. hirtum)"
+        },
+        {
+          "id": "italian",
+          "name": "Italian (Origanum × majoricum)"
         }
       ],
       "blooming": {
@@ -1217,6 +1246,31 @@
       "fruiting": {
         "start": 6,
         "end": 7
+      },
+      "defaultIconId": "cherry"
+    },
+    {
+      "id": "service_tree",
+      "name": "Service tree",
+      "functions": ["edible", "medicinal", "pollinator_attractor"],
+      "layers": ["overstory"],
+      "cultivars": [
+        {
+          "id": "pomifera",
+          "name": "Pomifera (apple-shaped fruit)"
+        },
+        {
+          "id": "pyrifera",
+          "name": "Pyrifera (pear-shaped fruit)"
+        }
+      ],
+      "blooming": {
+        "start": 5,
+        "end": 6
+      },
+      "fruiting": {
+        "start": 9,
+        "end": 11
       },
       "defaultIconId": "cherry"
     },

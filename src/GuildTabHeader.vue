@@ -1,10 +1,12 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue';
+  import { storeToRefs } from 'pinia';
 
   import HighlightText from './HighlightText.vue';
   import { searchInputPlaceholder } from './searchContext';
   import { useGardenStore } from './useGardenStore';
   import { useGuildSelection } from './useGuildSelection';
+  import { usePlanCommandHistory } from './usePlanCommandHistory';
   import { useSearchFocusHotkeys } from './useSearchFocusHotkeys';
 
   const props = defineProps<{
@@ -18,6 +20,8 @@
 
   const garden = useGardenStore();
   const { selectedGuildId, clearSelection, addGuild } = useGuildSelection();
+  const commandHistory = usePlanCommandHistory();
+  const { canUndo, canRedo } = storeToRefs(commandHistory);
   const searchInputRef = ref<HTMLInputElement | null>(null);
   const searchPlaceholder = searchInputPlaceholder();
 
@@ -85,12 +89,32 @@
         @input="emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
       />
     </label>
-    <button
-      type="button"
-      class="btn-soft-primary px-3 py-1.5 text-sm shrink-0"
-      @click="addGuild"
-    >
-      Add guild
-    </button>
+    <div class="flex flex-row items-center gap-1 shrink-0">
+      <button
+        type="button"
+        class="btn-soft-muted btn-soft-sm px-2 py-1.5 text-sm disabled:opacity-50"
+        :disabled="!canUndo"
+        aria-label="Undo"
+        @click="commandHistory.undo()"
+      >
+        Undo
+      </button>
+      <button
+        type="button"
+        class="btn-soft-muted btn-soft-sm px-2 py-1.5 text-sm disabled:opacity-50"
+        :disabled="!canRedo"
+        aria-label="Redo"
+        @click="commandHistory.redo()"
+      >
+        Redo
+      </button>
+      <button
+        type="button"
+        class="btn-soft-primary px-3 py-1.5 text-sm"
+        @click="addGuild"
+      >
+        Add guild
+      </button>
+    </div>
   </div>
 </template>

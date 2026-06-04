@@ -47,6 +47,7 @@
   import { plantDisplayLabel, plantGuildGroupLabel } from './resolvePlant';
   import { plantCatalog } from './plantCatalog';
   import { uuid } from './utils';
+  import { usePlanCommandHistory } from './usePlanCommandHistory';
 
   const GROUP_HEADER_MAX_PHASE_ICONS = 8;
 
@@ -66,6 +67,7 @@
 
   const garden = useGardenStore();
   const mapScale = useMapScaleStore();
+  const commandHistory = usePlanCommandHistory();
   const { selectedGuildId, selectGuild } = useGuildSelection();
   const { searchQuery } = useGuildSearch();
 
@@ -84,6 +86,13 @@
     }
     return g;
   });
+
+  /** Draft text while a field is focused; committed to the guild on blur via runMutation. */
+  const editingName = ref<string | null>(null);
+  const editingNote = ref<string | null>(null);
+
+  const displayedName = computed(() => editingName.value ?? guild.value.name);
+  const displayedNote = computed(() => editingNote.value ?? guild.value.note ?? '');
 
   type PlantEditor =
     | { kind: 'add' }
@@ -119,17 +128,38 @@
     );
   };
 
-  const setName = (e: Event) => {
-    guild.value.name = (e.target as HTMLInputElement)?.value || '';
+  const setEditingName = (e: Event) => {
+    editingName.value = (e.target as HTMLInputElement).value;
   };
 
-  const setNote = (e: Event) => {
-    const value = (e.target as HTMLTextAreaElement)?.value ?? '';
-    if (value === '') {
-      delete guild.value.note;
-    } else {
-      guild.value.note = value;
+  const commitName = () => {
+    if (editingName.value === null) {
+      return;
     }
+    const value = editingName.value;
+    editingName.value = null;
+    commandHistory.runMutation(() => {
+      guild.value.name = value || '';
+    });
+  };
+
+  const setEditingNote = (e: Event) => {
+    editingNote.value = (e.target as HTMLTextAreaElement).value;
+  };
+
+  const commitNote = () => {
+    if (editingNote.value === null) {
+      return;
+    }
+    const value = editingNote.value;
+    editingNote.value = null;
+    commandHistory.runMutation(() => {
+      if (value === '') {
+        delete guild.value.note;
+      } else {
+        guild.value.note = value;
+      }
+    });
   };
 
   const onNoteKeydown = (e: KeyboardEvent) => {
@@ -141,11 +171,7 @@
     const start = el.selectionStart ?? 0;
     const end = el.selectionEnd ?? 0;
     const next = `${el.value.slice(0, start)}\t${el.value.slice(end)}`;
-    if (next === '') {
-      delete guild.value.note;
-    } else {
-      guild.value.note = next;
-    }
+    editingNote.value = next;
     requestAnimationFrame(() => {
       el.selectionStart = start + 1;
       el.selectionEnd = start + 1;
@@ -156,12 +182,14 @@
     if (thingIds.length === 0) {
       return;
     }
-    const idSet = new Set(thingIds);
-    for (let i = guild.value.plants.length - 1; i >= 0; i--) {
-      if (idSet.has(guild.value.plants[i]!.id)) {
-        guild.value.plants.splice(i, 1);
+    commandHistory.runMutation(() => {
+      const idSet = new Set(thingIds);
+      for (let i = guild.value.plants.length - 1; i >= 0; i--) {
+        if (idSet.has(guild.value.plants[i]!.id)) {
+          guild.value.plants.splice(i, 1);
+        }
       }
-    }
+    });
   };
 
   const decrementGuildPlantQuantity = (thingIds: string[]) => {
@@ -251,27 +279,45 @@
     if (!selectedPick.value) {
       return;
     }
-    const { speciesId, cultivarId } = selectedPick.value;
-    let up = findMatchingUserPlant();
-    if (!up) {
-      up = { id: uuid(), speciesId, cultivarId };
-      garden.plants.push(up);
-    }
-    const editor = plantEditor.value;
-    if (editor?.kind === 'edit') {
-      const rp = garden.resolvedPlant(up.id);
-      const label = plantDisplayLabel(rp);
-      for (const thingId of editor.thingIds) {
-        const thing = guild.value.plants.find((t) => t.id === thingId);
-        if (thing) {
-          thing.plantId = up.id;
-          thing.nameOrCultivar = label;
-        }
+    commandHistory.runMutation(() => {
+      const { speciesId, cultivarId } = selectedPick.value!;
+      let up = findMatchingUserPlant();
+      if (!up) {
+        up = { id: uuid(), speciesId, cultivarId };
+        garden.plants.push(up);
       }
-      closePlantEditor();
-      return;
-    }
-    garden.addPlantToGuild(guild.value.id, up.id);
+      const editor = plantEditor.value;
+      if (editor?.kind === 'edit') {
+        const rp = garden.resolvedPlant(up.id);
+        const label = plantDisplayLabel(rp);
+        for (const thingId of editor.thingIds) {
+          const thing = guild.value.plants.find((t) => t.id === thingId);
+          if (thing) {
+            thing.plantId = up.id;
+            thing.nameOrCultivar = label;
+          }
+        }
+        return;
+      }
+      const guildRef = garden.guilds.find((g) => g.id === guild.value.id);
+      if (!guildRef) {
+        return;
+      }
+      const bounds = pathBounds(guildRef.path.length > 0 ? guildRef.path : []);
+      const placementBounds =
+        bounds.width > 0 && bounds.height > 0
+          ? bounds
+          : { x: 0, y: 0, width: 64, height: 64 };
+      guildRef.plants.push({
+        id: uuid(),
+        plantId: up.id,
+        x: placementBounds.x + 5,
+        y: placementBounds.y + 5,
+        width: 16,
+        height: 16,
+        nameOrCultivar: plantDisplayLabel(garden.resolvedPlant(up.id)),
+      });
+    });
     closePlantEditor();
   };
 
@@ -339,7 +385,9 @@
   const mulchStars: MulchLevel[] = [1, 2, 3, 4, 5];
 
   const setMulchLevel = (level: MulchLevel) => {
-    guild.value.mulchLevel = level;
+    commandHistory.runMutation(() => {
+      guild.value.mulchLevel = level;
+    });
   };
 
   const phenologySummaryForThingIds = (thingIds: string[]): string | null => {
@@ -417,27 +465,31 @@
     guild.value.plants.find((t) => t.id === thingId);
 
   const setThingGrowthPhase = (thingId: string, raw: string) => {
-    const thing = guildThing(thingId);
-    if (!thing) {
-      return;
-    }
-    if (raw === '') {
-      delete thing.growthPhase;
-    } else {
-      thing.growthPhase = raw as GrowthPhase;
-    }
+    commandHistory.runMutation(() => {
+      const thing = guildThing(thingId);
+      if (!thing) {
+        return;
+      }
+      if (raw === '') {
+        delete thing.growthPhase;
+      } else {
+        thing.growthPhase = raw as GrowthPhase;
+      }
+    });
   };
 
   const setThingVigorLevel = (thingId: string, vigor: PlantVigor | undefined) => {
-    const thing = guildThing(thingId);
-    if (!thing) {
-      return;
-    }
-    if (vigor === undefined) {
-      delete thing.vigor;
-    } else {
-      thing.vigor = vigor;
-    }
+    commandHistory.runMutation(() => {
+      const thing = guildThing(thingId);
+      if (!thing) {
+        return;
+      }
+      if (vigor === undefined) {
+        delete thing.vigor;
+      } else {
+        thing.vigor = vigor;
+      }
+    });
   };
 </script>
 
@@ -562,8 +614,10 @@
           </div>
           <input
             class="appearance-none bg-transparent border-none focus:outline-none text-ink-600 w-full truncate"
-            :value="guild.name"
-            @input="setName"
+            :value="displayedName"
+            @focus="editingName = guild.name"
+            @input="setEditingName"
+            @blur="commitName"
           />
           <div
             role="radiogroup"
@@ -949,10 +1003,12 @@
           <GuildCardSectionLabel>Note</GuildCardSectionLabel>
           <textarea
             class="input-soft w-full flex-1 min-h-0 resize-none p-2 text-sm text-ink-800 leading-relaxed"
-            :value="guild.note ?? ''"
+            :value="displayedNote"
             aria-label="Guild note"
             placeholder="Notes for this guild…"
-            @input="setNote"
+            @focus="editingNote = guild.note ?? ''"
+            @input="setEditingNote"
+            @blur="commitNote"
             @keydown="onNoteKeydown"
           />
         </div>

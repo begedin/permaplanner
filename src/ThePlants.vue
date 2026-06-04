@@ -23,8 +23,10 @@
   import UiIcon from './uiIcons/UiIcon.vue';
   import PlantFunctions from './PlantFunctions.vue';
   import PlantLayers from './PlantLayers.vue';
+  import { usePlanCommandHistory } from './usePlanCommandHistory';
 
   const garden = useGardenStore();
+  const commandHistory = usePlanCommandHistory();
 
   const plantRowLabel = (plant: UserPlant): string => {
     const resolved = resolveUserPlant(plant, plantCatalog);
@@ -143,11 +145,13 @@
 
     const index = garden.plants.findIndex((p) => p.id === plantInEditing.value.id);
     const toSave = { ...plantInEditing.value };
-    if (index === -1) {
-      garden.plants.push(toSave);
-    } else {
-      garden.plants.splice(index, 1, toSave);
-    }
+    commandHistory.runMutation(() => {
+      if (index === -1) {
+        garden.plants.push(toSave);
+      } else {
+        garden.plants.splice(index, 1, toSave);
+      }
+    });
   };
 
   const edit = (plant: UserPlant) => {
@@ -167,7 +171,9 @@
   };
 
   const remove = (plant: UserPlant) => {
-    garden.plants = garden.plants.filter((p) => p.id !== plant.id);
+    commandHistory.runMutation(() => {
+      garden.plants = garden.plants.filter((p) => p.id !== plant.id);
+    });
   };
 
   const isNew = computed(

@@ -4,6 +4,7 @@ import { setActivePinia } from 'pinia';
 import { createPinia } from 'pinia';
 
 import { usePermaplannerStore } from './usePermaplannerStore';
+import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
 import type { Guild } from './gardenTypes';
 
@@ -127,7 +128,9 @@ it('auto-saves guild changes to the linked file on the leading autosave edge', a
     plants: [],
     mulchLevel: 1,
   };
-  store.guilds = [autoGuild];
+  usePlanCommandHistory().runMutation(() => {
+    store.guilds = [autoGuild];
+  });
   await flushPromises();
 
   setActivePinia(createPinia());

@@ -7,6 +7,7 @@ import { plantCatalog } from './plantCatalog';
 import { confirmGuildDeletion } from './confirmGuildDeletion';
 import { pathBounds } from './guildPathBounds';
 import { plantDisplayLabel, resolveUserPlant } from './resolvePlant';
+import { usePlanCommandHistory } from './usePlanCommandHistory';
 
 export * from './gardenTypes';
 
@@ -31,6 +32,7 @@ type Bounds = {
 export const useGardenStore = defineStore('garden', () => {
   const permaplanner = usePermaplannerStore();
   const { plants, guilds } = storeToRefs(permaplanner);
+  const commandHistory = usePlanCommandHistory();
 
   const plantsById = computed(() => {
     const m: Record<string, Plant> = {};
@@ -50,36 +52,52 @@ export const useGardenStore = defineStore('garden', () => {
     ),
   );
 
-  const deleteFeature = (id: string) => {
-    if (guilds.value.some((g) => g.id === id)) {
-      removeGuild(id);
-      return;
-    }
-
-    const guildByPlantId = guilds.value.find((g) => g.plants.some((p) => p.id === id));
-
-    if (guildByPlantId) {
-      guildByPlantId.plants = guildByPlantId.plants.filter((p) => p.id !== id);
-    }
-  };
-
   const hoveredId = ref<string>();
 
   const deactivateAll = () => {
     hoveredId.value = undefined;
   };
 
+  const removeGuildWithoutConfirm = (id: string) => {
+    guilds.value = guilds.value.filter((g) => g.id !== id);
+    if (hoveredId.value === id) {
+      hoveredId.value = undefined;
+    }
+  };
+
+  const deleteFeature = (id: string) => {
+    if (guilds.value.some((g) => g.id === id)) {
+      const guild = guilds.value.find((g) => g.id === id);
+      if (!guild || !confirmGuildDeletion(guild.name)) {
+        return;
+      }
+      commandHistory.runMutation(() => removeGuildWithoutConfirm(id));
+      return;
+    }
+
+    commandHistory.runMutation(() => {
+      const guildByPlantId = guilds.value.find((g) => g.plants.some((p) => p.id === id));
+
+      if (guildByPlantId) {
+        guildByPlantId.plants = guildByPlantId.plants.filter((p) => p.id !== id);
+      }
+    });
+  };
+
   const createGuild = (): Guild => {
-    const g: Guild = {
-      id: uuid(),
-      name: 'New guild',
-      path: [],
-      plants: [],
-      mulchLevel: 1,
-    };
-    guilds.value.push(g);
-    hoveredId.value = g.id;
-    return g;
+    let created!: Guild;
+    commandHistory.runMutation(() => {
+      created = {
+        id: uuid(),
+        name: 'New guild',
+        path: [],
+        plants: [],
+        mulchLevel: 1,
+      };
+      guilds.value.push(created);
+      hoveredId.value = created.id;
+    });
+    return created;
   };
 
   const removeGuild = (id: string) => {
@@ -87,38 +105,39 @@ export const useGardenStore = defineStore('garden', () => {
     if (!guild || !confirmGuildDeletion(guild.name)) {
       return;
     }
-    guilds.value = guilds.value.filter((g) => g.id !== id);
-    if (hoveredId.value === id) {
-      hoveredId.value = undefined;
-    }
+    commandHistory.runMutation(() => removeGuildWithoutConfirm(id));
   };
 
   /** Clears the guild bed on the aerial map; keeps the guild and its plants. */
   const removeGuildFromAerialMap = (id: string) => {
-    const g = guilds.value.find((guild) => guild.id === id);
-    if (g) {
-      g.path = [];
-    }
+    commandHistory.runMutation(() => {
+      const g = guilds.value.find((guild) => guild.id === id);
+      if (g) {
+        g.path = [];
+      }
+    });
   };
 
   const addPlantToGuild = (guildId: string, plantId: string) => {
-    const guild = guilds.value.find((g) => g.id === guildId);
-    if (!guild) {
-      return;
-    }
-    const bounds =
-      guildBoundsById.value[guildId] ??
-      ({ x: 0, y: 0, width: 64, height: 64 } satisfies Bounds);
-    const rp = resolvedPlant(plantId);
+    commandHistory.runMutation(() => {
+      const guild = guilds.value.find((g) => g.id === guildId);
+      if (!guild) {
+        return;
+      }
+      const bounds =
+        guildBoundsById.value[guildId] ??
+        ({ x: 0, y: 0, width: 64, height: 64 } satisfies Bounds);
+      const rp = resolvedPlant(plantId);
 
-    guild.plants.push({
-      id: uuid(),
-      plantId,
-      x: bounds.x + 5,
-      y: bounds.y + 5,
-      width: 16,
-      height: 16,
-      nameOrCultivar: plantDisplayLabel(rp),
+      guild.plants.push({
+        id: uuid(),
+        plantId,
+        x: bounds.x + 5,
+        y: bounds.y + 5,
+        width: 16,
+        height: 16,
+        nameOrCultivar: plantDisplayLabel(rp),
+      });
     });
   };
 

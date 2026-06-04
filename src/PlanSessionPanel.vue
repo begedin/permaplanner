@@ -6,12 +6,34 @@
   import ToolSlider from './ToolSlider.vue';
   import { isGithubStorageLinked } from './githubRepoSync';
   import { useMapScaleStore } from './useMapScaleStore';
+  import { useOnboardingStore } from './useOnboardingStore';
   import { usePermaplannerStore } from './usePermaplannerStore';
+  import { usePlanEditSession } from './usePlanEditSession';
   import { usePlanSession } from './usePlanSession';
   import { isAerialRoute, routeNames } from './router';
 
   const permaplannerStore = usePermaplannerStore();
   const mapScale = useMapScaleStore();
+  const onboarding = useOnboardingStore();
+  const mapScaleEditSession = usePlanEditSession();
+  const backgroundOpacityEditSession = usePlanEditSession();
+
+  let mapScaleOnboardingTimer: ReturnType<typeof setTimeout> | undefined;
+
+  const finishMapScaleEdit = () => {
+    mapScaleEditSession.commit();
+    if (mapScale.linePhysicalLength === 1) {
+      return;
+    }
+    onboarding.onboardingState = 'settingLength';
+    if (mapScaleOnboardingTimer !== undefined) {
+      clearTimeout(mapScaleOnboardingTimer);
+    }
+    mapScaleOnboardingTimer = setTimeout(() => {
+      onboarding.onboardingState = 'done';
+      mapScaleOnboardingTimer = undefined;
+    }, 1000);
+  };
   const route = useRoute();
 
   const { load, newPlan, save } = usePlanSession();
@@ -37,18 +59,28 @@
     </p>
     <template v-if="showAerialMapTools">
       <ToolSlider
-        v-model:value="mapScale.linePhysicalLength"
+        :value="mapScale.linePhysicalLength"
         label="Map scale"
         :min="1"
         :max="300"
         :step="1"
+        @edit-start="mapScaleEditSession.begin"
+        @update:value="mapScale.linePhysicalLength = $event"
+        @commit:value="finishMapScaleEdit"
       />
       <ToolSlider
-        v-model:value="permaplannerStore.backgroundOpacity"
+        :value="permaplannerStore.backgroundOpacity"
         label="BG opacity"
         :min="0"
         :max="1"
         :step="0.01"
+        @edit-start="backgroundOpacityEditSession.begin"
+        @update:value="permaplannerStore.backgroundOpacity = $event"
+        @commit:value="
+          () => {
+            backgroundOpacityEditSession.commit();
+          }
+        "
       />
     </template>
     <template v-if="showLocalFileActions">

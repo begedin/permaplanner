@@ -1,97 +1,92 @@
 <script lang="ts" setup>
-  import { computed, watch } from 'vue';
+  import { computed, onBeforeUnmount } from 'vue';
+  import { storeToRefs } from 'pinia';
+  import { advanceOnboardingState } from './onboardingTypes';
   import { useMapScaleStore } from './useMapScaleStore';
-  import { useOnboardingStore } from './useOnboardingStore';
+  import { usePermaplannerStore } from './usePermaplannerStore';
+  import { usePlanCommandHistory } from './usePlanCommandHistory';
   import { useSceneStore } from './useSceneStore';
 
   const store = useMapScaleStore();
-  const onboarding = useOnboardingStore();
+  const { onboardingState } = storeToRefs(usePermaplannerStore());
   const scene = useSceneStore();
+  const commandHistory = usePlanCommandHistory();
 
-  const startMoveScaleStart = () => {
-    store.start.x = scene.worldX;
-    store.start.y = scene.worldY;
+  let activeDragAbort: AbortController | undefined;
 
+  onBeforeUnmount(() => {
+    activeDragAbort?.abort();
+    activeDragAbort = undefined;
+  });
+
+  const dragMapScalePoint = (
+    applyWorldPosition: (x: number, y: number) => void,
+    onMouseMove?: () => void,
+  ) => {
+    activeDragAbort?.abort();
+    const before = commandHistory.capturePlanSavableState();
     const controller = new AbortController();
+    activeDragAbort = controller;
+
+    applyWorldPosition(scene.worldX, scene.worldY);
+
+    const finishDrag = () => {
+      if (
+        onboardingState.value === 'movingFirst' ||
+        onboardingState.value === 'movingSecond'
+      ) {
+        onboardingState.value = advanceOnboardingState(onboardingState.value);
+      }
+      commandHistory.commitSnapshot(before);
+      controller.abort();
+      if (activeDragAbort === controller) {
+        activeDragAbort = undefined;
+      }
+    };
 
     document.addEventListener(
       'mousemove',
       () => {
-        store.start.x = scene.worldX;
-        store.start.y = scene.worldY;
-        if (onboarding.onboardingState === 'initial') {
-          onboarding.advanceOnboarding();
-        }
+        applyWorldPosition(scene.worldX, scene.worldY);
+        onMouseMove?.();
       },
       { signal: controller.signal },
     );
 
-    document.addEventListener(
-      'mouseup',
-      () => {
-        if (
-          onboarding.onboardingState === 'movingFirst' ||
-          onboarding.onboardingState === 'movingSecond'
-        ) {
-          onboarding.advanceOnboarding();
-        }
-        controller.abort();
+    document.addEventListener('mouseup', finishDrag, { signal: controller.signal });
+  };
+
+  const startMoveScaleStart = () => {
+    dragMapScalePoint(
+      (x, y) => {
+        store.start.x = x;
+        store.start.y = y;
       },
-      { signal: controller.signal },
+      () => {
+        if (onboardingState.value === 'initial') {
+          onboardingState.value = advanceOnboardingState(onboardingState.value);
+        }
+      },
     );
   };
 
   const startMoveScaleEnd = () => {
-    store.end.x = scene.worldX;
-    store.end.y = scene.worldY;
-
-    const controller = new AbortController();
-
-    document.addEventListener(
-      'mousemove',
+    dragMapScalePoint(
+      (x, y) => {
+        store.end.x = x;
+        store.end.y = y;
+      },
       () => {
-        store.end.x = scene.worldX;
-        store.end.y = scene.worldY;
-
         if (
           (store.end.x !== store.start.x || store.end.y !== store.start.y) &&
-          onboarding.onboardingState !== 'movingFirst' &&
-          onboarding.onboardingState !== 'movingSecond'
+          onboardingState.value !== 'movingFirst' &&
+          onboardingState.value !== 'movingSecond'
         ) {
-          onboarding.advanceOnboarding();
+          onboardingState.value = advanceOnboardingState(onboardingState.value);
         }
       },
-      { signal: controller.signal },
-    );
-
-    document.addEventListener(
-      'mouseup',
-      () => {
-        if (
-          onboarding.onboardingState === 'movingFirst' ||
-          onboarding.onboardingState === 'movingSecond'
-        ) {
-          onboarding.advanceOnboarding();
-        }
-        controller.abort();
-      },
-      { signal: controller.signal },
     );
   };
-
-  let timeout = 0;
-
-  watch(
-    () => store.linePhysicalLength,
-    (l) => {
-      if (l === 1) return;
-      onboarding.onboardingState = 'settingLength';
-      window.clearTimeout(timeout);
-      timeout = window.setTimeout(() => {
-        onboarding.onboardingState = 'done';
-      }, 1000);
-    },
-  );
 
   const centroid = computed(() => {
     const { x1, y1, x2, y2 } = store.line;
