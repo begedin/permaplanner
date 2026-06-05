@@ -1,10 +1,17 @@
 # Changelog
 
+## 0.16.0
+
+- [FIX] GitHub save force-updates `main` after each push so branch races no longer fail the ref step; removed pre-push remote timestamp conflict check so the in-app save queue can overwrite the backup tip
+
 ## 0.15.0
 
 - [DB] Added service tree (Sorbus domestica) to the catalog
 - [DB] Added Josta jostaberry cultivar
 - [DB] Added oregano to the catalog
+- [DB] Added Meteor sour cherry cultivar
+- [DB] Added kiwi and hardy kiwi (kiwiberry) to the catalog
+- [DB] Added Judas tree (Cercis siliquastrum) to the catalog
 - [FEATURE] Undo and redo for plan edits (guilds, plants, map scale, background opacity, reference line, and related aerial onboarding steps)
 - [FEATURE] Undo and Redo buttons in the guild tab header
 - [FEATURE] Undo with ⌘Z / Ctrl+Z; redo with ⌘⇧Z / Ctrl+Shift+Z or Ctrl+Y (skipped while typing in a field)

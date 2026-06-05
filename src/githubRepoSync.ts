@@ -25,7 +25,7 @@ export const githubRepoPushInFlightCount = ref(0);
 export const githubRepoLastSyncError = ref<string | undefined>();
 /**
  * In-memory remote save timestamp for the current garden: loaded from GitHub on plan load,
- * checked before push, updated after a successful push. Not persisted locally.
+ * updated after a successful push. Not persisted locally.
  */
 export const githubRepoRemoteLastUpdatedMs = ref<number | undefined>();
 
@@ -723,7 +723,7 @@ const updateGitBranchRef = async (
   const res = await fetch(gitApiUrl(fullName, `refs/${refSegment}`), {
     method: 'PATCH',
     headers: { ...githubHeaders(token), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sha: commitSha }),
+    body: JSON.stringify({ sha: commitSha, force: true }),
   });
   if (res.ok) {
     return 'ok';
@@ -853,23 +853,6 @@ export const refreshGithubRepoRemoteLastUpdatedMs = async (
 ): Promise<number | undefined> =>
   fetchGithubRepoRemoteLastUpdatedMs(token, sourceFileName);
 
-const assertGithubRemoteUnchanged = async (
-  token: string,
-  sourceFileName: string | undefined,
-): Promise<void> => {
-  const current = await fetchGithubRepoRemoteLastUpdatedMs(token, sourceFileName);
-  const baseline = githubRepoRemoteLastUpdatedMs.value;
-  if (baseline === current) {
-    return;
-  }
-  failGithubSync(
-    'write',
-    planRepoConfigPath(sourceFileName),
-    409,
-    'Remote plan changed since load.',
-  );
-};
-
 export const pullPlanJsonFromGithubRepo = async (
   token: string,
   sourceFileName: string | undefined,
@@ -930,7 +913,6 @@ const pushPlanJsonToGithubRepoOnce = async (
   snapshot: PermaplannerFileV1,
   sourceFileName: string | undefined,
 ): Promise<number | undefined> => {
-  await assertGithubRemoteUnchanged(token, sourceFileName);
   const fullName = await ensurePlanRepo(token);
   const configPath = planRepoConfigPath(sourceFileName);
 

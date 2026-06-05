@@ -458,6 +458,27 @@
       "defaultIconId": "blueberry"
     },
     {
+      "id": "judas_tree",
+      "name": "Judas tree",
+      "functions": ["nitrogen_fixer", "pollinator_attractor", "mulcher"],
+      "layers": ["understory"],
+      "cultivars": [
+        {
+          "id": "bodnant",
+          "name": "Bodnant"
+        },
+        {
+          "id": "alba",
+          "name": "Alba"
+        }
+      ],
+      "blooming": {
+        "start": 3,
+        "end": 4
+      },
+      "defaultIconId": "tree"
+    },
+    {
       "id": "banana",
       "name": "Banana",
       "functions": ["edible", "pollinator_attractor"],
@@ -1211,6 +1232,18 @@
           "name": "Montmorency"
         },
         {
+          "id": "meteor",
+          "name": "Meteor",
+          "blooming": {
+            "start": 5,
+            "end": 5
+          },
+          "fruiting": {
+            "start": 7,
+            "end": 7
+          }
+        },
+        {
           "id": "north_star",
           "name": "North Star",
           "blooming": {
@@ -1314,6 +1347,69 @@
         "end": 10
       },
       "defaultIconId": "tree"
+    },
+    {
+      "id": "kiwi",
+      "name": "Kiwi",
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["vine"],
+      "cultivars": [
+        {
+          "id": "hayward",
+          "name": "Hayward"
+        },
+        {
+          "id": "jenny",
+          "name": "Jenny"
+        },
+        {
+          "id": "tomuri",
+          "name": "Tomuri (male pollinizer)",
+          "fruiting": null
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 6
+      },
+      "fruiting": {
+        "start": 10,
+        "end": 11
+      },
+      "defaultIconId": "kiwi"
+    },
+    {
+      "id": "hardy_kiwi",
+      "name": "Hardy kiwi (kiwiberry)",
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["vine"],
+      "cultivars": [
+        {
+          "id": "ananasnaya",
+          "name": "Ananasnaya (Anna)"
+        },
+        {
+          "id": "issai",
+          "name": "Issai",
+          "fruiting": {
+            "start": 9,
+            "end": 9
+          }
+        },
+        {
+          "id": "kens_red",
+          "name": "Ken's Red"
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 6
+      },
+      "fruiting": {
+        "start": 9,
+        "end": 9
+      },
+      "defaultIconId": "kiwi"
     },
     {
       "id": "hazelnut",
