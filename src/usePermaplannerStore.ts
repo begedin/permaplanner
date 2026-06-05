@@ -288,9 +288,9 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     }
   };
 
-  const applyRemoteRepoSnapshot = (doc: PermaplannerFileV1) => {
-    suppressAutosaveDepth.value += 1;
+  const applyRemoteRepoSnapshot = async (doc: PermaplannerFileV1) => {
     isBulkPlanUpdate.value = true;
+    suppressAutosaveDepth.value += 1;
     try {
       backgroundImageDataUrl.value = doc.backgroundImage;
       backgroundOpacity.value = doc.backgroundOpacity;
@@ -301,11 +301,11 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       applyToMapScale(doc);
       usePlanCommandHistory().clear();
     } finally {
+      await nextTick();
       suppressAutosaveDepth.value -= 1;
-    }
-    void nextTick(() => {
+      await nextTick();
       isBulkPlanUpdate.value = false;
-    });
+    }
   };
 
   return {

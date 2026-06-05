@@ -5,7 +5,9 @@ import {
   completeGithubAuthIfNeeded,
   getGithubAccessToken,
   loadGithubRemoteSaveBaseline,
+  pullPlanJsonFromGithubRepo,
   readGithubClientIdConfig,
+  type GithubPlanListEntry,
 } from './githubRepoSync';
 import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
 import { checkGithubPlanMigration } from './usePlanMigration';
@@ -121,6 +123,42 @@ export const usePlanSession = () => {
     }
   };
 
+  const restorePlanFromGithub = async (entry: GithubPlanListEntry) => {
+    clearReopenFileUi();
+    const token = getGithubAccessToken();
+    if (!token) {
+      throw new Error('Connect to GitHub before opening a plan from the repo.');
+    }
+    const doc = await pullPlanJsonFromGithubRepo(token, entry.suggestedFileName);
+    await permaplannerStore.applyRemoteRepoSnapshot(doc);
+    permaplannerStore.fileHandle = undefined;
+    permaplannerStore.fileName = entry.suggestedFileName;
+    permaplannerStore.needsFileRelink = false;
+    await afterPlanLoaded();
+    await checkGithubPlanMigration(entry.suggestedFileName);
+  };
+
+  const loadFromGithub = async (entry: GithubPlanListEntry) => {
+    await restorePlanFromGithub(entry);
+    await saveLocalCopy();
+  };
+
+  const saveLocalCopy = async () => {
+    try {
+      const fileHandle = await window.showSaveFilePicker(
+        fileOptions(permaplannerStore.fileName),
+      );
+      await permaplannerStore.save(fileHandle);
+      planSaveCoordinator.markIntegrationsSaved(['local-file']);
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') {
+        return;
+      }
+      console.error(e);
+      throw e;
+    }
+  };
+
   const newPlan = async () => {
     try {
       clearReopenFileUi();
@@ -191,6 +229,9 @@ export const usePlanSession = () => {
     clearReopenFileUi,
     continueReopenPersistedFile,
     load,
+    loadFromGithub,
+    restorePlanFromGithub,
+    saveLocalCopy,
     newPlan,
     save,
     saveAs,

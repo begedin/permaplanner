@@ -1,10 +1,11 @@
 <script setup lang="ts">
-  import { computed } from 'vue';
+  import { computed, ref } from 'vue';
   import { useRoute } from 'vue-router';
 
+  import GithubPlanPickerDialog from './GithubPlanPickerDialog.vue';
   import PlanSaveIntegrationsList from './PlanSaveIntegrationsList.vue';
   import ToolSlider from './ToolSlider.vue';
-  import { isGithubStorageLinked } from './githubRepoSync';
+  import { isGithubStorageLinked, readGithubClientIdConfig } from './githubRepoSync';
   import { useMapScaleStore } from './useMapScaleStore';
   import { useOnboardingStore } from './useOnboardingStore';
   import { usePermaplannerStore } from './usePermaplannerStore';
@@ -38,6 +39,10 @@
 
   const { load, newPlan, save } = usePlanSession();
 
+  const githubPickerOpen = ref(false);
+  const showOpenFromGithub = computed(
+    () => Boolean(readGithubClientIdConfig()) && isGithubStorageLinked(),
+  );
   const showLocalFileActions = computed(() => Boolean(permaplannerStore.fileName));
   const showGithubOnlyHint = computed(
     () => !permaplannerStore.fileName && isGithubStorageLinked(),
@@ -54,8 +59,8 @@
       v-if="showGithubOnlyHint"
       class="text-xs text-ink-600"
     >
-      Plan backed up on GitHub. Use <strong>Open plan</strong> to also save a copy on this
-      device.
+      No local plan file yet. Use <strong>Open from GitHub…</strong> to load a backed-up
+      garden, or <strong>Open plan</strong> for a file on this device.
     </p>
     <template v-if="showAerialMapTools">
       <ToolSlider
@@ -100,6 +105,15 @@
     >
       Open plan
     </button>
+    <button
+      v-if="showOpenFromGithub"
+      type="button"
+      class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
+      @click="githubPickerOpen = true"
+    >
+      Open from GitHub…
+    </button>
+    <GithubPlanPickerDialog v-model:open="githubPickerOpen" />
     <button
       type="button"
       class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"

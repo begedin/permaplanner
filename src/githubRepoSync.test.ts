@@ -6,6 +6,7 @@ import {
   gitBranchHeadRefSegment,
   getPlanRepoGardenViewerUrl,
   githubSyncUserMessage,
+  isValidGithubPlanFolderContents,
   planBackgroundMediaRepoPath,
   planGardenFolderSegment,
   planPathSegment,
@@ -13,6 +14,7 @@ import {
   planRepoGuildsPath,
   planRepoPlantsPath,
   readGithubCommitDateMs,
+  suggestedPlanFileNameForGardenFolder,
 } from './githubRepoSync';
 
 it('GITHUB_PLAN_SYNC_REPO_NAME is the fixed backup repo slug', () => {
@@ -38,10 +40,17 @@ it('buildGithubAuthorizeUrl uses repo scope for private repo + Contents API', ()
 it('planPathSegment sanitizes; repo paths use one folder per garden under plans/', () => {
   expect(planPathSegment('My Garden!.json')).toBe('My-Garden-.json');
   expect(planGardenFolderSegment('foo.bar')).toBe('foo.bar');
+  expect(suggestedPlanFileNameForGardenFolder('foo.bar')).toBe('foo.bar.json');
   expect(planRepoPlantsPath('foo.bar')).toBe('plans/foo.bar/plants.json');
   expect(planRepoGuildsPath('foo.bar')).toBe('plans/foo.bar/guilds.json');
   expect(planRepoConfigPath('foo.bar')).toBe('plans/foo.bar/config.json');
   expect(planBackgroundMediaRepoPath('foo.json', 'png')).toBe('plans/foo/background.png');
+});
+
+it('isValidGithubPlanFolderContents accepts folders with plan shard files', () => {
+  expect(isValidGithubPlanFolderContents(['viewer.html'])).toBe(false);
+  expect(isValidGithubPlanFolderContents(['config.json', 'viewer.html'])).toBe(true);
+  expect(isValidGithubPlanFolderContents(['plants.json'])).toBe(true);
 });
 
 it('gitBranchHeadRefSegment is heads/branch for the Git ref API', () => {

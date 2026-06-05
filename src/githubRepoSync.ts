@@ -5,7 +5,7 @@ import { buildGithubPlanShardExports } from './permaplannerFileExport';
 import { renderPlanGardenViewerHtml } from './planGardenViewer';
 import {
   documentNeedsMigration,
-  guildsArrayFromShard,
+  migrateGuildsShardRaw,
   migratePlanDocumentRaw,
   plantsArrayFromShard,
   readDocumentVersion,
@@ -189,6 +189,33 @@ export const planGardenFolderSegment = (fileName: string | undefined): string =>
     .replace(/\.json$/i, '')
     .slice(0, 120);
   return stem || 'plan';
+};
+
+/** Local plan file name that maps to a `plans/<garden>/` folder on GitHub. */
+export const suggestedPlanFileNameForGardenFolder = (
+  gardenFolderSegment: string,
+): string => `${gardenFolderSegment}.json`;
+
+const GITHUB_PLAN_SHARD_FILE_NAMES = new Set([
+  'config.json',
+  'plants.json',
+  'guilds.json',
+]);
+
+/** True when a garden folder contains at least one synced plan shard file. */
+export const isValidGithubPlanFolderContents = (fileNames: Iterable<string>): boolean => {
+  for (const name of fileNames) {
+    if (GITHUB_PLAN_SHARD_FILE_NAMES.has(name)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+export type GithubPlanListEntry = {
+  gardenFolderSegment: string;
+  suggestedFileName: string;
+  remoteLastUpdatedMs?: number;
 };
 
 const gardenDir = (fileName: string | undefined): string =>
@@ -601,6 +628,33 @@ const getRepoJsonIfExists = async (
   return JSON.parse(new TextDecoder().decode(bytes)) as unknown;
 };
 
+type RepoDirectoryEntry = {
+  name: string;
+  path: string;
+  type: string;
+};
+
+const listRepoDirectory = async (
+  token: string,
+  fullName: string,
+  path: string,
+): Promise<RepoDirectoryEntry[]> => {
+  const url = `https://api.github.com/repos/${fullName}/contents/${path}?ref=${DEFAULT_BRANCH}`;
+  const res = await fetch(url, { headers: githubHeaders(token) });
+  if (res.status === 404) {
+    return [];
+  }
+  if (!res.ok) {
+    const t = await res.text();
+    failGithubSync('read', path, res.status, t);
+  }
+  const body = (await res.json()) as unknown;
+  if (!Array.isArray(body)) {
+    throw new Error(`GitHub list ${path}: unexpected response shape`);
+  }
+  return body as RepoDirectoryEntry[];
+};
+
 type GitPlanBlobFile = {
   path: string;
   contentBase64: string;
@@ -781,6 +835,25 @@ const dataUrlMimeForRepoPath = (repoPath: string): string => {
   return backgroundRepoPathMimeByExt[ext] ?? 'image/png';
 };
 
+const BACKGROUND_IMAGE_FILE_PATTERN = /^background\.(png|jpe?g|webp|gif)$/i;
+
+const loadBackgroundImageFromRepoPath = async (
+  token: string,
+  fullName: string,
+  repoPath: string,
+): Promise<string | undefined> => {
+  const file = await getRepoContentsFile(token, fullName, repoPath);
+  if (!file) {
+    return undefined;
+  }
+  const mime = dataUrlMimeForRepoPath(repoPath);
+  const bytes = await fetchGithubRepoFileBytes(token, fullName, file);
+  if (bytes.length === 0) {
+    return undefined;
+  }
+  return `data:${mime};base64,${uint8ArrayToStandardBase64(bytes)}`;
+};
+
 export const scanGithubPlanShardsForMigration = async (
   token: string,
   sourceFileName: string | undefined,
@@ -853,6 +926,36 @@ export const refreshGithubRepoRemoteLastUpdatedMs = async (
 ): Promise<number | undefined> =>
   fetchGithubRepoRemoteLastUpdatedMs(token, sourceFileName);
 
+/** Lists garden folders under `plans/` that contain synced plan shard files. */
+export const listGithubPlansInRepo = async (
+  token: string,
+): Promise<GithubPlanListEntry[]> => {
+  const fullName = await ensurePlanRepo(token);
+  const gardenDirs = await listRepoDirectory(token, fullName, PLANS_DIR);
+  const candidates = gardenDirs.filter((entry) => entry.type === 'dir');
+
+  const entries = await Promise.all(
+    candidates.map(async (dir): Promise<GithubPlanListEntry | undefined> => {
+      const files = await listRepoDirectory(token, fullName, dir.path);
+      const shardNames = files.filter((f) => f.type === 'file').map((f) => f.name);
+      if (!isValidGithubPlanFolderContents(shardNames)) {
+        return undefined;
+      }
+      const gardenFolderSegment = dir.name;
+      const suggestedFileName = suggestedPlanFileNameForGardenFolder(gardenFolderSegment);
+      const remoteLastUpdatedMs = await fetchGithubRepoRemoteLastUpdatedMs(
+        token,
+        suggestedFileName,
+      );
+      return { gardenFolderSegment, suggestedFileName, remoteLastUpdatedMs };
+    }),
+  );
+
+  return entries
+    .filter((entry): entry is GithubPlanListEntry => entry !== undefined)
+    .sort((a, b) => (b.remoteLastUpdatedMs ?? 0) - (a.remoteLastUpdatedMs ?? 0));
+};
+
 export const pullPlanJsonFromGithubRepo = async (
   token: string,
   sourceFileName: string | undefined,
@@ -877,21 +980,32 @@ export const pullPlanJsonFromGithubRepo = async (
   const bgPath =
     typeof cfg.backgroundImagePath === 'string' ? cfg.backgroundImagePath : undefined;
   if (bgPath) {
-    const file = await getRepoContentsFile(token, fullName, bgPath);
-    if (file) {
-      const mime = dataUrlMimeForRepoPath(bgPath);
-      const bytes = await fetchGithubRepoFileBytes(token, fullName, file);
-      if (bytes.length > 0) {
-        backgroundImage = `data:${mime};base64,${uint8ArrayToStandardBase64(bytes)}`;
-      }
+    backgroundImage = await loadBackgroundImageFromRepoPath(token, fullName, bgPath);
+  }
+  if (backgroundImage === undefined) {
+    const gardenFolderPath = `${PLANS_DIR}/${planGardenFolderSegment(sourceFileName)}`;
+    const gardenFiles = await listRepoDirectory(token, fullName, gardenFolderPath);
+    const bgEntry = gardenFiles.find(
+      (entry) => entry.type === 'file' && BACKGROUND_IMAGE_FILE_PATTERN.test(entry.name),
+    );
+    if (bgEntry) {
+      backgroundImage = await loadBackgroundImageFromRepoPath(
+        token,
+        fullName,
+        bgEntry.path,
+      );
     }
   }
 
   const merged: Record<string, unknown> = {
     ...(await migratePlanDocumentRaw(cfg)),
     plants: plantsRaw !== undefined ? await plantsArrayFromShard(plantsRaw) : undefined,
-    guilds: guildsRaw !== undefined ? await guildsArrayFromShard(guildsRaw) : undefined,
   };
+  if (guildsRaw !== undefined) {
+    const guildsDoc = await migrateGuildsShardRaw(guildsRaw);
+    merged.guilds = guildsDoc.guilds;
+    merged.guildLocations = guildsDoc.guildLocations;
+  }
   if (backgroundImage !== undefined) {
     merged.backgroundImage = backgroundImage;
   }

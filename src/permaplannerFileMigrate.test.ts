@@ -84,6 +84,55 @@ it('guildsArrayFromShard merges v3 split guilds.json', async () => {
   );
 });
 
+it('parsePermaplannerDocument keeps aerial geometry from split GitHub guild shards', async () => {
+  const merged: Guild[] = [
+    {
+      id: 'g1',
+      name: 'Guild',
+      path: [{ x: 1, y: 2 }],
+      plants: [
+        {
+          id: 't1',
+          nameOrCultivar: 'Apple',
+          plantId: 'p1',
+          x: 3,
+          y: 4,
+          width: 5,
+          height: 6,
+        },
+      ],
+      mulchLevel: 2,
+    },
+  ];
+  const { guilds, guildLocations } = splitGuildsForPersistence(merged);
+
+  const doc = await parsePermaplannerDocument({
+    version: PERMAPLANNER_FILE_VERSION,
+    syncRevision: 1,
+    mapScale: {
+      start: { x: 10, y: 20 },
+      end: { x: 110, y: 20 },
+      linePhysicalLength: 25,
+    },
+    backgroundOpacity: 0.55,
+    backgroundImage: 'data:image/png;base64,abc',
+    plants: [],
+    guilds,
+    guildLocations,
+  });
+
+  expect(doc).toMatchObject({
+    mapScale: {
+      start: { x: 10, y: 20 },
+      end: { x: 110, y: 20 },
+      linePhysicalLength: 25,
+    },
+    backgroundOpacity: 0.55,
+    backgroundImage: 'data:image/png;base64,abc',
+    guilds: merged,
+  });
+});
+
 it('parsePermaplannerDocument returns current version after migration', async () => {
   const doc = await parsePermaplannerDocument({ plants: [], guilds: [] });
   expect(doc.version).toBe(PERMAPLANNER_FILE_VERSION);

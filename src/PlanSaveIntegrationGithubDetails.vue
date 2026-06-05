@@ -98,7 +98,7 @@
     pulling.value = true;
     try {
       const doc = await pullPlanJsonFromGithubRepo(token, permaplannerStore.fileName);
-      permaplannerStore.applyRemoteRepoSnapshot(doc);
+      await permaplannerStore.applyRemoteRepoSnapshot(doc);
       planSaveCoordinator.markIntegrationsSaved(['github']);
       await loadGithubRemoteSaveBaseline(token, permaplannerStore.fileName);
       await checkGithubPlanMigration(permaplannerStore.fileName);

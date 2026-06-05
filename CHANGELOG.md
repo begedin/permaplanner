@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.17.0
+
+- [FEATURE] Open an existing garden from GitHub: browse backed-up plans in your sync repo, restore the one you pick, then choose where to save a local copy
+- [FIX] GitHub pull restores aerial map data (guild layout, map scale, and background image) instead of guild list content only
+- [FIX] Open from GitHub saves locally only and does not re-push to the remote backup while binding the file
+
 ## 0.16.0
 
 - [FIX] GitHub save force-updates `main` after each push so branch races no longer fail the ref step; removed pre-push remote timestamp conflict check so the in-app save queue can overwrite the backup tip

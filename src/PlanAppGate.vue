@@ -1,9 +1,14 @@
 <script setup lang="ts">
-  import { computed } from 'vue';
+  import { computed, ref } from 'vue';
 
+  import GithubPlanPickerDialog from './GithubPlanPickerDialog.vue';
   import GithubPlanSyncRepoNote from './GithubPlanSyncRepoNote.vue';
   import PlanMigrationScreen from './PlanMigrationScreen.vue';
-  import { beginGithubAuth, readGithubClientIdConfig } from './githubRepoSync';
+  import {
+    beginGithubAuth,
+    isGithubStorageLinked,
+    readGithubClientIdConfig,
+  } from './githubRepoSync';
   import { routeNames } from './router';
   import { planAppGateMode } from './usePlanAppGate';
   import { usePlanSession } from './usePlanSession';
@@ -25,6 +30,11 @@
   const connectGithub = () => {
     void beginGithubAuth();
   };
+
+  const githubPickerOpen = ref(false);
+  const showOpenFromGithub = computed(
+    () => githubClientConfigured.value && isGithubStorageLinked(),
+  );
 </script>
 
 <template>
@@ -161,7 +171,17 @@
           >
             Connect GitHub
           </button>
+          <button
+            v-if="showOpenFromGithub"
+            type="button"
+            class="w-full btn-soft-secondary px-4 py-3 font-medium text-left"
+            @click="githubPickerOpen = true"
+          >
+            Open from GitHub…
+          </button>
         </section>
+
+        <GithubPlanPickerDialog v-model:open="githubPickerOpen" />
 
         <p class="mt-6 text-center text-xs text-ink-500">
           <RouterLink
