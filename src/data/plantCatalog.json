@@ -640,6 +640,27 @@
       "defaultIconId": "flower"
     },
     {
+      "id": "common_mallow",
+      "name": "Common mallow (Malva sylvestris)",
+      "functions": ["edible", "medicinal", "pollinator_attractor"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "zebrina",
+          "name": "Zebrina"
+        },
+        {
+          "id": "mystic_merlin",
+          "name": "Mystic Merlin"
+        }
+      ],
+      "blooming": {
+        "start": 5,
+        "end": 9
+      },
+      "defaultIconId": "flower"
+    },
+    {
       "id": "carpathian_bellflower",
       "name": "Carpathian bellflower",
       "functions": ["pollinator_attractor", "ground_cover"],
@@ -804,10 +825,23 @@
     },
     {
       "id": "sage",
-      "name": "Sage",
+      "name": "Garden sage (Salvia officinalis)",
       "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
       "layers": ["herb", "shrub"],
-      "cultivars": [],
+      "cultivars": [
+        {
+          "id": "mandala_silver",
+          "name": "Mandala Silver"
+        },
+        {
+          "id": "berggarten",
+          "name": "Berggarten"
+        },
+        {
+          "id": "purpurascens",
+          "name": "Purpurascens (purple sage)"
+        }
+      ],
       "blooming": {
         "start": 6,
         "end": 8
@@ -982,7 +1016,7 @@
     },
     {
       "id": "nectarine",
-      "name": "Nectarine",
+      "name": "Nectarine (Prunus persica var. nucipersica)",
       "functions": ["edible", "pollinator_attractor"],
       "layers": ["understory"],
       "cultivars": [
@@ -997,6 +1031,10 @@
         {
           "id": "snow_queen",
           "name": "Snow Queen"
+        },
+        {
+          "id": "caldesi_2010",
+          "name": "Caldesi 2010"
         }
       ],
       "blooming": {
@@ -1960,6 +1998,48 @@
         "end": 9
       },
       "defaultIconId": "flower-tropical"
+    },
+    {
+      "id": "hyssop",
+      "name": "Hyssop (Hyssopus officinalis)",
+      "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb", "shrub"],
+      "cultivars": [
+        {
+          "id": "blues",
+          "name": "Blues"
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 9
+      },
+      "defaultIconId": "leaf-herb"
+    },
+    {
+      "id": "english_lavender",
+      "name": "English lavender (Lavandula angustifolia)",
+      "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
+      "layers": ["herb", "shrub"],
+      "cultivars": [
+        {
+          "id": "hidcote",
+          "name": "Hidcote"
+        },
+        {
+          "id": "munstead",
+          "name": "Munstead"
+        },
+        {
+          "id": "vera",
+          "name": "Vera"
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 8
+      },
+      "defaultIconId": "leaf-herb"
     },
     {
       "id": "larkspur",

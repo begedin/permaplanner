@@ -10,6 +10,10 @@ lerna-debug.log*
 node_modules
 .DS_Store
 dist
+server/_build
+server/deps
+server/priv/static/*
+!server/priv/static/.gitkeep
 dist-ssr
 coverage
 *.local

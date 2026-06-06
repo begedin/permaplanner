@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy to Fly with Vite build args from 1Password.
+# Deploy to Fly (Vite frontend + Phoenix release) with build args from 1Password.
 #
 # Prerequisites: `op` signed in, `.env.fly` (gitignored) with op:// refs — same shape as .env.1password.example
 #

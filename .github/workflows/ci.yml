@@ -1,11 +1,11 @@
 name: 'CI'
-on: 
+on:
   pull_request:
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     permissions:
       # Required to checkout the code
       contents: read
@@ -13,41 +13,50 @@ jobs:
       pull-requests: write
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: 'Install Node'
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22.x'
+      - uses: actions/checkout@v4
 
-    - name: Restore cache
-      uses: actions/cache@v4
-      with:
-        path: node_modules
-        key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
-    
-    - name: 'Install Deps'
-      run: npm ci
-    
-    - name: 'Test'
-      id: test
-      run: npm run test:coverage
-    
-    - name: Upload reports
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage
-        path: coverage
-        retention-days: 2
+      - name: 'Install Node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
 
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v4.0.1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
 
-    - name: Pass or fail
-      if: ${{ steps.test.outcome == 'failure' }}
-      uses: actions/github-script@v7
-      with:
-        script: core.setFailed('Tests failed!')
+      - name: 'Install Deps'
+        run: npm ci
 
+      - name: 'Test'
+        id: test
+        run: npm run test:coverage
+
+      - name: Install Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.18'
+          otp-version: '27'
+
+      - name: Test server
+        working-directory: server
+        run: mix deps.get && mix test
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+          retention-days: 2
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Pass or fail
+        if: ${{ steps.test.outcome == 'failure' }}
+        uses: actions/github-script@v7
+        with:
+          script: core.setFailed('Tests failed!')

@@ -2,6 +2,43 @@
 
 A garden planner with permaculture undertones
 
+## Development
+
+### Toolchain
+
+Node, Erlang, and Elixir versions are pinned in [`.tool-versions`](.tool-versions). Install them with asdf:
+
+```bash
+npm run install:toolchain
+```
+
+On macOS this switches the asdf Erlang plugin to [prebuilt binaries](https://github.com/michallepicki/asdf-erlang-prebuilt-macos) and bootstraps Hex/Rebar for the Phoenix app.
+
+Secrets for local dev (GitHub OAuth) live in `.env.1password` — see [`.env.1password.example`](.env.1password.example).
+
+### Running locally
+
+| Command                     | What it runs                                                               |
+| --------------------------- | -------------------------------------------------------------------------- |
+| `npm run dev`               | Phoenix (8080) + Vite dev server (5173), with 1Password env                |
+| `npm run dev:plain`         | Same, without `op run`                                                     |
+| `npm run start`             | Production-like Phoenix only on 8080 (requires `npm run build-only` first) |
+| `npm run start:server:test` | ExUnit tests for `server/`                                                 |
+
+**Use http://localhost:5173 for frontend work.** Vite serves the Vue app with HMR and proxies `/api` to Phoenix.
+
+**http://localhost:8080** is the Phoenix server directly. The OAuth token proxy (`POST /api/github/oauth/access_token`) works here. The UI is only served from a built `dist/` folder (no HMR), so it may be missing or stale unless you've run `npm run build-only`. For a full production-like stack on 8080, use `npm run start` instead.
+
+GitHub OAuth redirect URIs are origin-specific. Local dev typically uses `http://localhost:5173/guilds`; add `http://localhost:8080/guilds` too if you test the full flow on 8080.
+
+### Deploy to Fly
+
+```bash
+npm run deploy:fly
+```
+
+Build-time: `VITE_GITHUB_CLIENT_ID` (via `.env.fly` and 1Password). Runtime secret on Fly: `GITHUB_CLIENT_SECRET`. See [`scripts/fly-deploy-op.sh`](scripts/fly-deploy-op.sh).
+
 ## Adding plants to the catalog
 
 The editable plant list lives in [`src/data/plantCatalog.json`](src/data/plantCatalog.json). The app imports it as static data; there is no separate database server.

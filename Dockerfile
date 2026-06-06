@@ -1,57 +1,67 @@
 # syntax = docker/dockerfile:1
 
-# Adjust NODE_VERSION as desired
 ARG NODE_VERSION=22.2.0
-FROM node:${NODE_VERSION}-slim AS base
+ARG ELIXIR_IMAGE=elixir:1.18-otp-27
 
-LABEL fly_launch_runtime="Vite"
+FROM node:${NODE_VERSION}-slim AS frontend
 
-# Vite app lives here
 WORKDIR /app
 
-# Set production environment
-ENV NODE_ENV="production"
-
-
-# Throw-away build stage to reduce size of final image
-FROM base AS build
-
-# Install packages needed to build node modules
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3
 
-# Install node modules
 COPY --link package-lock.json package.json ./
 RUN npm ci --include=dev
 
-# Copy application code
 COPY --link . .
 
-# Public OAuth client id is baked into the client bundle (optional at build time).
 ARG VITE_GITHUB_CLIENT_ID
 ENV VITE_GITHUB_CLIENT_ID=$VITE_GITHUB_CLIENT_ID
 
-# Build application
 RUN npm run build
 
-# Remove development dependencies
-RUN npm prune --omit=dev
+FROM ${ELIXIR_IMAGE} AS build
 
+WORKDIR /app/server
 
-# Serves dist/ with SPA fallback (see server/static.mjs).
-ARG NODE_VERSION=22.2.0
-FROM node:${NODE_VERSION}-slim AS final
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y build-essential git && \
+    mix local.hex --force && \
+    mix local.rebar --force
+
+ENV MIX_ENV=prod
+
+COPY server/mix.exs server/mix.lock ./
+RUN mix deps.get --only prod
+
+COPY server/config ./config
+COPY server/lib ./lib
+COPY --from=frontend /app/dist ./priv/static
+
+RUN mix release
+
+FROM debian:bookworm-slim AS final
 
 WORKDIR /app
 
-COPY --from=build /app/dist ./dist
-COPY --link server/static.mjs ./server/static.mjs
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y libstdc++6 openssl libncurses6 locales ca-certificates && \
+    apt-get clean && \
+    rm -f /var/lib/apt/lists/*/*
 
-ENV NODE_ENV=production
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+ENV MIX_ENV=prod
 ENV PORT=8080
+
+COPY --from=build /app/server/_build/prod/rel/permaplanner ./
+
+RUN chown -R nobody:root /app && \
+    chmod -R ug+rwx /app
+
+USER nobody
 
 EXPOSE 8080
 
-USER node
-
-CMD ["node", "server/static.mjs"]
+CMD ["bin/permaplanner", "start"]

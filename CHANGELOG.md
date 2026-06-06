@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.18.0
+
+- [DB] Added English lavender (Lavandula angustifolia) to the catalog
+- [DB] Added garden sage cultivars (Mandala Silver, Berggarten, Purpurascens)
+- [DB] Added hyssop (Hyssopus officinalis) and Blues cultivar to the catalog
+- [DB] Added Caldesi 2010 nectarine cultivar
+- [DB] Added common mallow (Malva sylvestris) to the catalog
+- [FEATURE] Replace Node production server with a Phoenix app (GitHub OAuth token proxy and SPA static hosting)
+- [REFACTOR] Local dev runs Phoenix and Vite together; Vite proxies `/api` to the Elixir server
+- [TWEAK] Phoenix code reloader enabled in dev
+- [TWEAK] asdf toolchain (`.tool-versions`, prebuilt Erlang on macOS, `npm run install:toolchain`)
+- [TWEAK] README development and deploy notes; CI runs server ExUnit tests
+- [FIX] GitHub OAuth proxy forwards GitHub response headers correctly (Req list-valued headers)
+
 ## 0.17.0
 
 - [FEATURE] Open an existing garden from GitHub: browse backed-up plans in your sync repo, restore the one you pick, then choose where to save a local copy
