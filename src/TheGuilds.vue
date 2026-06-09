@@ -89,7 +89,7 @@
               :initial="false"
               :layout-dependency="selectedGuildId"
               :transition="guildLayoutTransition"
-              class="guild-list flex-1 min-h-0 overflow-y-auto p-2 grid gap-2"
+              class="guild-list flex-1 min-h-0 overflow-x-hidden overflow-y-auto p-2 grid gap-2"
               :class="
                 selectedGuildId
                   ? 'guild-list--single-col auto-rows-min'

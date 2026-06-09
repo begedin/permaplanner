@@ -132,11 +132,13 @@ it('lists only species placed in guilds with cultivar and plant counts', () => {
     {
       speciesId: 'apple',
       name: 'Apple',
+      nameLatin: 'Malus domestica',
       iconId: 'apple',
       cultivarCount: 2,
       plantCount: 3,
       producesFruit: true,
       cultivarLabels: 'Fuji Honeycrisp',
+      cultivarLatinLabels: '',
     },
   ]);
   for (const row of rows) {

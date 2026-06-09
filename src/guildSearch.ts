@@ -55,6 +55,12 @@ export const buildGuildSearchRecord = (
     if (plant.cultivar) {
       labels.add(plant.cultivar);
     }
+    if (plant.nameLatin) {
+      labels.add(plant.nameLatin);
+    }
+    if (plant.cultivarLatin) {
+      labels.add(plant.cultivarLatin);
+    }
   }
 
   return {

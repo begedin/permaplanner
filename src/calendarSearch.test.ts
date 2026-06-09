@@ -56,6 +56,9 @@ it('matches species names and cultivar labels from guild placements', () => {
   expect(searchGardenSpecies(rows, 'fuji').map((row) => row.speciesId)).toEqual([
     'apple',
   ]);
+  expect(
+    searchGardenSpecies(rows, 'malus domestica').map((row) => row.speciesId),
+  ).toEqual(['apple']);
   expect(searchGardenSpecies(rows, 'basil').map((row) => row.speciesId)).toEqual([]);
 });
 

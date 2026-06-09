@@ -61,11 +61,13 @@ export const resolveUserPlant = (
   ));
 
   let cultivarName: string | null = null;
+  let cultivarLatin: string | undefined;
 
   if (user.cultivarId !== null) {
     const row = getCultivar(species, user.cultivarId);
     if (row) {
       cultivarName = row.name;
+      cultivarLatin = row.name_latin;
       if (row.defaultIconId !== undefined) {
         iconId = row.defaultIconId;
       }
@@ -100,6 +102,8 @@ export const resolveUserPlant = (
     cultivarId: user.cultivarId,
     name: speciesName,
     cultivar: cultivarName,
+    nameLatin: species.name_latin,
+    cultivarLatin,
     iconId,
     functions,
     layers,
@@ -221,13 +225,42 @@ export const normalizePlantsFromFile = (
   return (raw as Record<string, unknown>[]).map((row) => legacyToUserPlant(row, catalog));
 };
 
-export const plantDisplayLabel = (p: Plant): string => p.cultivar || p.name;
+const latinParenthetical = (latin: string | undefined): string =>
+  latin ? ` (${latin})` : '';
+
+/** Species heading with optional Latin binomial for display. */
+export const plantSpeciesDisplayLabel = (name: string, nameLatin?: string): string =>
+  `${name}${latinParenthetical(nameLatin)}`;
+
+export const plantDisplayLabel = (p: Plant): string => {
+  if (p.cultivar) {
+    return `${p.cultivar}${latinParenthetical(p.cultivarLatin)}`;
+  }
+  return plantSpeciesDisplayLabel(p.name, p.nameLatin);
+};
 
 /** Guild card list: species only for the default cultivar; `Species, Cultivar` when a specific cultivar is selected. */
 export const plantGuildGroupLabel = (p: Plant): string => {
+  const speciesLabel = plantSpeciesDisplayLabel(p.name, p.nameLatin);
+  if (p.cultivarId === null) {
+    return speciesLabel;
+  }
+  const c = p.cultivar?.trim();
+  if (!c) {
+    return speciesLabel;
+  }
+  return `${speciesLabel}, ${c}${latinParenthetical(p.cultivarLatin)}`;
+};
+
+/** English-only guild list badge label (Latin shown via icon tooltip instead). */
+export const plantGuildGroupEnglishLabel = (p: Plant): string => {
   if (p.cultivarId === null) {
     return p.name;
   }
   const c = p.cultivar?.trim();
   return c ? `${p.name}, ${c}` : p.name;
 };
+
+/** Latin binomial for compact guild badges; cultivar Latin takes precedence. */
+export const plantLatinTooltip = (p: Plant): string | undefined =>
+  p.cultivarLatin ?? p.nameLatin;

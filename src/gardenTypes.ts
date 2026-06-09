@@ -56,6 +56,9 @@ export type Plant = {
   cultivarId: string | null;
   name: string;
   cultivar: string | null;
+  /** Catalog Latin name(s) for search; not shown as primary labels. */
+  nameLatin?: string;
+  cultivarLatin?: string;
   iconId: PlantIconId;
   functions: GuildFunction[];
   layers: GuildLayer[];

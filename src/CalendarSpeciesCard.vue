@@ -8,6 +8,7 @@
   import PlantIcon from './PlantIcon.vue';
   import PlantPhenologyCalendar from './PlantPhenologyCalendar.vue';
   import type { Plant } from './gardenTypes';
+  import { plantSpeciesDisplayLabel } from './resolvePlant';
   import { useCalendarSelection } from './useCalendarSelection';
 
   defineProps<{
@@ -22,6 +23,9 @@
   }>();
 
   const { selectedSpeciesId } = useCalendarSelection();
+
+  const speciesLabel = (row: GardenSpeciesSidebarRow): string =>
+    plantSpeciesDisplayLabel(row.name, row.nameLatin);
 
   const iconPlant = (row: GardenSpeciesSidebarRow): Plant => ({
     id: row.speciesId,
@@ -44,7 +48,7 @@
       'paper-card-selected': selectedSpeciesId === row.speciesId,
     }"
     :aria-current="selectedSpeciesId === row.speciesId ? 'true' : undefined"
-    :aria-label="`${row.name}, ${formatSpeciesCounts(row.cultivarCount, row.plantCount)}`"
+    :aria-label="`${speciesLabel(row)}, ${formatSpeciesCounts(row.cultivarCount, row.plantCount)}`"
     @click="emit('select', row.speciesId)"
   >
     <div class="flex flex-row items-center gap-2 min-w-0">
@@ -55,7 +59,7 @@
       <div class="min-w-0 flex-1">
         <span class="block truncate text-sm font-medium text-ink-800">
           <HighlightText
-            :text="row.name"
+            :text="speciesLabel(row)"
             :query="searchQuery"
           />
         </span>
@@ -68,7 +72,7 @@
       compact
       :tooltip-rows="tooltipRows"
       :show-section-label="false"
-      :calendar-aria-label="`${row.name} fruit and bloom by month`"
+      :calendar-aria-label="`${speciesLabel(row)} fruit and bloom by month`"
     />
   </button>
 </template>

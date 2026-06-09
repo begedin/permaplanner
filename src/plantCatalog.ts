@@ -56,6 +56,8 @@ export type CatalogPhenology = {
 export type CatalogCultivar = {
   id: string;
   name: string;
+  /** Latin binomial or cultivar epithet; used for search, not primary UI label. */
+  name_latin?: string;
   defaultIconId?: PlantIconId;
   functions?: GuildFunction[];
   layers?: GuildLayer[];
@@ -68,6 +70,8 @@ export type CatalogCultivar = {
 export type CatalogSpecies = {
   id: string;
   name: string;
+  /** Latin binomial; used for search, not primary UI label. */
+  name_latin?: string;
   defaultIconId: PlantIconId;
   functions: GuildFunction[];
   layers: GuildLayer[];

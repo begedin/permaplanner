@@ -2,7 +2,10 @@ import { expect, it } from 'vitest';
 import { plantCatalog } from './plantCatalog';
 import {
   normalizePlantsFromFile,
+  plantDisplayLabel,
+  plantGuildGroupEnglishLabel,
   plantGuildGroupLabel,
+  plantLatinTooltip,
   resolveUserPlant,
 } from './resolvePlant';
 import type { Plant, UserPlant } from './gardenTypes';
@@ -19,6 +22,7 @@ it('merges db species → species override → cultivar → cultivar override', 
   expect(r.iconId).toBe('leaf-herb');
   expect(r.cultivar).toBe('GS (mine)');
   expect(r.name).toBe('Apple');
+  expect(r.nameLatin).toBe('Malus domestica');
 });
 
 it('guild group label is species only for default cultivar', () => {
@@ -28,11 +32,12 @@ it('guild group label is species only for default cultivar', () => {
     cultivarId: null,
     name: 'Basil',
     cultivar: null,
+    nameLatin: 'Ocimum basilicum',
     iconId: 'leaf-herb',
     functions: [],
     layers: [],
   };
-  expect(plantGuildGroupLabel(p)).toBe('Basil');
+  expect(plantGuildGroupLabel(p)).toBe('Basil (Ocimum basilicum)');
 });
 
 it('guild group label is species and cultivar when a cultivar is selected', () => {
@@ -42,11 +47,63 @@ it('guild group label is species and cultivar when a cultivar is selected', () =
     cultivarId: 'genovese',
     name: 'Basil',
     cultivar: 'Genovese',
+    nameLatin: 'Ocimum basilicum',
     iconId: 'leaf-herb',
     functions: [],
     layers: [],
   };
-  expect(plantGuildGroupLabel(p)).toBe('Basil, Genovese');
+  expect(plantGuildGroupLabel(p)).toBe('Basil (Ocimum basilicum), Genovese');
+});
+
+it('shows cultivar Latin only when the cultivar has its own name_latin', () => {
+  const p: Plant = {
+    id: 'u1',
+    speciesId: 'daisy',
+    cultivarId: 'oxeye',
+    name: 'Daisy',
+    cultivar: 'Oxeye daisy',
+    cultivarLatin: 'Leucanthemum vulgare',
+    iconId: 'flower',
+    functions: [],
+    layers: [],
+  };
+  expect(plantDisplayLabel(p)).toBe('Oxeye daisy (Leucanthemum vulgare)');
+  expect(plantGuildGroupLabel(p)).toBe('Daisy, Oxeye daisy (Leucanthemum vulgare)');
+});
+
+it('does not repeat species Latin on cultivars without their own name_latin', () => {
+  const p: Plant = {
+    id: 'u1',
+    speciesId: 'apple',
+    cultivarId: 'fuji',
+    name: 'Apple',
+    cultivar: 'Fuji',
+    nameLatin: 'Malus domestica',
+    iconId: 'apple',
+    functions: [],
+    layers: [],
+  };
+  expect(plantDisplayLabel(p)).toBe('Fuji');
+  expect(plantGuildGroupLabel(p)).toBe('Apple (Malus domestica), Fuji');
+});
+
+it('uses English-only labels and separate Latin tooltip for guild list badges', () => {
+  const p: Plant = {
+    id: 'u1',
+    speciesId: 'apple',
+    cultivarId: 'fuji',
+    name: 'Apple',
+    cultivar: 'Fuji',
+    nameLatin: 'Malus domestica',
+    iconId: 'apple',
+    functions: [],
+    layers: [],
+  };
+  expect(plantGuildGroupEnglishLabel(p)).toBe('Apple, Fuji');
+  expect(plantLatinTooltip(p)).toBe('Malus domestica');
+  expect(plantGuildGroupEnglishLabel({ ...p, cultivarId: null, cultivar: null })).toBe(
+    'Apple',
+  );
 });
 
 it('migrates legacy plan rows to user plants', () => {

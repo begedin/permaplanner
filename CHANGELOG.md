@@ -2,11 +2,9 @@
 
 ## 0.18.0
 
-- [DB] Added English lavender (Lavandula angustifolia) to the catalog
-- [DB] Added garden sage cultivars (Mandala Silver, Berggarten, Purpurascens)
-- [DB] Added hyssop (Hyssopus officinalis) and Blues cultivar to the catalog
-- [DB] Added Caldesi 2010 nectarine cultivar
-- [DB] Added common mallow (Malva sylvestris) to the catalog
+- [TWEAK] Guild cards not placed on the aerial map use a warmer parchment background so they stand out from placed guilds
+- [DB] Expanded plant catalog: added jujube, purpletop vervain, snapdragon, sunflower, night-scented stock, bunching onion, hyssop, English lavender, common mallow, watermelon, magnolia, Indian lilac (neem), and fir (Nordmann fir); cultivars Blauhilde (pole bean), Blues (hyssop), Mandala Silver / Berggarten / Purpurascens (garden sage), and Caldesi 2010 (nectarine); optional `name_latin` for search; English-first display names with Latin on species/cultivar only when distinct
+- [FIX] Guild list sidebar no longer shows a horizontal scrollbar when plant badge labels are long
 - [FEATURE] Replace Node production server with a Phoenix app (GitHub OAuth token proxy and SPA static hosting)
 - [REFACTOR] Local dev runs Phoenix and Vite together; Vite proxies `/api` to the Elixir server
 - [TWEAK] Phoenix code reloader enabled in dev

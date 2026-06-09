@@ -16,11 +16,13 @@ const GROUP_HEADER_MAX_PHASE_ICONS = 8;
 export type GardenSpeciesSidebarRow = {
   speciesId: string;
   name: string;
+  nameLatin: string;
   iconId: PlantIconId;
   cultivarCount: number;
   plantCount: number;
   producesFruit: boolean;
   cultivarLabels: string;
+  cultivarLatinLabels: string;
 };
 
 export type CalendarCultivarRow = {
@@ -87,8 +89,10 @@ export const listGardenSpecies = (
     string,
     {
       name: string;
+      nameLatin: string;
       iconId: PlantIconId;
       cultivarLabels: Set<string>;
+      cultivarLatinLabels: Set<string>;
       producesFruit: boolean;
     }
   >();
@@ -104,14 +108,19 @@ export const listGardenSpecies = (
       const species = getSpecies(rp.speciesId);
       bucket = {
         name: rp.name,
+        nameLatin: species?.name_latin ?? '',
         iconId: species?.defaultIconId ?? rp.iconId,
         cultivarLabels: new Set(),
+        cultivarLatinLabels: new Set(),
         producesFruit: false,
       };
       bySpecies.set(rp.speciesId, bucket);
     }
 
     bucket.cultivarLabels.add(plantDisplayLabel(rp));
+    if (rp.cultivarLatin) {
+      bucket.cultivarLatinLabels.add(rp.cultivarLatin);
+    }
     if (resolvePhenology(rp.speciesId, rp.cultivarId).fruiting !== undefined) {
       bucket.producesFruit = true;
     }
@@ -127,11 +136,13 @@ export const listGardenSpecies = (
       return {
         speciesId,
         name: bucket.name,
+        nameLatin: bucket.nameLatin,
         iconId: bucket.iconId,
         cultivarCount,
         plantCount,
         producesFruit: bucket.producesFruit,
         cultivarLabels: [...bucket.cultivarLabels].sort().join(' '),
+        cultivarLatinLabels: [...bucket.cultivarLatinLabels].sort().join(' '),
       };
     })
     .sort((a, b) => {

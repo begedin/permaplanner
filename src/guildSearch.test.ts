@@ -120,6 +120,31 @@ it('returns no guilds when nothing matches', () => {
   expect(searchGuilds(guilds, 'zzzz', resolvePlant({}))).toEqual([]);
 });
 
+it('matches catalog Latin names in guild plant labels', () => {
+  const guilds = [
+    guild({
+      id: 'g1',
+      name: 'North bed',
+      plants: [thing({ id: 't1', plantId: 'p1', nameOrCultivar: 'Fuji' })],
+    }),
+  ];
+
+  expect(
+    searchGuilds(
+      guilds,
+      'malus domestica',
+      resolvePlant({
+        p1: testPlant({
+          id: 'p1',
+          name: 'Apple',
+          nameLatin: 'Malus domestica',
+          cultivar: 'Fuji',
+        }),
+      }),
+    ).map((g) => g.id),
+  ).toEqual(['g1']);
+});
+
 it('returns plain text when the highlight query is empty', () => {
   expect(highlightSegments('Cherry guild', '')).toEqual([
     { text: 'Cherry guild', match: false },

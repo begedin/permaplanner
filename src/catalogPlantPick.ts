@@ -1,19 +1,36 @@
 import type { CatalogSpecies } from './plantCatalog';
+import { plantSpeciesDisplayLabel } from './resolvePlant';
 
 export type CatalogPlantPick = {
   id: string;
   speciesId: string;
   speciesName: string;
+  speciesLatin?: string;
   cultivarId: string | null;
   rowLabel: string;
   inputLabel: string;
+  /** Lowercase haystack for combobox filtering (English + Latin). */
+  searchText: string;
 };
 
 export type CatalogPickGroup = {
   speciesId: string;
   speciesName: string;
+  speciesLatin?: string;
   picks: CatalogPlantPick[];
 };
+
+const labelWithLatin = (base: string, latin: string | undefined): string =>
+  latin ? `${base} (${latin})` : base;
+
+const catalogPickSearchText = (
+  species: CatalogSpecies,
+  cultivar: CatalogSpecies['cultivars'][number] | undefined,
+): string =>
+  [species.name, species.name_latin, cultivar?.name, cultivar?.name_latin]
+    .filter((part): part is string => Boolean(part))
+    .join(' ')
+    .toLowerCase();
 
 export const buildCatalogPickGroups = (
   speciesList: CatalogSpecies[],
@@ -29,31 +46,42 @@ export const buildCatalogPickGroups = (
         id: `${s.id}::`,
         speciesId: s.id,
         speciesName: s.name,
+        speciesLatin: s.name_latin,
         cultivarId: null,
         rowLabel: 'Default',
-        inputLabel: s.name,
+        inputLabel: plantSpeciesDisplayLabel(s.name, s.name_latin),
+        searchText: catalogPickSearchText(s, undefined),
       });
     } else {
       picks.push({
         id: `${s.id}::`,
         speciesId: s.id,
         speciesName: s.name,
+        speciesLatin: s.name_latin,
         cultivarId: null,
         rowLabel: 'Default',
-        inputLabel: `${s.name} (default)`,
+        inputLabel: labelWithLatin(`${s.name} (default)`, s.name_latin),
+        searchText: catalogPickSearchText(s, undefined),
       });
       for (const c of s.cultivars) {
         picks.push({
           id: `${s.id}::${c.id}`,
           speciesId: s.id,
           speciesName: s.name,
+          speciesLatin: s.name_latin,
           cultivarId: c.id,
-          rowLabel: c.name,
-          inputLabel: `${s.name} — ${c.name}`,
+          rowLabel: labelWithLatin(c.name, c.name_latin),
+          inputLabel: `${plantSpeciesDisplayLabel(s.name, s.name_latin)} — ${labelWithLatin(c.name, c.name_latin)}`,
+          searchText: catalogPickSearchText(s, c),
         });
       }
     }
-    out.push({ speciesId: s.id, speciesName: s.name, picks });
+    out.push({
+      speciesId: s.id,
+      speciesName: s.name,
+      speciesLatin: s.name_latin,
+      picks,
+    });
   }
   return out;
 };

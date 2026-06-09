@@ -104,6 +104,50 @@ const baseThing = (
   ...overrides,
 });
 
+it('shows plant icons on guild list badges without Latin in the label', async () => {
+  const store = useGardenStore();
+  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
+  store.guilds = [
+    {
+      ...testGuild,
+      name: 'Bed',
+      plants: [baseThing({ id: 'thing-a', plantId: 'plant' })],
+    },
+  ];
+
+  const wrapper = await renderGuildCard({ guildId: 'guild', context: 'aerialSidebar' });
+  const badges = card(wrapper).getByLabelText('Plants in this guild');
+
+  expect(badges.textContent).toContain('Comfrey');
+  expect(badges.textContent).not.toContain('Symphytum');
+  expect(badges.querySelector('use[href="#plant-icon-flower-spike"]')).toBeTruthy();
+});
+
+it('shows compact plant tags when the aerial card fills a grid cell', async () => {
+  const store = useGardenStore();
+  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
+  store.guilds = [
+    {
+      ...testGuild,
+      name: 'Bed',
+      plants: [baseThing({ id: 'thing-a', plantId: 'plant' })],
+    },
+  ];
+
+  const wrapper = await renderGuildCard({
+    guildId: 'guild',
+    context: 'aerialSidebar',
+    fillCell: true,
+  });
+
+  expect(card(wrapper).getByLabelText('Plants in this guild').textContent).toContain(
+    'Comfrey',
+  );
+  expect(
+    card(wrapper).getByLabelText('Guild fruit and bloom by month'),
+  ).toBeTruthy();
+});
+
 it('updates guild note from the note textarea', async () => {
   const store = useGardenStore();
   const wrapper = await renderGuildCard();
@@ -240,6 +284,33 @@ it('adds one instance when add-one is used on a single plant row', async () => {
 
   expect(store.guilds[0].plants).toHaveLength(2);
   expect(store.guilds[0].plants.every((t) => t.plantId === 'plant')).toBe(true);
+});
+
+it('uses a warm card surface when the guild is not on the aerial map', async () => {
+  const wrapper = await renderGuildCard();
+  expect(card(wrapper).getByText('Not on aerial')).toBeTruthy();
+  expect((wrapper.element as HTMLElement).classList.contains('paper-card-not-on-aerial')).toBe(
+    true,
+  );
+});
+
+it('uses the default card surface when the guild is on the aerial map', async () => {
+  const store = useGardenStore();
+  store.guilds = [
+    {
+      ...testGuild,
+      path: [
+        { x: 0, y: 0 },
+        { x: 64, y: 64 },
+      ],
+    },
+  ];
+
+  const wrapper = await renderGuildCard();
+  expect(card(wrapper).queryByText('Not on aerial')).toBeNull();
+  expect((wrapper.element as HTMLElement).classList.contains('paper-card-not-on-aerial')).toBe(
+    false,
+  );
 });
 
 it('shows map size and an icon remove control when the guild is on the aerial map', async () => {
@@ -410,7 +481,7 @@ it('cancels edit plant without changing the guild', async () => {
   expect(store.guilds[0].plants).toEqual([
     baseThing({ id: 'thing-a', plantId: 'plant' }),
   ]);
-  expect(card(wrapper).getByText('Comfrey')).toBeTruthy();
+  expect(card(wrapper).getByText(/Comfrey/)).toBeTruthy();
 });
 
 it('expands a plant group to edit per-instance phase and condition', async () => {
@@ -429,7 +500,7 @@ it('expands a plant group to edit per-instance phase and condition', async () =>
   const wrapper = await renderGuildCard();
   expect(card(wrapper).queryByLabelText('Phase')).toBeNull();
 
-  await fireEvent.click(card(wrapper).getByRole('button', { name: 'Expand Comfrey' }));
+  await fireEvent.click(card(wrapper).getByRole('button', { name: /Expand Comfrey/ }));
 
   const phaseSelects = card(wrapper).getAllByLabelText('Phase');
   expect(phaseSelects).toHaveLength(2);

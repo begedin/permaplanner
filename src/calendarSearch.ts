@@ -6,13 +6,17 @@ import { defaultFuzzySearchOptions, searchByFuse } from './guildSearch';
 export type CalendarSpeciesSearchRecord = {
   speciesId: string;
   name: string;
+  nameLatin: string;
   cultivarLabels: string;
+  cultivarLatinLabels: string;
 };
 
 export const calendarFuseOptions: IFuseOptions<CalendarSpeciesSearchRecord> = {
   keys: [
-    { name: 'name', weight: 0.7 },
-    { name: 'cultivarLabels', weight: 0.3 },
+    { name: 'name', weight: 0.45 },
+    { name: 'nameLatin', weight: 0.25 },
+    { name: 'cultivarLabels', weight: 0.2 },
+    { name: 'cultivarLatinLabels', weight: 0.1 },
   ],
   ...defaultFuzzySearchOptions,
 };
@@ -26,7 +30,9 @@ export const searchGardenSpecies = (
     rows.map((row) => ({
       speciesId: row.speciesId,
       name: row.name,
+      nameLatin: row.nameLatin,
       cultivarLabels: row.cultivarLabels,
+      cultivarLatinLabels: row.cultivarLatinLabels,
     })),
     query,
     calendarFuseOptions,

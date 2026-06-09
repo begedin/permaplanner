@@ -79,6 +79,23 @@
     @apply ring-2 ring-sage-500/80 ring-offset-1 ring-offset-parchment-100 border-sage-300/60 shadow-parchment-lg;
   }
 
+  /** Guild bed not drawn on the aerial map — warm tint aligned with the “Not on aerial” badge. */
+  .paper-card-not-on-aerial {
+    background-color: theme('colors.parchment.100');
+    background-image: var(--paper-grain),
+      radial-gradient(
+        ellipse 85% 55% at 12% 8%,
+        rgba(255, 236, 200, 0.55) 0%,
+        transparent 52%
+      ),
+      radial-gradient(
+        ellipse 60% 45% at 92% 88%,
+        rgba(210, 175, 120, 0.12) 0%,
+        transparent 48%
+      );
+    @apply border-amber-200/50;
+  }
+
   /** Inset chip with softer corners. */
   .paper-chip {
     @apply paper-inset rounded-lg border border-parchment-400/45;

@@ -1,0 +1,17 @@
+- generic [ref=e2]:
+  - dialog "Loading your plan…" [ref=e3]:
+    - status [ref=e5]: Loading your plan…
+  - generic [ref=e8]:
+    - generic [ref=e9]:
+      - heading "Aerial" [level=1] [ref=e10]
+      - generic [ref=e11]:
+        - generic [ref=e12]: Search guilds
+        - searchbox "Search guilds" [ref=e13]
+      - generic [ref=e14]:
+        - button "Undo" [disabled]
+        - button "Redo" [disabled]
+        - button "Add guild" [ref=e15] [cursor=pointer]
+    - region "Aerial map" [ref=e17]:
+      - img [ref=e18]:
+        - generic [ref=e20]: Paste an aerial photo of your plot of land here. You can use Google Maps to take a screenshot
+        - generic [ref=e23]: "1"

@@ -79,8 +79,9 @@ it('lists catalog species groups and cultivar rows when open', async () => {
     (g) => g.speciesId === 'apple',
   )!;
   const honeycrisp = apple.picks.find((p) => p.cultivarId === 'honeycrisp')!;
-  expect(wrapper.getByRole('listbox').textContent).toContain(apple.speciesName);
+  expect(wrapper.getByRole('listbox').textContent).toContain('Malus domestica');
   expect(wrapper.getByText(honeycrisp.rowLabel)).toBeTruthy();
+  expect(honeycrisp.rowLabel).toBe('Honeycrisp');
 });
 
 it('filters options by search query', async () => {
@@ -89,8 +90,18 @@ it('filters options by search query', async () => {
   });
   await openList(wrapper);
   await fireEvent.update(wrapper.getByRole('combobox'), 'comfrey');
-  expect(wrapper.getByText('Comfrey')).toBeTruthy();
+  expect(wrapper.getByText(/Comfrey/)).toBeTruthy();
   expect(wrapper.queryByText('Apple')).toBeNull();
+});
+
+it('filters options by Latin species name', async () => {
+  const wrapper = render(PlantCatalogCombobox, {
+    props: { modelValue: defaultPick() },
+  });
+  await openList(wrapper);
+  await fireEvent.update(wrapper.getByRole('combobox'), 'malus domestica');
+  expect(wrapper.getByText(/Apple/)).toBeTruthy();
+  expect(wrapper.queryByText('Comfrey')).toBeNull();
 });
 
 it('shows no matches when the query matches nothing', async () => {
@@ -108,7 +119,7 @@ it('clears the search query when modelValue changes', async () => {
   });
   await openList(wrapper);
   await fireEvent.update(wrapper.getByRole('combobox'), 'comfrey');
-  expect(wrapper.getByText('Comfrey')).toBeTruthy();
+  expect(wrapper.getByText(/Comfrey/)).toBeTruthy();
 
   const next = comfreyPick();
   await wrapper.rerender({ modelValue: next });

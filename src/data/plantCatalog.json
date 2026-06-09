@@ -39,7 +39,8 @@
         "start": 8,
         "end": 10
       },
-      "defaultIconId": "pear"
+      "defaultIconId": "pear",
+      "name_latin": "Pyrus pyrifolia"
     },
     {
       "id": "nanking_cherry",
@@ -68,7 +69,8 @@
         "start": 6,
         "end": 7
       },
-      "defaultIconId": "cherry"
+      "defaultIconId": "cherry",
+      "name_latin": "Prunus tomentosa"
     },
     {
       "id": "apple",
@@ -153,7 +155,8 @@
         "start": 8,
         "end": 10
       },
-      "defaultIconId": "apple"
+      "defaultIconId": "apple",
+      "name_latin": "Malus domestica"
     },
     {
       "id": "pear",
@@ -190,7 +193,8 @@
         "start": 8,
         "end": 9
       },
-      "defaultIconId": "pear"
+      "defaultIconId": "pear",
+      "name_latin": "Pyrus communis"
     },
     {
       "id": "narcissus",
@@ -223,7 +227,8 @@
         "start": 3,
         "end": 5
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "name_latin": "Narcissus pseudonarcissus"
     },
     {
       "id": "nasturtium",
@@ -248,7 +253,8 @@
         "start": 6,
         "end": 9
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "name_latin": "Tropaeolum majus"
     },
     {
       "id": "haskap",
@@ -281,7 +287,8 @@
         "start": 5,
         "end": 6
       },
-      "defaultIconId": "blueberry"
+      "defaultIconId": "blueberry",
+      "name_latin": "Lonicera caerulea"
     },
     {
       "id": "strawberry",
@@ -314,7 +321,8 @@
         "start": 6,
         "end": 8
       },
-      "defaultIconId": "strawberry"
+      "defaultIconId": "strawberry",
+      "name_latin": "Fragaria × ananassa"
     },
     {
       "id": "basil",
@@ -343,7 +351,8 @@
         "start": 7,
         "end": 9
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "name_latin": "Ocimum basilicum"
     },
     {
       "id": "chives",
@@ -364,7 +373,34 @@
         "start": 5,
         "end": 8
       },
-      "defaultIconId": "onion"
+      "defaultIconId": "onion",
+      "name_latin": "Allium schoenoprasum"
+    },
+    {
+      "id": "bunching_onion",
+      "name": "Bunching onion",
+      "functions": ["edible", "pest_repellent"],
+      "layers": ["herb", "root"],
+      "cultivars": [
+        {
+          "id": "ishikura",
+          "name": "Ishikura"
+        },
+        {
+          "id": "evergreen_hardy",
+          "name": "Evergreen Hardy"
+        },
+        {
+          "id": "white_lisbon",
+          "name": "White Lisbon"
+        }
+      ],
+      "blooming": {
+        "start": 5,
+        "end": 7
+      },
+      "defaultIconId": "onion",
+      "name_latin": "Allium fistulosum"
     },
     {
       "id": "ornamental_allium",
@@ -374,7 +410,8 @@
       "cultivars": [
         {
           "id": "naples_garlic",
-          "name": "Naples garlic (Allium neapolitanum)"
+          "name": "Naples garlic (Allium neapolitanum)",
+          "name_latin": "Allium neapolitanum"
         }
       ],
       "blooming": {
@@ -391,15 +428,18 @@
       "cultivars": [
         {
           "id": "shasta",
-          "name": "Shasta"
+          "name": "Shasta",
+          "name_latin": "Leucanthemum × superbum"
         },
         {
           "id": "oxeye",
-          "name": "Oxeye"
+          "name": "Oxeye daisy",
+          "name_latin": "Leucanthemum vulgare"
         },
         {
           "id": "english",
-          "name": "English"
+          "name": "English",
+          "name_latin": "Bellis perennis"
         }
       ],
       "blooming": {
@@ -407,6 +447,36 @@
         "end": 9
       },
       "defaultIconId": "flower"
+    },
+    {
+      "id": "snapdragon",
+      "name": "Snapdragon",
+      "functions": ["pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "rocket_mix",
+          "name": "Rocket Mix"
+        },
+        {
+          "id": "madame_butterfly",
+          "name": "Madame Butterfly"
+        },
+        {
+          "id": "chantilly",
+          "name": "Chantilly"
+        },
+        {
+          "id": "potomac_orange",
+          "name": "Potomac Orange"
+        }
+      ],
+      "blooming": {
+        "start": 5,
+        "end": 9
+      },
+      "defaultIconId": "flower-spike",
+      "name_latin": "Antirrhinum majus"
     },
     {
       "id": "japanese_maple",
@@ -418,7 +488,8 @@
         "start": 4,
         "end": 5
       },
-      "defaultIconId": "maple"
+      "defaultIconId": "maple",
+      "name_latin": "Acer palmatum"
     },
     {
       "id": "jostaberry",
@@ -455,7 +526,58 @@
         "start": 7,
         "end": 8
       },
-      "defaultIconId": "blueberry"
+      "defaultIconId": "blueberry",
+      "name_latin": "Ribes × nidigrolaria"
+    },
+    {
+      "id": "jujube",
+      "name": "Jujube (Chinese date)",
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["understory"],
+      "cultivars": [
+        {
+          "id": "li",
+          "name": "Li"
+        },
+        {
+          "id": "lang",
+          "name": "Lang"
+        },
+        {
+          "id": "honey_jar",
+          "name": "Honey Jar"
+        },
+        {
+          "id": "sugarcane",
+          "name": "Sugarcane"
+        },
+        {
+          "id": "shanxi_li",
+          "name": "Shanxi Li"
+        },
+        {
+          "id": "alcalde_1",
+          "name": "Alcalde #1"
+        },
+        {
+          "id": "ga866",
+          "name": "GA866"
+        },
+        {
+          "id": "sherwood",
+          "name": "Sherwood"
+        }
+      ],
+      "blooming": {
+        "start": 5,
+        "end": 7
+      },
+      "fruiting": {
+        "start": 8,
+        "end": 10
+      },
+      "defaultIconId": "tree",
+      "name_latin": "Ziziphus jujuba"
     },
     {
       "id": "judas_tree",
@@ -476,7 +598,8 @@
         "start": 3,
         "end": 4
       },
-      "defaultIconId": "tree"
+      "defaultIconId": "tree",
+      "name_latin": "Cercis siliquastrum"
     },
     {
       "id": "banana",
@@ -493,7 +616,8 @@
           "name": "Dwarf Cavendish"
         }
       ],
-      "defaultIconId": "banana"
+      "defaultIconId": "banana",
+      "name_latin": "Musa acuminata"
     },
     {
       "id": "gooseberry",
@@ -522,7 +646,8 @@
         "start": 6,
         "end": 7
       },
-      "defaultIconId": "pea"
+      "defaultIconId": "pea",
+      "name_latin": "Ribes uva-crispa"
     },
     {
       "id": "goumi",
@@ -551,7 +676,8 @@
         "start": 6,
         "end": 8
       },
-      "defaultIconId": "cherry"
+      "defaultIconId": "cherry",
+      "name_latin": "Elaeagnus multiflora"
     },
     {
       "id": "comfrey",
@@ -581,7 +707,8 @@
         "start": 5,
         "end": 7
       },
-      "defaultIconId": "flower-spike"
+      "defaultIconId": "flower-spike",
+      "name_latin": "Symphytum officinale"
     },
     {
       "id": "plantain",
@@ -608,7 +735,8 @@
         "start": 5,
         "end": 9
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "name_latin": "Plantago major"
     },
     {
       "id": "calendula",
@@ -637,11 +765,12 @@
         "start": 5,
         "end": 10
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "name_latin": "Calendula officinalis"
     },
     {
       "id": "common_mallow",
-      "name": "Common mallow (Malva sylvestris)",
+      "name": "Common mallow",
       "functions": ["edible", "medicinal", "pollinator_attractor"],
       "layers": ["herb"],
       "cultivars": [
@@ -658,7 +787,8 @@
         "start": 5,
         "end": 9
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "name_latin": "Malva sylvestris"
     },
     {
       "id": "carpathian_bellflower",
@@ -683,7 +813,8 @@
         "start": 6,
         "end": 9
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "name_latin": "Campanula carpatica"
     },
     {
       "id": "sweet_william",
@@ -708,7 +839,8 @@
         "start": 5,
         "end": 8
       },
-      "defaultIconId": "flower-blossom"
+      "defaultIconId": "flower-blossom",
+      "name_latin": "Dianthus barbatus"
     },
     {
       "id": "tagetes",
@@ -738,6 +870,40 @@
         "end": 10
       },
       "defaultIconId": "flower"
+    },
+    {
+      "id": "sunflower",
+      "name": "Sunflower",
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "mammoth",
+          "name": "Mammoth"
+        },
+        {
+          "id": "autumn_beauty",
+          "name": "Autumn Beauty"
+        },
+        {
+          "id": "teddy_bear",
+          "name": "Teddy Bear"
+        },
+        {
+          "id": "sunrich",
+          "name": "Sunrich"
+        }
+      ],
+      "blooming": {
+        "start": 7,
+        "end": 9
+      },
+      "fruiting": {
+        "start": 8,
+        "end": 10
+      },
+      "defaultIconId": "sunflower",
+      "name_latin": "Helianthus annuus"
     },
     {
       "id": "mint",
@@ -771,7 +937,8 @@
         "start": 6,
         "end": 9
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "name_latin": "Origanum majorana"
     },
     {
       "id": "oregano",
@@ -781,18 +948,21 @@
       "cultivars": [
         {
           "id": "greek",
-          "name": "Greek (Origanum vulgare subsp. hirtum)"
+          "name": "Greek (Origanum vulgare subsp. hirtum)",
+          "name_latin": "Origanum vulgare subsp. hirtum"
         },
         {
           "id": "italian",
-          "name": "Italian (Origanum × majoricum)"
+          "name": "Italian (Origanum × majoricum)",
+          "name_latin": "Origanum × majoricum"
         }
       ],
       "blooming": {
         "start": 6,
         "end": 9
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "name_latin": "Origanum vulgare"
     },
     {
       "id": "mulberry",
@@ -821,7 +991,8 @@
         "start": 6,
         "end": 8
       },
-      "defaultIconId": "blueberry"
+      "defaultIconId": "blueberry",
+      "name_latin": "Morus alba"
     },
     {
       "id": "sage",
@@ -846,7 +1017,8 @@
         "start": 6,
         "end": 8
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "name_latin": "Salvia officinalis"
     },
     {
       "id": "dill",
@@ -875,7 +1047,8 @@
         "start": 8,
         "end": 9
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "name_latin": "Anethum graveolens"
     },
     {
       "id": "che",
@@ -900,7 +1073,8 @@
         "start": 9,
         "end": 10
       },
-      "defaultIconId": "blueberry"
+      "defaultIconId": "blueberry",
+      "name_latin": "Cudrania tricuspidata"
     },
     {
       "id": "black_currant",
@@ -929,7 +1103,8 @@
         "start": 7,
         "end": 8
       },
-      "defaultIconId": "blueberry"
+      "defaultIconId": "blueberry",
+      "name_latin": "Ribes nigrum"
     },
     {
       "id": "white_currant",
@@ -954,7 +1129,8 @@
         "start": 7,
         "end": 8
       },
-      "defaultIconId": "blueberry"
+      "defaultIconId": "blueberry",
+      "name_latin": "Ribes rubrum"
     },
     {
       "id": "red_currant",
@@ -983,7 +1159,8 @@
         "start": 7,
         "end": 8
       },
-      "defaultIconId": "blueberry"
+      "defaultIconId": "blueberry",
+      "name_latin": "Ribes rubrum"
     },
     {
       "id": "peach",
@@ -1012,7 +1189,8 @@
         "start": 7,
         "end": 9
       },
-      "defaultIconId": "peach"
+      "defaultIconId": "peach",
+      "name_latin": "Prunus persica"
     },
     {
       "id": "nectarine",
@@ -1045,7 +1223,8 @@
         "start": 7,
         "end": 8
       },
-      "defaultIconId": "peach"
+      "defaultIconId": "peach",
+      "name_latin": "Prunus persica var. nucipersica"
     },
     {
       "id": "apricot",
@@ -1122,7 +1301,8 @@
         "start": 7,
         "end": 8
       },
-      "defaultIconId": "peach"
+      "defaultIconId": "peach",
+      "name_latin": "Prunus armeniaca"
     },
     {
       "id": "plum",
@@ -1159,7 +1339,8 @@
         "start": 7,
         "end": 9
       },
-      "defaultIconId": "plum"
+      "defaultIconId": "plum",
+      "name_latin": "Prunus domestica"
     },
     {
       "id": "persimmon",
@@ -1188,7 +1369,8 @@
         "start": 9,
         "end": 11
       },
-      "defaultIconId": "apricot"
+      "defaultIconId": "apricot",
+      "name_latin": "Diospyros kaki"
     },
     {
       "id": "sweet_cherry",
@@ -1257,7 +1439,8 @@
         "start": 6,
         "end": 7
       },
-      "defaultIconId": "cherry"
+      "defaultIconId": "cherry",
+      "name_latin": "Prunus avium"
     },
     {
       "id": "sour_cherry",
@@ -1318,7 +1501,8 @@
         "start": 6,
         "end": 7
       },
-      "defaultIconId": "cherry"
+      "defaultIconId": "cherry",
+      "name_latin": "Prunus cerasus"
     },
     {
       "id": "service_tree",
@@ -1343,7 +1527,8 @@
         "start": 9,
         "end": 11
       },
-      "defaultIconId": "cherry"
+      "defaultIconId": "cherry",
+      "name_latin": "Sorbus domestica"
     },
     {
       "id": "fig",
@@ -1384,6 +1569,25 @@
         "start": 7,
         "end": 10
       },
+      "defaultIconId": "tree",
+      "name_latin": "Ficus carica"
+    },
+    {
+      "id": "fir",
+      "name": "Fir",
+      "functions": ["mulcher", "pollinator_attractor"],
+      "layers": ["overstory"],
+      "cultivars": [
+        {
+          "id": "nordmann",
+          "name": "Nordmann fir",
+          "name_latin": "Abies nordmanniana"
+        }
+      ],
+      "blooming": {
+        "start": 4,
+        "end": 5
+      },
       "defaultIconId": "tree"
     },
     {
@@ -1414,7 +1618,8 @@
         "start": 10,
         "end": 11
       },
-      "defaultIconId": "kiwi"
+      "defaultIconId": "kiwi",
+      "name_latin": "Actinidia deliciosa"
     },
     {
       "id": "hardy_kiwi",
@@ -1447,7 +1652,8 @@
         "start": 9,
         "end": 9
       },
-      "defaultIconId": "kiwi"
+      "defaultIconId": "kiwi",
+      "name_latin": "Actinidia arguta"
     },
     {
       "id": "hazelnut",
@@ -1484,7 +1690,8 @@
         "start": 9,
         "end": 9
       },
-      "defaultIconId": "chestnut"
+      "defaultIconId": "chestnut",
+      "name_latin": "Corylus avellana"
     },
     {
       "id": "walnut",
@@ -1513,7 +1720,8 @@
         "start": 9,
         "end": 10
       },
-      "defaultIconId": "chestnut"
+      "defaultIconId": "chestnut",
+      "name_latin": "Juglans regia"
     },
     {
       "id": "blueberry",
@@ -1542,7 +1750,8 @@
         "start": 7,
         "end": 8
       },
-      "defaultIconId": "blueberry"
+      "defaultIconId": "blueberry",
+      "name_latin": "Vaccinium corymbosum"
     },
     {
       "id": "raspberry",
@@ -1571,7 +1780,8 @@
         "start": 7,
         "end": 8
       },
-      "defaultIconId": "blueberry"
+      "defaultIconId": "blueberry",
+      "name_latin": "Rubus idaeus"
     },
     {
       "id": "blackberry",
@@ -1604,7 +1814,8 @@
         "start": 7,
         "end": 9
       },
-      "defaultIconId": "blueberry"
+      "defaultIconId": "blueberry",
+      "name_latin": "Rubus fruticosus"
     },
     {
       "id": "tayberry",
@@ -1629,7 +1840,8 @@
         "start": 7,
         "end": 8
       },
-      "defaultIconId": "blueberry"
+      "defaultIconId": "blueberry",
+      "name_latin": "Rubus × loganobaccus"
     },
     {
       "id": "thyme",
@@ -1639,15 +1851,18 @@
       "cultivars": [
         {
           "id": "common",
-          "name": "Common (English)"
+          "name": "Common thyme",
+          "name_latin": "Thymus vulgaris"
         },
         {
           "id": "french",
-          "name": "French"
+          "name": "French",
+          "name_latin": "Thymus vulgaris"
         },
         {
           "id": "lemon",
-          "name": "Lemon"
+          "name": "Lemon",
+          "name_latin": "Thymus × citriodorus"
         },
         {
           "id": "summerdreams_lemon_gold",
@@ -1656,7 +1871,8 @@
         },
         {
           "id": "german_winter",
-          "name": "German winter"
+          "name": "German winter",
+          "name_latin": "Thymus vulgaris"
         },
         {
           "id": "creeping",
@@ -1668,7 +1884,8 @@
             "pest_repellent",
             "ground_cover"
           ],
-          "layers": ["herb", "ground_cover"]
+          "layers": ["herb", "ground_cover"],
+          "name_latin": "Thymus serpyllum"
         },
         {
           "id": "woolly",
@@ -1711,7 +1928,8 @@
         "start": 5,
         "end": 8
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "name_latin": "Thymus vulgaris"
     },
     {
       "id": "yamlina",
@@ -1756,7 +1974,8 @@
         "start": 10,
         "end": 4
       },
-      "defaultIconId": "lemon"
+      "defaultIconId": "lemon",
+      "name_latin": "Citrus limon"
     },
     {
       "id": "orange",
@@ -1785,7 +2004,8 @@
         "start": 11,
         "end": 4
       },
-      "defaultIconId": "orange"
+      "defaultIconId": "orange",
+      "name_latin": "Citrus × sinensis"
     },
     {
       "id": "hardy_orange",
@@ -1810,7 +2030,8 @@
         "start": 9,
         "end": 11
       },
-      "defaultIconId": "lemon"
+      "defaultIconId": "lemon",
+      "name_latin": "Poncirus trifoliata"
     },
     {
       "id": "goji",
@@ -1839,7 +2060,8 @@
         "start": 8,
         "end": 10
       },
-      "defaultIconId": "blueberry"
+      "defaultIconId": "blueberry",
+      "name_latin": "Lycium barbarum"
     },
     {
       "id": "cornelian_cherry",
@@ -1868,7 +2090,8 @@
         "start": 8,
         "end": 9
       },
-      "defaultIconId": "cherry"
+      "defaultIconId": "cherry",
+      "name_latin": "Cornus mas"
     },
     {
       "id": "chinese_chestnut",
@@ -1897,7 +2120,8 @@
         "start": 9,
         "end": 10
       },
-      "defaultIconId": "chestnut"
+      "defaultIconId": "chestnut",
+      "name_latin": "Castanea mollissima"
     },
     {
       "id": "yellowhorn",
@@ -1922,7 +2146,8 @@
         "start": 9,
         "end": 10
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "name_latin": "Xanthoceras sorbifolium"
     },
     {
       "id": "rosemary",
@@ -1947,7 +2172,8 @@
         "start": 4,
         "end": 6
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "name_latin": "Salvia rosmarinus"
     },
     {
       "id": "birch",
@@ -1972,7 +2198,8 @@
         "start": 3,
         "end": 5
       },
-      "defaultIconId": "tree"
+      "defaultIconId": "tree",
+      "name_latin": "Betula pendula"
     },
     {
       "id": "hibiscus",
@@ -1997,11 +2224,12 @@
         "start": 7,
         "end": 9
       },
-      "defaultIconId": "flower-tropical"
+      "defaultIconId": "flower-tropical",
+      "name_latin": "Hibiscus syriacus"
     },
     {
       "id": "hyssop",
-      "name": "Hyssop (Hyssopus officinalis)",
+      "name": "Hyssop",
       "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
       "layers": ["herb", "shrub"],
       "cultivars": [
@@ -2014,11 +2242,12 @@
         "start": 6,
         "end": 9
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "name_latin": "Hyssopus officinalis"
     },
     {
       "id": "english_lavender",
-      "name": "English lavender (Lavandula angustifolia)",
+      "name": "English lavender",
       "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
       "layers": ["herb", "shrub"],
       "cultivars": [
@@ -2039,7 +2268,21 @@
         "start": 6,
         "end": 8
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "name_latin": "Lavandula angustifolia"
+    },
+    {
+      "id": "indian_lilac",
+      "name": "Indian lilac (neem)",
+      "functions": ["medicinal", "pest_repellent", "pollinator_attractor", "mulcher"],
+      "layers": ["overstory", "understory"],
+      "cultivars": [],
+      "blooming": {
+        "start": 2,
+        "end": 4
+      },
+      "defaultIconId": "tree",
+      "name_latin": "Azadirachta indica"
     },
     {
       "id": "larkspur",
@@ -2064,7 +2307,26 @@
         "start": 5,
         "end": 8
       },
-      "defaultIconId": "bouquet"
+      "defaultIconId": "bouquet",
+      "name_latin": "Consolida ajacis"
+    },
+    {
+      "id": "night_scented_stock",
+      "name": "Night-scented stock",
+      "functions": ["pollinator_attractor", "pest_repellent"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "common",
+          "name": "Common"
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 9
+      },
+      "defaultIconId": "flower",
+      "name_latin": "Matthiola longipetala subsp. bicornis"
     },
     {
       "id": "lilac",
@@ -2089,7 +2351,8 @@
         "start": 4,
         "end": 5
       },
-      "defaultIconId": "flower-spike"
+      "defaultIconId": "flower-spike",
+      "name_latin": "Syringa vulgaris"
     },
     {
       "id": "livingstone_daisy",
@@ -2101,7 +2364,56 @@
         "start": 4,
         "end": 7
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "name_latin": "Dorotheanthus bellidiformis"
+    },
+    {
+      "id": "magnolia",
+      "name": "Magnolia",
+      "functions": ["pollinator_attractor", "mulcher"],
+      "layers": ["shrub", "understory"],
+      "cultivars": [
+        {
+          "id": "star_magnolia",
+          "name": "Star magnolia",
+          "blooming": {
+            "start": 2,
+            "end": 3
+          },
+          "name_latin": "Magnolia stellata"
+        },
+        {
+          "id": "saucer_magnolia",
+          "name": "Saucer magnolia",
+          "blooming": {
+            "start": 3,
+            "end": 4
+          },
+          "name_latin": "Magnolia × soulangeana"
+        },
+        {
+          "id": "southern_magnolia",
+          "name": "Southern magnolia",
+          "blooming": {
+            "start": 5,
+            "end": 6
+          },
+          "name_latin": "Magnolia grandiflora"
+        },
+        {
+          "id": "little_gem",
+          "name": "Little Gem"
+        },
+        {
+          "id": "ann",
+          "name": "Ann"
+        }
+      ],
+      "blooming": {
+        "start": 3,
+        "end": 5
+      },
+      "defaultIconId": "flower-blossom"
     },
     {
       "id": "sea_lavender",
@@ -2130,7 +2442,8 @@
         "start": 7,
         "end": 9
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "name_latin": "Helichrysum italicum"
     },
     {
       "id": "rosehip",
@@ -2140,7 +2453,8 @@
       "cultivars": [
         {
           "id": "dog_rose",
-          "name": "Dog rose (Rosa canina)"
+          "name": "Dog rose (Rosa canina)",
+          "name_latin": "Rosa canina"
         },
         {
           "id": "rugosa",
@@ -2165,7 +2479,8 @@
         "start": 9,
         "end": 11
       },
-      "defaultIconId": "flower-rose"
+      "defaultIconId": "flower-rose",
+      "name_latin": "Rosa canina"
     },
     {
       "id": "coneflower",
@@ -2190,7 +2505,21 @@
         "start": 6,
         "end": 9
       },
-      "defaultIconId": "flower-blossom"
+      "defaultIconId": "flower-blossom",
+      "name_latin": "Echinacea purpurea"
+    },
+    {
+      "id": "verbena_bonariensis",
+      "name": "Purpletop vervain",
+      "functions": ["pollinator_attractor"],
+      "layers": ["herb"],
+      "cultivars": [],
+      "blooming": {
+        "start": 6,
+        "end": 10
+      },
+      "defaultIconId": "flower",
+      "name_latin": "Verbena bonariensis"
     },
     {
       "id": "viburnum",
@@ -2227,7 +2556,7 @@
     },
     {
       "id": "aubrieta",
-      "name": "Aubrieta (rock cress)",
+      "name": "Rock cress",
       "functions": ["pollinator_attractor", "ground_cover"],
       "layers": ["herb", "ground_cover"],
       "cultivars": [
@@ -2248,7 +2577,8 @@
         "start": 3,
         "end": 5
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "name_latin": "Aubrieta deltoidea"
     },
     {
       "id": "elderberry",
@@ -2281,7 +2611,8 @@
         "start": 8,
         "end": 9
       },
-      "defaultIconId": "blueberry"
+      "defaultIconId": "blueberry",
+      "name_latin": "Sambucus nigra"
     },
     {
       "id": "asparagus",
@@ -2314,7 +2645,8 @@
         "start": 4,
         "end": 6
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "name_latin": "Asparagus officinalis"
     },
     {
       "id": "pole_bean",
@@ -2337,6 +2669,10 @@
         {
           "id": "rattlesnake",
           "name": "Rattlesnake"
+        },
+        {
+          "id": "blauhilde",
+          "name": "Blauhilde"
         }
       ],
       "blooming": {
@@ -2347,7 +2683,8 @@
         "start": 7,
         "end": 10
       },
-      "defaultIconId": "pea"
+      "defaultIconId": "pea",
+      "name_latin": "Phaseolus vulgaris"
     },
     {
       "id": "bush_bean",
@@ -2380,7 +2717,8 @@
         "start": 7,
         "end": 9
       },
-      "defaultIconId": "pea"
+      "defaultIconId": "pea",
+      "name_latin": "Phaseolus vulgaris"
     },
     {
       "id": "dianthus",
@@ -2413,7 +2751,8 @@
         "start": 5,
         "end": 9
       },
-      "defaultIconId": "flower-blossom"
+      "defaultIconId": "flower-blossom",
+      "name_latin": "Dianthus plumarius"
     },
     {
       "id": "sweet_potato",
@@ -2434,7 +2773,8 @@
           "name": "Okinawan"
         }
       ],
-      "defaultIconId": "seedling"
+      "defaultIconId": "seedling",
+      "name_latin": "Ipomoea batatas"
     },
     {
       "id": "globe_artichoke",
@@ -2455,7 +2795,8 @@
         "start": 4,
         "end": 6
       },
-      "defaultIconId": "flower-rosette"
+      "defaultIconId": "flower-rosette",
+      "name_latin": "Cynara cardunculus var. scolymus"
     },
     {
       "id": "leaf_celery",
@@ -2476,7 +2817,8 @@
         "start": 5,
         "end": 10
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "name_latin": "Apium graveolens var. secalinum"
     },
     {
       "id": "swiss_chard",
@@ -2497,7 +2839,8 @@
         "start": 5,
         "end": 11
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "name_latin": "Beta vulgaris subsp. vulgaris"
     },
     {
       "id": "dichondra_repens",
@@ -2514,7 +2857,8 @@
         "start": 5,
         "end": 8
       },
-      "defaultIconId": "seedling"
+      "defaultIconId": "seedling",
+      "name_latin": "Dichondra repens"
     },
     {
       "id": "white_willow",
@@ -2540,7 +2884,8 @@
         "start": 6,
         "end": 7
       },
-      "defaultIconId": "tree"
+      "defaultIconId": "tree",
+      "name_latin": "Salix alba"
     },
     {
       "id": "lambs_lettuce",
@@ -2561,7 +2906,46 @@
         "start": 10,
         "end": 4
       },
-      "defaultIconId": "lettuce"
+      "defaultIconId": "lettuce",
+      "name_latin": "Valerianella locusta"
+    },
+    {
+      "id": "watermelon",
+      "name": "Watermelon",
+      "functions": ["edible", "pollinator_attractor", "ground_cover"],
+      "layers": ["vine", "ground_cover"],
+      "cultivars": [
+        {
+          "id": "sugar_baby",
+          "name": "Sugar Baby"
+        },
+        {
+          "id": "crimson_sweet",
+          "name": "Crimson Sweet"
+        },
+        {
+          "id": "charleston_gray",
+          "name": "Charleston Gray"
+        },
+        {
+          "id": "moon_and_stars",
+          "name": "Moon and Stars"
+        },
+        {
+          "id": "yellow_doll",
+          "name": "Yellow Doll"
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 8
+      },
+      "fruiting": {
+        "start": 7,
+        "end": 9
+      },
+      "defaultIconId": "seedling",
+      "name_latin": "Citrullus lanatus"
     },
     {
       "id": "wild_rocket",
@@ -2582,7 +2966,8 @@
         "start": 4,
         "end": 10
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "name_latin": "Diplotaxis tenuifolia"
     }
   ]
 }

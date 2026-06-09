@@ -44,7 +44,11 @@
     monthAspectTooltip,
     monthHeaderTooltip,
   } from './guildPlantTooltips';
-  import { plantDisplayLabel, plantGuildGroupLabel } from './resolvePlant';
+  import {
+    plantDisplayLabel,
+    plantGuildGroupEnglishLabel,
+    plantGuildGroupLabel,
+  } from './resolvePlant';
   import { plantCatalog } from './plantCatalog';
   import { uuid } from './utils';
   import { usePlanCommandHistory } from './usePlanCommandHistory';
@@ -433,7 +437,8 @@
 
   const compactPlantTags = computed(() =>
     groupedGuildPlants.value.map((row) => ({
-      label: row.label,
+      label: plantGuildGroupEnglishLabel(row.representativeResolved),
+      plant: row.representativeResolved,
       count: row.count,
     })),
   );
@@ -495,13 +500,14 @@
 
 <template>
   <article
-    class="flex flex-col gap-1 items-start justify-start p-2 text-ink-600 w-full"
+    class="flex flex-col gap-1 items-start justify-start p-2 text-ink-600 w-full min-w-0 max-w-full"
     :class="{
-      'h-full min-h-0': context === 'guilds',
-      'h-full': context === 'aerialSidebar' && fillCell,
+      'h-full min-h-0':
+        context === 'guilds' || (context === 'aerialSidebar' && fillCell),
       'paper-card-interactive': context === 'aerialSidebar',
       'paper-card-selected': context === 'aerialSidebar' && selectedGuildId === guildId,
       'paper-card': context === 'guilds',
+      'paper-card-not-on-aerial': !placedOnMap,
     }"
     :aria-label="guild.name"
     :aria-current="
@@ -512,7 +518,7 @@
     @keydown="onAerialListKeydown"
   >
     <template v-if="context === 'aerialSidebar'">
-      <div class="flex flex-row items-start justify-between gap-2 w-full">
+      <div class="flex flex-row items-start justify-between gap-2 w-full shrink-0">
         <p class="font-medium text-ink-800 min-w-0 flex-1">
           <HighlightText
             :text="guild.name"
@@ -545,18 +551,25 @@
         </div>
       </div>
       <div
-        class="flex flex-wrap gap-1 w-full"
+        class="flex flex-wrap gap-1 w-full min-w-0 shrink-0"
         aria-label="Plants in this guild"
       >
         <span
           v-for="(tag, i) in compactPlantTags"
           :key="`${tag.label}-${i}`"
-          class="text-[11px] leading-tight text-ink-700 paper-chip px-1.5 py-0.5"
+          class="inline-flex max-w-full items-center gap-1 text-[11px] leading-tight text-ink-700 paper-chip px-1.5 py-0.5"
         >
-          <HighlightText
-            :text="tag.label"
-            :query="searchQuery"
-          /><template v-if="tag.count > 1"> ×{{ tag.count }}</template>
+          <PlantIcon
+            :title="tag.label"
+            class="size-3.5 shrink-0"
+            :plant="tag.plant"
+          />
+          <span class="min-w-0 truncate">
+            <HighlightText
+              :text="tag.label"
+              :query="searchQuery"
+            /><template v-if="tag.count > 1"> ×{{ tag.count }}</template>
+          </span>
         </span>
         <span
           v-if="compactPlantTags.length === 0"
@@ -1017,7 +1030,7 @@
 
     <div
       v-if="context === 'aerialSidebar'"
-      class="flex flex-col gap-1 w-full"
+      class="flex flex-col gap-1 w-full min-w-0 shrink-0"
       :class="{ 'mt-auto': fillCell }"
       aria-label="Guild fruit and bloom by month"
     >

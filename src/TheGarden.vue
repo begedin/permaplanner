@@ -213,7 +213,7 @@
         </div>
         <div
           v-else
-          class="flex-1 min-h-0 overflow-y-auto p-2 flex flex-col gap-2"
+          class="flex-1 min-h-0 overflow-x-hidden overflow-y-auto p-2 flex flex-col gap-2"
         >
           <ThingBarGuild
             v-for="guild in filteredGuilds"

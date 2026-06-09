@@ -162,7 +162,7 @@
               :initial="false"
               :layout-dependency="selectedSpeciesId"
               :transition="gardenLayoutTransition"
-              class="calendar-list flex-1 min-h-0 overflow-y-auto p-2 grid gap-2"
+              class="calendar-list flex-1 min-h-0 overflow-x-hidden overflow-y-auto p-2 grid gap-2"
               :class="
                 selectedSpeciesId
                   ? 'calendar-list--single-col auto-rows-min'

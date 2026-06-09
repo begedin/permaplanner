@@ -12,6 +12,7 @@
     type CatalogPlantPick,
   } from './catalogPlantPick';
   import { plantCatalog } from './plantCatalog';
+  import { plantSpeciesDisplayLabel } from './resolvePlant';
 
   const props = withDefaults(
     defineProps<{
@@ -58,14 +59,11 @@
     }
     return allPickGroups.value
       .map((g) => {
-        const speciesMatch = g.speciesName.toLowerCase().includes(q);
+        const speciesHaystack = [g.speciesName, g.speciesLatin].filter(Boolean).join(' ');
+        const speciesMatch = speciesHaystack.toLowerCase().includes(q);
         const picks = speciesMatch
           ? g.picks
-          : g.picks.filter(
-              (p) =>
-                p.rowLabel.toLowerCase().includes(q) ||
-                p.inputLabel.toLowerCase().includes(q),
-            );
+          : g.picks.filter((p) => p.searchText.includes(q));
         return { ...g, picks };
       })
       .filter((g) => g.picks.length > 0);
@@ -135,7 +133,7 @@
             role="presentation"
             class="sticky top-0 z-10 border-b border-parchment-300/55 paper-chip px-2 py-1 text-left text-xs font-semibold text-ink-700"
           >
-            {{ group.speciesName }}
+            {{ plantSpeciesDisplayLabel(group.speciesName, group.speciesLatin) }}
           </div>
           <ComboboxOption
             v-for="pick in group.picks"
