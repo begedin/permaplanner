@@ -2,7 +2,7 @@ import { splitGuildsForPersistence } from './guildPersistence';
 import { plantCatalog } from './plantCatalog';
 import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
 import { plantDisplayLabel, resolveUserPlant } from './resolvePlant';
-import type { PermaplannerFileV1 } from './usePermaplannerStore';
+import type { GardenDocument } from './gardenDocument';
 
 const hasMeaningfulPlantLabel = (label: string | undefined): boolean =>
   typeof label === 'string' &&
@@ -10,8 +10,8 @@ const hasMeaningfulPlantLabel = (label: string | undefined): boolean =>
   label.trim().toLowerCase() !== 'plant';
 
 const withPersistedGuildPlantLabels = (
-  snapshot: PermaplannerFileV1,
-): PermaplannerFileV1 => {
+  snapshot: GardenDocument,
+): GardenDocument => {
   const labelByPlantId = new Map(
     snapshot.plants.map((userPlant) => [
       userPlant.id,
@@ -42,7 +42,7 @@ const withPersistedGuildPlantLabels = (
   return { ...snapshot, guilds };
 };
 
-export const buildLocalPlanJsonText = (snapshot: PermaplannerFileV1): string => {
+export const buildLocalPlanJsonText = (snapshot: GardenDocument): string => {
   const normalized = withPersistedGuildPlantLabels(snapshot);
   const { guilds, guildLocations } = splitGuildsForPersistence(normalized.guilds);
 
@@ -59,7 +59,7 @@ export type GithubPlanShardExports = {
 };
 
 export const buildGithubPlanShardExports = (
-  snapshot: PermaplannerFileV1,
+  snapshot: GardenDocument,
   options: { gardenFolderSegment: string; backgroundImagePath?: string },
 ): GithubPlanShardExports => {
   const normalized = withPersistedGuildPlantLabels(snapshot);

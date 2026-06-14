@@ -4,10 +4,9 @@ import { flushPromises } from '@vue/test-utils';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
 
-import { createMemoryHistory } from 'vue-router';
-
 import ThingBarGuild from './ThingBarGuild.vue';
-import { createAppRouter, routeNames, routeParam } from './router';
+import { createAuthedTestRouter } from './testing/authedTestSession';
+import { routeNames, routeParam } from './router';
 import { useGardenStore } from './useGardenStore';
 
 beforeEach(() => {
@@ -15,9 +14,7 @@ beforeEach(() => {
 });
 
 const renderOnAerial = async () => {
-  const router = createAppRouter(createMemoryHistory());
-  await router.push('/aerial');
-  await router.isReady();
+  const router = await createAuthedTestRouter('/aerial');
   return router;
 };
 

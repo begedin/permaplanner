@@ -9,7 +9,7 @@ import {
   readDocumentVersion,
 } from './permaplannerFileMigrate';
 import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
-import { parsePermaplannerDocument } from './usePermaplannerStore';
+import { parsePermaplannerDocument } from './gardenDocument';
 import type { Guild } from './gardenTypes';
 
 it('documentNeedsMigration is true below current version', () => {

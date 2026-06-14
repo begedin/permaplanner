@@ -1,14 +1,16 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/vue';
-import { flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
 import { createRouter, createWebHistory } from 'vue-router';
 
+import * as gardensApi from './api/gardens';
+
 import PlanSessionDrawer from './PlanSessionDrawer.vue';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
+import { seedAuthedTestSession } from './testing/authedTestSession';
 
 import { routeNames } from './router';
 
@@ -17,11 +19,13 @@ const router = createRouter({
   routes: [
     { path: '/', component: { template: '<div />' } },
     { path: '/privacy', name: routeNames.privacy, component: { template: '<div />' } },
+    { path: '/import', name: routeNames.import, component: { template: '<div />' } },
   ],
 });
 
 beforeEach(async () => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
+  seedAuthedTestSession();
   await router.push('/');
   await router.isReady();
 });
@@ -38,7 +42,7 @@ it('shows plan actions when open', () => {
   renderDrawer({ open: true });
 
   expect(screen.getByRole('dialog', { name: 'Plan and sync' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Open plan' })).toBeTruthy();
+  expect(screen.getByRole('link', { name: 'Import another garden' })).toBeTruthy();
 });
 
 it('closes from the header close button', async () => {
@@ -57,9 +61,12 @@ it('closes when the backdrop is clicked', async () => {
   expect(emitted()['update:open']).toEqual([[false]]);
 });
 
-it('shows unsaved indicator inside the drawer when there are changes', async () => {
+it('shows unsaved indicator inside the drawer when there are changes', () => {
+  vi.mocked(gardensApi.updateGarden).mockImplementation(() => new Promise(() => {}));
+
   const store = usePermaplannerStore();
-  store.fileHandle = { name: 'plan.json' } as FileSystemFileHandle;
+  store.gardenId = 'g1';
+  store.gardenName = 'plan.json';
   const coordinator = usePlanSaveCoordinator();
   coordinator.markIntegrationsSaved();
   usePlanCommandHistory().runMutation(() => {
@@ -69,9 +76,8 @@ it('shows unsaved indicator inside the drawer when there are changes', async () 
       cultivarId: null,
     });
   });
-  await flushPromises();
 
   renderDrawer({ open: true });
 
-  expect(screen.getByText(/Unsaved changes on one or more destinations/)).toBeTruthy();
+  expect(screen.getByText('Unsaved changes')).toBeTruthy();
 });

@@ -1,21 +1,28 @@
 <script setup lang="ts">
-  import { computed, ref } from 'vue';
-  import { useRoute } from 'vue-router';
+  import { computed } from 'vue';
+  import { useRouter } from 'vue-router';
 
-  import GithubPlanPickerDialog from './GithubPlanPickerDialog.vue';
+  import { exportActiveGardenJson } from './exportGardenJson';
   import PlanSaveIntegrationsList from './PlanSaveIntegrationsList.vue';
   import ToolSlider from './ToolSlider.vue';
-  import { isGithubStorageLinked, readGithubClientIdConfig } from './githubRepoSync';
   import { useMapScaleStore } from './useMapScaleStore';
   import { useOnboardingStore } from './useOnboardingStore';
   import { usePermaplannerStore } from './usePermaplannerStore';
   import { usePlanEditSession } from './usePlanEditSession';
-  import { usePlanSession } from './usePlanSession';
+  import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
+  import { useAuthStore } from './stores/useAuthStore';
   import { isAerialRoute, routeNames } from './router';
+  import { resetGardenSession } from './useGardenSession';
+  import { useRoute } from 'vue-router';
 
   const permaplannerStore = usePermaplannerStore();
   const mapScale = useMapScaleStore();
   const onboarding = useOnboardingStore();
+  const auth = useAuthStore();
+  const router = useRouter();
+  const route = useRoute();
+  const planSaveCoordinator = usePlanSaveCoordinator();
+
   const mapScaleEditSession = usePlanEditSession();
   const backgroundOpacityEditSession = usePlanEditSession();
 
@@ -35,33 +42,42 @@
       mapScaleOnboardingTimer = undefined;
     }, 1000);
   };
-  const route = useRoute();
 
-  const { load, newPlan, save } = usePlanSession();
-
-  const githubPickerOpen = ref(false);
-  const showOpenFromGithub = computed(
-    () => Boolean(readGithubClientIdConfig()) && isGithubStorageLinked(),
-  );
-  const showLocalFileActions = computed(() => Boolean(permaplannerStore.fileName));
-  const showGithubOnlyHint = computed(
-    () => !permaplannerStore.fileName && isGithubStorageLinked(),
-  );
   const showAerialMapTools = computed(
-    () => showLocalFileActions.value && isAerialRoute(route.name),
+    () => Boolean(permaplannerStore.gardenId) && isAerialRoute(route.name),
   );
+
+  const savePlan = async () => {
+    await planSaveCoordinator.saveAllLinkedIntegrations();
+  };
+
+  const logout = async () => {
+    await auth.logout();
+    await resetGardenSession();
+    await router.replace({ name: routeNames.login });
+  };
 </script>
 
 <template>
   <div class="flex flex-col items-stretch gap-2">
     <PlanSaveIntegrationsList />
-    <p
-      v-if="showGithubOnlyHint"
-      class="text-xs text-ink-600"
-    >
-      No local plan file yet. Use <strong>Open from GitHub…</strong> to load a backed-up
-      garden, or <strong>Open plan</strong> for a file on this device.
-    </p>
+    <template v-if="permaplannerStore.gardenName">
+      <span class="text-xs text-ink-600 truncate">{{ permaplannerStore.gardenName }}</span>
+      <button
+        type="button"
+        class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
+        @click="savePlan"
+      >
+        Save plan
+      </button>
+      <button
+        type="button"
+        class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
+        @click="exportActiveGardenJson"
+      >
+        Export JSON…
+      </button>
+    </template>
     <template v-if="showAerialMapTools">
       <ToolSlider
         :value="mapScale.linePhysicalLength"
@@ -88,38 +104,18 @@
         "
       />
     </template>
-    <template v-if="showLocalFileActions">
-      <span class="text-xs text-ink-600 truncate">{{ permaplannerStore.fileName }}</span>
-      <button
-        type="button"
-        class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
-        @click="save"
-      >
-        Save plan
-      </button>
-    </template>
+    <RouterLink
+      class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800 text-center"
+      :to="{ name: routeNames.import }"
+    >
+      Import another garden
+    </RouterLink>
     <button
       type="button"
       class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
-      @click="load"
+      @click="logout"
     >
-      Open plan
-    </button>
-    <button
-      v-if="showOpenFromGithub"
-      type="button"
-      class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
-      @click="githubPickerOpen = true"
-    >
-      Open from GitHub…
-    </button>
-    <GithubPlanPickerDialog v-model:open="githubPickerOpen" />
-    <button
-      type="button"
-      class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
-      @click="newPlan"
-    >
-      New plan
+      Sign out
     </button>
     <p class="pt-1 text-center text-[11px] text-ink-500">
       <RouterLink

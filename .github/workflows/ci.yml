@@ -6,6 +6,19 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     permissions:
       # Required to checkout the code
       contents: read
@@ -41,6 +54,8 @@ jobs:
 
       - name: Test server
         working-directory: server
+        env:
+          DATABASE_URL: ecto://postgres:postgres@localhost:5432/permaplanner_test
         run: mix deps.get && mix test
 
       - name: Upload reports

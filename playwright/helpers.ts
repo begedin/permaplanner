@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -6,11 +7,53 @@ import { expect, Page } from '@playwright/test';
 const helpersDir = path.dirname(fileURLToPath(import.meta.url));
 const emptyPlanPath = path.join(helpersDir, 'fixtures', 'emptyPlan.json');
 
+const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+const decodeBase32 = (input: string): Buffer => {
+  const cleaned = input.replace(/=+$/, '').toUpperCase();
+  let bits = 0;
+  let value = 0;
+  const output: number[] = [];
+  for (const char of cleaned) {
+    const idx = BASE32_ALPHABET.indexOf(char);
+    if (idx === -1) {
+      continue;
+    }
+    value = (value << 5) | idx;
+    bits += 5;
+    if (bits >= 8) {
+      output.push((value >>> (bits - 8)) & 0xff);
+      bits -= 8;
+    }
+  }
+  return Buffer.from(output);
+};
+
+export const totpCode = (secret: string, stepSeconds = 30): string => {
+  const key = decodeBase32(secret);
+  const counter = Math.floor(Date.now() / 1000 / stepSeconds);
+  const buf = Buffer.alloc(8);
+  buf.writeBigUInt64BE(BigInt(counter));
+  const hmac = createHmac('sha1', key).update(buf).digest();
+  const offset = hmac[hmac.length - 1] & 0x0f;
+  const code =
+    ((hmac[offset] & 0x7f) << 24) |
+    ((hmac[offset + 1] & 0xff) << 16) |
+    ((hmac[offset + 2] & 0xff) << 8) |
+    (hmac[offset + 3] & 0xff);
+  return String(code % 1_000_000).padStart(6, '0');
+};
+
+export const E2E_PASSWORD = 'valid_password_12';
+
+export const uniqueE2eEmail = (): string =>
+  `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 10)}@example.com`;
+
 /** Dispatches a paste event with a tiny PNG (more reliable than OS clipboard in headless). */
 export const pasteAerialPhotoOntoMap = async (page: Page): Promise<void> => {
   await page.evaluate(async () => {
     const dataUrl =
-      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAIAAADTED8xAAADMElEQVR4nOzVwQnAIBQFQYXff81RUkQCOyDj1YOPnbXWPmeTRef+/3O/OyBjzh3CD95BfqICMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMO0TAAD//2Anhf4QtqobAAAAAElFTkSuQmCC';
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAIAAADTED8xAAADMElEQVR4nOzVwQnAIBQFQYXff81RUkQCOyDj1YOPnbXWPmeTRef+/3O/OyBjzh3CD95BfqICMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMO0TAAD//2Anhf4QtqobAAAAAElFTkSuQmCC';
     const res = await fetch(dataUrl);
     const blob = await res.blob();
     const file = new File([blob], 'aerial.png', { type: 'image/png' });
@@ -47,46 +90,63 @@ export const waitForMainApp = async (page: Page): Promise<void> => {
   ).toBeVisible({
     timeout: 20_000,
   });
-  await expect(
-    page.getByRole('heading', { name: 'Choose where to save your plan' }),
-  ).toBeHidden();
 };
 
-/** Opens the top-bar plan menu (save, open, map tools on aerial). */
+/** Opens the top-bar plan menu (save, export, map tools on aerial). */
 export const openPlanSessionDrawer = async (page: Page): Promise<void> => {
   await page.getByRole('button', { name: /^Plan and sync/ }).click();
   await expect(page.getByRole('dialog', { name: 'Plan and sync' })).toBeVisible();
 };
 
-/** Dismiss the setup gate by creating a new plan (requires save picker stub). */
-export const createNewPlanThroughGate = async (
-  page: Page,
-  fixtureFileName = 'new.json',
-): Promise<void> => {
-  const newPath = path.join(helpersDir, 'fixtures', fixtureFileName);
-  const bytes = fs.readFileSync(newPath);
-  await page.evaluate(
-    async ({ content, saveName }) => {
-      const blob = new Blob([new Uint8Array(content)], { type: 'application/json' });
-      window.showSaveFilePicker = () =>
-        Promise.resolve({
-          name: saveName,
-          getFile: () => Promise.resolve(blob as File),
-          createWritable: () =>
-            Promise.resolve({
-              write: () => Promise.resolve(),
-              close: () => Promise.resolve(),
-            } as unknown as FileSystemWritableFileStream),
-        } as unknown as FileSystemFileHandle);
-    },
-    { content: [...bytes], saveName: fixtureFileName },
-  );
-  await page.getByRole('button', { name: 'Create new plan…' }).click();
+export const registerAndReachImport = async (page: Page): Promise<void> => {
+  const email = uniqueE2eEmail();
+  await page.goto('/register');
+  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Password').fill(E2E_PASSWORD);
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByText('Scan this in your authenticator')).toBeVisible();
+  const secret = (await page.locator('.font-mono').first().textContent())?.trim();
+  if (!secret) {
+    throw new Error('TOTP secret missing on registration screen');
+  }
+  await page.getByLabel('Confirm with a code').fill(totpCode(secret));
+  await page.getByRole('button', { name: 'Verify 2FA' }).click();
+  await page.getByRole('button', { name: 'Continue to import' }).click();
+  await expect(page.getByRole('heading', { name: 'Set up your garden' })).toBeVisible();
+};
+
+export const createEmptyGarden = async (page: Page): Promise<void> => {
+  await page.getByRole('button', { name: 'Create empty garden' }).click();
   await waitForMainApp(page);
 };
 
+export const setupAuthenticatedGarden = async (page: Page): Promise<void> => {
+  await registerAndReachImport(page);
+  await createEmptyGarden(page);
+};
+
+/** Register (if needed), create a garden, and land on the main app. */
+export const ensureAuthenticatedGarden = async (page: Page): Promise<void> => {
+  await page.goto('/guilds');
+  const url = page.url();
+  if (url.includes('/login') || url.includes('/register')) {
+    await setupAuthenticatedGarden(page);
+    return;
+  }
+  if (url.includes('/import')) {
+    await createEmptyGarden(page);
+    return;
+  }
+  await waitForMainApp(page);
+};
+
+/** @deprecated Use `setupAuthenticatedGarden` */
+export const createNewPlanThroughGate = async (page: Page): Promise<void> => {
+  await setupAuthenticatedGarden(page);
+};
+
 export const onboard = async (page: Page): Promise<void> => {
-  await createNewPlanThroughGate(page, 'new.json');
+  await ensureAuthenticatedGarden(page);
   if (!page.url().includes('/aerial')) {
     await page.getByRole('link', { name: 'Aerial' }).click();
   }
@@ -118,15 +178,7 @@ export const onboard = async (page: Page): Promise<void> => {
 };
 
 /**
- * Seeds Origin Private File System with a real FileSystemFileHandle and stubs the
- * picker APIs to return it. Chromium can persist that handle in IndexedDB, so save →
- * reload → auto-restore behaves like a user-chosen file.
- *
- * addInitScript runs on every navigation; we only write the fixture once per tab
- * (sessionStorage) so a reload does not clobber saved JSON before restore runs.
- *
- * Important: the callback body is serialized for the browser — only locals and the
- * injected argument exist there; do not reference outer-scope variables.
+ * Seeds Origin Private File System with a plan file for legacy import E2E (optional).
  */
 export const installOpfsPlanFileHandleE2E = async (page: Page) => {
   const initial = fs.readFileSync(emptyPlanPath, 'utf-8');

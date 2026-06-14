@@ -1,71 +1,18 @@
-import { flushPromises } from '@vue/test-utils';
-import { beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
 import { createPinia } from 'pinia';
+import { beforeEach, expect, it } from 'vitest';
 
+import { parseGardenDocument } from './gardenDocument';
+import { buildLocalPlanJsonText } from './permaplannerFileExport';
 import { usePermaplannerStore } from './usePermaplannerStore';
-import { usePlanCommandHistory } from './usePlanCommandHistory';
-import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
 import type { Guild } from './gardenTypes';
 
-vi.mock('./sessionFileHandle', () => ({
-  clearFileBinding: vi.fn().mockResolvedValue(undefined),
-  persistFileBinding: vi.fn().mockResolvedValue(undefined),
-}));
-
-const fileLabel = 'garden.json';
-
-type Disk = { get value(): string; set(s: string): void };
-
-const createDisk = (): Disk => {
-  let v = '';
-  return {
-    get value() {
-      return v;
-    },
-    set(s: string) {
-      v = s;
-    },
-  };
-};
-
-let disk: Disk;
-
 beforeEach(() => {
-  disk = createDisk();
   setActivePinia(createPinia());
 });
 
-it('new plan, save, change, save, then load again like after a refresh', async () => {
-  const makeHandle = (): FileSystemFileHandle => {
-    return {
-      name: fileLabel,
-      getFile: () =>
-        Promise.resolve({
-          name: fileLabel,
-          text: () => Promise.resolve(disk.value),
-        } as File),
-      createWritable: () => {
-        let last = '';
-        return Promise.resolve({
-          write: (data: string) => {
-            last = data;
-            return Promise.resolve();
-          },
-          close: () => {
-            disk.set(last);
-            return Promise.resolve();
-          },
-        });
-      },
-    } as FileSystemFileHandle;
-  };
-
+it('hydrates from document snapshot round-trip', async () => {
   const store = usePermaplannerStore();
-  await store.resetToNewPlan();
-  await store.save(makeHandle());
-  expect(store.guilds).toHaveLength(0);
-
   const guild: Guild = {
     id: 'g-willow',
     name: 'Willow',
@@ -74,69 +21,16 @@ it('new plan, save, change, save, then load again like after a refresh', async (
     mulchLevel: 1,
   };
   store.guilds = [guild];
-  await store.save(makeHandle());
+  store.gardenId = 'g1';
+  store.gardenName = 'garden.json';
+
+  const snap = store.snapshot();
+  const parsed = await parseGardenDocument(JSON.parse(buildLocalPlanJsonText(snap)));
 
   setActivePinia(createPinia());
   const reloaded = usePermaplannerStore();
-  expect(reloaded.guilds).toHaveLength(0);
+  await reloaded.hydrateFromDocument(parsed, { id: 'g1', name: 'garden.json' });
 
-  await reloaded.load(makeHandle(), { skipBindingPersist: true });
-
-  expect(reloaded).toMatchObject({
-    fileName: fileLabel,
-    guilds: [guild],
-  });
-});
-
-it('auto-saves guild changes to the linked file on the leading autosave edge', async () => {
-  vi.useFakeTimers();
-  const makeHandle = (): FileSystemFileHandle => {
-    return {
-      name: fileLabel,
-      getFile: () =>
-        Promise.resolve({
-          name: fileLabel,
-          text: () => Promise.resolve(disk.value),
-        } as File),
-      createWritable: () => {
-        let last = '';
-        return Promise.resolve({
-          write: (data: string) => {
-            last = data;
-            return Promise.resolve();
-          },
-          close: () => {
-            disk.set(last);
-            return Promise.resolve();
-          },
-        });
-      },
-    } as FileSystemFileHandle;
-  };
-
-  const store = usePermaplannerStore();
-  await store.resetToNewPlan();
-  await store.save(makeHandle());
-
-  const coordinator = usePlanSaveCoordinator();
-  coordinator.markIntegrationsSaved();
-
-  const autoGuild: Guild = {
-    id: 'g-auto',
-    name: 'Autosaved guild',
-    path: [],
-    plants: [],
-    mulchLevel: 1,
-  };
-  usePlanCommandHistory().runMutation(() => {
-    store.guilds = [autoGuild];
-  });
-  await flushPromises();
-
-  setActivePinia(createPinia());
-  const reloaded = usePermaplannerStore();
-  await reloaded.load(makeHandle(), { skipBindingPersist: true });
-
-  expect(reloaded.guilds).toEqual([autoGuild]);
-  vi.useRealTimers();
+  expect(reloaded.gardenName).toBe('garden.json');
+  expect(reloaded.guilds).toEqual([guild]);
 });

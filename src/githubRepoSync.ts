@@ -11,10 +11,7 @@ import {
   readDocumentVersion,
 } from './permaplannerFileMigrate';
 import type { GithubShardMigrationVersions } from './permaplannerFileMigrate';
-import {
-  parsePermaplannerDocument,
-  type PermaplannerFileV1,
-} from './usePermaplannerStore';
+import { type GardenDocument, parsePermaplannerDocument } from './gardenDocument';
 
 export const planRepoSyncUpdatedEventName = 'permaplanner:plan-repo-updated';
 
@@ -130,7 +127,7 @@ const SS_TOKEN = 'permaplanner.github.accessToken';
 const LS_REPO_FULL_NAME = 'permaplanner.github.planRepoFullName';
 
 const GITHUB_AUTH = 'https://github.com/login/oauth/authorize';
-const redirectUri = () => `${window.location.origin}/guilds`;
+const redirectUri = () => `${window.location.origin}/import`;
 
 const base64Url = (buf: ArrayBuffer): string => {
   const bin = String.fromCharCode(...new Uint8Array(buf));
@@ -959,7 +956,7 @@ export const listGithubPlansInRepo = async (
 export const pullPlanJsonFromGithubRepo = async (
   token: string,
   sourceFileName: string | undefined,
-): Promise<PermaplannerFileV1> => {
+): Promise<GardenDocument> => {
   const fullName = await ensurePlanRepo(token);
   const plantsPath = planRepoPlantsPath(sourceFileName);
   const guildsPath = planRepoGuildsPath(sourceFileName);
@@ -1015,7 +1012,7 @@ export const pullPlanJsonFromGithubRepo = async (
 
 type PushPlanJob = {
   token: string;
-  snapshot: PermaplannerFileV1;
+  snapshot: GardenDocument;
   sourceFileName: string | undefined;
 };
 
@@ -1024,7 +1021,7 @@ let queuedPushPlan: PushPlanJob | null = null;
 
 const pushPlanJsonToGithubRepoOnce = async (
   token: string,
-  snapshot: PermaplannerFileV1,
+  snapshot: GardenDocument,
   sourceFileName: string | undefined,
 ): Promise<number | undefined> => {
   const fullName = await ensurePlanRepo(token);
@@ -1069,7 +1066,7 @@ const pushPlanJsonToGithubRepoOnce = async (
 
 export const pushPlanJsonToGithubRepo = async (
   token: string,
-  snapshot: PermaplannerFileV1,
+  snapshot: GardenDocument,
   sourceFileName: string | undefined,
 ): Promise<void> => {
   queuedPushPlan = { token, snapshot, sourceFileName };
@@ -1102,7 +1099,7 @@ export const pushPlanJsonToGithubRepo = async (
 };
 
 export const syncIfRepoLinked = async (
-  snapshot: PermaplannerFileV1,
+  snapshot: GardenDocument,
   sourceFileName: string | undefined,
 ): Promise<void> => {
   if (!readGithubClientIdConfig()) {

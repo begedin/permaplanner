@@ -1,8 +1,4 @@
-import { githubPlanSaveIntegration } from './github';
-import { localFilePlanSaveIntegration } from './localFile';
+import { serverPlanSaveIntegration } from './server';
 import type { PlanSaveIntegration } from '../planSaveIntegration';
 
-export const planSaveIntegrations: PlanSaveIntegration[] = [
-  localFilePlanSaveIntegration,
-  githubPlanSaveIntegration,
-];
+export const planSaveIntegrations: PlanSaveIntegration[] = [serverPlanSaveIntegration];

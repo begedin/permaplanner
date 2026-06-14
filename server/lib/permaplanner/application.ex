@@ -6,6 +6,7 @@ defmodule Permaplanner.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      Permaplanner.Repo,
       {Phoenix.PubSub, name: Permaplanner.PubSub},
       PermaplannerWeb.Endpoint
     ]

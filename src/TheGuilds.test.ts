@@ -4,10 +4,9 @@ import { flushPromises } from '@vue/test-utils';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
 
-import { createMemoryHistory } from 'vue-router';
-
 import TheGuilds from './TheGuilds.vue';
-import { createAppRouter, routeNames, routeParam } from './router';
+import { createAuthedTestRouter } from './testing/authedTestSession';
+import { routeNames, routeParam } from './router';
 import { useGardenStore } from './useGardenStore';
 import { resetGuildSearch } from './useGuildSearch';
 
@@ -19,7 +18,7 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 const seedGuilds = async (initialPath = '/guilds') => {
-  const router = createAppRouter(createMemoryHistory());
+  const router = await createAuthedTestRouter(initialPath);
   const store = useGardenStore();
   store.guilds = [
     { id: 'a', name: 'Alpha guild', plants: [], path: [], mulchLevel: 1 },
@@ -147,9 +146,7 @@ it('highlights matched text in guild list results', async () => {
 });
 
 it('add guild navigates with the new guild in the route', async () => {
-  const router = createAppRouter(createMemoryHistory());
-  await router.push('/guilds');
-  await router.isReady();
+  const router = await createAuthedTestRouter('/guilds');
   render(TheGuilds, { global: { plugins: [router] } });
 
   await fireEvent.click(screen.getByRole('button', { name: 'Add guild' }));

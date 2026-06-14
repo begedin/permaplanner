@@ -1,8 +1,6 @@
 <script setup lang="ts">
   import { storeToRefs } from 'pinia';
 
-  import PlanSaveIntegrationGithubDetails from './PlanSaveIntegrationGithubDetails.vue';
-  import PlanSaveIntegrationLocalDetails from './PlanSaveIntegrationLocalDetails.vue';
   import UiIcon from './uiIcons/UiIcon.vue';
   import { planSaveStatusLabel } from './planSaveIntegration';
   import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
@@ -34,7 +32,7 @@
       role="status"
       aria-live="polite"
     >
-      Unsaved changes on one or more destinations
+      Unsaved changes
     </p>
     <ul
       class="space-y-1"
@@ -108,8 +106,6 @@
           >
             {{ row.errorMessage }}
           </p>
-          <PlanSaveIntegrationLocalDetails v-if="row.id === 'local-file'" />
-          <PlanSaveIntegrationGithubDetails v-if="row.id === 'github'" />
         </div>
       </li>
     </ul>

@@ -5,10 +5,9 @@ import { setActivePinia } from 'pinia';
 import { mount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 
-import { createMemoryHistory } from 'vue-router';
-
 import TheGarden from './TheGarden.vue';
-import { createAppRouter, routeNames, routeParam } from './router';
+import { createAuthedTestRouter } from './testing/authedTestSession';
+import { routeNames, routeParam } from './router';
 import { useGardenStore } from './useGardenStore';
 import GardenGuild from './GardenGuild.vue';
 import { usePermaplannerStore } from './usePermaplannerStore';
@@ -28,7 +27,8 @@ beforeEach(() => {
   resetGuildSearch();
   vi.spyOn(window, 'confirm').mockReturnValue(true);
   const store = usePermaplannerStore();
-  store.fileName = 'test';
+  store.gardenId = 'g1';
+  store.gardenName = 'test';
 });
 
 afterEach(() => {
@@ -37,9 +37,7 @@ afterEach(() => {
 });
 
 const renderGarden = async (path = '/aerial') => {
-  const router = createAppRouter(createMemoryHistory());
-  await router.push(path);
-  await router.isReady();
+  const router = await createAuthedTestRouter(path);
   return { router, view: render(TheGarden, { global: { plugins: [router] } }) };
 };
 

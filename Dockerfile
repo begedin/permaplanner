@@ -36,6 +36,7 @@ RUN mix deps.get --only prod
 
 COPY server/config ./config
 COPY server/lib ./lib
+COPY server/priv ./priv
 COPY --from=frontend /app/dist ./priv/static
 
 RUN mix release

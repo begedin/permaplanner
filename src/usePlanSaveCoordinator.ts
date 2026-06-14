@@ -1,16 +1,13 @@
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
-import { githubRepoLastSyncError, planRepoSyncUpdatedEventName } from './githubRepoSync';
 import type {
   PlanSaveIntegrationId,
   PlanSaveIntegrationStatus,
   PlanSaveIntegrationView,
 } from './planSaveIntegration';
 import { planSaveIntegrations } from './planSaveIntegrations';
-import { githubSaveFailureMessage } from './planSaveIntegrations/github';
 import { runPlanSaveSerial } from './planSaveSerialQueue';
-import { isPlanMigrationPending } from './usePlanMigration';
 import { usePermaplannerStore } from './usePermaplannerStore';
 
 type IntegrationRuntime = {
@@ -24,30 +21,23 @@ const defaultRuntime = (): IntegrationRuntime => ({
   saving: false,
 });
 
-/** Delay before the trailing autosave after the last edit in a burst. */
 const AUTOSAVE_DEBOUNCE_MS = import.meta.env.VITEST ? 50 : 5000;
 
 export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
   const permaplannerStore = usePermaplannerStore();
 
   const runtimeById = ref<Record<PlanSaveIntegrationId, IntegrationRuntime>>({
-    'local-file': defaultRuntime(),
-    github: defaultRuntime(),
+    server: defaultRuntime(),
   });
 
   const expandedIds = ref<Set<PlanSaveIntegrationId>>(new Set());
-
-  /** False until the plan is loaded and destinations are marked saved (avoids false "unsaved" on refresh). */
   const trackingEnabled = ref(false);
-
-  /** Bumped on each user edit; integrations save through the current generation. */
   const editGeneration = ref(0);
-
   const savedAtGenerationById = ref<Partial<Record<PlanSaveIntegrationId, number>>>({});
 
   const saveContext = () => ({
     snapshot: () => permaplannerStore.snapshot(),
-    fileName: () => permaplannerStore.fileName,
+    gardenName: () => permaplannerStore.gardenName,
   });
 
   const integrationFor = (id: PlanSaveIntegrationId) => {
@@ -109,13 +99,10 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
 
   const refreshAllDetails = async () => {
     await Promise.all(
-      planSaveIntegrations
-        .filter((i) => i.isAvailable())
-        .map((i) => refreshDetails(i.id)),
+      planSaveIntegrations.filter((i) => i.isAvailable()).map((i) => refreshDetails(i.id)),
     );
   };
 
-  /** Call after loading or pulling a plan so linked destinations start as saved. */
   const markIntegrationsSaved = (ids?: PlanSaveIntegrationId[]) => {
     const targets =
       ids ??
@@ -146,14 +133,7 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     void refreshDetails(id);
   };
 
-  /** Record local write, then push other linked destinations. */
-  const scheduleFlushAfterLocalWrite = (): Promise<void> => {
-    noteDestinationSaved('local-file');
-    return scheduleFlush();
-  };
-
   let inFlightFlush: Promise<void> | null = null;
-
   let autosaveTrailingTimer: ReturnType<typeof setTimeout> | undefined;
   let autosaveBurstActive = false;
 
@@ -182,17 +162,13 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     }
 
     setRuntime(id, { saving: true, errorMessage: undefined });
-
     const generationAtStart = editGeneration.value;
 
     try {
       await integration.save(saveContext());
       noteDestinationSaved(id, generationAtStart);
     } catch (e) {
-      const message = id === 'github' ? githubSaveFailureMessage(e) : String(e);
-      if (id === 'github') {
-        githubRepoLastSyncError.value = message;
-      }
+      const message = e instanceof Error ? e.message : String(e);
       setRuntime(id, { saving: false, errorMessage: message });
       throw e;
     }
@@ -207,11 +183,7 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     );
 
   const flushLinkedSavesNow = async (options?: { force?: boolean }) => {
-    if (
-      !trackingEnabled.value ||
-      permaplannerStore.suppressAutosaveDepth > 0 ||
-      isPlanMigrationPending.value
-    ) {
+    if (!trackingEnabled.value || permaplannerStore.suppressAutosaveDepth > 0) {
       return;
     }
     if (!options?.force && !anyDirty()) {
@@ -227,10 +199,8 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     }
   };
 
-  const saveAllLinkedIntegrationsNow = async () => flushLinkedSavesNow({ force: true });
-
   const saveAllLinkedIntegrations = (): Promise<void> =>
-    runPlanSaveSerial(() => saveAllLinkedIntegrationsNow());
+    runPlanSaveSerial(() => flushLinkedSavesNow({ force: true }));
 
   const scheduleFlush = (): Promise<void> => {
     if (!anyDirty()) {
@@ -285,36 +255,18 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
   );
 
   watch(
-    () => permaplannerStore.fileHandle,
+    () => permaplannerStore.gardenId,
     () => {
       void refreshAllDetails();
     },
     { flush: 'post' },
   );
 
-  watch(githubRepoLastSyncError, (message) => {
-    if (message && integrationFor('github').isLinked()) {
-      setRuntime('github', { errorMessage: message });
-    }
-  });
-
-  const onRepoUpdated = () => {
-    noteDestinationSaved('github');
-  };
-
-  if (typeof window !== 'undefined') {
-    window.addEventListener(planRepoSyncUpdatedEventName, onRepoUpdated);
-  }
-
-  /** Call when a user edit command is applied (including undo/redo). */
   const onEditApplied = () => {
     if (!trackingEnabled.value) {
       return;
     }
-    if (
-      permaplannerStore.suppressAutosaveDepth > 0 ||
-      permaplannerStore.isBulkPlanUpdate
-    ) {
+    if (permaplannerStore.suppressAutosaveDepth > 0 || permaplannerStore.isBulkPlanUpdate) {
       return;
     }
     editGeneration.value += 1;
@@ -335,7 +287,6 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     refreshAllDetails,
     markIntegrationsSaved,
     noteDestinationSaved,
-    scheduleFlushAfterLocalWrite,
     onEditApplied,
   };
 });

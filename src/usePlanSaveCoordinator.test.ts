@@ -3,31 +3,39 @@ import { setActivePinia } from 'pinia';
 import { createPinia } from 'pinia';
 import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 
+import * as gardensApi from './api/gardens';
 import { resetPlanSaveSerialQueueForTests } from './planSaveSerialQueue';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
+import { useAuthStore } from './stores/useAuthStore';
+
+vi.mock('./api/gardens', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./api/gardens')>();
+  return {
+    ...actual,
+    updateGarden: vi.fn(),
+    listGardens: vi.fn().mockResolvedValue([]),
+  };
+});
 
 beforeEach(() => {
   setActivePinia(createPinia());
   resetPlanSaveSerialQueueForTests();
+  useAuthStore().user = { id: 'u1', email: 't@example.com', totpConfirmed: true };
 });
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.mocked(gardensApi.updateGarden).mockReset();
 });
 
-it('leading autosave saves soon after the first edit in a burst', async () => {
+it('autosaves to server after edit', async () => {
+  vi.mocked(gardensApi.updateGarden).mockResolvedValue(1);
+
   const store = usePermaplannerStore();
-  const write = vi.fn().mockResolvedValue(undefined);
-  const close = vi.fn().mockResolvedValue(undefined);
-  const createWritable = vi.fn().mockResolvedValue({ write, close });
-  const getFile = vi.fn().mockResolvedValue({ lastModified: 1000 });
-  store.fileHandle = {
-    name: 'garden.json',
-    createWritable,
-    getFile,
-  } as unknown as FileSystemFileHandle;
+  store.gardenId = 'g1';
+  store.gardenName = 'garden.json';
 
   const coordinator = usePlanSaveCoordinator();
   coordinator.markIntegrationsSaved();
@@ -41,12 +49,13 @@ it('leading autosave saves soon after the first edit in a burst', async () => {
   });
   await flushPromises();
 
-  expect(createWritable).toHaveBeenCalledTimes(1);
+  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
+  expect(coordinator.views.find((v) => v.id === 'server')?.status).toBe('saved');
 });
 
-it('does not mark linked destinations unsaved before markIntegrationsSaved', () => {
+it('does not mark server unsaved before markIntegrationsSaved', () => {
   const store = usePermaplannerStore();
-  store.fileHandle = { name: 'garden.json' } as FileSystemFileHandle;
+  store.gardenId = 'g1';
 
   const coordinator = usePlanSaveCoordinator();
   usePlanCommandHistory().runMutation(() => {
@@ -60,154 +69,16 @@ it('does not mark linked destinations unsaved before markIntegrationsSaved', () 
   expect(coordinator.hasUnsavedChanges).toBe(false);
 });
 
-it('flushes local save through the local-file integration', async () => {
+it('saveAllLinkedIntegrations forces server save', async () => {
+  vi.mocked(gardensApi.updateGarden).mockResolvedValue(0);
+
   const store = usePermaplannerStore();
-  const write = vi.fn().mockResolvedValue(undefined);
-  const close = vi.fn().mockResolvedValue(undefined);
-  const createWritable = vi.fn().mockResolvedValue({ write, close });
-  const getFile = vi.fn().mockResolvedValue({ lastModified: 1000 });
-  store.fileHandle = {
-    name: 'garden.json',
-    createWritable,
-    getFile,
-  } as unknown as FileSystemFileHandle;
+  store.gardenId = 'g1';
 
   const coordinator = usePlanSaveCoordinator();
   coordinator.markIntegrationsSaved();
-  usePlanCommandHistory().runMutation(() => {
-    store.plants.push({
-      id: 'p1',
-      speciesId: 'comfrey',
-      cultivarId: null,
-    });
-  });
-  await flushPromises();
-
-  await coordinator.scheduleFlush();
-
-  expect(createWritable).toHaveBeenCalled();
-  expect(coordinator.views.find((v) => v.id === 'local-file')?.status).toBe('saved');
-});
-
-it('saveAllLinkedIntegrations writes local file even when nothing changed', async () => {
-  const store = usePermaplannerStore();
-  const write = vi.fn().mockResolvedValue(undefined);
-  const close = vi.fn().mockResolvedValue(undefined);
-  const createWritable = vi.fn().mockResolvedValue({ write, close });
-  const getFile = vi.fn().mockResolvedValue({ lastModified: 1000 });
-  store.fileHandle = {
-    name: 'garden.json',
-    createWritable,
-    getFile,
-  } as unknown as FileSystemFileHandle;
-
-  const coordinator = usePlanSaveCoordinator();
-  coordinator.markIntegrationsSaved();
-  createWritable.mockClear();
 
   await coordinator.saveAllLinkedIntegrations();
 
-  expect(createWritable).toHaveBeenCalled();
-});
-
-it('scheduleFlushAfterLocalWrite skips when nothing changed', async () => {
-  const store = usePermaplannerStore();
-  const write = vi.fn().mockResolvedValue(undefined);
-  const close = vi.fn().mockResolvedValue(undefined);
-  const createWritable = vi.fn().mockResolvedValue({ write, close });
-  const getFile = vi.fn().mockResolvedValue({ lastModified: 1000 });
-  store.fileHandle = {
-    name: 'garden.json',
-    createWritable,
-    getFile,
-  } as unknown as FileSystemFileHandle;
-
-  const coordinator = usePlanSaveCoordinator();
-  coordinator.markIntegrationsSaved();
-  createWritable.mockClear();
-
-  await coordinator.scheduleFlushAfterLocalWrite();
-
-  expect(createWritable).not.toHaveBeenCalled();
-});
-
-it('autosave trailing edge saves after the debounce when edits continue in a burst', async () => {
-  const store = usePermaplannerStore();
-  const write = vi.fn().mockResolvedValue(undefined);
-  const close = vi.fn().mockResolvedValue(undefined);
-  const createWritable = vi.fn().mockResolvedValue({ write, close });
-  const getFile = vi.fn().mockResolvedValue({ lastModified: 1000 });
-  store.fileHandle = {
-    name: 'garden.json',
-    createWritable,
-    getFile,
-  } as unknown as FileSystemFileHandle;
-
-  const coordinator = usePlanSaveCoordinator();
-  coordinator.markIntegrationsSaved();
-
-  usePlanCommandHistory().runMutation(() => {
-    store.plants.push({
-      id: 'p1',
-      speciesId: 'comfrey',
-      cultivarId: null,
-    });
-  });
-  await flushPromises();
-  await flushPromises();
-  expect(createWritable).toHaveBeenCalledTimes(1);
-
-  usePlanCommandHistory().runMutation(() => {
-    store.plants.push({
-      id: 'p2',
-      speciesId: 'yarrow',
-      cultivarId: null,
-    });
-  });
-  await flushPromises();
-  expect(createWritable).toHaveBeenCalledTimes(1);
-
-  await new Promise((resolve) => setTimeout(resolve, 60));
-  await flushPromises();
-
-  expect(createWritable).toHaveBeenCalledTimes(2);
-});
-
-it('serializes overlapping flush and single-integration saves', async () => {
-  const store = usePermaplannerStore();
-  const order: string[] = [];
-  const write = vi.fn().mockImplementation(async () => {
-    order.push('local-write');
-  });
-  const close = vi.fn().mockResolvedValue(undefined);
-  const createWritable = vi.fn().mockResolvedValue({ write, close });
-  const getFile = vi.fn().mockResolvedValue({ lastModified: 1000 });
-  store.fileHandle = {
-    name: 'garden.json',
-    createWritable,
-    getFile,
-  } as unknown as FileSystemFileHandle;
-
-  const coordinator = usePlanSaveCoordinator();
-  coordinator.markIntegrationsSaved();
-  usePlanCommandHistory().runMutation(() => {
-    store.plants.push({
-      id: 'p1',
-      speciesId: 'comfrey',
-      cultivarId: null,
-    });
-  });
-  await flushPromises();
-
-  const flushDone = coordinator.scheduleFlush();
-  const singleDone = coordinator.saveIntegration('local-file');
-  await Promise.all([flushDone, singleDone]);
-
-  const writeIndices = order
-    .map((label, index) => (label === 'local-write' ? index : -1))
-    .filter((index) => index >= 0);
-  expect(writeIndices.length).toBeGreaterThanOrEqual(2);
-  for (let i = 1; i < writeIndices.length; i++) {
-    expect(writeIndices[i]!).toBeGreaterThan(writeIndices[i - 1]!);
-  }
+  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
 });

@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import {
-  createNewPlanThroughGate,
   openPlanSessionDrawer,
   pasteAerialPhotoOntoMap,
+  setupAuthenticatedGarden,
 } from './helpers';
 
 test('onboards', async ({ browser }) => {
@@ -12,7 +12,8 @@ test('onboards', async ({ browser }) => {
   const page = await context.newPage();
   await page.goto('/aerial');
 
-  await createNewPlanThroughGate(page, 'new.json');
+  await setupAuthenticatedGarden(page);
+  await page.goto('/aerial');
 
   await expect(page.locator('[data-onboarding-text]')).toHaveText(
     /Paste an aerial photo/,

@@ -29,7 +29,15 @@ Secrets for local dev (GitHub OAuth) live in `.env.1password` — see [`.env.1pa
 
 **http://localhost:8080** is the Phoenix server directly. The OAuth token proxy (`POST /api/github/oauth/access_token`) works here. The UI is only served from a built `dist/` folder (no HMR), so it may be missing or stale unless you've run `npm run build-only`. For a full production-like stack on 8080, use `npm run start` instead.
 
-GitHub OAuth redirect URIs are origin-specific. Local dev typically uses `http://localhost:5173/guilds`; add `http://localhost:8080/guilds` too if you test the full flow on 8080.
+GitHub OAuth redirect URIs are origin-specific. Add `http://localhost:5173/import` (and production `/import`) for legacy GitHub import. The OAuth token proxy is `POST /api/github/oauth/access_token`.
+
+### Database (local)
+
+Phoenix expects Postgres. Default dev credentials are in [`server/config/dev.exs`](server/config/dev.exs) (`permaplanner_dev` on localhost). Create and migrate:
+
+```bash
+cd server && mix ecto.create && mix ecto.migrate
+```
 
 ### Deploy to Fly
 
@@ -37,7 +45,19 @@ GitHub OAuth redirect URIs are origin-specific. Local dev typically uses `http:/
 npm run deploy:fly
 ```
 
-Build-time: `VITE_GITHUB_CLIENT_ID` (via `.env.fly` and 1Password). Runtime secret on Fly: `GITHUB_CLIENT_SECRET`. See [`scripts/fly-deploy-op.sh`](scripts/fly-deploy-op.sh).
+Build-time: `VITE_GITHUB_CLIENT_ID` (via `.env.fly` and 1Password).
+
+Runtime secrets on Fly:
+
+- `GITHUB_CLIENT_SECRET`
+- `SECRET_KEY_BASE` (64+ bytes): `fly secrets set SECRET_KEY_BASE="$(cd server && mix phx.gen.secret)"`
+- `DATABASE_URL` — set automatically by `fly postgres attach permaplanner-db -a permaplanner`
+
+After setting secrets, deploy them: `fly secrets deploy -a permaplanner` (Fly may show secrets as “Staged” until you do).
+
+Postgres on Fly uses the private network (`*.flycast`). The app sets `ECTO_IPV6=true` in `fly.toml` so Ecto can connect (without it you get `nxdomain` on migrate/boot).
+
+Migrations run on deploy via `release_command` in [`fly.toml`](fly.toml).
 
 ## Adding plants to the catalog
 

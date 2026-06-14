@@ -3,6 +3,20 @@ defmodule PermaplannerWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :fetch_session
+    plug PermaplannerWeb.UserAuth, :fetch_current_user
+  end
+
+  pipeline :require_authenticated do
+    plug PermaplannerWeb.UserAuth, :require_authenticated
+  end
+
+  pipeline :require_pending_user do
+    plug PermaplannerWeb.UserAuth, :require_pending_user
+  end
+
+  pipeline :require_totp_confirmed do
+    plug PermaplannerWeb.UserAuth, :require_totp_confirmed
   end
 
   pipeline :spa do
@@ -12,7 +26,26 @@ defmodule PermaplannerWeb.Router do
   scope "/api", PermaplannerWeb do
     pipe_through :api
 
+    get "/auth/session", AuthController, :session
+    post "/auth/register", AuthController, :register
+    post "/auth/login", AuthController, :login
+    post "/auth/logout", AuthController, :logout
+    post "/auth/github", AuthController, :github
     post "/github/oauth/access_token", GithubOAuthController, :create
+  end
+
+  scope "/api", PermaplannerWeb do
+    pipe_through [:api, :require_pending_user]
+
+    post "/auth/register/totp", AuthController, :register_totp
+    post "/auth/login/totp", AuthController, :login_totp
+  end
+
+  scope "/api", PermaplannerWeb do
+    pipe_through [:api, :require_authenticated, :require_totp_confirmed]
+
+    resources "/gardens", GardenController, only: [:index, :create, :show, :update, :delete]
+    post "/legacy-import/local", LegacyImportController, :local
   end
 
   scope "/", PermaplannerWeb do

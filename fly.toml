@@ -10,6 +10,11 @@ primary_region = 'ams'
 
 [env]
   MIX_ENV = "prod"
+  # Fly private network (flycast / .internal) uses IPv6; required for Postgres.
+  ECTO_IPV6 = "true"
+
+[deploy]
+  release_command = "/app/bin/permaplanner eval Permaplanner.Release.migrate"
 
 [http_service]
   internal_port = 8080

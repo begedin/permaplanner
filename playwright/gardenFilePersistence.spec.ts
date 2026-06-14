@@ -1,39 +1,17 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import {
-  installOpfsPlanFileHandleE2E,
   openPlanSessionDrawer,
+  setupAuthenticatedGarden,
   waitForMainApp,
 } from './helpers';
 
-const waitForPlanRestoredOrSetup = async (page: Page) => {
-  const setupHeading = page.getByRole('heading', {
-    name: 'Choose where to save your plan',
-  });
-  await Promise.race([
-    setupHeading.waitFor({ state: 'visible', timeout: 20_000 }),
-    waitForMainApp(page),
-  ]);
-};
-
-test('new plan, edit map scale, save, reload — plan and map scale restore', async ({
-  page,
-}) => {
-  await installOpfsPlanFileHandleE2E(page);
+test('edit map scale, save, reload — plan restores from server', async ({ page }) => {
+  await setupAuthenticatedGarden(page);
   await page.goto('/aerial');
-  await waitForPlanRestoredOrSetup(page);
-
-  if (
-    await page
-      .getByRole('heading', { name: 'Choose where to save your plan' })
-      .isVisible()
-  ) {
-    await page.getByRole('button', { name: 'Create new plan…' }).click();
-    await waitForMainApp(page);
-  }
+  await waitForMainApp(page);
 
   await openPlanSessionDrawer(page);
-  await expect(page.getByRole('button', { name: 'Save plan' })).toBeVisible();
-  await expect(page.getByText('e2e-plan.json', { exact: true })).toBeVisible();
+  await expect(page.getByText('My garden', { exact: true })).toBeVisible();
 
   await page.getByLabel('Map scale').fill('77');
   await page.getByRole('button', { name: 'Save plan' }).click();
@@ -42,19 +20,6 @@ test('new plan, edit map scale, save, reload — plan and map scale restore', as
   await waitForMainApp(page);
 
   await openPlanSessionDrawer(page);
-  await expect(page.getByText('e2e-plan.json', { exact: true })).toBeVisible();
+  await expect(page.getByText('My garden', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Map scale')).toHaveValue('77');
-
-  await expect
-    .poll(async () =>
-      page.evaluate(async () => {
-        const root = await navigator.storage.getDirectory();
-        const file = await (await root.getFileHandle('e2e-plan.json')).getFile();
-        const doc = JSON.parse(await file.text()) as {
-          mapScale?: { linePhysicalLength?: number };
-        };
-        return doc.mapScale?.linePhysicalLength;
-      }),
-    )
-    .toBe(77);
 });

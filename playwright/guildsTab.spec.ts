@@ -33,7 +33,7 @@ test.describe('guilds tab', () => {
     await expect(guildList.getByRole('article', { name: 'Berry guild' })).toBeVisible();
 
     await openPlanSessionDrawer(page);
-    await expect(page.getByText('new.json', { exact: true })).toBeVisible();
+    await expect(page.getByText('My garden', { exact: true })).toBeVisible();
     await expect(page.getByLabel('Map scale')).toBeHidden();
   });
 });

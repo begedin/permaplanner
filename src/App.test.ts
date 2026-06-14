@@ -1,29 +1,24 @@
+import { computed } from 'vue';
 import { cleanup, fireEvent, render, screen } from '@testing-library/vue';
-import { flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
 import { createMemoryHistory } from 'vue-router';
+
+import * as gardensApi from './api/gardens';
 import App from './App.vue';
 import { createAppRouter, routeNames } from './router';
+import { seedAuthedTestSession } from './testing/authedTestSession';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
+import { isGardenBootstrapping } from './useGardenSession';
 
-vi.mock('./usePlanAppGate', () => ({
-  showMainApp: { value: true },
-}));
-
-vi.mock('./usePlanSession', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./usePlanSession')>();
+vi.mock('./useAuthGate', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./useAuthGate')>();
   return {
     ...actual,
-    usePlanSession: () => ({
-      load: vi.fn(),
-      newPlan: vi.fn(),
-      save: vi.fn(),
-      saveAs: vi.fn(),
-    }),
+    showMainApp: computed(() => true),
   };
 });
 
@@ -31,6 +26,9 @@ const router = createAppRouter(createMemoryHistory());
 
 beforeEach(async () => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
+  seedAuthedTestSession();
+  isGardenBootstrapping.value = false;
+  vi.mocked(gardensApi.updateGarden).mockReset();
   await router.push({ name: routeNames.guilds });
   await router.isReady();
 });
@@ -54,9 +52,12 @@ it('opens the plan drawer from the top bar icon', async () => {
   expect(screen.getByRole('dialog', { name: 'Plan and sync' })).toBeTruthy();
 });
 
-it('shows an unsaved dot on the plan menu button', async () => {
+it('shows an unsaved dot on the plan menu button', () => {
+  vi.mocked(gardensApi.updateGarden).mockImplementation(() => new Promise(() => {}));
+
   const store = usePermaplannerStore();
-  store.fileHandle = { name: 'plan.json' } as FileSystemFileHandle;
+  store.gardenId = 'g1';
+  store.gardenName = 'plan.json';
   const coordinator = usePlanSaveCoordinator();
   coordinator.markIntegrationsSaved();
   usePlanCommandHistory().runMutation(() => {
@@ -66,7 +67,7 @@ it('shows an unsaved dot on the plan menu button', async () => {
       cultivarId: null,
     });
   });
-  await flushPromises();
+
   renderApp();
 
   expect(

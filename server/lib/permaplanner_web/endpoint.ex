@@ -11,7 +11,11 @@ defmodule PermaplannerWeb.Endpoint do
 
   plug Plug.MethodOverride
   plug Plug.Head
-  plug Plug.Session, store: :cookie, key: "_permaplanner_key", signing_salt: "unused"
+  plug Plug.Session,
+    store: :cookie,
+    key: "_permaplanner_session",
+    signing_salt: "permaplanner_sess",
+    same_site: "Lax"
 
   if code_reloading? do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket

@@ -8,14 +8,24 @@ import { createTestingPinia } from '@pinia/testing';
 import { createMemoryHistory } from 'vue-router';
 
 import GuildTabHeader from './GuildTabHeader.vue';
-import { createAppRouter, routeNames, routeParam } from './router';
-import { isRestoringSession } from './usePlanSession';
+import { createAppRouter } from './router';
+import { createAuthedTestRouter, seedAuthedTestSession } from './testing/authedTestSession';
+import { routeNames, routeParam } from './router';
+import { isGardenBootstrapping } from './useGardenSession';
 import { useGardenStore } from './useGardenStore';
 import { useGuildSelection } from './useGuildSelection';
 
+vi.mock('./useGardenSession', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./useGardenSession')>();
+  return {
+    ...actual,
+    bootstrapGardenSession: vi.fn().mockResolvedValue(undefined),
+  };
+});
+
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
-  isRestoringSession.value = false;
+  isGardenBootstrapping.value = false;
 });
 
 afterEach(() => cleanup());
@@ -30,7 +40,8 @@ const SelectionProbe = defineComponent({
 });
 
 it('keeps the guild route while the plan session is restoring', async () => {
-  isRestoringSession.value = true;
+  isGardenBootstrapping.value = true;
+  seedAuthedTestSession();
   const router = createAppRouter(createMemoryHistory());
 
   await router.push({ name: routeNames.guildsDetail, params: { guildId: 'alpha' } });
@@ -43,14 +54,15 @@ it('keeps the guild route while the plan session is restoring', async () => {
 
   const store = useGardenStore();
   store.guilds = [{ id: 'alpha', name: 'Alpha', path: [], plants: [], mulchLevel: 1 }];
-  isRestoringSession.value = false;
+  isGardenBootstrapping.value = false;
   await flushPromises();
 
   expect(screen.getByText('alpha').getAttribute('data-selected')).toBe('alpha');
 });
 
 it('clears an unknown guild route after the plan session finishes restoring', async () => {
-  isRestoringSession.value = true;
+  isGardenBootstrapping.value = true;
+  seedAuthedTestSession();
   const router = createAppRouter(createMemoryHistory());
 
   await router.push({ name: routeNames.aerialDetail, params: { guildId: 'missing' } });
@@ -60,7 +72,7 @@ it('clears an unknown guild route after the plan session finishes restoring', as
 
   expect(router.currentRoute.value.name).toBe(routeNames.aerialDetail);
 
-  isRestoringSession.value = false;
+  isGardenBootstrapping.value = false;
   await flushPromises();
   await router.isReady();
 
@@ -69,7 +81,7 @@ it('clears an unknown guild route after the plan session finishes restoring', as
 });
 
 it('reads the guild route param on the guilds tab', async () => {
-  const router = createAppRouter(createMemoryHistory());
+  const router = await createAuthedTestRouter();
   const store = useGardenStore();
   store.guilds = [{ id: 'alpha', name: 'Alpha', path: [], plants: [], mulchLevel: 1 }];
 
@@ -81,7 +93,7 @@ it('reads the guild route param on the guilds tab', async () => {
 });
 
 it('reads the guild route param on the aerial tab', async () => {
-  const router = createAppRouter(createMemoryHistory());
+  const router = await createAuthedTestRouter();
   const store = useGardenStore();
   store.guilds = [{ id: 'g1', name: 'Bed', path: [], plants: [], mulchLevel: 1 }];
 
@@ -93,7 +105,7 @@ it('reads the guild route param on the aerial tab', async () => {
 });
 
 it('add guild navigates to the guilds tab with the new guild selected', async () => {
-  const router = createAppRouter(createMemoryHistory());
+  const router = await createAuthedTestRouter();
   await router.push('/aerial');
   await router.isReady();
 
@@ -115,7 +127,7 @@ it('add guild navigates to the guilds tab with the new guild selected', async ()
 });
 
 it('points the guilds tab link at the selected guild from aerial', async () => {
-  const router = createAppRouter(createMemoryHistory());
+  const router = await createAuthedTestRouter();
   const store = useGardenStore();
   store.guilds = [{ id: 'g1', name: 'Bed', path: [], plants: [], mulchLevel: 1 }];
 
@@ -150,7 +162,7 @@ it('points the guilds tab link at the selected guild from aerial', async () => {
 });
 
 it('points the aerial tab link at the selected guild from guilds', async () => {
-  const router = createAppRouter(createMemoryHistory());
+  const router = await createAuthedTestRouter();
   const store = useGardenStore();
   store.guilds = [{ id: 'g1', name: 'Bed', path: [], plants: [], mulchLevel: 1 }];
 

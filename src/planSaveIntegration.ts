@@ -1,6 +1,6 @@
-import type { PermaplannerFileV1 } from './usePermaplannerStore';
+import type { GardenDocument } from './gardenDocument';
 
-export const PLAN_SAVE_INTEGRATION_IDS = ['local-file', 'github'] as const;
+export const PLAN_SAVE_INTEGRATION_IDS = ['server'] as const;
 
 export type PlanSaveIntegrationId = (typeof PLAN_SAVE_INTEGRATION_IDS)[number];
 
@@ -24,8 +24,8 @@ export type PlanSaveIntegrationView = {
 };
 
 export type PlanSaveContext = {
-  snapshot: () => PermaplannerFileV1;
-  fileName: () => string | undefined;
+  snapshot: () => GardenDocument;
+  gardenName: () => string | undefined;
 };
 
 export type PlanSaveIntegration = {

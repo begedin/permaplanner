@@ -1,5 +1,14 @@
 import Config
 
+config :permaplanner, Permaplanner.Repo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "permaplanner_dev",
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 10
+
 config :permaplanner, PermaplannerWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 8080],
   check_origin: false,

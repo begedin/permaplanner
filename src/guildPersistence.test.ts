@@ -8,7 +8,7 @@ import {
 } from './guildPersistence';
 import { migrateGuildsShardRaw, migratePlanDocumentRaw } from './permaplannerFileMigrate';
 import { buildLocalPlanJsonText } from './permaplannerFileExport';
-import type { PermaplannerFileV1 } from './usePermaplannerStore';
+import type { GardenDocument } from './gardenDocument';
 import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
 
 const sampleGuild: Guild = {
@@ -132,7 +132,7 @@ it('mergeGuildsFromPersistence drops empty notes from guild shards', () => {
 });
 
 it('buildLocalPlanJsonText omits empty guild notes from saved JSON', () => {
-  const snapshot: PermaplannerFileV1 = {
+  const snapshot: GardenDocument = {
     version: PERMAPLANNER_FILE_VERSION,
     syncRevision: 0,
     plants: [],

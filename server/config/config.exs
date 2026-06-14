@@ -1,5 +1,7 @@
 import Config
 
+config :permaplanner, ecto_repos: [Permaplanner.Repo]
+
 config :permaplanner, PermaplannerWeb.Endpoint,
   url: [host: "localhost"],
   render_errors: [

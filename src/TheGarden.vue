@@ -17,15 +17,12 @@
   import { useGuildSelection } from './useGuildSelection';
   import ReferenceLine from './ReferenceLine.vue';
   import { useOnboardingStore } from './useOnboardingStore';
-  import { isGithubStorageLinked } from './githubRepoSync';
   import { usePermaplannerStore } from './usePermaplannerStore';
   import { usePlanCommandHistory } from './usePlanCommandHistory';
 
   const permaplannerStore = usePermaplannerStore();
 
-  const showThingBar = computed(
-    () => Boolean(permaplannerStore.fileName) || isGithubStorageLinked(),
-  );
+  const showThingBar = computed(() => Boolean(permaplannerStore.gardenId));
 
   const {
     setupBackgroundImagePaste,

@@ -5,9 +5,9 @@ import {
   buildLocalPlanJsonText,
 } from './permaplannerFileExport';
 import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
-import type { PermaplannerFileV1 } from './usePermaplannerStore';
+import type { GardenDocument } from './gardenDocument';
 
-const sampleDoc: PermaplannerFileV1 = {
+const sampleDoc: GardenDocument = {
   version: PERMAPLANNER_FILE_VERSION,
   syncRevision: 1,
   plants: [],
@@ -22,7 +22,7 @@ const sampleDoc: PermaplannerFileV1 = {
 };
 
 it('buildLocalPlanJsonText includes current version', () => {
-  const parsed = JSON.parse(buildLocalPlanJsonText(sampleDoc)) as PermaplannerFileV1;
+  const parsed = JSON.parse(buildLocalPlanJsonText(sampleDoc)) as GardenDocument;
   expect(parsed).toMatchObject({ version: PERMAPLANNER_FILE_VERSION, syncRevision: 1 });
 });
 
@@ -55,7 +55,7 @@ it('buildLocalPlanJsonText writes split guild fields', () => {
 });
 
 it('buildLocalPlanJsonText resolves guild plant names from plant records', () => {
-  const snapshot: PermaplannerFileV1 = {
+  const snapshot: GardenDocument = {
     ...sampleDoc,
     plants: [
       {
@@ -93,7 +93,7 @@ it('buildLocalPlanJsonText resolves guild plant names from plant records', () =>
 });
 
 it('buildGithubPlanShardExports resolves guild plant names from plant records', () => {
-  const snapshot: PermaplannerFileV1 = {
+  const snapshot: GardenDocument = {
     ...sampleDoc,
     plants: [
       {
