@@ -9,16 +9,16 @@ defmodule Permaplanner.LegacyImport.Adapters.LocalFile do
 
   @spec import_document(User.t(), map()) :: {:ok, Gardens.Garden.t()} | {:error, term()}
   def import_document(%User{} = user, attrs) do
-    document = Map.get(attrs, "document") || Map.get(attrs, :document)
-    name = Map.get(attrs, "name") || Map.get(attrs, :name)
-    import_source = Map.get(attrs, "import_source") || Map.get(attrs, :import_source) || "local"
+    document = attrs["document"]
+    name = attrs["name"]
+    import_source = attrs["import_source"] || "local"
 
     with :ok <- validate_document(document),
          {:ok, garden} <-
            Gardens.create_garden(user, %{
-             name: name || default_name(document),
-             document: document,
-             import_source: import_source
+             "name" => name || default_name(document),
+             "document" => document,
+             "import_source" => import_source
            }) do
       {:ok, garden}
     else

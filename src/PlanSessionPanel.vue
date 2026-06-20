@@ -1,7 +1,13 @@
 <script setup lang="ts">
-  import { computed } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import { useRouter } from 'vue-router';
 
+  import {
+    createGardenShare,
+    listGardenShares,
+    revokeGardenShare,
+    type GardenShare,
+  } from './api/gardenShares';
   import { exportActiveGardenJson } from './exportGardenJson';
   import PlanSaveIntegrationsList from './PlanSaveIntegrationsList.vue';
   import ToolSlider from './ToolSlider.vue';
@@ -47,6 +53,64 @@
     () => Boolean(permaplannerStore.gardenId) && isAerialRoute(route.name),
   );
 
+  const shares = ref<GardenShare[]>([]);
+  const shareError = ref<string | undefined>();
+  const sharing = ref(false);
+  const revokingShareId = ref<string | undefined>();
+
+  const formatShareDate = (iso: string): string => new Date(iso).toLocaleString();
+
+  const loadShares = async () => {
+    const gardenId = permaplannerStore.gardenId;
+    if (!gardenId) {
+      shares.value = [];
+      return;
+    }
+    shareError.value = undefined;
+    try {
+      shares.value = await listGardenShares(gardenId);
+    } catch (e) {
+      shareError.value = e instanceof Error ? e.message : String(e);
+      shares.value = [];
+    }
+  };
+
+  watch(() => permaplannerStore.gardenId, loadShares, { immediate: true });
+
+  const generateShareLink = async () => {
+    const gardenId = permaplannerStore.gardenId;
+    if (!gardenId) {
+      return;
+    }
+    sharing.value = true;
+    shareError.value = undefined;
+    try {
+      const share = await createGardenShare(gardenId);
+      shares.value = [share, ...shares.value.filter((row) => row.id !== share.id)];
+    } catch (e) {
+      shareError.value = e instanceof Error ? e.message : String(e);
+    } finally {
+      sharing.value = false;
+    }
+  };
+
+  const revokeShare = async (shareId: string) => {
+    const gardenId = permaplannerStore.gardenId;
+    if (!gardenId) {
+      return;
+    }
+    revokingShareId.value = shareId;
+    shareError.value = undefined;
+    try {
+      await revokeGardenShare(gardenId, shareId);
+      shares.value = shares.value.filter((share) => share.id !== shareId);
+    } catch (e) {
+      shareError.value = e instanceof Error ? e.message : String(e);
+    } finally {
+      revokingShareId.value = undefined;
+    }
+  };
+
   const savePlan = async () => {
     await planSaveCoordinator.saveAllLinkedIntegrations();
   };
@@ -62,7 +126,9 @@
   <div class="flex flex-col items-stretch gap-2">
     <PlanSaveIntegrationsList />
     <template v-if="permaplannerStore.gardenName">
-      <span class="text-xs text-ink-600 truncate">{{ permaplannerStore.gardenName }}</span>
+      <span class="text-xs text-ink-600 truncate">{{
+        permaplannerStore.gardenName
+      }}</span>
       <button
         type="button"
         class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
@@ -77,6 +143,53 @@
       >
         Export JSON…
       </button>
+      <button
+        type="button"
+        class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
+        :disabled="sharing"
+        @click="generateShareLink"
+      >
+        {{ sharing ? 'Generating share link…' : 'Share garden' }}
+      </button>
+      <ul
+        v-if="shares.length > 0"
+        class="space-y-1"
+        aria-label="Share links"
+      >
+        <li
+          v-for="share in shares"
+          :key="share.id"
+          class="paper-card p-2 text-xs text-ink-700"
+        >
+          <div class="flex items-start gap-2">
+            <a
+              class="min-w-0 flex-1 break-all text-sage-800 hover:text-sage-800 underline"
+              :href="share.url"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {{ share.url }}
+            </a>
+            <button
+              type="button"
+              class="btn-soft-muted btn-soft-sm shrink-0 px-1.5 py-0.5 text-ink-700"
+              :aria-label="`Revoke share link ${share.url}`"
+              :disabled="revokingShareId === share.id"
+              @click="revokeShare(share.id)"
+            >
+              {{ revokingShareId === share.id ? 'Revoking…' : 'Revoke' }}
+            </button>
+          </div>
+          <p class="mt-1 text-ink-500">Created {{ formatShareDate(share.createdAt) }}</p>
+        </li>
+      </ul>
+      <p
+        v-if="shareError"
+        class="text-xs text-red-700"
+        role="alert"
+      >
+        {{ shareError }}
+      </p>
     </template>
     <template v-if="showAerialMapTools">
       <ToolSlider

@@ -39,6 +39,15 @@ Phoenix expects Postgres. Default dev credentials are in [`server/config/dev.exs
 cd server && mix ecto.create && mix ecto.migrate
 ```
 
+While a migration is still uncommitted, edit that file in place rather than adding a follow-up migration. After changing a migration that was already applied locally, reset and re-run tests:
+
+```bash
+cd server && mix ecto.reset
+cd server && MIX_ENV=test mix ecto.reset && mix test
+```
+
+See [`.cursor/skills/ecto-migrations/SKILL.md`](.cursor/skills/ecto-migrations/SKILL.md) for the full workflow.
+
 ### Deploy to Fly
 
 ```bash

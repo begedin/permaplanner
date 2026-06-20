@@ -1,8 +1,6 @@
 import { ref } from 'vue';
 
-import planGardenViewerTemplate from '../public/plan-garden-viewer.template.html?raw';
 import { buildGithubPlanShardExports } from './permaplannerFileExport';
-import { renderPlanGardenViewerHtml } from './planGardenViewer';
 import {
   documentNeedsMigration,
   migrateGuildsShardRaw,
@@ -230,10 +228,6 @@ export const planRepoGuildsPath = (fileName: string | undefined): string =>
 export const planRepoConfigPath = (fileName: string | undefined): string =>
   `${gardenDir(fileName)}/config.json`;
 
-/** `plans/<garden>/viewer.html` */
-export const planRepoGardenViewerPath = (fileName: string | undefined): string =>
-  `${gardenDir(fileName)}/viewer.html`;
-
 /** Background image path in the same garden folder (Contents API = normal git blob, not LFS). */
 export const planBackgroundMediaRepoPath = (
   fileName: string | undefined,
@@ -250,34 +244,6 @@ export const getPlanRepoGardenFolderUrl = (
   }
   const path = gardenDir(fileName);
   return `https://github.com/${full}/tree/${DEFAULT_BRANCH}/${path}`;
-};
-
-const planRepoGithubPagesBaseUrl = (fullName: string): string => {
-  const [ownerRaw, repoRaw] = fullName.split('/');
-  const owner = ownerRaw?.trim();
-  const repo = repoRaw?.trim();
-  if (!owner || !repo) {
-    return '';
-  }
-  if (repo.toLowerCase() === `${owner.toLowerCase()}.github.io`) {
-    return `https://${owner}.github.io`;
-  }
-  return `https://${owner}.github.io/${repo}`;
-};
-
-/** GitHub Pages URL for a static per-garden viewer page. */
-export const getPlanRepoGardenViewerUrl = (
-  fileName: string | undefined,
-): string | undefined => {
-  const full = localStorage.getItem(LS_REPO_FULL_NAME);
-  if (!full) {
-    return undefined;
-  }
-  const base = planRepoGithubPagesBaseUrl(full);
-  if (!base) {
-    return undefined;
-  }
-  return `${base}/${planRepoGardenViewerPath(fileName)}`;
 };
 
 export const clearGithubRepoSession = (): void => {
@@ -1044,21 +1010,11 @@ const pushPlanJsonToGithubRepoOnce = async (
     gardenFolderSegment: segment,
     backgroundImagePath,
   });
-  const guildsForViewer = (JSON.parse(guildsJson) as { guilds?: unknown }).guilds;
-  const staticViewerHtml = renderPlanGardenViewerHtml(
-    planGardenViewerTemplate,
-    segment,
-    guildsForViewer,
-  );
 
   gitFiles.push(
     { path: planRepoPlantsPath(sourceFileName), contentBase64: utf8ToBase64(plantsJson) },
     { path: planRepoGuildsPath(sourceFileName), contentBase64: utf8ToBase64(guildsJson) },
     { path: configPath, contentBase64: utf8ToBase64(configJson) },
-    {
-      path: planRepoGardenViewerPath(sourceFileName),
-      contentBase64: utf8ToBase64(staticViewerHtml),
-    },
   );
 
   return commitPlanFilesViaGitApi(token, fullName, gitFiles, `Update plan (${segment})`);

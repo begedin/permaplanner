@@ -4,11 +4,7 @@ defmodule Permaplanner.MixProject do
   def project do
     [
       app: :permaplanner,
-<<<<<<< Updated upstream
-      version: "0.18.0",
-=======
       version: "0.19.0",
->>>>>>> Stashed changes
       elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -40,6 +36,8 @@ defmodule Permaplanner.MixProject do
   defp deps do
     [
       {:phoenix, "~> 1.7.18"},
+      {:phoenix_html, "~> 4.1"},
+      {:phoenix_live_view, "~> 1.0"},
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.12"},
       {:postgrex, ">= 0.0.0"},

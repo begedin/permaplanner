@@ -17,8 +17,8 @@ defmodule Permaplanner.Gardens do
   end
 
   def create_garden(%User{id: user_id}, attrs) do
-    name = Map.get(attrs, "name") || Map.get(attrs, :name) || "My garden"
-    document = Map.get(attrs, "document") || Map.get(attrs, :document) || default_document()
+    name = attrs["name"] || "My garden"
+    document = attrs["document"] || default_document()
 
     %Garden{}
     |> Ecto.Changeset.change(
@@ -27,18 +27,17 @@ defmodule Permaplanner.Gardens do
       document: document,
       sync_revision: document["syncRevision"] || 0,
       file_version: Garden.current_file_version(),
-      import_source: Map.get(attrs, "import_source") || Map.get(attrs, :import_source)
+      import_source: attrs["import_source"]
     )
     |> Repo.insert()
   end
 
   def update_garden(%User{} = user, id, attrs) do
     garden = get_garden!(user, id)
-    document = Map.get(attrs, "document") || Map.get(attrs, :document)
+    document = attrs["document"]
 
     client_revision =
-      Map.get(attrs, "syncRevision") ||
-        Map.get(attrs, :sync_revision) ||
+      attrs["syncRevision"] ||
         if(is_map(document), do: document["syncRevision"], else: nil)
 
     if client_revision != nil and client_revision < garden.sync_revision do

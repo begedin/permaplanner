@@ -4,7 +4,6 @@ import {
   buildGithubAuthorizeUrl,
   GITHUB_PLAN_SYNC_REPO_NAME,
   gitBranchHeadRefSegment,
-  getPlanRepoGardenViewerUrl,
   githubSyncUserMessage,
   isValidGithubPlanFolderContents,
   planBackgroundMediaRepoPath,
@@ -91,32 +90,4 @@ it('githubSyncUserMessage prefers GitHub API message for other errors when prese
       '{"message":"Server Error"}',
     ),
   ).toBe('Server Error');
-});
-
-it('getPlanRepoGardenViewerUrl uses owner.github.io/<repo>/viewer.html for project pages', () => {
-  window.localStorage.setItem(
-    'permaplanner.github.planRepoFullName',
-    'octocat/permaplanner-plan-sync',
-  );
-  try {
-    expect(getPlanRepoGardenViewerUrl('my plan.json')).toBe(
-      'https://octocat.github.io/permaplanner-plan-sync/plans/my-plan/viewer.html',
-    );
-  } finally {
-    window.localStorage.removeItem('permaplanner.github.planRepoFullName');
-  }
-});
-
-it('getPlanRepoGardenViewerUrl omits repo segment for owner.github.io repo', () => {
-  window.localStorage.setItem(
-    'permaplanner.github.planRepoFullName',
-    'octocat/octocat.github.io',
-  );
-  try {
-    expect(getPlanRepoGardenViewerUrl('garden.json')).toBe(
-      'https://octocat.github.io/plans/garden/viewer.html',
-    );
-  } finally {
-    window.localStorage.removeItem('permaplanner.github.planRepoFullName');
-  }
 });

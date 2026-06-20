@@ -1,0 +1,20 @@
+---
+description: Phoenix JSON API endpoints and HTML modules — controllers, router, inline HEEx, ConnCase tests. Follow the writing-endpoints skill.
+globs:
+  - server/lib/permaplanner_web/**/*_controller.ex
+  - server/lib/permaplanner_web/**/*_html.ex
+  - server/lib/permaplanner_web/**/*_json.ex
+  - server/lib/permaplanner_web/router.ex
+  - server/test/permaplanner_web/controllers/**/*_test.exs
+  - server/test/permaplanner_web/**/*_html_test.exs
+alwaysApply: false
+---
+
+# Writing endpoints
+
+When this rule applies, read and follow [`.cursor/skills/writing-endpoints/SKILL.md`](../skills/writing-endpoints/SKILL.md) **before** editing.
+
+- HTTP params use **string keys only**; no atom-key fallbacks in controllers or contexts called from controllers.
+- Keep controllers thin; register routes with the correct auth pipeline.
+- HTML markup lives in `*_html.ex` with inline `~H"""` — **no** `.heex` files or `embed_templates`.
+- Add or update ConnCase controller tests; run `mix test` on affected files before finishing.

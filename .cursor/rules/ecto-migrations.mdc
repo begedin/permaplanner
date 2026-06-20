@@ -1,0 +1,15 @@
+---
+description: Ecto database migrations — edit in place when uncommitted, reset test DB. Follow the ecto-migrations skill.
+globs:
+  - server/priv/repo/migrations/**/*
+  - server/lib/permaplanner/**/*.ex
+alwaysApply: false
+---
+
+# Ecto migrations
+
+When this rule applies, read and follow [`.cursor/skills/ecto-migrations/SKILL.md`](../skills/ecto-migrations/SKILL.md) **before** editing.
+
+- **Uncommitted** migration: edit the file in place; do not add a follow-up migration to undo/redo the same change.
+- After in-place edits: `MIX_ENV=test mix ecto.reset`, then `mix test`.
+- **Committed or deployed**: add a new migration only; never rewrite old files.

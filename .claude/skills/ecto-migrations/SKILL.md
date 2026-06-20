@@ -1,0 +1,1 @@
+../../../.cursor/skills/ecto-migrations/SKILL.md

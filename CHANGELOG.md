@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.19.0
+
+- [FEATURE] Public garden share links: create from the plan menu, list existing links, revoke when no longer needed
+- [FEATURE] Share page at `/share/:id` renders a plain-text guild overview (HTML generated on each request from the saved garden)
+- [REFACTOR] GitHub backup sync no longer writes `viewer.html` to the sync repo (sharing is handled by the Phoenix app instead)
+- [DB] Postgres `shares` table links a garden to a public share id (no HTML stored in the database)
+
 ## 0.18.0
 
 - [TWEAK] Guild cards not placed on the aerial map use a warmer parchment background so they stand out from placed guilds
