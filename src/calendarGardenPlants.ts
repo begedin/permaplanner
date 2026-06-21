@@ -146,11 +146,11 @@ export const listGardenSpecies = (
       };
     })
     .sort((a, b) => {
+      if (b.plantCount !== a.plantCount) {
+        return b.plantCount - a.plantCount;
+      }
       if (b.cultivarCount !== a.cultivarCount) {
         return b.cultivarCount - a.cultivarCount;
-      }
-      if (a.producesFruit !== b.producesFruit) {
-        return a.producesFruit ? -1 : 1;
       }
       return a.name.localeCompare(b.name);
     });

@@ -153,25 +153,40 @@ it('omits species that exist only in the plant catalog', () => {
   expect(listGardenSpecies([], resolvePlant)).toEqual([]);
 });
 
-it('sorts species by cultivar count then fruiting plants', () => {
-  const resolve = (id: string): Plant => {
-    if (id === 'p-cherry') {
-      return {
-        id,
-        speciesId: 'sweet_cherry',
-        cultivarId: null,
-        name: 'Sweet cherry',
-        cultivar: null,
-        iconId: 'cherry',
-        functions: ['edible'],
-        layers: ['shrub'],
-      };
-    }
-    return resolvePlant(id);
-  };
+it('sorts species by plant count then cultivar count', () => {
+  const mixedGuilds: Guild[] = [
+    {
+      id: 'g-basil',
+      name: 'Herbs',
+      path: [],
+      mulchLevel: 1,
+      plants: [
+        {
+          id: 't-basil-1',
+          plantId: 'p-basil',
+          nameOrCultivar: 'Basil',
+          x: 0,
+          y: 0,
+          width: 16,
+          height: 16,
+        },
+        {
+          id: 't-basil-2',
+          plantId: 'p-basil',
+          nameOrCultivar: 'Basil',
+          x: 0,
+          y: 0,
+          width: 16,
+          height: 16,
+        },
+      ],
+    },
+    ...guilds,
+  ];
 
-  expect(listGardenSpecies(guilds, resolve).map((row) => row.speciesId)).toEqual([
+  expect(listGardenSpecies(mixedGuilds, resolvePlant).map((row) => row.speciesId)).toEqual([
     'apple',
+    'basil',
   ]);
 });
 

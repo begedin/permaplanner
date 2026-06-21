@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.20.3
+
+- [TWEAK] Calendar plant list sorts by total plants, then unique cultivars (both descending)
+
 ## 0.20.2
 
 - [FIX] Share links use the current site origin instead of `localhost` in deployed apps
