@@ -1,14 +1,14 @@
 ---
 name: ecto-migrations
 description: >-
-  Ecto schema migrations for the Phoenix server (server/priv/repo/migrations).
+  Ecto schema migrations for the Phoenix server (priv/repo/migrations).
   Use when adding or changing database tables/columns, editing migration files,
   or resetting the test DB after an in-place migration edit.
 ---
 
 # Ecto migrations (permaplanner server)
 
-Migrations live under [`server/priv/repo/migrations/`](../../server/priv/repo/migrations/). Schema modules live in [`server/lib/permaplanner/`](../../server/lib/permaplanner/).
+Migrations live under [`priv/repo/migrations/`](../../priv/repo/migrations/). Schema modules live in [`lib/permaplanner/`](../../lib/permaplanner/).
 
 ## Edit in place vs add a new file
 
@@ -24,9 +24,9 @@ Example: if `create_shares` is still only on your branch, drop a column by editi
 Replay the schema from scratch locally and in test:
 
 ```bash
-cd server && mix ecto.reset
-cd server && MIX_ENV=test mix ecto.reset
-cd server && mix test
+mix ecto.reset
+MIX_ENV=test mix ecto.reset
+mix test
 ```
 
 `mix test` runs `ecto.create` + `ecto.migrate` via the Mix alias, but that only helps when migrations match what Postgres already has. If you changed a file that was already migrated, **reset first** or tests will fail with column/table mismatches.
@@ -35,24 +35,24 @@ cd server && mix test
 
 ```bash
 # First-time / dev DB
-cd server && mix ecto.create && mix ecto.migrate
+mix ecto.create && mix ecto.migrate
 
 # Drop, recreate, migrate (dev)
-cd server && mix ecto.reset
+mix ecto.reset
 
 # Test DB only
-cd server && MIX_ENV=test mix ecto.reset
+MIX_ENV=test mix ecto.reset
 
 # New migration (when history must be preserved)
-cd server && mix ecto.gen.migration describe_the_change
+mix ecto.gen.migration describe_the_change
 ```
 
-Default DB names: `permaplanner_dev` (dev), `permaplanner_test` (test) — see [`server/config/dev.exs`](../../server/config/dev.exs) and [`server/config/test.exs`](../../server/config/test.exs).
+Default DB names: `permaplanner_dev` (dev), `permaplanner_test` (test) — see [`config/dev.exs`](../../config/dev.exs) and [`config/test.exs`](../../config/test.exs).
 
 ## Rules
 
 - Keep **one migration per logical schema change** while the work is still uncommitted.
-- Update the matching **Ecto schema** (`server/lib/permaplanner/.../*.ex`) in the same change.
+- Update the matching **Ecto schema** (`lib/permaplanner/.../*.ex`) in the same change.
 - Production deploys run migrations via Fly `release_command` — only **forward** migrations ship there.
 - Do not delete or reorder migration files that have shipped.
 

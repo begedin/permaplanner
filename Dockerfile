@@ -22,7 +22,7 @@ RUN npm run build
 
 FROM ${ELIXIR_IMAGE} AS build
 
-WORKDIR /app/server
+WORKDIR /app
 
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential git && \
@@ -31,12 +31,12 @@ RUN apt-get update -qq && \
 
 ENV MIX_ENV=prod
 
-COPY server/mix.exs server/mix.lock ./
+COPY mix.exs mix.lock ./
 RUN mix deps.get --only prod
 
-COPY server/config ./config
-COPY server/lib ./lib
-COPY server/priv ./priv
+COPY config ./config
+COPY lib ./lib
+COPY priv ./priv
 COPY --from=frontend /app/dist ./priv/static
 
 RUN mix release
@@ -56,7 +56,7 @@ ENV LC_ALL=en_US.UTF-8
 ENV MIX_ENV=prod
 ENV PORT=8080
 
-COPY --from=build /app/server/_build/prod/rel/permaplanner ./
+COPY --from=build /app/_build/prod/rel/permaplanner ./
 
 RUN chown -R nobody:root /app && \
     chmod -R ug+rwx /app

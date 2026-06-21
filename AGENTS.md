@@ -8,7 +8,7 @@ Persisted garden data uses a **`version`** field (local `.json` and GitHub `plan
 
 ## Postgres / Ecto migrations
 
-**Before adding or changing `server/priv/repo/migrations/` or Ecto schemas:** read [`.cursor/skills/ecto-migrations/SKILL.md`](.cursor/skills/ecto-migrations/SKILL.md). Uncommitted migrations are edited **in place** (not fixed with a second file). After in-place edits, reset the test DB: `cd server && MIX_ENV=test mix ecto.reset`, then `mix test`. Cursor auto-attaches [`.cursor/rules/ecto-migrations.mdc`](.cursor/rules/ecto-migrations.mdc) when you edit migration or schema paths.
+**Before adding or changing `priv/repo/migrations/` or Ecto schemas:** read [`.cursor/skills/ecto-migrations/SKILL.md`](.cursor/skills/ecto-migrations/SKILL.md). Uncommitted migrations are edited **in place** (not fixed with a second file). After in-place edits, reset the test DB: `MIX_ENV=test mix ecto.reset`, then `mix test`. Cursor auto-attaches [`.cursor/rules/ecto-migrations.mdc`](.cursor/rules/ecto-migrations.mdc) when you edit migration or schema paths.
 
 ## Plant catalog
 

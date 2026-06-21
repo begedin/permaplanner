@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.20.1
+
+- [DB] Added Aurora haskap cultivar; corrected haskap bloom (Apr–May) and fruit (Jun–Jul) calendars for species and existing cultivars (Berry Blue, Indigo Gem, Borealis, Tundra)
+
+## 0.20.0
+
+- [REFACTOR] Phoenix app moved from `server/` to the repo root (`lib/`, `config/`, `priv/`, `test/`, `mix.exs`) so Elixir and frontend share one project directory
+- [TWEAK] npm scripts, CI, Dockerfile, and docs run `mix` from the root; merged `.gitignore` for frontend and Elixir build artifacts
+
 ## 0.19.0
 
 - [FEATURE] Public garden share links: create from the plan menu, list existing links, revoke when no longer needed

@@ -42,9 +42,9 @@ ensure_erlang_prebuilt_plugin
 clean_failed_kerl_builds
 asdf install
 
-if [[ -f server/mix.exs ]]; then
-  echo "Bootstrapping Hex/Rebar for server..."
-  (cd server && mix local.hex --force && mix local.rebar --force)
+if [[ -f mix.exs ]]; then
+  echo "Bootstrapping Hex/Rebar..."
+  mix local.hex --force && mix local.rebar --force
 fi
 
 echo

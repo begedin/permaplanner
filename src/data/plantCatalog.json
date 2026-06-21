@@ -264,28 +264,72 @@
       "cultivars": [
         {
           "id": "borealis",
-          "name": "Borealis"
+          "name": "Borealis",
+          "blooming": {
+            "start": 5,
+            "end": 6
+          },
+          "fruiting": {
+            "start": 6,
+            "end": 7
+          }
         },
         {
           "id": "tundra",
-          "name": "Tundra"
+          "name": "Tundra",
+          "blooming": {
+            "start": 5,
+            "end": 6
+          },
+          "fruiting": {
+            "start": 6,
+            "end": 7
+          }
         },
         {
           "id": "berry_blue",
-          "name": "Berry Blue"
+          "name": "Berry Blue",
+          "blooming": {
+            "start": 4,
+            "end": 6
+          },
+          "fruiting": {
+            "start": 6,
+            "end": 6
+          }
         },
         {
           "id": "indigo_gem",
-          "name": "Indigo Gem"
+          "name": "Indigo Gem",
+          "blooming": {
+            "start": 4,
+            "end": 6
+          },
+          "fruiting": {
+            "start": 6,
+            "end": 6
+          }
+        },
+        {
+          "id": "aurora",
+          "name": "Aurora",
+          "blooming": {
+            "start": 4,
+            "end": 6
+          },
+          "fruiting": {
+            "start": 6,
+            "end": 7
+          }
         }
       ],
       "blooming": {
-        "start": 3,
-        "end": 4
+        "start": 4,
+        "end": 5
       },
       "fruiting": {
-        "start": 5,
-        "end": 6
+        "start": 6,
+        "end": 7
       },
       "defaultIconId": "blueberry",
       "name_latin": "Lonicera caerulea"

@@ -1,12 +1,12 @@
 ---
 description: Phoenix JSON API endpoints and HTML modules — controllers, router, inline HEEx, ConnCase tests. Follow the writing-endpoints skill.
 globs:
-  - server/lib/permaplanner_web/**/*_controller.ex
-  - server/lib/permaplanner_web/**/*_html.ex
-  - server/lib/permaplanner_web/**/*_json.ex
-  - server/lib/permaplanner_web/router.ex
-  - server/test/permaplanner_web/controllers/**/*_test.exs
-  - server/test/permaplanner_web/**/*_html_test.exs
+  - lib/permaplanner_web/**/*_controller.ex
+  - lib/permaplanner_web/**/*_html.ex
+  - lib/permaplanner_web/**/*_json.ex
+  - lib/permaplanner_web/router.ex
+  - test/permaplanner_web/controllers/**/*_test.exs
+  - test/permaplanner_web/**/*_html_test.exs
 alwaysApply: false
 ---
 

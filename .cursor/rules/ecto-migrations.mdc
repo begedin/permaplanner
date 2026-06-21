@@ -1,8 +1,8 @@
 ---
 description: Ecto database migrations — edit in place when uncommitted, reset test DB. Follow the ecto-migrations skill.
 globs:
-  - server/priv/repo/migrations/**/*
-  - server/lib/permaplanner/**/*.ex
+  - priv/repo/migrations/**/*
+  - lib/permaplanner/**/*.ex
 alwaysApply: false
 ---
 

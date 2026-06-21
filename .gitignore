@@ -14,6 +14,15 @@ dist-ssr
 coverage
 *.local
 
+# Elixir / Phoenix (former server/.gitignore)
+/_build/
+/deps/
+/priv/static/*
+!/priv/static/.gitkeep
+*.ez
+erl_crash.dump
+.expert/
+
 # Plain env with real secrets (use .env.1password + op run for dev instead)
 .env
 .env.*
@@ -41,3 +50,6 @@ coverage
 .dexter.db
 .dexter.db-shm
 .dexter.db-wal
+
+
+.elixir_ls/

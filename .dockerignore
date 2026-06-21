@@ -10,13 +10,18 @@ lerna-debug.log*
 node_modules
 .DS_Store
 dist
-server/_build
-server/deps
-server/priv/static/*
-!server/priv/static/.gitkeep
 dist-ssr
 coverage
 *.local
+
+# Elixir / Phoenix (former server/.gitignore)
+_build
+deps
+priv/static/*
+!priv/static/.gitkeep
+*.ez
+erl_crash.dump
+.expert
 
 /cypress/videos/
 /cypress/screenshots/

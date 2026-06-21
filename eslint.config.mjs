@@ -10,9 +10,9 @@ export default tseslint.config(
       'node_modules/**',
       'playwright-report/**',
       'test-results/**',
-      'server/_build/**',
-      'server/deps/**',
-      'server/priv/static/**',
+      '_build/**',
+      'deps/**',
+      'priv/static/**',
     ],
   },
   eslint.configs.recommended,
@@ -56,7 +56,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['server/**/*.mjs'],
+    files: ['scripts/**/*.mjs'],
     languageOptions: {
       globals: {
         Buffer: 'readonly',

@@ -53,7 +53,6 @@ jobs:
           otp-version: '27'
 
       - name: Test server
-        working-directory: server
         env:
           DATABASE_URL: ecto://postgres:postgres@localhost:5432/permaplanner_test
         run: mix deps.get && mix test

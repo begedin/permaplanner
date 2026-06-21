@@ -3,8 +3,8 @@ name: writing-endpoints
 description: >-
   Adds and edits Phoenix JSON API endpoints in this repo: controllers, router
   routes, ErrorJSON, and ConnCase controller tests. Use when writing or changing
-  server/lib/permaplanner_web/**/*_controller.ex, *_json.ex, router.ex, or
-  server/test/**/*_controller_test.exs. Loads full rules from .cursor — read
+  lib/permaplanner_web/**/*_controller.ex, *_json.ex, router.ex, or
+  test/**/*_controller_test.exs. Loads full rules from .cursor — read
   that file before following instructions.
 ---
 

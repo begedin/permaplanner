@@ -3,13 +3,13 @@ name: writing-endpoints
 description: >-
   Adds and edits Phoenix JSON API endpoints and HTML responses in this repo:
   controllers, router, *_html modules, ErrorJSON, and ConnCase controller tests.
-  Use when writing or changing server/lib/permaplanner_web/**/*_controller.ex,
-  *_html.ex, *_json.ex, router.ex, or server/test/**/*_controller_test.exs.
+  Use when writing or changing lib/permaplanner_web/**/*_controller.ex,
+  *_html.ex, *_json.ex, router.ex, or test/**/*_controller_test.exs.
 ---
 
 # Writing endpoints (permaplanner server)
 
-Phoenix JSON API lives under `server/lib/permaplanner_web/`. Keep controllers thin; business logic belongs in context modules under `server/lib/permaplanner/`.
+Phoenix JSON API lives under `lib/permaplanner_web/`. Keep controllers thin; business logic belongs in context modules under `lib/permaplanner/`.
 
 ## Params and JSON keys
 
@@ -76,7 +76,7 @@ Keep response shaping in private `*_json/…` helpers on the controller unless a
 
 ## HTML responses (`*_html.ex`)
 
-Some routes return HTML (e.g. public `/share/:id`). Do **not** add `.heex` files or `embed_templates` directories under `server/`.
+Some routes return HTML (e.g. public `/share/:id`). Do **not** add `.heex` files or `embed_templates` directories under the repo root.
 
 Put markup in a `PermaplannerWeb.*HTML` module using inline `~H"""` functions:
 
@@ -127,7 +127,7 @@ When adding a route, register **method, path, controller action, and pipeline** 
 
 ## Controller tests
 
-File: `server/test/permaplanner_web/controllers/<name>_controller_test.exs`
+File: `test/permaplanner_web/controllers/<name>_controller_test.exs`
 
 ```elixir
 defmodule PermaplannerWeb.GardenShareControllerTest do
@@ -157,20 +157,20 @@ end
 
 ## Checklist for a new endpoint
 
-1. Context function(s) in `server/lib/permaplanner/` (if not already present)
+1. Context function(s) in `lib/permaplanner/` (if not already present)
 2. Controller action(s) with string-key params and JSON/error mapping
 3. Route in `router.ex` with correct pipeline
-4. `server/test/permaplanner_web/controllers/<name>_controller_test.exs` (or extend existing)
+4. `test/permaplanner_web/controllers/<name>_controller_test.exs` (or extend existing)
 5. TypeScript client under `src/api/` if the Vue app calls it
 6. For HTML routes: `*_html.ex` with inline `~H"""` (no `.heex` files)
 7. Run affected tests:
 
 ```bash
-cd server && mix test test/permaplanner_web/controllers/<name>_controller_test.exs
+mix test test/permaplanner_web/controllers/<name>_controller_test.exs
 ```
 
 Run the whole controller suite when touching shared auth or router plumbing:
 
 ```bash
-cd server && mix test test/permaplanner_web/controllers/
+mix test test/permaplanner_web/controllers/
 ```

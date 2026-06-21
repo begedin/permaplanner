@@ -23,7 +23,7 @@ Secrets for local dev (GitHub OAuth) live in `.env.1password` — see [`.env.1pa
 | `npm run dev`               | Phoenix (8080) + Vite dev server (5173), with 1Password env                |
 | `npm run dev:plain`         | Same, without `op run`                                                     |
 | `npm run start`             | Production-like Phoenix only on 8080 (requires `npm run build-only` first) |
-| `npm run start:server:test` | ExUnit tests for `server/`                                                 |
+| `npm run start:server:test` | ExUnit tests for the Phoenix app                                         |
 
 **Use http://localhost:5173 for frontend work.** Vite serves the Vue app with HMR and proxies `/api` to Phoenix.
 
@@ -33,17 +33,17 @@ GitHub OAuth redirect URIs are origin-specific. Add `http://localhost:5173/impor
 
 ### Database (local)
 
-Phoenix expects Postgres. Default dev credentials are in [`server/config/dev.exs`](server/config/dev.exs) (`permaplanner_dev` on localhost). Create and migrate:
+Phoenix expects Postgres. Default dev credentials are in [`config/dev.exs`](config/dev.exs) (`permaplanner_dev` on localhost). Create and migrate:
 
 ```bash
-cd server && mix ecto.create && mix ecto.migrate
+mix ecto.create && mix ecto.migrate
 ```
 
 While a migration is still uncommitted, edit that file in place rather than adding a follow-up migration. After changing a migration that was already applied locally, reset and re-run tests:
 
 ```bash
-cd server && mix ecto.reset
-cd server && MIX_ENV=test mix ecto.reset && mix test
+mix ecto.reset
+MIX_ENV=test mix ecto.reset && mix test
 ```
 
 See [`.cursor/skills/ecto-migrations/SKILL.md`](.cursor/skills/ecto-migrations/SKILL.md) for the full workflow.
@@ -59,7 +59,7 @@ Build-time: `VITE_GITHUB_CLIENT_ID` (via `.env.fly` and 1Password).
 Runtime secrets on Fly:
 
 - `GITHUB_CLIENT_SECRET`
-- `SECRET_KEY_BASE` (64+ bytes): `fly secrets set SECRET_KEY_BASE="$(cd server && mix phx.gen.secret)"`
+- `SECRET_KEY_BASE` (64+ bytes): `fly secrets set SECRET_KEY_BASE="$(mix phx.gen.secret)"`
 - `DATABASE_URL` — set automatically by `fly postgres attach permaplanner-db -a permaplanner`
 
 After setting secrets, deploy them: `fly secrets deploy -a permaplanner` (Fly may show secrets as “Staged” until you do).
