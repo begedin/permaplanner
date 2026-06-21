@@ -24,9 +24,11 @@ const router = createRouter({
 
 const existingShare = {
   id: 'share-1',
-  url: 'http://localhost/share/share-1',
+  url: '/share/share-1',
   createdAt: '2026-06-15T10:00:00.000Z',
 };
+
+const existingShareHref = `${window.location.origin}${existingShare.url}`;
 
 beforeEach(async () => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
@@ -34,7 +36,7 @@ beforeEach(async () => {
   vi.mocked(gardenSharesApi.listGardenShares).mockResolvedValue([existingShare]);
   vi.mocked(gardenSharesApi.createGardenShare).mockResolvedValue({
     id: 'share-2',
-    url: 'http://localhost/share/share-2',
+    url: '/share/share-2',
     createdAt: '2026-06-15T11:00:00.000Z',
   });
   vi.mocked(gardenSharesApi.revokeGardenShare).mockResolvedValue();
@@ -59,7 +61,7 @@ it('lists existing share links for the active garden', async () => {
   });
 
   expect(screen.getByRole('list', { name: 'Share links' })).toBeTruthy();
-  expect(screen.getByRole('link', { name: existingShare.url })).toBeTruthy();
+  expect(screen.getByRole('link', { name: existingShareHref })).toBeTruthy();
 });
 
 it('revokes a listed share link', async () => {
@@ -67,17 +69,17 @@ it('revokes a listed share link', async () => {
 
   await waitFor(() => {
     expect(
-      screen.getByRole('button', { name: `Revoke share link ${existingShare.url}` }),
+      screen.getByRole('button', { name: `Revoke share link ${existingShareHref}` }),
     ).toBeTruthy();
   });
 
   await fireEvent.click(
-    screen.getByRole('button', { name: `Revoke share link ${existingShare.url}` }),
+    screen.getByRole('button', { name: `Revoke share link ${existingShareHref}` }),
   );
 
   await waitFor(() => {
     expect(gardenSharesApi.revokeGardenShare).toHaveBeenCalledWith('g1', 'share-1');
   });
 
-  expect(screen.queryByRole('link', { name: existingShare.url })).toBeNull();
+  expect(screen.queryByRole('link', { name: existingShareHref })).toBeNull();
 });

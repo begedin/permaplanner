@@ -60,6 +60,9 @@
 
   const formatShareDate = (iso: string): string => new Date(iso).toLocaleString();
 
+  const absoluteShareUrl = (path: string): string =>
+    new URL(path, window.location.origin).href;
+
   const loadShares = async () => {
     const gardenId = permaplannerStore.gardenId;
     if (!gardenId) {
@@ -164,16 +167,16 @@
           <div class="flex items-start gap-2">
             <a
               class="min-w-0 flex-1 break-all text-sage-800 hover:text-sage-800 underline"
-              :href="share.url"
+              :href="absoluteShareUrl(share.url)"
               target="_blank"
               rel="noopener noreferrer"
             >
-              {{ share.url }}
+              {{ absoluteShareUrl(share.url) }}
             </a>
             <button
               type="button"
               class="btn-soft-muted btn-soft-sm shrink-0 px-1.5 py-0.5 text-ink-700"
-              :aria-label="`Revoke share link ${share.url}`"
+              :aria-label="`Revoke share link ${absoluteShareUrl(share.url)}`"
               :disabled="revokingShareId === share.id"
               @click="revokeShare(share.id)"
             >

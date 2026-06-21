@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.20.2
+
+- [FIX] Share links use the current site origin instead of `localhost` in deployed apps
+
 ## 0.20.1
 
 - [DB] Added Aurora haskap cultivar; corrected haskap bloom (Apr–May) and fruit (Jun–Jul) calendars for species and existing cultivars (Berry Blue, Indigo Gem, Borealis, Tundra)

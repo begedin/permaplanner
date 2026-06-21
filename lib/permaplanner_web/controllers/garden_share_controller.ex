@@ -67,6 +67,6 @@ defmodule PermaplannerWeb.GardenShareController do
   end
 
   defp share_url(_conn, share_id) do
-    PermaplannerWeb.Endpoint.url() <> "/share/" <> share_id
+    "/share/" <> share_id
   end
 end
