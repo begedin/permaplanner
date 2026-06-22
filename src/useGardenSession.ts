@@ -36,7 +36,7 @@ export const bootstrapGardenSession = async () => {
           id: garden.id,
           name: garden.name,
         });
-        planSaveCoordinator.markIntegrationsSaved();
+        planSaveCoordinator.markSaved();
       }
     } finally {
       isGardenBootstrapping.value = false;
@@ -65,7 +65,7 @@ export const useGardenSession = () => {
       id: garden.id,
       name: garden.name,
     });
-    planSaveCoordinator.markIntegrationsSaved();
+    planSaveCoordinator.markSaved();
   };
 
   const createEmptyGarden = async (name?: string) => {
@@ -76,7 +76,7 @@ export const useGardenSession = () => {
       id: garden.id,
       name: garden.name,
     });
-    planSaveCoordinator.markIntegrationsSaved();
+    planSaveCoordinator.markSaved();
     return garden;
   };
 

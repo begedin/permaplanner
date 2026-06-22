@@ -2,6 +2,7 @@ defmodule PermaplannerWeb.AuthController do
   use PermaplannerWeb, :controller
 
   alias Permaplanner.Accounts
+  alias Permaplanner.Accounts.User
   alias PermaplannerWeb.UserAuth
 
   def session(conn, _params) do
@@ -58,9 +59,23 @@ defmodule PermaplannerWeb.AuthController do
   def login(conn, %{"email" => email, "password" => password}) do
     case Accounts.authenticate_password(email, password) do
       {:ok, user} ->
-        conn
-        |> UserAuth.set_pending_user(user)
-        |> json(%{requiresTotp: true})
+        conn = UserAuth.set_pending_user(conn, user)
+
+        if User.totp_confirmed?(user) do
+          json(conn, %{requiresTotp: true})
+        else
+          with {:ok, user} <- Accounts.ensure_totp_secret(user),
+               {:ok, totp} <- Accounts.totp_setup_for_user(user) do
+            json(conn, %{
+              requiresTotp: true,
+              requiresTotpSetup: true,
+              totp: %{uri: totp.uri, secret: totp.secret, qrSvg: totp.qr_svg}
+            })
+          else
+            {:error, _} ->
+              conn |> put_status(:internal_server_error) |> json(%{error: "totp_setup_failed"})
+          end
+        end
 
       {:error, :invalid_credentials} ->
         conn |> put_status(:unauthorized) |> json(%{error: "invalid_credentials"})
@@ -74,22 +89,37 @@ defmodule PermaplannerWeb.AuthController do
   def login_totp(conn, %{"code" => code}) do
     user = conn.assigns.pending_user
 
-    case Accounts.verify_login_totp(user, code) do
-      :ok ->
-        conn
-        |> UserAuth.log_in_user(user)
-        |> json(%{user: Accounts.user_json(user)})
+    if User.totp_confirmed?(user) do
+      case Accounts.verify_login_totp(user, code) do
+        :ok ->
+          conn
+          |> UserAuth.log_in_user(user)
+          |> json(%{user: Accounts.user_json(user)})
 
-      {:error, :invalid_totp} ->
-        case Accounts.verify_recovery_code(user, code) do
-          :ok ->
-            conn
-            |> UserAuth.log_in_user(user)
-            |> json(%{user: Accounts.user_json(user)})
+        {:error, :invalid_totp} ->
+          case Accounts.verify_recovery_code(user, code) do
+            :ok ->
+              conn
+              |> UserAuth.log_in_user(user)
+              |> json(%{user: Accounts.user_json(user)})
 
-          {:error, _} ->
-            conn |> put_status(:unprocessable_entity) |> json(%{error: "invalid_totp"})
-        end
+            {:error, _} ->
+              conn |> put_status(:unprocessable_entity) |> json(%{error: "invalid_totp"})
+          end
+      end
+    else
+      case Accounts.confirm_totp_registration(user, code) do
+        {:ok, confirmed_user, recovery_codes} ->
+          conn
+          |> UserAuth.log_in_user(confirmed_user)
+          |> json(%{user: Accounts.user_json(confirmed_user), recoveryCodes: recovery_codes})
+
+        {:error, :invalid_totp} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{error: "invalid_totp"})
+
+        {:error, _} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{error: "totp_setup_failed"})
+      end
     end
   end
 

@@ -25,6 +25,13 @@ defmodule Permaplanner.Accounts do
     |> Repo.insert()
   end
 
+  def ensure_totp_secret(%User{} = user) do
+    case decrypt_totp_secret(user) do
+      {:ok, _} -> {:ok, user}
+      {:error, _} -> reset_totp_secret(user)
+    end
+  end
+
   def totp_setup_for_user(%User{} = user) do
     with {:ok, secret} <- decrypt_totp_secret(user) do
       uri = NimbleTOTP.otpauth_uri(user.email, secret, issuer: "Permaplanner")
@@ -130,6 +137,12 @@ defmodule Permaplanner.Accounts do
       email: user.email,
       totpConfirmed: User.totp_confirmed?(user)
     }
+  end
+
+  defp reset_totp_secret(user) do
+    user
+    |> Ecto.Changeset.change(totp_secret: generate_totp_secret())
+    |> Repo.update()
   end
 
   defp generate_totp_secret do

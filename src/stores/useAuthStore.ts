@@ -34,7 +34,9 @@ export const useAuthStore = defineStore('auth', () => {
   const login = (email: string, password: string) => authApi.login(email, password);
 
   const confirmLoginTotp = async (code: string) => {
-    user.value = await authApi.confirmLoginTotp(code);
+    const { user: loggedIn, recoveryCodes } = await authApi.confirmLoginTotp(code);
+    user.value = loggedIn;
+    return recoveryCodes;
   };
 
   const logout = async () => {

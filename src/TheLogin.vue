@@ -2,6 +2,7 @@
   import { ref } from 'vue';
   import { useRouter } from 'vue-router';
 
+  import TotpQrCode from './TotpQrCode.vue';
   import { useAuthStore } from './stores/useAuthStore';
   import { routeNames } from './router';
 
@@ -11,14 +12,25 @@
   const email = ref('');
   const password = ref('');
   const totpCode = ref('');
+  const totpUri = ref('');
+  const totpSecret = ref('');
+  const totpQrSvg = ref('');
+  const recoveryCodes = ref<string[]>([]);
   const error = ref<string | undefined>();
-  const step = ref<'credentials' | 'totp'>('credentials');
+  const step = ref<'credentials' | 'totp-setup' | 'totp' | 'recovery'>('credentials');
 
   const submitCredentials = async () => {
     error.value = undefined;
     try {
-      await auth.login(email.value, password.value);
-      step.value = 'totp';
+      const result = await auth.login(email.value, password.value);
+      if (result.requiresTotpSetup && result.totp) {
+        totpUri.value = result.totp.uri;
+        totpSecret.value = result.totp.secret;
+        totpQrSvg.value = result.totp.qrSvg;
+        step.value = 'totp-setup';
+      } else {
+        step.value = 'totp';
+      }
     } catch {
       error.value = 'Invalid email or password.';
     }
@@ -27,17 +39,28 @@
   const submitTotp = async () => {
     error.value = undefined;
     try {
-      await auth.confirmLoginTotp(totpCode.value);
+      const codes = await auth.confirmLoginTotp(totpCode.value);
+      if (codes) {
+        recoveryCodes.value = codes;
+        step.value = 'recovery';
+        return;
+      }
       await router.replace({ name: routeNames.guilds });
     } catch {
       error.value = 'Invalid authentication code.';
     }
   };
+
+  const finish = async () => {
+    await router.replace({ name: routeNames.guilds });
+  };
 </script>
 
 <template>
   <div class="min-h-full flex items-center justify-center p-6 bg-parchment-100">
-    <div class="w-full max-w-md rounded-2xl border border-parchment-300/55 paper-surface shadow-parchment-lg p-8">
+    <div
+      class="w-full max-w-md rounded-2xl border border-parchment-300/55 paper-surface shadow-parchment-lg p-8"
+    >
       <h1 class="text-xl font-semibold text-ink-800">Sign in</h1>
 
       <form
@@ -72,8 +95,51 @@
         </button>
       </form>
 
+      <div
+        v-else-if="step === 'totp-setup'"
+        class="mt-6 space-y-4"
+      >
+        <p class="text-sm text-ink-600">
+          Scan this QR code in your authenticator app, or enter the secret manually.
+        </p>
+        <TotpQrCode
+          v-if="totpQrSvg"
+          :svg="totpQrSvg"
+        />
+        <details class="text-sm text-ink-600">
+          <summary class="cursor-pointer text-ink-700">Can't scan the code?</summary>
+          <p class="mt-2 text-xs font-mono break-all bg-parchment-50 p-2 rounded">
+            {{ totpSecret }}
+          </p>
+          <a
+            :href="totpUri"
+            class="mt-2 inline-block text-sm underline text-ink-700"
+          >
+            Open in authenticator
+          </a>
+        </details>
+        <form @submit.prevent="submitTotp">
+          <label class="block text-sm text-ink-700">
+            Confirm with a code
+            <input
+              v-model="totpCode"
+              type="text"
+              inputmode="numeric"
+              required
+              class="mt-1 w-full rounded-lg border border-parchment-300 px-3 py-2"
+            />
+          </label>
+          <button
+            type="submit"
+            class="mt-4 w-full btn-soft-primary py-2.5 font-medium"
+          >
+            Verify 2FA
+          </button>
+        </form>
+      </div>
+
       <form
-        v-else
+        v-else-if="step === 'totp'"
         class="mt-6 space-y-4"
         @submit.prevent="submitTotp"
       >
@@ -96,6 +162,28 @@
           Sign in
         </button>
       </form>
+
+      <div
+        v-else
+        class="mt-6 space-y-4"
+      >
+        <p class="text-sm text-ink-700 font-medium">Save these recovery codes</p>
+        <ul class="text-sm font-mono bg-parchment-50 p-3 rounded space-y-1">
+          <li
+            v-for="code in recoveryCodes"
+            :key="code"
+          >
+            {{ code }}
+          </li>
+        </ul>
+        <button
+          type="button"
+          class="w-full btn-soft-primary py-2.5 font-medium"
+          @click="finish"
+        >
+          Continue
+        </button>
+      </div>
 
       <p
         v-if="error"

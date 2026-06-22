@@ -1,141 +1,138 @@
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
-import type {
-  PlanSaveIntegrationId,
-  PlanSaveIntegrationStatus,
-  PlanSaveIntegrationView,
-} from './planSaveIntegration';
-import { planSaveIntegrations } from './planSaveIntegrations';
+import { ApiError } from './api/client';
+import * as gardensApi from './api/gardens';
 import { runPlanSaveSerial } from './planSaveSerialQueue';
+import { useAuthStore } from './stores/useAuthStore';
+import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import { usePermaplannerStore } from './usePermaplannerStore';
 
-type IntegrationRuntime = {
-  errorMessage?: string;
-  details: PlanSaveIntegrationView['details'];
-  saving: boolean;
-};
+export type PlanSaveStatus = 'inactive' | 'unsaved' | 'saving' | 'saved' | 'error';
 
-const defaultRuntime = (): IntegrationRuntime => ({
-  details: [],
-  saving: false,
-});
+export type PlanSaveDetailRow =
+  | { kind: 'text'; label: string; value: string }
+  | { kind: 'link'; label: string; href: string };
+
+export const planSaveStatusLabel = (status: PlanSaveStatus): string => {
+  switch (status) {
+    case 'inactive':
+      return 'Off';
+    case 'unsaved':
+      return 'Unsaved';
+    case 'saving':
+      return 'Saving…';
+    case 'saved':
+      return 'Saved';
+    case 'error':
+      return 'Failed';
+  }
+};
 
 const AUTOSAVE_DEBOUNCE_MS = import.meta.env.VITEST ? 50 : 5000;
 
+const formatTimestamp = (iso: string | undefined): string =>
+  iso ? new Date(iso).toLocaleString() : '—';
+
 export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
   const permaplannerStore = usePermaplannerStore();
+  const authStore = useAuthStore();
 
-  const runtimeById = ref<Record<PlanSaveIntegrationId, IntegrationRuntime>>({
-    server: defaultRuntime(),
-  });
-
-  const expandedIds = ref<Set<PlanSaveIntegrationId>>(new Set());
+  const saving = ref(false);
+  const errorMessage = ref<string | undefined>();
+  const details = ref<PlanSaveDetailRow[]>([]);
+  const detailsExpanded = ref(false);
   const trackingEnabled = ref(false);
   const editGeneration = ref(0);
-  const savedAtGenerationById = ref<Partial<Record<PlanSaveIntegrationId, number>>>({});
+  const savedAtGeneration = ref<number | undefined>();
 
-  const saveContext = () => ({
-    snapshot: () => permaplannerStore.snapshot(),
-    gardenName: () => permaplannerStore.gardenName,
-  });
+  let inFlightFlush: Promise<void> | null = null;
+  let autosaveTrailingTimer: ReturnType<typeof setTimeout> | undefined;
+  let autosaveBurstActive = false;
 
-  const integrationFor = (id: PlanSaveIntegrationId) => {
-    const integration = planSaveIntegrations.find((i) => i.id === id);
-    if (!integration) {
-      throw new Error(`Unknown plan save integration: ${id}`);
-    }
-    return integration;
-  };
+  const isSaveAvailable = (): boolean => Boolean(authStore.user?.totpConfirmed);
+  const isLinked = (): boolean => Boolean(permaplannerStore.gardenId);
 
-  const setRuntime = (id: PlanSaveIntegrationId, patch: Partial<IntegrationRuntime>) => {
-    runtimeById.value = {
-      ...runtimeById.value,
-      [id]: { ...runtimeById.value[id]!, ...patch },
-    };
-  };
-
-  const isIntegrationDirty = (id: PlanSaveIntegrationId): boolean => {
-    if (!trackingEnabled.value) {
+  const isDirty = (): boolean => {
+    if (!trackingEnabled.value || !isSaveAvailable() || !isLinked()) {
       return false;
     }
-    const integration = integrationFor(id);
-    if (!integration.isAvailable() || !integration.isLinked()) {
-      return false;
-    }
-    return savedAtGenerationById.value[id] !== editGeneration.value;
+    return savedAtGeneration.value !== editGeneration.value;
   };
 
-  const integrationStatus = (id: PlanSaveIntegrationId): PlanSaveIntegrationStatus => {
-    const integration = integrationFor(id);
-    if (!integration.isAvailable() || !integration.isLinked()) {
+  const status = computed((): PlanSaveStatus => {
+    void editGeneration.value;
+    void savedAtGeneration.value;
+    if (!isSaveAvailable() || !isLinked()) {
       return 'inactive';
     }
-    const runtime = runtimeById.value[id]!;
-    if (runtime.saving) {
+    if (saving.value) {
       return 'saving';
     }
-    if (runtime.errorMessage) {
+    if (errorMessage.value) {
       return 'error';
     }
-    if (isIntegrationDirty(id)) {
+    if (isDirty()) {
       return 'unsaved';
     }
     return 'saved';
-  };
+  });
 
-  const refreshDetails = async (id: PlanSaveIntegrationId) => {
-    const integration = integrationFor(id);
-    if (!integration.isAvailable()) {
+  const hasUnsavedChanges = computed(
+    () => status.value === 'unsaved' || status.value === 'error',
+  );
+
+  const refreshDetails = async () => {
+    if (!isSaveAvailable()) {
       return;
     }
     try {
-      const details = await integration.loadDetails(saveContext());
-      setRuntime(id, { details });
+      const rows: PlanSaveDetailRow[] = [];
+      const name = permaplannerStore.gardenName;
+      if (name) {
+        rows.push({ kind: 'text', label: 'Garden', value: name });
+      }
+      const summary = useGardenSessionStore().gardens.find(
+        (g) => g.id === permaplannerStore.gardenId,
+      );
+      rows.push({
+        kind: 'text',
+        label: 'Last saved',
+        value: formatTimestamp(summary?.updatedAt),
+      });
+      details.value = rows;
     } catch {
       /* details are best-effort */
     }
   };
 
-  const refreshAllDetails = async () => {
-    await Promise.all(
-      planSaveIntegrations.filter((i) => i.isAvailable()).map((i) => refreshDetails(i.id)),
-    );
-  };
-
-  const markIntegrationsSaved = (ids?: PlanSaveIntegrationId[]) => {
-    const targets =
-      ids ??
-      planSaveIntegrations
-        .filter((i) => i.isAvailable() && i.isLinked())
-        .map((i) => i.id);
-    const next = { ...savedAtGenerationById.value };
-    for (const id of targets) {
-      next[id] = editGeneration.value;
-      setRuntime(id, { errorMessage: undefined });
+  const markSaved = (savedGeneration: number = editGeneration.value) => {
+    if (!isLinked()) {
+      trackingEnabled.value = true;
+      return;
     }
-    savedAtGenerationById.value = next;
+    savedAtGeneration.value = savedGeneration;
+    errorMessage.value = undefined;
     trackingEnabled.value = true;
   };
 
-  const noteDestinationSaved = (
-    id: PlanSaveIntegrationId,
-    savedGeneration: number = editGeneration.value,
-  ) => {
-    if (!integrationFor(id).isLinked()) {
+  const noteSaved = (savedGeneration: number = editGeneration.value) => {
+    if (!isLinked()) {
       return;
     }
-    savedAtGenerationById.value = {
-      ...savedAtGenerationById.value,
-      [id]: savedGeneration,
-    };
-    setRuntime(id, { errorMessage: undefined, saving: false });
-    void refreshDetails(id);
+    savedAtGeneration.value = savedGeneration;
+    errorMessage.value = undefined;
+    saving.value = false;
+    void refreshDetails();
   };
 
-  let inFlightFlush: Promise<void> | null = null;
-  let autosaveTrailingTimer: ReturnType<typeof setTimeout> | undefined;
-  let autosaveBurstActive = false;
+  const cancelAutosaveTrailing = () => {
+    if (autosaveTrailingTimer !== undefined) {
+      clearTimeout(autosaveTrailingTimer);
+      autosaveTrailingTimer = undefined;
+    }
+    autosaveBurstActive = false;
+  };
 
   const scheduleAutosaveFlush = () => {
     if (autosaveTrailingTimer !== undefined) {
@@ -155,60 +152,77 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     }, AUTOSAVE_DEBOUNCE_MS);
   };
 
-  const saveIntegrationNow = async (id: PlanSaveIntegrationId) => {
-    const integration = integrationFor(id);
-    if (!integration.isAvailable() || !integration.isLinked()) {
-      return;
+  const saveGardenToServer = async () => {
+    const id = permaplannerStore.gardenId;
+    if (!id) {
+      throw new Error('No active garden selected.');
     }
-
-    setRuntime(id, { saving: true, errorMessage: undefined });
-    const generationAtStart = editGeneration.value;
-
+    const document = permaplannerStore.snapshot();
     try {
-      await integration.save(saveContext());
-      noteDestinationSaved(id, generationAtStart);
+      const syncRevision = await gardensApi.updateGarden(id, document);
+      permaplannerStore.setSyncRevision(syncRevision);
+      await useGardenSessionStore().refreshList();
     } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      setRuntime(id, { saving: false, errorMessage: message });
+      if (e instanceof ApiError && e.status === 409) {
+        const fresh = await gardensApi.fetchGarden(id);
+        await permaplannerStore.hydrateFromDocument(fresh.document, {
+          id: fresh.id,
+          name: fresh.name,
+        });
+        throw new Error(
+          'Your garden was updated elsewhere. Loaded the latest copy — review and save again.',
+        );
+      }
       throw e;
     }
   };
 
-  const saveIntegration = (id: PlanSaveIntegrationId): Promise<void> =>
-    runPlanSaveSerial(() => saveIntegrationNow(id));
-
-  const anyDirty = (): boolean =>
-    planSaveIntegrations.some(
-      (i) => i.isAvailable() && i.isLinked() && isIntegrationDirty(i.id),
-    );
-
-  const flushLinkedSavesNow = async (options?: { force?: boolean }) => {
-    if (!trackingEnabled.value || permaplannerStore.suppressAutosaveDepth > 0) {
+  const saveNowInternal = async (options?: { force?: boolean }) => {
+    if (!isSaveAvailable() || !isLinked()) {
       return;
     }
-    if (!options?.force && !anyDirty()) {
+    if (!options?.force && !isDirty()) {
       return;
     }
 
-    const linked = planSaveIntegrations.filter((i) => i.isAvailable() && i.isLinked());
-    for (const integration of linked) {
-      if (!options?.force && !isIntegrationDirty(integration.id)) {
-        continue;
+    saving.value = true;
+    errorMessage.value = undefined;
+    const generationAtStart = editGeneration.value;
+
+    try {
+      await saveGardenToServer();
+      noteSaved(generationAtStart);
+    } catch (e) {
+      if (!options?.force) {
+        cancelAutosaveTrailing();
       }
-      await saveIntegrationNow(integration.id);
+      const message = e instanceof Error ? e.message : String(e);
+      saving.value = false;
+      errorMessage.value = message;
+      throw e;
     }
   };
 
-  const saveAllLinkedIntegrations = (): Promise<void> =>
-    runPlanSaveSerial(() => flushLinkedSavesNow({ force: true }));
+  const saveNow = (): Promise<void> =>
+    runPlanSaveSerial(() => saveNowInternal({ force: true }));
+
+  const flushAutosave = async () => {
+    if (!trackingEnabled.value || permaplannerStore.suppressAutosaveDepth > 0) {
+      return;
+    }
+    if (!isDirty()) {
+      return;
+    }
+    await saveNowInternal();
+  };
 
   const scheduleFlush = (): Promise<void> => {
-    if (!anyDirty()) {
+    if (!isDirty()) {
       return Promise.resolve();
     }
     inFlightFlush ??= runPlanSaveSerial(async () => {
       try {
-        await flushLinkedSavesNow();
+        await flushAutosave();
       } finally {
         inFlightFlush = null;
       }
@@ -216,48 +230,21 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     return inFlightFlush;
   };
 
-  const retry = (id: PlanSaveIntegrationId) => {
-    void saveIntegration(id);
+  const retry = () => {
+    void saveNow();
   };
 
-  const toggleExpanded = (id: PlanSaveIntegrationId) => {
-    const next = new Set(expandedIds.value);
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
-      void refreshDetails(id);
+  const toggleDetailsExpanded = () => {
+    detailsExpanded.value = !detailsExpanded.value;
+    if (detailsExpanded.value) {
+      void refreshDetails();
     }
-    expandedIds.value = next;
   };
-
-  const isExpanded = (id: PlanSaveIntegrationId) => expandedIds.value.has(id);
-
-  const views = computed((): PlanSaveIntegrationView[] => {
-    void editGeneration.value;
-    void savedAtGenerationById.value;
-    return planSaveIntegrations
-      .filter((i) => i.isAvailable())
-      .map((integration) => {
-        const runtime = runtimeById.value[integration.id]!;
-        return {
-          id: integration.id,
-          label: integration.label,
-          status: integrationStatus(integration.id),
-          errorMessage: runtime.errorMessage,
-          details: runtime.details,
-        };
-      });
-  });
-
-  const hasUnsavedChanges = computed(() =>
-    views.value.some((v) => v.status === 'unsaved' || v.status === 'error'),
-  );
 
   watch(
     () => permaplannerStore.gardenId,
     () => {
-      void refreshAllDetails();
+      void refreshDetails();
     },
     { flush: 'post' },
   );
@@ -266,7 +253,10 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     if (!trackingEnabled.value) {
       return;
     }
-    if (permaplannerStore.suppressAutosaveDepth > 0 || permaplannerStore.isBulkPlanUpdate) {
+    if (
+      permaplannerStore.suppressAutosaveDepth > 0 ||
+      permaplannerStore.isBulkPlanUpdate
+    ) {
       return;
     }
     editGeneration.value += 1;
@@ -274,19 +264,17 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
   };
 
   return {
-    views,
+    status,
+    errorMessage,
+    details,
+    detailsExpanded,
     hasUnsavedChanges,
-    expandedIds,
-    isExpanded,
-    toggleExpanded,
+    toggleDetailsExpanded,
     retry,
-    saveIntegration,
-    saveAllLinkedIntegrations,
+    saveNow,
     scheduleFlush,
     refreshDetails,
-    refreshAllDetails,
-    markIntegrationsSaved,
-    noteDestinationSaved,
+    markSaved,
     onEditApplied,
   };
 });

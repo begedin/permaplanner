@@ -38,7 +38,7 @@ it('autosaves to server after edit', async () => {
   store.gardenName = 'garden.json';
 
   const coordinator = usePlanSaveCoordinator();
-  coordinator.markIntegrationsSaved();
+  coordinator.markSaved();
 
   usePlanCommandHistory().runMutation(() => {
     store.plants.push({
@@ -50,10 +50,10 @@ it('autosaves to server after edit', async () => {
   await flushPromises();
 
   expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
-  expect(coordinator.views.find((v) => v.id === 'server')?.status).toBe('saved');
+  expect(coordinator.status).toBe('saved');
 });
 
-it('does not mark server unsaved before markIntegrationsSaved', () => {
+it('does not mark server unsaved before markSaved', () => {
   const store = usePermaplannerStore();
   store.gardenId = 'g1';
 
@@ -69,16 +69,57 @@ it('does not mark server unsaved before markIntegrationsSaved', () => {
   expect(coordinator.hasUnsavedChanges).toBe(false);
 });
 
-it('saveAllLinkedIntegrations forces server save', async () => {
+it('saveNow forces server save', async () => {
   vi.mocked(gardensApi.updateGarden).mockResolvedValue(0);
 
   const store = usePermaplannerStore();
   store.gardenId = 'g1';
 
   const coordinator = usePlanSaveCoordinator();
-  coordinator.markIntegrationsSaved();
+  coordinator.markSaved();
 
-  await coordinator.saveAllLinkedIntegrations();
+  await coordinator.saveNow();
 
   expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
+});
+
+it('does not autosave again after failure until next edit or manual save', async () => {
+  vi.useFakeTimers();
+  vi.mocked(gardensApi.updateGarden).mockRejectedValue(new Error('db down'));
+
+  const store = usePermaplannerStore();
+  store.gardenId = 'g1';
+
+  const coordinator = usePlanSaveCoordinator();
+  coordinator.markSaved();
+
+  usePlanCommandHistory().runMutation(() => {
+    store.plants.push({
+      id: 'p1',
+      speciesId: 'comfrey',
+      cultivarId: null,
+    });
+  });
+  await flushPromises();
+  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
+  expect(coordinator.status).toBe('error');
+
+  await vi.advanceTimersByTimeAsync(50);
+  await flushPromises();
+  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
+
+  vi.mocked(gardensApi.updateGarden).mockResolvedValue(1);
+  await coordinator.saveNow();
+  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(2);
+
+  vi.mocked(gardensApi.updateGarden).mockRejectedValue(new Error('db down again'));
+  usePlanCommandHistory().runMutation(() => {
+    store.plants.push({
+      id: 'p2',
+      speciesId: 'comfrey',
+      cultivarId: null,
+    });
+  });
+  await flushPromises();
+  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(3);
 });

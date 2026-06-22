@@ -12,6 +12,12 @@ export type TotpSetup = {
   qrSvg: string;
 };
 
+export type LoginResult = {
+  requiresTotp: true;
+  requiresTotpSetup?: boolean;
+  totp?: TotpSetup;
+};
+
 export const fetchSession = async (): Promise<AuthUser | null> => {
   const res = await apiFetch('/api/auth/session');
   if (res.status === 401) {
@@ -42,8 +48,8 @@ export const confirmRegisterTotp = async (
   );
 };
 
-export const login = async (email: string, password: string): Promise<void> => {
-  await expectJson(
+export const login = async (email: string, password: string): Promise<LoginResult> => {
+  return expectJson(
     await apiFetch('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
@@ -51,14 +57,16 @@ export const login = async (email: string, password: string): Promise<void> => {
   );
 };
 
-export const confirmLoginTotp = async (code: string): Promise<AuthUser> => {
-  const data = await expectJson<{ user: AuthUser }>(
+export const confirmLoginTotp = async (
+  code: string,
+): Promise<{ user: AuthUser; recoveryCodes?: string[] }> => {
+  const data = await expectJson<{ user: AuthUser; recoveryCodes?: string[] }>(
     await apiFetch('/api/auth/login/totp', {
       method: 'POST',
       body: JSON.stringify({ code }),
     }),
   );
-  return data.user;
+  return data;
 };
 
 export const logout = async (): Promise<void> => {

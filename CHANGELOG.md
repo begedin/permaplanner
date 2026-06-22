@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.21.0
+
+- [FEATURE] Sign-in completes 2FA setup when the account has not confirmed TOTP yet (QR code, manual secret, recovery codes)
+- [REFACTOR] Plan save coordinator targets Permaplanner cloud only; removed the multi-integration save plug-in layer
+- [FIX] Autosave stops retrying after a failed save until the next edit or a manual save
+
 ## 0.20.3
 
 - [TWEAK] Calendar plant list sorts by total plants, then unique cultivars (both descending)

@@ -68,7 +68,7 @@ it('shows unsaved indicator inside the drawer when there are changes', () => {
   store.gardenId = 'g1';
   store.gardenName = 'plan.json';
   const coordinator = usePlanSaveCoordinator();
-  coordinator.markIntegrationsSaved();
+  coordinator.markSaved();
   usePlanCommandHistory().runMutation(() => {
     store.plants.push({
       id: 'p1',

@@ -9,7 +9,7 @@
     type GardenShare,
   } from './api/gardenShares';
   import { exportActiveGardenJson } from './exportGardenJson';
-  import PlanSaveIntegrationsList from './PlanSaveIntegrationsList.vue';
+  import PlanSaveStatus from './PlanSaveStatus.vue';
   import ToolSlider from './ToolSlider.vue';
   import { useMapScaleStore } from './useMapScaleStore';
   import { useOnboardingStore } from './useOnboardingStore';
@@ -115,7 +115,7 @@
   };
 
   const savePlan = async () => {
-    await planSaveCoordinator.saveAllLinkedIntegrations();
+    await planSaveCoordinator.saveNow();
   };
 
   const logout = async () => {
@@ -127,7 +127,7 @@
 
 <template>
   <div class="flex flex-col items-stretch gap-2">
-    <PlanSaveIntegrationsList />
+    <PlanSaveStatus />
     <template v-if="permaplannerStore.gardenName">
       <span class="text-xs text-ink-600 truncate">{{
         permaplannerStore.gardenName

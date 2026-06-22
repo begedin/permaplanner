@@ -59,7 +59,7 @@ it('shows an unsaved dot on the plan menu button', () => {
   store.gardenId = 'g1';
   store.gardenName = 'plan.json';
   const coordinator = usePlanSaveCoordinator();
-  coordinator.markIntegrationsSaved();
+  coordinator.markSaved();
   usePlanCommandHistory().runMutation(() => {
     store.plants.push({
       id: 'p1',

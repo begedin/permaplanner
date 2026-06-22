@@ -62,7 +62,9 @@ defmodule PermaplannerWeb.AuthControllerTest do
         "password" => @password
       })
 
-    assert %{"requiresTotp" => true} = json_response(conn, 200)
+    response = json_response(conn, 200)
+    assert %{"requiresTotp" => true} = response
+    refute response["requiresTotpSetup"]
 
     conn =
       build_conn()
@@ -71,6 +73,39 @@ defmodule PermaplannerWeb.AuthControllerTest do
       |> post("/api/auth/login/totp", %{"code" => totp_code_for(user)})
 
     assert %{"user" => %{"email" => "login@example.com"}} = json_response(conn, 200)
+  end
+
+  test "login returns totp setup when 2fa is not confirmed", %{conn: conn} do
+    {:ok, user} = Accounts.register_user(%{email: "setup@example.com", password: @password})
+
+    conn =
+      post(conn, "/api/auth/login", %{
+        "email" => "setup@example.com",
+        "password" => @password
+      })
+
+    assert %{
+             "requiresTotp" => true,
+             "requiresTotpSetup" => true,
+             "totp" => %{"uri" => uri, "secret" => secret, "qrSvg" => qr_svg}
+           } = json_response(conn, 200)
+
+    assert uri =~ "otpauth://"
+    assert secret != ""
+    assert qr_svg =~ "<svg"
+
+    code = NimbleTOTP.verification_code(Base.decode32!(secret, padding: false))
+
+    conn =
+      build_conn()
+      |> Plug.Test.init_test_session(%{})
+      |> Plug.Conn.put_session("pending_user_id", user.id)
+      |> post("/api/auth/login/totp", %{"code" => code})
+
+    assert %{"user" => %{"email" => "setup@example.com", "totpConfirmed" => true}, "recoveryCodes" => codes} =
+             json_response(conn, 200)
+
+    assert length(codes) == 8
   end
 
   defp totp_code_for(%User{} = user) do
