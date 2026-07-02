@@ -157,10 +157,11 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     if (!id) {
       throw new Error('No active garden selected.');
     }
-    const document = permaplannerStore.snapshot();
+    const document = permaplannerStore.snapshotForServer();
     try {
       const syncRevision = await gardensApi.updateGarden(id, document);
       permaplannerStore.setSyncRevision(syncRevision);
+      permaplannerStore.noteBackgroundImageSaved();
       await useGardenSessionStore().refreshList();
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) {
@@ -169,6 +170,7 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
           id: fresh.id,
           name: fresh.name,
         });
+        permaplannerStore.noteBackgroundImageSaved();
         throw new Error(
           'Your garden was updated elsewhere. Loaded the latest copy — review and save again.',
         );

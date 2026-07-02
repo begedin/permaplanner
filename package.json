@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "op run --env-file=.env.1password -- run-p dev:server dev:client",
-    "dev:plain": "run-p dev:server dev:client",
+    "dev": "bash scripts/ensure-postgres.sh && op run --env-file=.env.1password -- run-p dev:server dev:client",
+    "dev:plain": "bash scripts/ensure-postgres.sh && run-p dev:server dev:client",
     "dev:server": "mix phx.server",
     "dev:client": "vite",
     "gen:env:1password": "node scripts/gen-env-1password.mjs",

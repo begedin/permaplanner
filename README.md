@@ -33,11 +33,11 @@ GitHub OAuth redirect URIs are origin-specific. Add `http://localhost:5173/impor
 
 ### Database (local)
 
-Phoenix expects Postgres. Default dev credentials are in [`config/dev.exs`](config/dev.exs) (`permaplanner_dev` on localhost). Create and migrate:
+Phoenix expects the **asdf** Postgres instance from [`.tool-versions`](.tool-versions) on **port 5433** (so it does not clash with other local Elixir apps on 5432). Default credentials are in [`config/dev.exs`](config/dev.exs).
 
-```bash
-mix ecto.create && mix ecto.migrate
-```
+`npm run dev` runs [`scripts/ensure-postgres.sh`](scripts/ensure-postgres.sh) first: it starts asdf Postgres on 5433 when needed, runs `mix ecto.setup` when the dev/test databases are missing, and errors if the instance contains unexpected databases.
+
+One-time: if your asdf data directory was previously on 5432, the script rewrites `port` in `$(asdf where postgres)/data/postgresql.conf` and restarts Postgres.
 
 While a migration is still uncommitted, edit that file in place rather than adding a follow-up migration. After changing a migration that was already applied locally, reset and re-run tests:
 

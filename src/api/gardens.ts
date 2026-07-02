@@ -43,9 +43,13 @@ export const fetchGarden = async (id: string): Promise<GardenRecord> => {
   return data.garden;
 };
 
+export type GardenDocumentPayload = Omit<GardenDocument, 'backgroundImage'> & {
+  backgroundImage?: string | null;
+};
+
 export const updateGarden = async (
   id: string,
-  document: GardenDocument,
+  document: GardenDocumentPayload,
 ): Promise<number> => {
   const data = await expectJson<{ syncRevision: number }>(
     await apiFetch(`/api/gardens/${id}`, {

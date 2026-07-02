@@ -27,6 +27,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
   const gardenName = ref<string | undefined>();
 
   const backgroundImageDataUrl = ref<string | undefined>();
+  const backgroundImageSavedDataUrl = ref<string | undefined>();
   const backgroundOpacity = ref(0.4);
   const plants = ref<UserPlant[]>(defaultUserPlants());
   const guilds = ref<Guild[]>([]);
@@ -58,6 +59,31 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     return doc;
   };
 
+  /** Plan JSON for server save — omits background unless it changed since last save. */
+  const snapshotForServer = ():
+    | GardenDocument
+    | (Omit<GardenDocument, 'backgroundImage'> & { backgroundImage?: string | null }) => {
+    const doc = snapshot();
+    const current = backgroundImageDataUrl.value;
+    const saved = backgroundImageSavedDataUrl.value;
+
+    if (current === saved) {
+      const { backgroundImage: _removed, ...rest } = doc;
+      return rest;
+    }
+
+    if (current === undefined) {
+      const { backgroundImage: _removed, ...rest } = doc;
+      return { ...rest, backgroundImage: null };
+    }
+
+    return doc;
+  };
+
+  const noteBackgroundImageSaved = () => {
+    backgroundImageSavedDataUrl.value = backgroundImageDataUrl.value;
+  };
+
   const hydrateFromDocument = async (
     doc: GardenDocument,
     meta?: { id?: string; name?: string },
@@ -66,6 +92,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     suppressAutosaveDepth.value += 1;
     try {
       backgroundImageDataUrl.value = doc.backgroundImage;
+      backgroundImageSavedDataUrl.value = doc.backgroundImage;
       backgroundOpacity.value = doc.backgroundOpacity;
       plants.value = doc.plants;
       guilds.value = doc.guilds ?? [];
@@ -95,6 +122,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       gardenId.value = undefined;
       gardenName.value = undefined;
       backgroundImageDataUrl.value = undefined;
+      backgroundImageSavedDataUrl.value = undefined;
       backgroundOpacity.value = 0.4;
       plants.value = defaultUserPlants();
       guilds.value = [];
@@ -120,12 +148,15 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     gardenId,
     gardenName,
     snapshot,
+    snapshotForServer,
+    noteBackgroundImageSaved,
     hydrateFromDocument,
     loadFromRaw,
     resetToNewPlan,
     suppressAutosaveDepth,
     isBulkPlanUpdate,
     backgroundImageDataUrl,
+    backgroundImageSavedDataUrl,
     backgroundOpacity,
     plants,
     guilds,

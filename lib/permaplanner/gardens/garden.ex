@@ -4,6 +4,7 @@ defmodule Permaplanner.Gardens.Garden do
   use Ecto.Schema
 
   alias Permaplanner.Accounts.User
+  alias Permaplanner.Gardens.GardenBackgroundImage
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -17,6 +18,7 @@ defmodule Permaplanner.Gardens.Garden do
     field :file_version, :integer, default: @current_file_version
     field :import_source, :string
     belongs_to :user, User
+    has_one :background_image, GardenBackgroundImage, foreign_key: :id, references: :id
 
     timestamps(type: :utc_datetime_usec)
   end

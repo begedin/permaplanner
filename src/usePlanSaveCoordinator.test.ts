@@ -123,3 +123,64 @@ it('does not autosave again after failure until next edit or manual save', async
   await flushPromises();
   expect(gardensApi.updateGarden).toHaveBeenCalledTimes(3);
 });
+
+it('omits backgroundImage from server save when only other fields change', async () => {
+  vi.mocked(gardensApi.updateGarden).mockResolvedValue(1);
+
+  const store = usePermaplannerStore();
+  store.gardenId = 'g1';
+  store.backgroundImageDataUrl = 'data:image/png;base64,abc';
+  store.backgroundImageSavedDataUrl = 'data:image/png;base64,abc';
+
+  const coordinator = usePlanSaveCoordinator();
+  coordinator.markSaved();
+
+  usePlanCommandHistory().runMutation(() => {
+    store.plants.push({
+      id: 'p1',
+      speciesId: 'comfrey',
+      cultivarId: null,
+    });
+  });
+  await flushPromises();
+
+  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
+  const [, document] = vi.mocked(gardensApi.updateGarden).mock.calls[0]!;
+  expect(document).not.toHaveProperty('backgroundImage');
+});
+
+it('sends backgroundImage when it changes and supports undo', async () => {
+  vi.useFakeTimers();
+  vi.mocked(gardensApi.updateGarden).mockResolvedValue(1);
+
+  const store = usePermaplannerStore();
+  store.gardenId = 'g1';
+
+  const coordinator = usePlanSaveCoordinator();
+  coordinator.markSaved();
+
+  const history = usePlanCommandHistory();
+  history.runMutation(() => {
+    store.backgroundImageDataUrl = 'data:image/png;base64,new';
+  });
+  await flushPromises();
+  await vi.advanceTimersByTimeAsync(50);
+  await flushPromises();
+
+  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
+  expect(vi.mocked(gardensApi.updateGarden).mock.calls[0]![1]).toMatchObject({
+    backgroundImage: 'data:image/png;base64,new',
+  });
+
+  vi.mocked(gardensApi.updateGarden).mockClear();
+
+  history.undo();
+  await flushPromises();
+  await vi.advanceTimersByTimeAsync(50);
+  await flushPromises();
+
+  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
+  expect(vi.mocked(gardensApi.updateGarden).mock.calls[0]![1]).toMatchObject({
+    backgroundImage: null,
+  });
+});
