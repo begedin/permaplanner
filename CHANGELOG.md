@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.21.2
+
+- [DB] Removed duplicate Latin from catalog display names (garden sage, nectarine, kidney weed, and several cultivars) where `name_latin` already supplies the binomial
+
 ## 0.21.1
 
 - [DB] Added Baby's breath (Gypsophila paniculata) with Starflakes, Bristol Fairy, and Festival Star cultivars

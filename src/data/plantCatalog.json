@@ -454,7 +454,7 @@
       "cultivars": [
         {
           "id": "naples_garlic",
-          "name": "Naples garlic (Allium neapolitanum)",
+          "name": "Naples garlic",
           "name_latin": "Allium neapolitanum"
         }
       ],
@@ -992,12 +992,12 @@
       "cultivars": [
         {
           "id": "greek",
-          "name": "Greek (Origanum vulgare subsp. hirtum)",
+          "name": "Greek",
           "name_latin": "Origanum vulgare subsp. hirtum"
         },
         {
           "id": "italian",
-          "name": "Italian (Origanum × majoricum)",
+          "name": "Italian",
           "name_latin": "Origanum × majoricum"
         }
       ],
@@ -1040,7 +1040,7 @@
     },
     {
       "id": "sage",
-      "name": "Garden sage (Salvia officinalis)",
+      "name": "Garden sage",
       "functions": ["edible", "medicinal", "pollinator_attractor", "pest_repellent"],
       "layers": ["herb", "shrub"],
       "cultivars": [
@@ -1238,7 +1238,7 @@
     },
     {
       "id": "nectarine",
-      "name": "Nectarine (Prunus persica var. nucipersica)",
+      "name": "Nectarine",
       "functions": ["edible", "pollinator_attractor"],
       "layers": ["understory"],
       "cultivars": [
@@ -2523,7 +2523,7 @@
       "cultivars": [
         {
           "id": "dog_rose",
-          "name": "Dog rose (Rosa canina)",
+          "name": "Dog rose",
           "name_latin": "Rosa canina"
         },
         {
@@ -2944,7 +2944,7 @@
     },
     {
       "id": "dichondra_repens",
-      "name": "Kidney weed (Dichondra repens)",
+      "name": "Kidney weed",
       "functions": ["ground_cover"],
       "layers": ["ground_cover"],
       "cultivars": [
