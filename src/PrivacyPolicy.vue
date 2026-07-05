@@ -52,12 +52,8 @@
         <p class="mt-2">When you use the app, your browser may store:</p>
         <ul class="mt-2 list-disc space-y-1 pl-5">
           <li>
-            Your plan file on disk (via the File System Access API), including plants,
-            guilds, map scale, and optional background images.
-          </li>
-          <li>
-            A file-handle binding and bound file name in IndexedDB and local storage so
-            the app can reopen your last plan after a reload.
+            Your active garden id in local storage so the app can reopen the same garden
+            after a reload.
           </li>
           <li>Onboarding progress in local storage.</li>
           <li>

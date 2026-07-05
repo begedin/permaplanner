@@ -1,11 +1,5 @@
 import { createHmac } from 'node:crypto';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
 import { expect, Page } from '@playwright/test';
-
-const helpersDir = path.dirname(fileURLToPath(import.meta.url));
-const emptyPlanPath = path.join(helpersDir, 'fixtures', 'emptyPlan.json');
 
 const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
@@ -175,41 +169,4 @@ export const onboard = async (page: Page): Promise<void> => {
   await openPlanSessionDrawer(page);
   await page.getByLabel('Map scale').fill('100');
   await page.keyboard.press('Escape');
-};
-
-/**
- * Seeds Origin Private File System with a plan file for legacy import E2E (optional).
- */
-export const installOpfsPlanFileHandleE2E = async (page: Page) => {
-  const initial = fs.readFileSync(emptyPlanPath, 'utf-8');
-  await page.addInitScript((minText: string) => {
-    const fileName = 'e2e-plan.json';
-    const seededKey = 'permaplanner:e2e:opfs-seeded';
-
-    const win = window as Window & {
-      __permaplannerE2eOpfsReady: Promise<FileSystemFileHandle>;
-    };
-
-    win.__permaplannerE2eOpfsReady = (async () => {
-      const root = await navigator.storage.getDirectory();
-
-      if (!sessionStorage.getItem(seededKey)) {
-        try {
-          await root.removeEntry(fileName);
-        } catch {
-          // not present
-        }
-        const created = await root.getFileHandle(fileName, { create: true });
-        const stream = await created.createWritable();
-        await stream.write(minText);
-        await stream.close();
-        sessionStorage.setItem(seededKey, '1');
-      }
-
-      return root.getFileHandle(fileName, { create: true });
-    })();
-
-    window.showSaveFilePicker = () => win.__permaplannerE2eOpfsReady;
-    window.showOpenFilePicker = async () => [await win.__permaplannerE2eOpfsReady];
-  }, initial);
 };

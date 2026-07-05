@@ -11,14 +11,12 @@ defmodule Permaplanner.LegacyImport.Adapters.LocalFile do
   def import_document(%User{} = user, attrs) do
     document = attrs["document"]
     name = attrs["name"]
-    import_source = attrs["import_source"] || "local"
 
     with :ok <- validate_document(document),
          {:ok, garden} <-
            Gardens.create_garden(user, %{
              "name" => name || default_name(document),
-             "document" => document,
-             "import_source" => import_source
+             "document" => document
            }) do
       {:ok, garden}
     else

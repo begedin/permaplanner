@@ -33,8 +33,7 @@ defmodule Permaplanner.Gardens do
                name: name,
                document: stored_document,
                sync_revision: stored_document["syncRevision"] || 0,
-               file_version: Garden.current_file_version(),
-               import_source: attrs["import_source"]
+               file_version: Garden.current_file_version()
              )
              |> Repo.insert(),
            :ok <- apply_background_action(garden.id, background_action) do
@@ -109,7 +108,6 @@ defmodule Permaplanner.Gardens do
       name: garden.name,
       syncRevision: garden.sync_revision,
       fileVersion: garden.file_version,
-      importSource: garden.import_source,
       document: document,
       updatedAt: garden.updated_at,
       insertedAt: garden.inserted_at

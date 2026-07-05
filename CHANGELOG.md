@@ -4,6 +4,10 @@
 
 - [FEATURE] Sign-in completes 2FA setup when the account has not confirmed TOTP yet (QR code, manual secret, recovery codes)
 - [REFACTOR] Plan save coordinator targets Permaplanner cloud only; removed the multi-integration save plug-in layer
+- [REFACTOR] Removed persisted local file-handle binding (IndexedDB); JSON import always opens the file picker
+- [REFACTOR] Removed GitHub import from the garden setup screen
+- [TWEAK] Plan sidebar shows save status inline without a collapsible “Permaplanner cloud” section
+- [DB] Dropped `import_source` from gardens; imports are local JSON files only
 - [FIX] Autosave stops retrying after a failed save until the next edit or a manual save
 
 ## 0.20.3

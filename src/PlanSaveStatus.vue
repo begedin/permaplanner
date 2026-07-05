@@ -1,12 +1,16 @@
 <script setup lang="ts">
+  import { onMounted } from 'vue';
   import { storeToRefs } from 'pinia';
 
-  import UiIcon from './uiIcons/UiIcon.vue';
   import { planSaveStatusLabel, usePlanSaveCoordinator } from './usePlanSaveCoordinator';
 
   const planSaveCoordinator = usePlanSaveCoordinator();
-  const { status, errorMessage, details, detailsExpanded, hasUnsavedChanges } =
+  const { status, errorMessage, details, hasUnsavedChanges } =
     storeToRefs(planSaveCoordinator);
+
+  onMounted(() => {
+    void planSaveCoordinator.refreshDetails();
+  });
 
   const statusClass = (value: string): string => {
     switch (value) {
@@ -25,7 +29,10 @@
 </script>
 
 <template>
-  <div class="space-y-2">
+  <div
+    v-if="status !== 'inactive' || hasUnsavedChanges"
+    class="space-y-1 text-xs text-ink-700"
+  >
     <p
       v-if="hasUnsavedChanges"
       class="px-1.5 py-1 rounded-lg text-xs font-medium text-amber-900 bg-amber-100/90 border border-amber-200/60"
@@ -34,26 +41,10 @@
     >
       Unsaved changes
     </p>
-    <div
-      v-if="status !== 'inactive'"
-      class="paper-card text-xs text-ink-700"
-    >
-      <div class="flex items-center gap-1 p-2">
-        <button
-          type="button"
-          class="flex min-w-0 flex-1 items-center gap-1 text-left font-medium text-ink-800 hover:text-ink-950"
-          :aria-expanded="detailsExpanded"
-          @click="planSaveCoordinator.toggleDetailsExpanded()"
-        >
-          <UiIcon
-            name="chevron-down"
-            class="size-3.5 shrink-0 transition-transform"
-            :class="{ 'rotate-180': detailsExpanded }"
-          />
-          <span class="truncate">Permaplanner cloud</span>
-        </button>
+    <template v-if="status !== 'inactive'">
+      <div class="flex items-center gap-2">
         <span
-          class="shrink-0 font-medium"
+          class="font-medium"
           :class="statusClass(status)"
         >
           {{ planSaveStatusLabel(status) }}
@@ -62,46 +53,41 @@
           v-if="status === 'error'"
           type="button"
           class="btn-soft-muted btn-soft-sm shrink-0 px-1.5 py-0.5 text-ink-700"
-          aria-label="Retry save to Permaplanner cloud"
+          aria-label="Retry save"
           @click="planSaveCoordinator.retry()"
         >
           ↻
         </button>
       </div>
-      <div
-        v-if="detailsExpanded"
-        class="border-t border-parchment-400/50 px-2 pb-2 pt-1 space-y-1"
+      <template
+        v-for="(detail, index) in details"
+        :key="index"
       >
-        <template
-          v-for="(detail, index) in details"
-          :key="index"
-        >
-          <p
-            v-if="detail.kind === 'text'"
-            class="text-ink-600"
-          >
-            {{ detail.label }}:
-            <strong class="text-ink-800">{{ detail.value }}</strong>
-          </p>
-          <p v-else-if="detail.kind === 'link'">
-            <a
-              class="text-sage-800 hover:text-sage-800 underline break-all"
-              :href="detail.href"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {{ detail.label }}
-            </a>
-          </p>
-        </template>
         <p
-          v-if="errorMessage"
-          class="text-red-700"
-          role="alert"
+          v-if="detail.kind === 'text'"
+          class="text-ink-600"
         >
-          {{ errorMessage }}
+          {{ detail.label }}:
+          <strong class="text-ink-800">{{ detail.value }}</strong>
         </p>
-      </div>
-    </div>
+        <p v-else-if="detail.kind === 'link'">
+          <a
+            class="text-sage-800 hover:text-sage-800 underline break-all"
+            :href="detail.href"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ detail.label }}
+          </a>
+        </p>
+      </template>
+      <p
+        v-if="errorMessage"
+        class="text-red-700"
+        role="alert"
+      >
+        {{ errorMessage }}
+      </p>
+    </template>
   </div>
 </template>

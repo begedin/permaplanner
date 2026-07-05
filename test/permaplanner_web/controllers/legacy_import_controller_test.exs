@@ -22,12 +22,10 @@ defmodule PermaplannerWeb.LegacyImportControllerTest do
     conn =
       post(conn, "/api/legacy-import/local", %{
         "document" => document,
-        "name" => "Imported",
-        "import_source" => "local"
+        "name" => "Imported"
       })
 
-    assert %{"garden" => %{"name" => "Imported", "importSource" => "local"}} =
-             json_response(conn, 201)
+    assert %{"garden" => %{"name" => "Imported"}} = json_response(conn, 201)
   end
 
   test "rejects old document version", %{conn: conn} do

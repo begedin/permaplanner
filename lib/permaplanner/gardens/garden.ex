@@ -16,7 +16,6 @@ defmodule Permaplanner.Gardens.Garden do
     field :document, :map
     field :sync_revision, :integer, default: 0
     field :file_version, :integer, default: @current_file_version
-    field :import_source, :string
     belongs_to :user, User
     has_one :background_image, GardenBackgroundImage, foreign_key: :id, references: :id
 

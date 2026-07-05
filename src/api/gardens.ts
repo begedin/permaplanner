@@ -13,7 +13,6 @@ export type GardenRecord = {
   name: string;
   syncRevision: number;
   fileVersion: number;
-  importSource?: string;
   document: GardenDocument;
   updatedAt: string;
   insertedAt: string;
@@ -63,7 +62,6 @@ export const updateGarden = async (
 export const importGardenDocument = async (opts: {
   document: GardenDocument;
   name?: string;
-  importSource?: 'local' | 'github';
 }): Promise<GardenRecord> => {
   const data = await expectJson<{ garden: GardenRecord }>(
     await apiFetch('/api/legacy-import/local', {
@@ -71,7 +69,6 @@ export const importGardenDocument = async (opts: {
       body: JSON.stringify({
         document: opts.document,
         name: opts.name,
-        import_source: opts.importSource,
       }),
     }),
   );

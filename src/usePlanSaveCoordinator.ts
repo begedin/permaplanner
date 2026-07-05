@@ -41,7 +41,6 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
   const saving = ref(false);
   const errorMessage = ref<string | undefined>();
   const details = ref<PlanSaveDetailRow[]>([]);
-  const detailsExpanded = ref(false);
   const trackingEnabled = ref(false);
   const editGeneration = ref(0);
   const savedAtGeneration = ref<number | undefined>();
@@ -236,13 +235,6 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     void saveNow();
   };
 
-  const toggleDetailsExpanded = () => {
-    detailsExpanded.value = !detailsExpanded.value;
-    if (detailsExpanded.value) {
-      void refreshDetails();
-    }
-  };
-
   watch(
     () => permaplannerStore.gardenId,
     () => {
@@ -269,9 +261,7 @@ export const usePlanSaveCoordinator = defineStore('planSaveCoordinator', () => {
     status,
     errorMessage,
     details,
-    detailsExpanded,
     hasUnsavedChanges,
-    toggleDetailsExpanded,
     retry,
     saveNow,
     scheduleFlush,
