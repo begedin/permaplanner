@@ -2108,6 +2108,32 @@
       "name_latin": "Lycium barbarum"
     },
     {
+      "id": "babys_breath",
+      "name": "Baby's breath",
+      "functions": ["pollinator_attractor"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "starflakes",
+          "name": "Starflakes"
+        },
+        {
+          "id": "bristol_fairy",
+          "name": "Bristol Fairy"
+        },
+        {
+          "id": "festival_star",
+          "name": "Festival Star"
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 8
+      },
+      "defaultIconId": "bouquet",
+      "name_latin": "Gypsophila paniculata"
+    },
+    {
       "id": "cornelian_cherry",
       "name": "Cornelian cherry",
       "functions": ["edible", "pollinator_attractor"],
@@ -2623,6 +2649,36 @@
       },
       "defaultIconId": "flower",
       "name_latin": "Aubrieta deltoidea"
+    },
+    {
+      "id": "aronia",
+      "name": "Black chokeberry",
+      "functions": ["edible", "pollinator_attractor", "medicinal"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "viking",
+          "name": "Viking"
+        },
+        {
+          "id": "nero",
+          "name": "Nero"
+        },
+        {
+          "id": "mckenzie",
+          "name": "McKenzie"
+        }
+      ],
+      "blooming": {
+        "start": 5,
+        "end": 6
+      },
+      "fruiting": {
+        "start": 8,
+        "end": 9
+      },
+      "defaultIconId": "blueberry",
+      "name_latin": "Aronia melanocarpa"
     },
     {
       "id": "elderberry",

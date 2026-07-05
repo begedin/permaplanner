@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.21.1
+
+- [DB] Added Baby's breath (Gypsophila paniculata) with Starflakes, Bristol Fairy, and Festival Star cultivars
+- [DB] Added black chokeberry (Aronia melanocarpa) with Viking, Nero, and McKenzie cultivars
+
 ## 0.21.0
 
 - [FEATURE] Sign-in completes 2FA setup when the account has not confirmed TOTP yet (QR code, manual secret, recovery codes)
