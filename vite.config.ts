@@ -26,11 +26,13 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': phoenixDevUrl,
+      '/share': phoenixDevUrl,
     },
   },
   preview: {
     proxy: {
       '/api': phoenixDevUrl,
+      '/share': phoenixDevUrl,
     },
   },
   test: {

@@ -63,6 +63,18 @@
   const absoluteShareUrl = (path: string): string =>
     new URL(path, window.location.origin).href;
 
+  const shareJsonPath = (path: string): string => `${path}.json`;
+
+  const copyShareLink = async (path: string, kind: 'HTML' | 'JSON') => {
+    shareError.value = undefined;
+    try {
+      await navigator.clipboard.writeText(absoluteShareUrl(path));
+    } catch (e) {
+      shareError.value =
+        e instanceof Error ? e.message : `Could not copy ${kind} share link`;
+    }
+  };
+
   const loadShares = async () => {
     const gardenId = permaplannerStore.gardenId;
     if (!gardenId) {
@@ -181,6 +193,24 @@
               @click="revokeShare(share.id)"
             >
               {{ revokingShareId === share.id ? 'Revoking…' : 'Revoke' }}
+            </button>
+          </div>
+          <div class="mt-1 flex flex-wrap gap-1">
+            <button
+              type="button"
+              class="btn-soft-muted btn-soft-sm px-1.5 py-0.5 text-ink-700"
+              :aria-label="`Copy HTML share link ${absoluteShareUrl(share.url)}`"
+              @click="copyShareLink(share.url, 'HTML')"
+            >
+              Copy HTML link
+            </button>
+            <button
+              type="button"
+              class="btn-soft-muted btn-soft-sm px-1.5 py-0.5 text-ink-700"
+              :aria-label="`Copy JSON share link ${absoluteShareUrl(shareJsonPath(share.url))}`"
+              @click="copyShareLink(shareJsonPath(share.url), 'JSON')"
+            >
+              Copy JSON link
             </button>
           </div>
           <p class="mt-1 text-ink-500">Created {{ formatShareDate(share.createdAt) }}</p>

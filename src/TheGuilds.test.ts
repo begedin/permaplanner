@@ -13,6 +13,7 @@ import { resetGuildSearch } from './useGuildSearch';
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
   resetGuildSearch();
+  Element.prototype.scrollIntoView = vi.fn();
 });
 
 afterEach(() => cleanup());
@@ -38,6 +39,34 @@ it('shows guilds in a multi-column grid when none is selected', async () => {
   expect(screen.getByRole('heading', { name: 'Guilds', level: 1 })).toBeTruthy();
   expect(container.querySelector('.guild-list')).toBeTruthy();
   expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
+});
+
+it('scrolls to the selected guild when opening the guilds tab with a selection', async () => {
+  const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView');
+  const { router } = await seedGuilds('/guilds/b');
+  render(TheGuilds, { global: { plugins: [router] } });
+  await flushPromises();
+
+  expect(scrollIntoView).toHaveBeenCalledWith({
+    block: 'nearest',
+    behavior: 'smooth',
+  });
+});
+
+it('scrolls to another guild selected from the list', async () => {
+  const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView');
+  const { router } = await seedGuilds();
+  render(TheGuilds, { global: { plugins: [router] } });
+  await flushPromises();
+  scrollIntoView.mockClear();
+
+  await fireEvent.click(screen.getByRole('article', { name: 'Beta guild' }));
+  await flushPromises();
+
+  expect(scrollIntoView).toHaveBeenCalledWith({
+    block: 'nearest',
+    behavior: 'smooth',
+  });
 });
 
 it('selects a guild from the list and shows full details', async () => {

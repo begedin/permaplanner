@@ -29,16 +29,22 @@ defmodule PermaplannerWeb.GardenShareHTMLTest do
     assert text =~ "note: North bed"
   end
 
-  test "render produces share page html" do
-    html = GardenShareHTML.render("my-garden", @sample_guilds)
+  test "show produces share page html" do
+    html =
+      GardenShareHTML.show(%{garden_name: "my-garden", guilds: @sample_guilds})
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
 
     assert html =~ "<title>Permaplanner Guilds (my-garden)</title>"
     assert html =~ "Garden: my-garden · Guilds: 1"
     assert html =~ "Thai Basil"
   end
 
-  test "render shows (no guilds) when guild list is empty" do
-    html = GardenShareHTML.render("empty", [])
+  test "show shows (no guilds) when guild list is empty" do
+    html =
+      GardenShareHTML.show(%{garden_name: "empty", guilds: []})
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
 
     assert html =~ "Guilds: 0"
     assert html =~ "(no guilds)"

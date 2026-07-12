@@ -14,6 +14,7 @@
   import OnboardingText from './OnboardingText.vue';
   import ThingBarGuild from './ThingBarGuild.vue';
   import { useGuildSearch } from './useGuildSearch';
+  import { useGuildListScroll } from './useGuildListScroll';
   import { useGuildSelection } from './useGuildSelection';
   import ReferenceLine from './ReferenceLine.vue';
   import { useOnboardingStore } from './useOnboardingStore';
@@ -134,6 +135,7 @@
   const commandHistory = usePlanCommandHistory();
   const { selectedGuildId, selectGuild, clearSelection } = useGuildSelection();
   const { searchQuery, filteredGuilds, hasSearchQuery } = useGuildSearch();
+  const { guildListScroll } = useGuildListScroll();
 
   const placedGuilds = computed(() => garden.guilds.filter((g) => g.path.length > 0));
 
@@ -210,6 +212,7 @@
         </div>
         <div
           v-else
+          ref="guildListScroll"
           class="flex-1 min-h-0 overflow-x-hidden overflow-y-auto p-2 flex flex-col gap-2"
         >
           <ThingBarGuild

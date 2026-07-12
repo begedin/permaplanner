@@ -502,14 +502,14 @@
   <article
     class="flex flex-col gap-1 items-start justify-start p-2 text-ink-600 w-full min-w-0 max-w-full"
     :class="{
-      'h-full min-h-0':
-        context === 'guilds' || (context === 'aerialSidebar' && fillCell),
+      'h-full min-h-0': context === 'guilds' || (context === 'aerialSidebar' && fillCell),
       'paper-card-interactive': context === 'aerialSidebar',
       'paper-card-selected': context === 'aerialSidebar' && selectedGuildId === guildId,
       'paper-card': context === 'guilds',
       'paper-card-not-on-aerial': !placedOnMap,
     }"
     :aria-label="guild.name"
+    :data-guild-id="context === 'aerialSidebar' ? guildId : undefined"
     :aria-current="
       context === 'aerialSidebar' && selectedGuildId === guildId ? 'true' : undefined
     "

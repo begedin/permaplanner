@@ -8,7 +8,10 @@
   import ThingBarGuild from './ThingBarGuild.vue';
   import { useGardenStore } from './useGardenStore';
   import { useGuildSearch } from './useGuildSearch';
+  import { useGuildListScroll } from './useGuildListScroll';
   import { useGuildSelection } from './useGuildSelection';
+
+  const { guildListScroll } = useGuildListScroll();
 
   const guildListGridStyle = {
     gridTemplateColumns: 'repeat(auto-fill, minmax(17rem, 1fr))',
@@ -89,27 +92,32 @@
               :initial="false"
               :layout-dependency="selectedGuildId"
               :transition="guildLayoutTransition"
-              class="guild-list flex-1 min-h-0 overflow-x-hidden overflow-y-auto p-2 grid gap-2"
-              :class="
-                selectedGuildId
-                  ? 'guild-list--single-col auto-rows-min'
-                  : 'items-stretch auto-rows-min content-start'
-              "
-              :style="guildListGridStyle"
+              class="flex-1 min-h-0 min-w-0"
             >
-              <motion.div
-                v-for="guild in filteredGuilds"
-                :key="guild.id"
-                layout
-                :initial="false"
-                class="min-w-0"
-                :class="{ 'h-full': !selectedGuildId }"
+              <div
+                ref="guildListScroll"
+                class="guild-list h-full overflow-x-hidden overflow-y-auto p-2 grid gap-2"
+                :class="
+                  selectedGuildId
+                    ? 'guild-list--single-col auto-rows-min'
+                    : 'items-stretch auto-rows-min content-start'
+                "
+                :style="guildListGridStyle"
               >
-                <ThingBarGuild
-                  :id="guild.id"
-                  :fill-cell="!selectedGuildId"
-                />
-              </motion.div>
+                <motion.div
+                  v-for="guild in filteredGuilds"
+                  :key="guild.id"
+                  layout
+                  :initial="false"
+                  class="min-w-0"
+                  :class="{ 'h-full': !selectedGuildId }"
+                >
+                  <ThingBarGuild
+                    :id="guild.id"
+                    :fill-cell="!selectedGuildId"
+                  />
+                </motion.div>
+              </div>
             </motion.div>
           </motion.aside>
 

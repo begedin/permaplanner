@@ -26,6 +26,7 @@ beforeEach(() => {
   setActivePinia(createTestingPinia({ stubActions: false, createSpy: vi.fn }));
   resetGuildSearch();
   vi.spyOn(window, 'confirm').mockReturnValue(true);
+  Element.prototype.scrollIntoView = vi.fn();
   const store = usePermaplannerStore();
   store.gardenId = 'g1';
   store.gardenName = 'test';
@@ -158,6 +159,69 @@ it('switches selection to another guild and discards the previous edit', async (
 
   expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe('b');
   expect(store.guilds.find((g) => g.id === 'a')?.path).toEqual(bedA.path);
+});
+
+it('scrolls to the selected guild when opening the aerial tab with a selection', async () => {
+  const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView');
+  const store = useGardenStore();
+  store.guilds = [
+    { id: 'a', name: 'A', mulchLevel: 1, plants: [], path: [] },
+    { id: 'b', name: 'B', mulchLevel: 1, plants: [], path: [] },
+  ];
+  await renderGarden('/aerial/b');
+  await flushPromises();
+
+  expect(scrollIntoView).toHaveBeenCalledWith({
+    block: 'nearest',
+    behavior: 'smooth',
+  });
+});
+
+it('scrolls the sidebar to a guild selected on the aerial map', async () => {
+  const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView');
+
+  const store = useGardenStore();
+  const bedA = {
+    id: 'a',
+    name: 'A',
+    mulchLevel: 1 as const,
+    path: [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 100 },
+      { x: 0, y: 100 },
+    ],
+    plants: [],
+  };
+  const bedB = {
+    id: 'b',
+    name: 'B',
+    mulchLevel: 1 as const,
+    path: [
+      { x: 200, y: 0 },
+      { x: 300, y: 0 },
+      { x: 300, y: 100 },
+      { x: 200, y: 100 },
+    ],
+    plants: [],
+  };
+  store.guilds = [bedA, bedB];
+  const { router } = await renderGarden('/aerial');
+  const wrapper = mount(TheGarden, { global: { plugins: [router] } });
+  await wrapper.vm.$nextTick();
+
+  const guildB = wrapper
+    .findAllComponents(GardenGuild)
+    .find((c) => c.props('guild')?.id === 'b');
+  await guildB?.find('polygon.pointer-events-fill').trigger('click');
+  await flushPromises();
+  await router.isReady();
+
+  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe('b');
+  expect(scrollIntoView).toHaveBeenCalledWith({
+    block: 'nearest',
+    behavior: 'smooth',
+  });
 });
 
 it('deselects when placement is cancelled', async () => {

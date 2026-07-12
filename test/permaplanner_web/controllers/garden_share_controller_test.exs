@@ -46,6 +46,24 @@ defmodule PermaplannerWeb.GardenShareControllerTest do
     assert html =~ "Edge guild"
     assert html =~ "Thai Basil"
     assert html =~ "Garden: Backyard"
+
+    assert %{
+             "gardenName" => "Backyard",
+             "guilds" => [
+               %{
+                 "id" => "g1",
+                 "name" => "Edge guild",
+                 "mulchLevel" => 3,
+                 "note" => "North bed",
+                 "plants" => [%{"name" => "Thai Basil", "growthPhase" => "young", "vigor" => 4}]
+               }
+             ],
+             "summary" => summary
+           } =
+             build_conn() |> get("/share/#{share_id}.json") |> json_response(200)
+
+    assert summary =~ "Edge guild"
+    assert summary =~ "Thai Basil"
   end
 
   test "share page reflects the current garden document", %{
@@ -73,6 +91,23 @@ defmodule PermaplannerWeb.GardenShareControllerTest do
     assert html =~ "Updated guild"
     assert html =~ "Mint"
     refute html =~ "Edge guild"
+
+    assert %{"gardenName" => "Backyard", "guilds" => guilds, "summary" => summary} =
+             build_conn() |> get("/share/#{share_id}.json") |> json_response(200)
+
+    assert guilds == [
+             %{
+               "id" => "g2",
+               "name" => "Updated guild",
+               "mulchLevel" => 2,
+               "note" => "Changed",
+               "plants" => [%{"name" => "Mint", "growthPhase" => "established", "vigor" => 5}]
+             }
+           ]
+
+    assert summary =~ "Updated guild"
+    assert summary =~ "Mint"
+    refute summary =~ "Edge guild"
   end
 
   test "lists and revokes shares for a garden", %{conn: auth_conn, garden: garden} do
@@ -88,6 +123,9 @@ defmodule PermaplannerWeb.GardenShareControllerTest do
              ""
 
     assert build_conn() |> get("/share/#{share_id}") |> response(404) == "Not Found"
+
+    assert %{"error" => "not_found"} =
+             build_conn() |> get("/share/#{share_id}.json") |> json_response(404)
 
     assert %{"shares" => []} =
              auth_conn |> get("/api/gardens/#{garden.id}/shares") |> json_response(200)
@@ -112,7 +150,18 @@ defmodule PermaplannerWeb.GardenShareControllerTest do
   end
 
   test "returns 404 for unknown share" do
-    assert build_conn() |> get("/share/#{Ecto.UUID.generate()}") |> response(404) == "Not Found"
+    unknown_id = Ecto.UUID.generate()
+
+    assert build_conn() |> get("/share/#{unknown_id}") |> response(404) == "Not Found"
+
+    assert %{"error" => "not_found"} =
+             build_conn() |> get("/share/#{unknown_id}.json") |> json_response(404)
+  end
+
+  test "returns 404 for unsupported share format" do
+    share_id = Ecto.UUID.generate()
+
+    assert build_conn() |> get("/share/#{share_id}.xml") |> response(404) == "Not Found"
   end
 
   defp registered_user!(email \\ "share@example.com") do

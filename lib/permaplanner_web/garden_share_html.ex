@@ -21,22 +21,17 @@ defmodule PermaplannerWeb.GardenShareHTML do
     5 => "Thriving"
   }
 
-  def render(garden_name, guilds) when is_binary(garden_name) do
+  def show(%{garden_name: garden_name, guilds: guilds}) do
     normalized = normalize_guilds(guilds)
 
-    assigns = %{
+    show_template(%{
       garden_name: garden_name,
       guild_count: length(normalized),
       guild_content: guild_content(normalized)
-    }
-
-    assigns
-    |> show()
-    |> Phoenix.HTML.Safe.to_iodata()
-    |> IO.iodata_to_binary()
+    })
   end
 
-  def show(assigns) do
+  defp show_template(assigns) do
     ~H"""
     <!doctype html>
     <html lang="en">

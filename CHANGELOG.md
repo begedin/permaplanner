@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.21.3
+
+- [TWEAK] Guild list scrolls to the selected guild on the Aerial and Guilds tabs, including when switching tabs with the same selection
+
 ## 0.21.2
 
 - [DB] Removed duplicate Latin from catalog display names (garden sage, nectarine, kidney weed, and several cultivars) where `name_latin` already supplies the binomial

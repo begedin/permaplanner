@@ -29,10 +29,18 @@ const existingShare = {
 };
 
 const existingShareHref = `${window.location.origin}${existingShare.url}`;
+const existingShareJsonHref = `${existingShareHref}.json`;
+
+const writeText = vi.fn<typeof navigator.clipboard.writeText>();
 
 beforeEach(async () => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
   seedAuthedTestSession();
+  writeText.mockResolvedValue();
+  Object.defineProperty(navigator, 'clipboard', {
+    configurable: true,
+    value: { writeText },
+  });
   vi.mocked(gardenSharesApi.listGardenShares).mockResolvedValue([existingShare]);
   vi.mocked(gardenSharesApi.createGardenShare).mockResolvedValue({
     id: 'share-2',
@@ -82,4 +90,30 @@ it('revokes a listed share link', async () => {
   });
 
   expect(screen.queryByRole('link', { name: existingShareHref })).toBeNull();
+});
+
+it('copies HTML and JSON share links to the clipboard', async () => {
+  renderPanel();
+
+  await waitFor(() => {
+    expect(
+      screen.getByRole('button', { name: `Copy HTML share link ${existingShareHref}` }),
+    ).toBeTruthy();
+  });
+
+  await fireEvent.click(
+    screen.getByRole('button', { name: `Copy HTML share link ${existingShareHref}` }),
+  );
+
+  await waitFor(() => {
+    expect(writeText).toHaveBeenCalledWith(existingShareHref);
+  });
+
+  await fireEvent.click(
+    screen.getByRole('button', { name: `Copy JSON share link ${existingShareJsonHref}` }),
+  );
+
+  await waitFor(() => {
+    expect(writeText).toHaveBeenCalledWith(existingShareJsonHref);
+  });
 });
