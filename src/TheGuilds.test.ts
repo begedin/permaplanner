@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/vue';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
 import { setActivePinia } from 'pinia';
@@ -34,11 +34,13 @@ it('shows guilds in a multi-column grid when none is selected', async () => {
   const { router } = await seedGuilds();
   const { container } = render(TheGuilds, { global: { plugins: [router] } });
 
-  expect(screen.getByRole('article', { name: 'Alpha guild' })).toBeTruthy();
-  expect(screen.getByRole('article', { name: 'Beta guild' })).toBeTruthy();
-  expect(screen.getByRole('heading', { name: 'Guilds', level: 1 })).toBeTruthy();
+  await waitFor(() => {
+    expect(screen.getByRole('article', { name: 'Alpha guild' })).toBeVisible();
+    expect(screen.getByRole('article', { name: 'Beta guild' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Guilds', level: 1 })).toBeVisible();
+  });
   expect(container.querySelector('.guild-list')).toBeTruthy();
-  expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
 });
 
 it('scrolls to the selected guild when opening the guilds tab with a selection', async () => {
@@ -60,7 +62,7 @@ it('scrolls to another guild selected from the list', async () => {
   await flushPromises();
   scrollIntoView.mockClear();
 
-  await fireEvent.click(screen.getByRole('article', { name: 'Beta guild' }));
+  await fireEvent.click(await screen.findByRole('article', { name: 'Beta guild' }));
   await flushPromises();
 
   expect(scrollIntoView).toHaveBeenCalledWith({
@@ -73,30 +75,36 @@ it('selects a guild from the list and shows full details', async () => {
   const { router } = await seedGuilds();
   render(TheGuilds, { global: { plugins: [router] } });
 
-  await fireEvent.click(screen.getByRole('article', { name: 'Beta guild' }));
+  await fireEvent.click(await screen.findByRole('article', { name: 'Beta guild' }));
   await flushPromises();
   await router.isReady();
 
   expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe('b');
-  expect(screen.getByRole('button', { name: 'Delete' })).toBeTruthy();
-  expect(screen.getByRole('navigation', { name: 'Breadcrumb' }).textContent).toContain(
-    'Beta guild',
-  );
-  expect(screen.getByRole('button', { name: 'Deselect guild, Guilds' })).toBeTruthy();
+  await waitFor(() => {
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeVisible();
+    expect(screen.getByRole('navigation', { name: 'Breadcrumb' }).textContent).toContain(
+      'Beta guild',
+    );
+    expect(screen.getByRole('button', { name: 'Deselect guild, Guilds' })).toBeVisible();
+  });
 });
 
 it('deselects when the page title is clicked', async () => {
   const { router, store } = await seedGuilds('/guilds/a');
   render(TheGuilds, { global: { plugins: [router] } });
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Deselect guild, Guilds' }));
+  await fireEvent.click(
+    await screen.findByRole('button', { name: 'Deselect guild, Guilds' }),
+  );
   await flushPromises();
   await router.isReady();
 
   expect(router.currentRoute.value.name).toBe(routeNames.guilds);
   expect(routeParam(router.currentRoute.value.params, 'guildId')).toBeUndefined();
   expect(store.hoveredId).toBeUndefined();
-  expect(screen.getByRole('heading', { name: 'Guilds', level: 1 })).toBeTruthy();
+  await waitFor(() => {
+    expect(screen.getByRole('heading', { name: 'Guilds', level: 1 })).toBeVisible();
+  });
 });
 
 it('filters guilds by search query', async () => {
@@ -108,8 +116,12 @@ it('filters guilds by search query', async () => {
     'Beta',
   );
 
-  expect(screen.getByRole('article', { name: 'Beta guild' })).toBeTruthy();
-  expect(screen.queryByRole('article', { name: 'Alpha guild' })).toBeNull();
+  await waitFor(() => {
+    expect(screen.getByRole('article', { name: 'Beta guild' })).toBeVisible();
+    expect(
+      screen.queryByRole('article', { name: 'Alpha guild' }),
+    ).not.toBeInTheDocument();
+  });
 });
 
 it('shows a message when search matches no guilds', async () => {
@@ -121,8 +133,12 @@ it('shows a message when search matches no guilds', async () => {
     'zzzz',
   );
 
-  expect(screen.getByText('No guilds match “zzzz”.')).toBeTruthy();
-  expect(screen.queryByRole('article', { name: 'Alpha guild' })).toBeNull();
+  await waitFor(() => {
+    expect(screen.getByText('No guilds match “zzzz”.')).toBeVisible();
+    expect(
+      screen.queryByRole('article', { name: 'Alpha guild' }),
+    ).not.toBeInTheDocument();
+  });
 });
 
 it('focuses search on Cmd+F and /', async () => {
@@ -178,7 +194,7 @@ it('add guild navigates with the new guild in the route', async () => {
   const router = await createAuthedTestRouter('/guilds');
   render(TheGuilds, { global: { plugins: [router] } });
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Add guild' }));
+  await fireEvent.click(await screen.findByRole('button', { name: 'Add guild' }));
   await flushPromises();
   await router.isReady();
 
@@ -187,5 +203,7 @@ it('add guild navigates with the new guild in the route', async () => {
   expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe(
     store.guilds[0]!.id,
   );
-  expect(screen.getByRole('button', { name: 'Delete' })).toBeTruthy();
+  await waitFor(() => {
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeVisible();
+  });
 });

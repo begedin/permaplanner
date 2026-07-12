@@ -30,7 +30,7 @@ To add or edit plants, follow [README — Adding plants to the catalog](README.m
 - **Agents / one-off runs (exit when done):** `npm run test:unit -- path/to/file.test.ts` — or the whole suite: `npm run test:unit`.
 - **Local dev (watch mode):** `npm run test:unit:watch` runs bare `vitest` and stays open until you quit.
 - Prefer **`toMatchObject` / `toEqual`** (and expected objects/constants) over many per-field `expect`s and `arr[0]!` access.
-- Prefer **`findBy*`** for async UI (fetch/watch/render); **`getBy*`** only when the element is present immediately after `render()`. Do not `waitFor` a duplicate presence check — pass `findBy*` / `getBy*` straight to `fireEvent.click`. Use `waitFor` for non-DOM side effects (mocks, clipboard).
+- **DOM:** `waitFor` + `getBy*` + jest-dom `expect` for async presence; `queryBy*` + `not.toBeInTheDocument()` for absence; `findBy*` only for `fireEvent` targets (not inside `expect`). Other `waitFor` for non-DOM side effects (mocks, clipboard).
 - Full conventions: [`.cursor/skills/vitest-testing-style/SKILL.md`](.cursor/skills/vitest-testing-style/SKILL.md) (Claude Code: stub under `.claude/skills/…` that points there).
 
 ## Keeping tests in sync with code changes

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.21.5
+
+- [TWEAK] Vitest component tests use `@testing-library/jest-dom` (`toBeVisible`, `toBeInTheDocument`, etc.) with `waitFor` + `getBy*` / `queryBy*` assertion patterns
+
 ## 0.21.4
 
 - [FEATURE] Plan sidebar **Copy guild JSON** copies the public share JSON payload (garden name, guilds, and summary) to the clipboard

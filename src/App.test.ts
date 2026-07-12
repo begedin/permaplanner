@@ -1,5 +1,5 @@
 import { computed } from 'vue';
-import { cleanup, fireEvent, render, screen } from '@testing-library/vue';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
@@ -45,14 +45,16 @@ const renderApp = () =>
 it('opens the plan drawer from the top bar icon', async () => {
   renderApp();
 
-  expect(screen.queryByRole('dialog', { name: 'Plan and sync' })).toBeNull();
+  expect(screen.queryByRole('dialog', { name: 'Plan and sync' })).not.toBeInTheDocument();
 
   await fireEvent.click(screen.getByRole('button', { name: 'Plan and sync' }));
 
-  expect(screen.getByRole('dialog', { name: 'Plan and sync' })).toBeTruthy();
+  await waitFor(() => {
+    expect(screen.getByRole('dialog', { name: 'Plan and sync' })).toBeVisible();
+  });
 });
 
-it('shows an unsaved dot on the plan menu button', () => {
+it('shows an unsaved dot on the plan menu button', async () => {
   vi.mocked(gardensApi.updateGarden).mockImplementation(() => new Promise(() => {}));
 
   const store = usePermaplannerStore();
@@ -70,7 +72,9 @@ it('shows an unsaved dot on the plan menu button', () => {
 
   renderApp();
 
-  expect(
-    screen.getByRole('button', { name: 'Plan and sync, unsaved changes' }),
-  ).toBeTruthy();
+  await waitFor(() => {
+    expect(
+      screen.getByRole('button', { name: 'Plan and sync, unsaved changes' }),
+    ).toBeVisible();
+  });
 });

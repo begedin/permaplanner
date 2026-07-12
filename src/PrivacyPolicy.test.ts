@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/vue';
+import { cleanup, render, screen, waitFor } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
@@ -17,17 +17,19 @@ beforeEach(async () => {
 
 afterEach(() => cleanup());
 
-it('renders the privacy statement and back link', () => {
+it('renders the privacy statement and back link', async () => {
   render(PrivacyPolicy, {
     global: {
       plugins: [router],
     },
   });
 
-  expect(screen.getByRole('heading', { name: 'Privacy', level: 1 })).toBeTruthy();
-  expect(
-    screen.getByText(/does not store your garden plans on our servers/i),
-  ).toBeTruthy();
+  await waitFor(() => {
+    expect(screen.getByRole('heading', { name: 'Privacy', level: 1 })).toBeVisible();
+    expect(
+      screen.getByText(/does not store your garden plans on our servers/i),
+    ).toBeVisible();
+  });
   expect(
     screen.getByRole('link', { name: 'Back to Permaplanner' }).getAttribute('href'),
   ).toBe('/guilds');

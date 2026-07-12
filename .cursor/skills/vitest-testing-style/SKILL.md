@@ -11,36 +11,65 @@ description: >-
 
 ## Queries and interactions
 
-- **`findBy*`** — built-in wait (polls until found or timeout, default **1000ms**). **Prefer** whenever UI appears after a fetch, `watch`, or render tick — for clicks **and** presence checks. Equivalent to `waitFor(() => getBy*(…))`.
-- **`getBy*`** — synchronous, no wait. Use only when the element is on screen immediately after `render()` with no intervening async work.
-- **`queryBy*`** — returns `null` when absent; use only for “should not be on screen” assertions.
+| Query | Waits? | If missing | Use for |
+|-------|--------|------------|---------|
+| **`getBy*`** | No | Throws | Inside **`waitFor`** with **`expect`** + jest-dom matchers; or sync UI right after `render()` |
+| **`queryBy*`** | No | Returns `null` | **`expect(…).not.toBeInTheDocument()`** (absence) |
+| **`findBy*`** | Yes | Throws | **Interactions only** — pass to `fireEvent.click`, etc. Do **not** wrap in `expect` |
 
-**Do not** assert that a control exists and then query the same control again before interacting:
+There is no async query that returns `null`. **`queryBy*` is not a wait helper** — it is only for asserting something is **not** in the DOM.
+
+**Presence / visibility assertions** — `waitFor` + `getBy*` + jest-dom matcher:
+
+```ts
+await waitFor(() => {
+  expect(screen.getByRole('dialog', { name: 'Plan and sync' })).toBeVisible();
+});
+
+await waitFor(() => {
+  expect(screen.getByRole('status')).toHaveTextContent('Unsaved changes');
+});
+```
+
+**Absence** — `queryBy*` (add `waitFor` when the element disappears after an async action):
+
+```ts
+expect(screen.queryByRole('article', { name: 'Alpha guild' })).not.toBeInTheDocument();
+
+await waitFor(() => {
+  expect(screen.queryByRole('link', { name: shareHref })).not.toBeInTheDocument();
+});
+```
+
+Use **`toBeVisible()`** when the user should see the element; **`toBeInTheDocument()`** when DOM presence is enough. Use **`toHaveTextContent`**, **`toHaveAttribute`**, etc. for content or state.
+
+**Avoid** — `findBy*` is self-asserting (throws if not found); do not use it inside `expect`:
+
+```ts
+// Avoid — findBy already fails; expect adds nothing useful
+expect(await screen.findByRole('dialog', { name: 'Plan and sync' })).toBeVisible();
+```
+
+**Clicks** — `findBy*` / `getBy*` directly on the interaction, no separate presence assertion on the same element:
+
+```ts
+await fireEvent.click(await screen.findByRole('button', { name: 'Revoke share link …' }));
+await fireEvent.click(screen.getByRole('button', { name: 'Copy guild JSON' }));
+```
+
+**Do not** `waitFor` a presence check and then query the same control again before clicking:
 
 ```ts
 // Avoid
 await waitFor(() => {
-  expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Save' })).toBeVisible();
 });
 await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 ```
 
-**Prefer** `findBy*` for async DOM — one query, fails loudly if missing:
+Reserve bare `waitFor` without DOM queries for **non-DOM** side effects (mock calls, clipboard) when no element query is involved.
 
-```ts
-// Async presence
-await screen.findByRole('link', { name: shareHref });
-
-// Async click
-await fireEvent.click(await screen.findByRole('button', { name: 'Revoke share link …' }));
-
-// Sync click (element is on screen right after render)
-await fireEvent.click(screen.getByRole('button', { name: 'Copy guild JSON' }));
-```
-
-`await findBy*(…)` is enough on its own — no need to wrap it in `expect(…).toBeTruthy()`.
-
-Reserve `waitFor` for **non-DOM** side effects (mock calls, clipboard, “element removed after action”), not for waiting on elements that `findBy*` can query.
+Vitest loads jest-dom in [`src/testing/vitestSetup.ts`](../testing/vitestSetup.ts).
 
 ## Assertions
 

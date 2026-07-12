@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/vue';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
@@ -38,11 +38,13 @@ const renderDrawer = (props: { open: boolean }) =>
     global: { plugins: [router] },
   });
 
-it('shows plan actions when open', () => {
+it('shows plan actions when open', async () => {
   renderDrawer({ open: true });
 
-  expect(screen.getByRole('dialog', { name: 'Plan and sync' })).toBeTruthy();
-  expect(screen.getByRole('link', { name: 'Import another garden' })).toBeTruthy();
+  await waitFor(() => {
+    expect(screen.getByRole('dialog', { name: 'Plan and sync' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Import another garden' })).toBeVisible();
+  });
 });
 
 it('closes from the header close button', async () => {
@@ -61,7 +63,7 @@ it('closes when the backdrop is clicked', async () => {
   expect(emitted()['update:open']).toEqual([[false]]);
 });
 
-it('shows unsaved indicator inside the drawer when there are changes', () => {
+it('shows unsaved indicator inside the drawer when there are changes', async () => {
   vi.mocked(gardensApi.updateGarden).mockImplementation(() => new Promise(() => {}));
 
   const store = usePermaplannerStore();
@@ -79,5 +81,7 @@ it('shows unsaved indicator inside the drawer when there are changes', () => {
 
   renderDrawer({ open: true });
 
-  expect(screen.getByText('Unsaved changes')).toBeTruthy();
+  await waitFor(() => {
+    expect(screen.getByRole('status')).toHaveTextContent('Unsaved changes');
+  });
 });

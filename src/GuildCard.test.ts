@@ -139,9 +139,7 @@ it('shows compact plant tags when the aerial card fills a grid cell', async () =
   expect(card(wrapper).getByLabelText('Plants in this guild').textContent).toContain(
     'Comfrey',
   );
-  expect(
-    card(wrapper).getByLabelText('Guild fruit and bloom by month'),
-  ).toBeTruthy();
+  expect(card(wrapper).getByLabelText('Guild fruit and bloom by month')).toBeTruthy();
 });
 
 it('updates guild note from the note textarea', async () => {
@@ -233,13 +231,13 @@ it('shows remove-all control when there is only one instance', async () => {
   const wrapper = await renderGuildCard();
   expect(
     card(wrapper).queryByRole('button', { name: 'Remove one plant from bed' }),
-  ).toBeNull();
+  ).not.toBeInTheDocument();
   expect(
     card(wrapper).getByRole('button', { name: 'Remove plant from bed' }),
-  ).toBeTruthy();
+  ).toBeVisible();
   expect(
     card(wrapper).getByRole('button', { name: 'Add one plant to bed' }),
-  ).toBeTruthy();
+  ).toBeVisible();
 });
 
 it('removes the only instance when remove-all is used', async () => {
@@ -284,10 +282,10 @@ it('adds one instance when add-one is used on a single plant row', async () => {
 
 it('uses a warm card surface when the guild is not on the aerial map', async () => {
   const wrapper = await renderGuildCard();
-  expect(card(wrapper).getByText('Not on aerial')).toBeTruthy();
-  expect((wrapper.element as HTMLElement).classList.contains('paper-card-not-on-aerial')).toBe(
-    true,
-  );
+  expect(card(wrapper).getByText('Not on aerial')).toBeVisible();
+  expect(
+    (wrapper.element as HTMLElement).classList.contains('paper-card-not-on-aerial'),
+  ).toBe(true);
 });
 
 it('uses the default card surface when the guild is on the aerial map', async () => {
@@ -303,10 +301,10 @@ it('uses the default card surface when the guild is on the aerial map', async ()
   ];
 
   const wrapper = await renderGuildCard();
-  expect(card(wrapper).queryByText('Not on aerial')).toBeNull();
-  expect((wrapper.element as HTMLElement).classList.contains('paper-card-not-on-aerial')).toBe(
-    false,
-  );
+  expect(card(wrapper).queryByText('Not on aerial')).not.toBeInTheDocument();
+  expect(
+    (wrapper.element as HTMLElement).classList.contains('paper-card-not-on-aerial'),
+  ).toBe(false);
 });
 
 it('shows map size and an icon remove control when the guild is on the aerial map', async () => {
@@ -373,8 +371,10 @@ it('remove-one only affects the subgroup row that has duplicates', async () => {
 
 it('hides the add-plant editor until Add plant is clicked', async () => {
   const wrapper = await renderGuildCard();
-  expect(card(wrapper).queryByRole('combobox')).toBeNull();
-  expect(card(wrapper).queryByRole('button', { name: 'Add to guild' })).toBeNull();
+  expect(card(wrapper).queryByRole('combobox')).not.toBeInTheDocument();
+  expect(
+    card(wrapper).queryByRole('button', { name: 'Add to guild' }),
+  ).not.toBeInTheDocument();
 });
 
 it('adds the default catalog plant when Add to guild is clicked', async () => {
@@ -388,7 +388,7 @@ it('adds the default catalog plant when Add to guild is clicked', async () => {
 
   expect(store.plants).toMatchObject([{ speciesId: 'apple', cultivarId: null }]);
   expect(store.guilds[0].plants).toHaveLength(1);
-  expect(card(wrapper).queryByRole('combobox')).toBeNull();
+  expect(card(wrapper).queryByRole('combobox')).not.toBeInTheDocument();
 });
 
 it('adds the selected plant when Enter is pressed in the editor', async () => {
@@ -416,9 +416,11 @@ it('opens the editor for an existing plant and updates it on confirm', async () 
   await fireEvent.click(card(wrapper).getByRole('button', { name: 'Edit plant in bed' }));
   await nextTick();
 
-  expect(card(wrapper).getByRole('combobox')).toBeTruthy();
-  expect(card(wrapper).queryByRole('button', { name: 'Add plant to guild' })).toBeNull();
-  expect(card(wrapper).queryByLabelText('Comfrey')).toBeNull();
+  expect(card(wrapper).getByRole('combobox')).toBeVisible();
+  expect(
+    card(wrapper).queryByRole('button', { name: 'Add plant to guild' }),
+  ).not.toBeInTheDocument();
+  expect(card(wrapper).queryByLabelText('Comfrey')).not.toBeInTheDocument();
 
   await setEditorPick(wrapper, basilGenovesePick());
   await fireEvent.click(
@@ -452,8 +454,8 @@ it('cancels add plant without changing the guild', async () => {
   );
 
   expect(store.guilds[0].plants).toEqual([]);
-  expect(card(wrapper).queryByRole('combobox')).toBeNull();
-  expect(card(wrapper).getByRole('button', { name: 'Add plant to guild' })).toBeTruthy();
+  expect(card(wrapper).queryByRole('combobox')).not.toBeInTheDocument();
+  expect(card(wrapper).getByRole('button', { name: 'Add plant to guild' })).toBeVisible();
 });
 
 it('cancels edit plant without changing the guild', async () => {
@@ -477,7 +479,7 @@ it('cancels edit plant without changing the guild', async () => {
   expect(store.guilds[0].plants).toEqual([
     baseThing({ id: 'thing-a', plantId: 'plant' }),
   ]);
-  expect(card(wrapper).getByText(/Comfrey/)).toBeTruthy();
+  expect(card(wrapper).getByText(/Comfrey/)).toBeVisible();
 });
 
 it('expands a plant group to edit per-instance phase and condition', async () => {
@@ -494,7 +496,7 @@ it('expands a plant group to edit per-instance phase and condition', async () =>
   ];
 
   const wrapper = await renderGuildCard();
-  expect(card(wrapper).queryByLabelText('Phase')).toBeNull();
+  expect(card(wrapper).queryByLabelText('Phase')).not.toBeInTheDocument();
 
   await fireEvent.click(card(wrapper).getByRole('button', { name: /Expand Comfrey/ }));
 
@@ -535,7 +537,7 @@ it('shows average condition in the group header and ignores unset instances', as
   ];
 
   const wrapper = await renderGuildCard();
-  expect(card(wrapper).getByLabelText('Average condition: Healthy')).toBeTruthy();
+  expect(card(wrapper).getByLabelText('Average condition: Healthy')).toBeVisible();
 });
 
 it('shows a phase icon per instance in the group header, up to eight, then ellipsis', async () => {
@@ -552,5 +554,5 @@ it('shows a phase icon per instance in the group header, up to eight, then ellip
 
   const wrapper = await renderGuildCard();
   expect(card(wrapper).getAllByRole('img', { name: /^Phase:/ })).toHaveLength(4);
-  expect(card(wrapper).getByLabelText('More plants')).toBeTruthy();
+  expect(card(wrapper).getByLabelText('More plants')).toBeVisible();
 });

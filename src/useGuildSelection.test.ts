@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/vue';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
 import { defineComponent, type ComputedRef } from 'vue';
@@ -9,7 +9,10 @@ import { createMemoryHistory } from 'vue-router';
 
 import GuildTabHeader from './GuildTabHeader.vue';
 import { createAppRouter } from './router';
-import { createAuthedTestRouter, seedAuthedTestSession } from './testing/authedTestSession';
+import {
+  createAuthedTestRouter,
+  seedAuthedTestSession,
+} from './testing/authedTestSession';
 import { routeNames, routeParam } from './router';
 import { isGardenBootstrapping } from './useGardenSession';
 import { useGardenStore } from './useGardenStore';
@@ -57,7 +60,9 @@ it('keeps the guild route while the plan session is restoring', async () => {
   isGardenBootstrapping.value = false;
   await flushPromises();
 
-  expect(screen.getByText('alpha').getAttribute('data-selected')).toBe('alpha');
+  await waitFor(() => {
+    expect(screen.getByText('alpha').getAttribute('data-selected')).toBe('alpha');
+  });
 });
 
 it('clears an unknown guild route after the plan session finishes restoring', async () => {
@@ -89,7 +94,9 @@ it('reads the guild route param on the guilds tab', async () => {
   await router.isReady();
   render(SelectionProbe, { global: { plugins: [router] } });
 
-  expect(screen.getByText('alpha').getAttribute('data-selected')).toBe('alpha');
+  await waitFor(() => {
+    expect(screen.getByText('alpha').getAttribute('data-selected')).toBe('alpha');
+  });
 });
 
 it('reads the guild route param on the aerial tab', async () => {
@@ -101,7 +108,9 @@ it('reads the guild route param on the aerial tab', async () => {
   await router.isReady();
   render(SelectionProbe, { global: { plugins: [router] } });
 
-  expect(screen.getByText('g1').getAttribute('data-selected')).toBe('g1');
+  await waitFor(() => {
+    expect(screen.getByText('g1').getAttribute('data-selected')).toBe('g1');
+  });
 });
 
 it('add guild navigates to the guilds tab with the new guild selected', async () => {

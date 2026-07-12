@@ -64,7 +64,9 @@ const renderPanel = () => {
 it('lists existing share links for the active garden', async () => {
   renderPanel();
 
-  await screen.findByRole('link', { name: existingShareHref });
+  await waitFor(() => {
+    expect(screen.getByRole('link', { name: existingShareHref })).toBeVisible();
+  });
   expect(gardenSharesApi.listGardenShares).toHaveBeenCalledWith('g1');
 });
 
@@ -79,7 +81,11 @@ it('revokes a listed share link', async () => {
     expect(gardenSharesApi.revokeGardenShare).toHaveBeenCalledWith('g1', 'share-1');
   });
 
-  expect(screen.queryByRole('link', { name: existingShareHref })).toBeNull();
+  await waitFor(() => {
+    expect(
+      screen.queryByRole('link', { name: existingShareHref }),
+    ).not.toBeInTheDocument();
+  });
 });
 
 it('copies the current guild share JSON payload to the clipboard', async () => {

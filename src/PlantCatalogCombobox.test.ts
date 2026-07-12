@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render } from '@testing-library/vue';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
 import {
@@ -32,7 +32,7 @@ const comfreyPick = () =>
   catalogPickForSpeciesCultivar(buildCatalogPickGroups(knownSpecies()), 'comfrey', null)!;
 
 const openList = async (wrapper: ReturnType<typeof render>) => {
-  await fireEvent.click(wrapper.getByRole('button', { name: 'Open plant list' }));
+  await fireEvent.click(await wrapper.findByRole('button', { name: 'Open plant list' }));
 };
 
 it('emits the first catalog pick when modelValue is null', () => {
@@ -58,7 +58,7 @@ it('does not replace a valid modelValue on mount', () => {
   expect(onUpdate).not.toHaveBeenCalled();
 });
 
-it('forwards label and placeholder to the combobox input', () => {
+it('forwards label and placeholder to the combobox input', async () => {
   const wrapper = render(PlantCatalogCombobox, {
     props: {
       modelValue: defaultPick(),
@@ -66,8 +66,10 @@ it('forwards label and placeholder to the combobox input', () => {
       placeholder: 'Type to filter…',
     },
   });
-  expect(wrapper.getByText('Pick a plant')).toBeTruthy();
-  expect(wrapper.getByPlaceholderText('Type to filter…')).toBeTruthy();
+  await waitFor(() => {
+    expect(wrapper.getByText('Pick a plant')).toBeVisible();
+    expect(wrapper.getByPlaceholderText('Type to filter…')).toBeVisible();
+  });
 });
 
 it('lists catalog species groups and cultivar rows when open', async () => {
@@ -79,8 +81,10 @@ it('lists catalog species groups and cultivar rows when open', async () => {
     (g) => g.speciesId === 'apple',
   )!;
   const honeycrisp = apple.picks.find((p) => p.cultivarId === 'honeycrisp')!;
-  expect(wrapper.getByRole('listbox').textContent).toContain('Malus domestica');
-  expect(wrapper.getByText(honeycrisp.rowLabel)).toBeTruthy();
+  await waitFor(() => {
+    expect(wrapper.getByRole('listbox').textContent).toContain('Malus domestica');
+    expect(wrapper.getByText(honeycrisp.rowLabel)).toBeVisible();
+  });
   expect(honeycrisp.rowLabel).toBe('Honeycrisp');
 });
 
@@ -90,8 +94,10 @@ it('filters options by search query', async () => {
   });
   await openList(wrapper);
   await fireEvent.update(wrapper.getByRole('combobox'), 'comfrey');
-  expect(wrapper.getByText(/Comfrey/)).toBeTruthy();
-  expect(wrapper.queryByText('Apple')).toBeNull();
+  await waitFor(() => {
+    expect(wrapper.getByText(/Comfrey/)).toBeVisible();
+    expect(wrapper.queryByText('Apple')).not.toBeInTheDocument();
+  });
 });
 
 it('filters options by Latin species name', async () => {
@@ -100,8 +106,10 @@ it('filters options by Latin species name', async () => {
   });
   await openList(wrapper);
   await fireEvent.update(wrapper.getByRole('combobox'), 'malus domestica');
-  expect(wrapper.getByText(/Apple/)).toBeTruthy();
-  expect(wrapper.queryByText('Comfrey')).toBeNull();
+  await waitFor(() => {
+    expect(wrapper.getByText(/Apple/)).toBeVisible();
+    expect(wrapper.queryByText('Comfrey')).not.toBeInTheDocument();
+  });
 });
 
 it('shows no matches when the query matches nothing', async () => {
@@ -110,7 +118,9 @@ it('shows no matches when the query matches nothing', async () => {
   });
   await openList(wrapper);
   await fireEvent.update(wrapper.getByRole('combobox'), 'zzz-no-plants-zzz');
-  expect(wrapper.getByText('No matches')).toBeTruthy();
+  await waitFor(() => {
+    expect(wrapper.getByText('No matches')).toBeVisible();
+  });
 });
 
 it('clears the search query when modelValue changes', async () => {
@@ -119,7 +129,9 @@ it('clears the search query when modelValue changes', async () => {
   });
   await openList(wrapper);
   await fireEvent.update(wrapper.getByRole('combobox'), 'comfrey');
-  expect(wrapper.getByText(/Comfrey/)).toBeTruthy();
+  await waitFor(() => {
+    expect(wrapper.getByText(/Comfrey/)).toBeVisible();
+  });
 
   const next = comfreyPick();
   await wrapper.rerender({ modelValue: next });

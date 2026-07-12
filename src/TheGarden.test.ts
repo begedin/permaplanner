@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/vue';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/vue';
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
 import { setActivePinia } from 'pinia';
@@ -50,7 +50,9 @@ it('deselects when the aerial page title is clicked', async () => {
   expect(screen.getByRole('navigation', { name: 'Breadcrumb' }).textContent).toContain(
     'Guild',
   );
-  await fireEvent.click(screen.getByRole('button', { name: 'Deselect guild, Aerial' }));
+  await fireEvent.click(
+    await screen.findByRole('button', { name: 'Deselect guild, Aerial' }),
+  );
   await flushPromises();
   await router.isReady();
 
@@ -66,10 +68,12 @@ it('shows the aerial header and guild list in the left sidebar', async () => {
   ];
   await renderGarden();
 
-  expect(screen.getByRole('heading', { name: 'Aerial', level: 1 })).toBeTruthy();
-  expect(screen.getByRole('complementary', { name: 'Guild list' })).toBeTruthy();
-  expect(screen.getByRole('article', { name: 'A guild' })).toBeTruthy();
-  expect(screen.getByRole('region', { name: 'Aerial map' })).toBeTruthy();
+  await waitFor(() => {
+    expect(screen.getByRole('heading', { name: 'Aerial', level: 1 })).toBeVisible();
+    expect(screen.getByRole('complementary', { name: 'Guild list' })).toBeVisible();
+    expect(screen.getByRole('article', { name: 'A guild' })).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Aerial map' })).toBeVisible();
+  });
 });
 
 it('filters guilds in the sidebar by search query', async () => {
@@ -85,8 +89,10 @@ it('filters guilds in the sidebar by search query', async () => {
     'Another',
   );
 
-  expect(screen.getByRole('article', { name: 'Another guild' })).toBeTruthy();
-  expect(screen.queryByRole('article', { name: 'A guild' })).toBeNull();
+  await waitFor(() => {
+    expect(screen.getByRole('article', { name: 'Another guild' })).toBeVisible();
+    expect(screen.queryByRole('article', { name: 'A guild' })).not.toBeInTheDocument();
+  });
 });
 
 it('deletes the selected guild on Delete only when confirmed', async () => {

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render } from '@testing-library/vue';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
 import { setActivePinia } from 'pinia';
@@ -56,9 +56,13 @@ it('shows guild name, compact plant tags, and season section', async () => {
     props: { id: 'guild' },
     global: { plugins: [router] },
   });
-  expect(wrapper.getByText('A guild')).toBeTruthy();
-  expect(wrapper.getByLabelText('Plants in this guild').textContent).toContain('Comfrey');
-  expect(wrapper.getByLabelText('Guild fruit and bloom by month')).toBeTruthy();
+  await waitFor(() => {
+    expect(wrapper.getByText('A guild')).toBeVisible();
+    expect(wrapper.getByLabelText('Plants in this guild').textContent).toContain(
+      'Comfrey',
+    );
+    expect(wrapper.getByLabelText('Guild fruit and bloom by month')).toBeVisible();
+  });
 });
 
 it('marks the card as current when this guild is selected on the map', async () => {
@@ -152,7 +156,7 @@ it('selects the guild in the aerial route when the card is clicked', async () =>
     props: { id: 'guild' },
     global: { plugins: [router] },
   });
-  await fireEvent.click(wrapper.getByRole('article', { name: 'A guild' }));
+  await fireEvent.click(await wrapper.findByRole('article', { name: 'A guild' }));
   await flushPromises();
   await router.isReady();
 
