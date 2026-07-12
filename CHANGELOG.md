@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.21.4
+
+- [FEATURE] Plan sidebar **Copy guild JSON** copies the public share JSON payload (garden name, guilds, and summary) to the clipboard
+
 ## 0.21.3
 
 - [TWEAK] Guild list scrolls to the selected guild on the Aerial and Guilds tabs, including when switching tabs with the same selection

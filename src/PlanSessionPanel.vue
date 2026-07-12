@@ -9,6 +9,7 @@
     type GardenShare,
   } from './api/gardenShares';
   import { exportActiveGardenJson } from './exportGardenJson';
+  import { buildGardenShareJsonText } from './gardenShareExport';
   import PlanSaveStatus from './PlanSaveStatus.vue';
   import ToolSlider from './ToolSlider.vue';
   import { useMapScaleStore } from './useMapScaleStore';
@@ -72,6 +73,17 @@
     } catch (e) {
       shareError.value =
         e instanceof Error ? e.message : `Could not copy ${kind} share link`;
+    }
+  };
+
+  const copyGuildJson = async () => {
+    shareError.value = undefined;
+    try {
+      const gardenName = permaplannerStore.gardenName?.trim() || 'garden';
+      const text = buildGardenShareJsonText(gardenName, permaplannerStore.snapshot());
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      shareError.value = e instanceof Error ? e.message : 'Could not copy guild JSON';
     }
   };
 
@@ -165,6 +177,14 @@
         @click="generateShareLink"
       >
         {{ sharing ? 'Generating share link…' : 'Share garden' }}
+      </button>
+      <button
+        type="button"
+        class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
+        aria-label="Copy guild JSON"
+        @click="copyGuildJson"
+      >
+        Copy guild JSON
       </button>
       <ul
         v-if="shares.length > 0"

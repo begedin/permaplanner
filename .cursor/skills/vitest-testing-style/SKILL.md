@@ -9,6 +9,39 @@ description: >-
 
 # Vitest testing style (permaplanner)
 
+## Queries and interactions
+
+- **`findBy*`** — built-in wait (polls until found or timeout, default **1000ms**). **Prefer** whenever UI appears after a fetch, `watch`, or render tick — for clicks **and** presence checks. Equivalent to `waitFor(() => getBy*(…))`.
+- **`getBy*`** — synchronous, no wait. Use only when the element is on screen immediately after `render()` with no intervening async work.
+- **`queryBy*`** — returns `null` when absent; use only for “should not be on screen” assertions.
+
+**Do not** assert that a control exists and then query the same control again before interacting:
+
+```ts
+// Avoid
+await waitFor(() => {
+  expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy();
+});
+await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+```
+
+**Prefer** `findBy*` for async DOM — one query, fails loudly if missing:
+
+```ts
+// Async presence
+await screen.findByRole('link', { name: shareHref });
+
+// Async click
+await fireEvent.click(await screen.findByRole('button', { name: 'Revoke share link …' }));
+
+// Sync click (element is on screen right after render)
+await fireEvent.click(screen.getByRole('button', { name: 'Copy guild JSON' }));
+```
+
+`await findBy*(…)` is enough on its own — no need to wrap it in `expect(…).toBeTruthy()`.
+
+Reserve `waitFor` for **non-DOM** side effects (mock calls, clipboard, “element removed after action”), not for waiting on elements that `findBy*` can query.
+
 ## Assertions
 
 - Prefer **one structured assertion** over many field-by-field `expect`s, especially on indexed access like `arr[0]!.foo` (avoid non-null `!` for convenience when a matcher can express the same intent).
