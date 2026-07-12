@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.22.0
+
+- [FEATURE] Aerial map toolbar with separate **Select** (`V`), **Edit brush** (`B`), and **Move guild** (`M`) tools; brush and move are disabled until a guild is selected
+
 ## 0.21.5
 
 - [TWEAK] Vitest component tests use `@testing-library/jest-dom` (`toBeVisible`, `toBeInTheDocument`, etc.) with `waitFor` + `getBy*` / `queryBy*` assertion patterns

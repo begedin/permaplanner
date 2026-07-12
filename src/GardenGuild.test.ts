@@ -25,7 +25,7 @@ it('draws a bed', async () => {
     attachTo: document.body,
   });
 
-  await wrapper.setProps({ selected: true });
+  await wrapper.setProps({ selected: true, tool: 'edit' });
 
   scene.isDrawing = true;
   await wrapper.vm.$nextTick();
@@ -80,7 +80,7 @@ it('cancells drawing a bed', async () => {
 
   const scene = useSceneStore();
 
-  await wrapper.setProps({ selected: true });
+  await wrapper.setProps({ selected: true, tool: 'edit' });
 
   scene.isDrawing = true;
   scene.x = 5;
@@ -114,6 +114,7 @@ it('discards unsaved path edits when deselected', async () => {
       unitLengthPx: 5,
       hovered: false,
       selected: true,
+      tool: 'edit',
     },
     attachTo: document.body,
   });
@@ -149,6 +150,7 @@ it('changes brush size', async () => {
       unitLengthPx: 5,
       hovered: false,
       selected: true,
+      tool: 'edit',
     },
     attachTo: document.body,
   });
@@ -169,4 +171,88 @@ it('changes brush size', async () => {
   await wrapper.vm.$nextTick();
   expect(wrapper.get('polygon').attributes('points')).not.toEqual(pointsAtDefaultSize);
   expect(wrapper.get('polygon').attributes('points')).not.toEqual(pointsAtLargerSize);
+});
+
+it('does not draw when select tool is active', async () => {
+  const scene = useSceneStore();
+  const guild = {
+    id: 'guild',
+    path: [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 10 },
+    ],
+    plants: [],
+    name: 'Bed',
+    mulchLevel: 1 as const,
+  };
+
+  const wrapper = mount(GardenGuild, {
+    props: {
+      guild,
+      unitLengthPx: 5,
+      hovered: false,
+      selected: true,
+      tool: 'select',
+    },
+    attachTo: document.body,
+  });
+
+  scene.isDrawing = true;
+  scene.x = 50;
+  scene.y = 50;
+  await wrapper.vm.$nextTick();
+  scene.isDrawing = false;
+  await wrapper.vm.$nextTick();
+
+  expect(
+    wrapper.get('polygon[class*="pointer-events-fill"]').attributes('points'),
+  ).toEqual(guild.path.map(({ x, y }) => `${x},${y}`).join(' '));
+});
+
+it('moves a placed guild', async () => {
+  const scene = useSceneStore();
+  const guild = {
+    id: 'guild',
+    path: [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 10 },
+    ],
+    plants: [],
+    name: 'Bed',
+    mulchLevel: 1 as const,
+  };
+
+  const wrapper = mount(GardenGuild, {
+    props: {
+      guild,
+      unitLengthPx: 5,
+      hovered: false,
+      selected: true,
+      tool: 'move',
+    },
+    attachTo: document.body,
+  });
+
+  scene.worldX = 0;
+  scene.worldY = 0;
+  await wrapper.get('polygon[class*="pointer-events-fill"]').trigger('mousedown');
+  scene.worldX = 5;
+  scene.worldY = 7;
+  document.dispatchEvent(new MouseEvent('mousemove'));
+  await wrapper.vm.$nextTick();
+  document.dispatchEvent(new MouseEvent('mouseup'));
+  await wrapper.vm.$nextTick();
+
+  expect(wrapper.emitted('move')?.at(0)).toEqual([
+    {
+      ...guild,
+      path: [
+        { x: 5, y: 7 },
+        { x: 15, y: 7 },
+        { x: 15, y: 17 },
+      ],
+    },
+  ]);
 });

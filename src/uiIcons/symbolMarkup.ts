@@ -2,6 +2,13 @@ import type { UiIconId } from './iconIds';
 
 /** Inner SVG for each ui-icon symbol (viewBox 0 0 48 48). */
 export const UI_ICON_SYMBOL_INNER: Record<UiIconId, string> = {
+  pointer: `
+    <path d="M14 10 L14 34 L20 28 L26 38 L30 36 L24 26 L32 26 Z" fill="currentColor" stroke="currentColor" />
+  `,
+  move: `
+    <path d="M24 10 L24 18 M24 30 L24 38 M10 24 L18 24 M30 24 L38 24" />
+    <path d="M24 10 L20 16 M24 10 L28 16 M24 38 L20 32 M24 38 L28 32 M10 24 L16 20 M10 24 L16 28 M38 24 L32 20 M38 24 L32 28" />
+  `,
   edit: `
     <path d="M30 10 L38 18 L18 38 L8 40 L10 30 Z" />
     <path d="M26 14 L34 22" />

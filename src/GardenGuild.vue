@@ -7,16 +7,19 @@
   import GardenMeasure from './GardenMeasure.vue';
   import { useSceneStore } from './useSceneStore';
   import { useMagicKeys } from '@vueuse/core';
+  import type { AerialTool } from './useAerialTool';
 
   const props = defineProps<{
     unitLengthPx: number;
     guild: Guild;
     hovered: boolean;
     selected: boolean;
+    tool?: AerialTool;
   }>();
 
   const emit = defineEmits<{
     (e: 'update', guild: Guild): void;
+    (e: 'move', guild: Guild): void;
     (e: 'cancel' | 'click' | 'mouseenter' | 'mouseleave'): void;
     (e: 'click', evt: MouseEvent): void;
   }>();
@@ -29,10 +32,13 @@
 
   watch(() => props.guild, resetPath, { immediate: true });
 
+  const isEditing = computed(() => props.selected && props.tool === 'edit');
+  const isMoving = computed(() => props.selected && props.tool === 'move');
+
   const brushSize = ref(12);
 
   const brush = computed(() => {
-    if (!props.selected) {
+    if (!isEditing.value) {
       return [];
     }
 
@@ -51,8 +57,14 @@
   });
 
   let editModeController = new AbortController();
+  let moveController = new AbortController();
 
   const stroke = ref<{ x: number; y: number }[]>([]);
+  const moveOrigin = ref<{
+    worldX: number;
+    worldY: number;
+    path: { x: number; y: number }[];
+  } | null>(null);
 
   const joinPaths = (a: { x: number; y: number }[], b: { x: number; y: number }[]) => {
     return a.length > 0
@@ -89,7 +101,7 @@
   watch(
     () => scene.isDrawing,
     (isDrawing) => {
-      if (!props.selected) {
+      if (!isEditing.value) {
         return;
       }
 
@@ -111,7 +123,7 @@
   watch(
     () => [scene.worldX, scene.worldY],
     () => {
-      if (!props.selected) {
+      if (!isEditing.value) {
         return;
       }
 
@@ -122,12 +134,14 @@
   );
 
   watch(
-    () => props.selected,
-    (selected) => {
-      if (!selected) {
+    isEditing,
+    (editing) => {
+      if (!editing) {
         editModeController.abort();
         stroke.value = [];
-        resetPath();
+        if (props.selected) {
+          resetPath();
+        }
         return;
       }
 
@@ -168,6 +182,73 @@
     { immediate: true },
   );
 
+  watch(
+    () => props.selected,
+    (selected) => {
+      if (!selected) {
+        editModeController.abort();
+        moveController.abort();
+        stroke.value = [];
+        moveOrigin.value = null;
+        resetPath();
+      }
+    },
+  );
+
+  watch(isMoving, (moving) => {
+    if (!moving) {
+      moveController.abort();
+      moveOrigin.value = null;
+    }
+  });
+
+  const onPathMouseDown = (e: MouseEvent) => {
+    if (!isMoving.value || path.value.length === 0) {
+      return;
+    }
+
+    e.stopPropagation();
+    moveController.abort();
+    moveController = new AbortController();
+    moveOrigin.value = {
+      worldX: scene.worldX,
+      worldY: scene.worldY,
+      path: path.value.map((point) => ({ ...point })),
+    };
+
+    document.addEventListener(
+      'mousemove',
+      () => {
+        if (!moveOrigin.value) {
+          return;
+        }
+        const dx = scene.worldX - moveOrigin.value.worldX;
+        const dy = scene.worldY - moveOrigin.value.worldY;
+        path.value = moveOrigin.value.path.map((point) => ({
+          x: point.x + dx,
+          y: point.y + dy,
+        }));
+      },
+      { signal: moveController.signal },
+    );
+
+    document.addEventListener(
+      'mouseup',
+      () => {
+        if (!moveOrigin.value) {
+          return;
+        }
+        moveController.abort();
+        emit('move', {
+          ...props.guild,
+          path: [...path.value],
+        });
+        moveOrigin.value = null;
+      },
+      { signal: moveController.signal },
+    );
+  };
+
   const box = computed(() => {
     if (path.value.length === 0) {
       return null;
@@ -195,7 +276,7 @@
     class="pointer-events-none"
   />
   <polygon
-    v-else-if="selected || hovered"
+    v-else-if="isEditing"
     :points="brush.map(({ x, y }) => `${x},${y}`).join(' ')"
     :fill="brushColor"
     class="pointer-events-none"
@@ -213,7 +294,8 @@
           : 'rgba(0, 100, 0, 0.2)'
     "
     stroke="black"
-    class="pointer-events-fill"
+    :class="['pointer-events-fill', isMoving ? 'cursor-move' : undefined]"
+    @mousedown="onPathMouseDown"
     @mouseenter="emit('mouseenter')"
     @mouseleave="emit('mouseleave')"
     @click="emit('click', $event)"

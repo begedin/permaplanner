@@ -20,6 +20,8 @@
   import { useOnboardingStore } from './useOnboardingStore';
   import { usePermaplannerStore } from './usePermaplannerStore';
   import { usePlanCommandHistory } from './usePlanCommandHistory';
+  import AerialMapToolbar from './AerialMapToolbar.vue';
+  import { useAerialTool, useAerialToolHotkeys } from './useAerialTool';
 
   const permaplannerStore = usePermaplannerStore();
 
@@ -134,6 +136,7 @@
   const garden = useGardenStore();
   const commandHistory = usePlanCommandHistory();
   const { selectedGuildId, selectGuild, clearSelection } = useGuildSelection();
+  const { activeTool, setTool, resetTool } = useAerialTool();
   const { searchQuery, filteredGuilds, hasSearchQuery } = useGuildSearch();
   const { guildListScroll } = useGuildListScroll();
 
@@ -165,6 +168,21 @@
     return g;
   });
 
+  const canUseGuildTools = computed(() => selectedGuildId.value !== undefined);
+
+  watch(selectedGuildId, (id) => {
+    if (!id) {
+      resetTool();
+    }
+  });
+
+  useAerialToolHotkeys({
+    enabled: computed(() => true),
+    canUseEdit: canUseGuildTools,
+    canUseMove: canUseGuildTools,
+    setTool,
+  });
+
   onMounted(() => {
     document.addEventListener('keydown', (e): void => {
       if (e.key === 'Delete' && selectedGuildId.value !== undefined) {
@@ -188,6 +206,16 @@
       garden.guilds[index] = guild;
     });
     void clearSelection();
+  };
+
+  const moveGuild = (guild: Guild) => {
+    commandHistory.runMutation(() => {
+      const index = garden.guilds.findIndex((g) => g.id === guild.id);
+      if (index === -1) {
+        return;
+      }
+      garden.guilds[index] = guild;
+    });
   };
 </script>
 
@@ -224,9 +252,17 @@
       </aside>
 
       <section
-        class="flex flex-1 min-h-0 min-w-0 flex-col"
+        class="relative flex flex-1 min-h-0 min-w-0 flex-col"
         aria-label="Aerial map"
       >
+        <div class="pointer-events-none absolute top-2 right-2 z-10">
+          <AerialMapToolbar
+            :active-tool="activeTool"
+            :can-use-edit="canUseGuildTools"
+            :can-use-move="canUseGuildTools"
+            @update:active-tool="setTool"
+          />
+        </div>
         <svg
           ref="container"
           :viewBox="svgViewbox"
@@ -308,6 +344,7 @@
             v-for="guild in placedGuildsRenderOrder"
             :key="guild.id"
             :selected="selectedGuildId === guild.id"
+            :tool="selectedGuildId === guild.id ? activeTool : undefined"
             :hovered="garden.hoveredId === guild.id"
             :guild="guild"
             :unit-length-px="mapScale.unitLengthPx"
@@ -316,6 +353,7 @@
             @click.shift="garden.removeGuildFromAerialMap(guild.id)"
             @mouseenter="garden.hoveredId = guild.id"
             @mouseleave="garden.hoveredId = undefined"
+            @move="moveGuild"
             @update="updateGuild"
           ></GardenGuild>
 
@@ -323,6 +361,7 @@
             v-if="placementGuildDraft"
             :guild="placementGuildDraft"
             :unit-length-px="mapScale.unitLengthPx"
+            :tool="activeTool"
             hovered
             selected
             @update="updateGuild"

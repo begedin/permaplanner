@@ -1,5 +1,7 @@
 /** Hand-drawn UI action icons (toolbar / card controls). */
 export const UI_ICON_IDS = [
+  'pointer',
+  'move',
   'edit',
   'add',
   'remove-one',

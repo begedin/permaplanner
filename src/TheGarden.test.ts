@@ -148,6 +148,8 @@ it('switches selection to another guild and discards the previous edit', async (
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   await wrapper.vm.$nextTick();
 
+  await fireEvent.click(screen.getByRole('button', { name: 'Edit brush (B)' }));
+
   const scene = useSceneStore();
   scene.isDrawing = true;
   scene.x = 50;
@@ -245,4 +247,77 @@ it('deselects when placement is cancelled', async () => {
   expect(router.currentRoute.value.name).toBe(routeNames.aerial);
   expect(routeParam(router.currentRoute.value.params, 'guildId')).toBeUndefined();
   expect(store.hoveredId).toBeUndefined();
+});
+
+it('shows map tools in the top-right of the aerial map', async () => {
+  await renderGarden();
+
+  await waitFor(() => {
+    expect(screen.getByRole('toolbar', { name: 'Map tools' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Select (V)' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Edit brush (B)' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Move guild (M)' })).toBeVisible();
+  });
+});
+
+it('disables edit and move tools when no guild is selected', async () => {
+  await renderGarden();
+
+  expect(screen.getByRole('button', { name: 'Edit brush (B)' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Move guild (M)' })).toBeDisabled();
+});
+
+it('activates tools with V, B, and M hotkeys', async () => {
+  const store = useGardenStore();
+  store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 }];
+  await renderGarden('/aerial/guild');
+
+  const selectBtn = screen.getByRole('button', { name: 'Select (V)' });
+  const editBtn = screen.getByRole('button', { name: 'Edit brush (B)' });
+  const moveBtn = screen.getByRole('button', { name: 'Move guild (M)' });
+
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'b' }));
+  await waitFor(() => {
+    expect(editBtn).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'm' }));
+  await waitFor(() => {
+    expect(moveBtn).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'v' }));
+  await waitFor(() => {
+    expect(selectBtn).toHaveAttribute('aria-pressed', 'true');
+  });
+});
+
+it('does not edit a bed while the select tool is active', async () => {
+  const store = useGardenStore();
+  const bed = {
+    id: 'guild',
+    name: 'Bed',
+    mulchLevel: 1 as const,
+    path: [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 100 },
+      { x: 0, y: 100 },
+    ],
+    plants: [],
+  };
+  store.guilds = [bed];
+  const { router } = await renderGarden('/aerial/guild');
+  const wrapper = mount(TheGarden, { global: { plugins: [router] } });
+  await wrapper.vm.$nextTick();
+
+  const scene = useSceneStore();
+  scene.isDrawing = true;
+  scene.x = 50;
+  scene.y = 50;
+  await wrapper.vm.$nextTick();
+  scene.isDrawing = false;
+  await wrapper.vm.$nextTick();
+
+  expect(store.guilds.find((g) => g.id === 'guild')?.path).toEqual(bed.path);
 });
