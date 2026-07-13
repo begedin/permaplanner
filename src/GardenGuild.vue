@@ -8,6 +8,7 @@
   import { useSceneStore } from './useSceneStore';
   import { useMagicKeys } from '@vueuse/core';
   import type { AerialTool } from './useAerialTool';
+  import { clientToSvgUser } from './svgClientToUser';
 
   const props = defineProps<{
     unitLengthPx: number;
@@ -210,40 +211,66 @@
     e.stopPropagation();
     moveController.abort();
     moveController = new AbortController();
+    const svg = (e.currentTarget as SVGElement).closest('svg');
+    const origin =
+      svg instanceof SVGSVGElement
+        ? clientToSvgUser(svg, e.clientX, e.clientY)
+        : { x: scene.worldX, y: scene.worldY };
     moveOrigin.value = {
-      worldX: scene.worldX,
-      worldY: scene.worldY,
+      worldX: origin.x,
+      worldY: origin.y,
       path: path.value.map((point) => ({ ...point })),
+    };
+
+    const applyMove = (clientX: number, clientY: number) => {
+      if (!moveOrigin.value) {
+        return;
+      }
+      const current =
+        svg instanceof SVGSVGElement
+          ? clientToSvgUser(svg, clientX, clientY)
+          : { x: scene.worldX, y: scene.worldY };
+      const dx = current.x - moveOrigin.value.worldX;
+      const dy = current.y - moveOrigin.value.worldY;
+      path.value = moveOrigin.value.path.map((point) => ({
+        x: point.x + dx,
+        y: point.y + dy,
+      }));
+    };
+
+    const finishMove = () => {
+      if (!moveOrigin.value) {
+        return;
+      }
+      moveController.abort();
+      emit('move', {
+        ...props.guild,
+        path: [...path.value],
+      });
+      moveOrigin.value = null;
     };
 
     document.addEventListener(
       'mousemove',
-      () => {
-        if (!moveOrigin.value) {
+      (moveE) => {
+        if ((moveE.buttons & 1) === 0) {
+          applyMove(moveE.clientX, moveE.clientY);
+          finishMove();
           return;
         }
-        const dx = scene.worldX - moveOrigin.value.worldX;
-        const dy = scene.worldY - moveOrigin.value.worldY;
-        path.value = moveOrigin.value.path.map((point) => ({
-          x: point.x + dx,
-          y: point.y + dy,
-        }));
+        applyMove(moveE.clientX, moveE.clientY);
       },
       { signal: moveController.signal },
     );
 
     document.addEventListener(
       'mouseup',
-      () => {
+      (upE) => {
         if (!moveOrigin.value) {
           return;
         }
-        moveController.abort();
-        emit('move', {
-          ...props.guild,
-          path: [...path.value],
-        });
-        moveOrigin.value = null;
+        applyMove(upE.clientX, upE.clientY);
+        finishMove();
       },
       { signal: moveController.signal },
     );

@@ -4,6 +4,7 @@ import GardenGuild from './GardenGuild.vue';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
 import { useSceneStore } from './useSceneStore';
+import * as svgClientToUser from './svgClientToUser';
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
@@ -240,7 +241,7 @@ it('moves a placed guild', async () => {
   await wrapper.get('polygon[class*="pointer-events-fill"]').trigger('mousedown');
   scene.worldX = 5;
   scene.worldY = 7;
-  document.dispatchEvent(new MouseEvent('mousemove'));
+  document.dispatchEvent(new MouseEvent('mousemove', { buttons: 1, bubbles: true }));
   await wrapper.vm.$nextTick();
   document.dispatchEvent(new MouseEvent('mouseup'));
   await wrapper.vm.$nextTick();
@@ -255,4 +256,141 @@ it('moves a placed guild', async () => {
       ],
     },
   ]);
+});
+
+it('moves a placed guild from the mousedown position when scene coordinates are stale', async () => {
+  const clientToSvgUser = vi
+    .spyOn(svgClientToUser, 'clientToSvgUser')
+    .mockReturnValueOnce({ x: 100, y: 200 })
+    .mockReturnValueOnce({ x: 105, y: 207 })
+    .mockReturnValueOnce({ x: 105, y: 207 });
+
+  const scene = useSceneStore();
+  const guild = {
+    id: 'guild',
+    path: [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 10 },
+    ],
+    plants: [],
+    name: 'Bed',
+    mulchLevel: 1 as const,
+  };
+
+  const wrapper = mount(
+    {
+      components: { GardenGuild },
+      template: `
+        <svg xmlns="http://www.w3.org/2000/svg">
+          <GardenGuild
+            :guild="guild"
+            :unit-length-px="5"
+            :hovered="false"
+            :selected="true"
+            tool="move"
+          />
+        </svg>
+      `,
+      setup() {
+        return { guild };
+      },
+    },
+    { attachTo: document.body },
+  );
+
+  scene.worldX = 0;
+  scene.worldY = 0;
+  await wrapper.get('polygon[class*="pointer-events-fill"]').trigger('mousedown');
+  scene.worldX = 105;
+  scene.worldY = 207;
+  document.dispatchEvent(
+    new MouseEvent('mousemove', {
+      clientX: 105,
+      clientY: 207,
+      buttons: 1,
+      bubbles: true,
+    }),
+  );
+  await wrapper.vm.$nextTick();
+  document.dispatchEvent(new MouseEvent('mouseup'));
+  await wrapper.vm.$nextTick();
+
+  expect(clientToSvgUser).toHaveBeenCalled();
+  expect(wrapper.findComponent(GardenGuild).emitted('move')?.at(0)).toEqual([
+    {
+      ...guild,
+      path: [
+        { x: 5, y: 7 },
+        { x: 15, y: 7 },
+        { x: 15, y: 17 },
+      ],
+    },
+  ]);
+
+  clientToSvgUser.mockRestore();
+  wrapper.unmount();
+});
+
+it('commits the release position on mouseup when the last mousemove is skipped', async () => {
+  const clientToSvgUser = vi
+    .spyOn(svgClientToUser, 'clientToSvgUser')
+    .mockReturnValueOnce({ x: 100, y: 200 })
+    .mockReturnValueOnce({ x: 108, y: 214 });
+
+  const scene = useSceneStore();
+  const guild = {
+    id: 'guild',
+    path: [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 10 },
+    ],
+    plants: [],
+    name: 'Bed',
+    mulchLevel: 1 as const,
+  };
+
+  const wrapper = mount(
+    {
+      components: { GardenGuild },
+      template: `
+        <svg xmlns="http://www.w3.org/2000/svg">
+          <GardenGuild
+            :guild="guild"
+            :unit-length-px="5"
+            :hovered="false"
+            :selected="true"
+            tool="move"
+          />
+        </svg>
+      `,
+      setup() {
+        return { guild };
+      },
+    },
+    { attachTo: document.body },
+  );
+
+  scene.worldX = 0;
+  scene.worldY = 0;
+  await wrapper.get('polygon[class*="pointer-events-fill"]').trigger('mousedown');
+  document.dispatchEvent(
+    new MouseEvent('mouseup', { clientX: 300, clientY: 400, bubbles: true }),
+  );
+  await wrapper.vm.$nextTick();
+
+  expect(wrapper.findComponent(GardenGuild).emitted('move')?.at(0)).toEqual([
+    {
+      ...guild,
+      path: [
+        { x: 8, y: 14 },
+        { x: 18, y: 14 },
+        { x: 18, y: 24 },
+      ],
+    },
+  ]);
+
+  clientToSvgUser.mockRestore();
+  wrapper.unmount();
 });

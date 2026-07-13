@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.22.1
+
+- [FIX] Aerial map wheel zoom keeps a stable anchor during trackpad bursts instead of following cursor movement
+- [FIX] Middle-mouse pan no longer jumps at the background edge or drifts after release; wheel zoom is suppressed during and briefly after panning (including rapid consecutive pans)
+- [FIX] Guild move and draw-box drags use pointer coordinates instead of stale scene cursor position
+
 ## 0.22.0
 
 - [FEATURE] Aerial map toolbar with separate **Select** (`V`), **Edit brush** (`B`), and **Move guild** (`M`) tools; brush and move are disabled until a guild is selected

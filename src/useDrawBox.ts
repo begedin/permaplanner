@@ -32,10 +32,10 @@ export const useDrawBox = (
   watch(
     mouseEventReceiver,
     () => {
+      controller.abort();
       controller = new AbortController();
 
       if (!mouseEventReceiver.value) {
-        controller.abort();
         return;
       }
 
@@ -77,7 +77,12 @@ export const useDrawBox = (
 
       stageElement.value?.addEventListener(
         'mouseleave',
-        () => (isDrawing.value = false),
+        ((e: MouseEvent) => {
+          if (e.buttons !== 0) {
+            return;
+          }
+          isDrawing.value = false;
+        }) as (e: Event) => void,
         { signal: controller.signal },
       );
     },
