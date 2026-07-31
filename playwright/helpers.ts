@@ -88,8 +88,8 @@ export const waitForMainApp = async (page: Page): Promise<void> => {
 
 /** Opens the top-bar plan menu (save, export, map tools on aerial). */
 export const openPlanSessionDrawer = async (page: Page): Promise<void> => {
-  await page.getByRole('button', { name: /^Plan and sync/ }).click();
-  await expect(page.getByRole('dialog', { name: 'Plan and sync' })).toBeVisible();
+  await page.getByRole('button', { name: /^Plan(?:, unsaved changes)?$/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Plan' })).toBeVisible();
 };
 
 export const registerAndReachImport = async (page: Page): Promise<void> => {
@@ -98,7 +98,7 @@ export const registerAndReachImport = async (page: Page): Promise<void> => {
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(E2E_PASSWORD);
   await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByText('Scan this in your authenticator')).toBeVisible();
+  await expect(page.getByText('Scan this QR code in your authenticator')).toBeVisible();
   const secret = (await page.locator('.font-mono').first().textContent())?.trim();
   if (!secret) {
     throw new Error('TOTP secret missing on registration screen');
@@ -119,28 +119,13 @@ export const setupAuthenticatedGarden = async (page: Page): Promise<void> => {
   await createEmptyGarden(page);
 };
 
-/** Register (if needed), create a garden, and land on the main app. */
-export const ensureAuthenticatedGarden = async (page: Page): Promise<void> => {
-  await page.goto('/guilds');
-  const url = page.url();
-  if (url.includes('/login') || url.includes('/register')) {
-    await setupAuthenticatedGarden(page);
-    return;
-  }
-  if (url.includes('/import')) {
-    await createEmptyGarden(page);
-    return;
-  }
-  await waitForMainApp(page);
-};
-
 /** @deprecated Use `setupAuthenticatedGarden` */
 export const createNewPlanThroughGate = async (page: Page): Promise<void> => {
   await setupAuthenticatedGarden(page);
 };
 
 export const onboard = async (page: Page): Promise<void> => {
-  await ensureAuthenticatedGarden(page);
+  await setupAuthenticatedGarden(page);
   if (!page.url().includes('/aerial')) {
     await page.getByRole('link', { name: 'Aerial' }).click();
   }

@@ -45,12 +45,12 @@ const renderApp = () =>
 it('opens the plan drawer from the top bar icon', async () => {
   renderApp();
 
-  expect(screen.queryByRole('dialog', { name: 'Plan and sync' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('dialog', { name: 'Plan' })).not.toBeInTheDocument();
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Plan and sync' }));
+  await fireEvent.click(screen.getByRole('button', { name: 'Plan' }));
 
   await waitFor(() => {
-    expect(screen.getByRole('dialog', { name: 'Plan and sync' })).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Plan' })).toBeVisible();
   });
 });
 
@@ -73,8 +73,6 @@ it('shows an unsaved dot on the plan menu button', async () => {
   renderApp();
 
   await waitFor(() => {
-    expect(
-      screen.getByRole('button', { name: 'Plan and sync, unsaved changes' }),
-    ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Plan, unsaved changes' })).toBeVisible();
   });
 });

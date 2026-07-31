@@ -1,4 +1,4 @@
-/** Current on-disk / GitHub plan document version (monolithic file and repo shards). */
+/** Current garden document version (server document and downloadable JSON). */
 export const PERMAPLANNER_FILE_VERSION = 5 as const;
 
 export type PermaplannerFileVersion = typeof PERMAPLANNER_FILE_VERSION | 1 | 2 | 3 | 4;

@@ -42,7 +42,7 @@ it('shows plan actions when open', async () => {
   renderDrawer({ open: true });
 
   await waitFor(() => {
-    expect(screen.getByRole('dialog', { name: 'Plan and sync' })).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Plan' })).toBeVisible();
     expect(screen.getByRole('link', { name: 'Import another garden' })).toBeVisible();
   });
 });

@@ -12,7 +12,13 @@ defmodule Permaplanner.Application do
     ]
 
     opts = [strategy: :one_for_one, name: Permaplanner.Supervisor]
-    Supervisor.start_link(children, opts)
+    {:ok, _pid} = result = Supervisor.start_link(children, opts)
+
+    if Application.get_env(:permaplanner, :sql_sandbox) do
+      Ecto.Adapters.SQL.Sandbox.mode(Permaplanner.Repo, :manual)
+    end
+
+    result
   end
 
   @impl true

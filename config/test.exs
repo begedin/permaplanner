@@ -9,10 +9,12 @@ config :permaplanner, Permaplanner.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2
 
+config :permaplanner, sql_sandbox: true
+
 config :permaplanner, PermaplannerWeb.Endpoint,
-  http: [ip: {127, 0, 0, 1}, port: 4002],
+  http: [ip: {127, 0, 0, 1}, port: String.to_integer(System.get_env("PORT") || "4002")],
   secret_key_base: "test_secret_key_base_for_conn_tests_only_must_be_at_least_64_bytes_long_xxxxxxxx",
-  server: false
+  server: System.get_env("PHX_SERVER") == "true"
 
 config :permaplanner,
   static_dir: Path.expand("../test/fixtures/static", __DIR__)

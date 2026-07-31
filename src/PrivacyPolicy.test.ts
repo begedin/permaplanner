@@ -27,7 +27,7 @@ it('renders the privacy statement and back link', async () => {
   await waitFor(() => {
     expect(screen.getByRole('heading', { name: 'Privacy', level: 1 })).toBeVisible();
     expect(
-      screen.getByText(/does not store your garden plans on our servers/i),
+      screen.getByText(/your garden plans .* are stored on the hosted service/i),
     ).toBeVisible();
   });
   expect(

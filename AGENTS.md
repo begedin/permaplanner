@@ -2,9 +2,9 @@
 
 ## Plan file format & migrations
 
-Persisted garden data uses a **`version`** field (local `.json` and GitHub `plans/<garden>/{config,plants,guilds}.json`).
+Persisted garden data uses a **`version`** field (Postgres garden `document` and downloadable / importable `.json`).
 
-**Before changing saved fields or JSON layout:** read [`.cursor/skills/data-format-migration/SKILL.md`](.cursor/skills/data-format-migration/SKILL.md) and follow it (bump `PERMAPLANNER_FILE_VERSION`, add a module under `src/migrations/`, register it in the matching `loaders.ts`, update push/pull and tests). Cursor auto-attaches [`.cursor/rules/data-format-migration.mdc`](.cursor/rules/data-format-migration.mdc) when you edit those paths.
+**Before changing saved fields or JSON layout:** read [`.cursor/skills/data-format-migration/SKILL.md`](.cursor/skills/data-format-migration/SKILL.md) and follow it (bump `PERMAPLANNER_FILE_VERSION`, add a module under `src/migrations/plan/`, register it in `loaders.ts`, update tests). Cursor auto-attaches [`.cursor/rules/data-format-migration.mdc`](.cursor/rules/data-format-migration.mdc) when you edit those paths.
 
 ## Postgres / Ecto migrations
 

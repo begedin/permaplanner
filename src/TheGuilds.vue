@@ -3,7 +3,7 @@
   import { LayoutGroup, motion } from 'motion-v';
   import { computed } from 'vue';
 
-  import GuildCard from './GuildCard.vue';
+  import GuildEditor from './GuildEditor.vue';
   import GuildTabHeader from './GuildTabHeader.vue';
   import ThingBarGuild from './ThingBarGuild.vue';
   import { useGardenStore } from './useGardenStore';
@@ -135,9 +135,8 @@
               v-if="selectedGuildId"
               class="flex flex-1 min-h-0 flex-col p-4 overflow-hidden"
             >
-              <GuildCard
+              <GuildEditor
                 :guild-id="selectedGuildId"
-                context="guilds"
                 class="flex-1 min-h-0"
               />
             </div>

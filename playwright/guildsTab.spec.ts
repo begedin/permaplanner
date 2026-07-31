@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
 import { createNewPlanThroughGate, openPlanSessionDrawer } from './helpers';
+import { expect, test } from './test';
 
 test.describe('guilds tab', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
@@ -22,6 +22,7 @@ test.describe('guilds tab', () => {
     await expect(guildDetails.getByRole('button', { name: 'Delete' })).toBeVisible();
 
     await guildDetails.locator('input').first().fill('Berry guild');
+    await guildDetails.locator('input').first().blur();
     await expect(guildList.getByRole('article', { name: 'Berry guild' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Deselect guild, Guilds' }).click();
@@ -33,7 +34,11 @@ test.describe('guilds tab', () => {
     await expect(guildList.getByRole('article', { name: 'Berry guild' })).toBeVisible();
 
     await openPlanSessionDrawer(page);
-    await expect(page.getByText('My garden', { exact: true })).toBeVisible();
+    await expect(
+      page
+        .getByRole('dialog', { name: 'Plan' })
+        .locator('strong', { hasText: 'My garden' }),
+    ).toBeVisible();
     await expect(page.getByLabel('Map scale')).toBeHidden();
   });
 });

@@ -23,7 +23,7 @@ There is no async query that returns `null`. **`queryBy*` is not a wait helper**
 
 ```ts
 await waitFor(() => {
-  expect(screen.getByRole('dialog', { name: 'Plan and sync' })).toBeVisible();
+  expect(screen.getByRole('dialog', { name: 'Plan' })).toBeVisible();
 });
 
 await waitFor(() => {
@@ -47,7 +47,7 @@ Use **`toBeVisible()`** when the user should see the element; **`toBeInTheDocume
 
 ```ts
 // Avoid — findBy already fails; expect adds nothing useful
-expect(await screen.findByRole('dialog', { name: 'Plan and sync' })).toBeVisible();
+expect(await screen.findByRole('dialog', { name: 'Plan' })).toBeVisible();
 ```
 
 **Clicks** — `findBy*` / `getBy*` directly on the interaction, no separate presence assertion on the same element:

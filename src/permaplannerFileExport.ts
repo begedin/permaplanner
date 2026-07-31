@@ -1,6 +1,5 @@
 import { splitGuildsForPersistence } from './guildPersistence';
 import { plantCatalog } from './plantCatalog';
-import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
 import { plantDisplayLabel, resolveUserPlant } from './resolvePlant';
 import type { GardenDocument } from './gardenDocument';
 
@@ -48,52 +47,6 @@ export const buildLocalPlanJsonText = (snapshot: GardenDocument): string => {
 
   const { guilds: _merged, ...rest } = normalized;
   return JSON.stringify({ ...rest, guilds, guildLocations }, null, 2);
-};
-
-export type GithubPlanShardExports = {
-  configJson: string;
-  plantsJson: string;
-  guildsJson: string;
-  /** Folder segment under `plans/` (used in download filenames). */
-  gardenFolderSegment: string;
-};
-
-export const buildGithubPlanShardExports = (
-  snapshot: GardenDocument,
-  options: { gardenFolderSegment: string; backgroundImagePath?: string },
-): GithubPlanShardExports => {
-  const normalized = withPersistedGuildPlantLabels(snapshot);
-  const configJson = JSON.stringify(
-    {
-      version: normalized.version,
-      syncRevision: normalized.syncRevision,
-      mapScale: normalized.mapScale,
-      backgroundOpacity: normalized.backgroundOpacity,
-      onboardingState: normalized.onboardingState,
-      ...(options.backgroundImagePath !== undefined
-        ? { backgroundImagePath: options.backgroundImagePath }
-        : {}),
-    },
-    null,
-    2,
-  );
-  const plantsJson = JSON.stringify(
-    { version: PERMAPLANNER_FILE_VERSION, plants: normalized.plants },
-    null,
-    2,
-  );
-  const { guilds, guildLocations } = splitGuildsForPersistence(normalized.guilds);
-  const guildsJson = JSON.stringify(
-    { version: PERMAPLANNER_FILE_VERSION, guilds, guildLocations },
-    null,
-    2,
-  );
-  return {
-    configJson,
-    plantsJson,
-    guildsJson,
-    gardenFolderSegment: options.gardenFolderSegment,
-  };
 };
 
 export const downloadTextAsFile = (

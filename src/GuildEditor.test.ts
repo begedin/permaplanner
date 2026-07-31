@@ -11,7 +11,7 @@ import {
   catalogPickForSpeciesCultivar,
   type CatalogPlantPick,
 } from './catalogPlantPick';
-import GuildCard from './GuildCard.vue';
+import GuildEditor from './GuildEditor.vue';
 import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
 import type { GardenThing, Guild } from './gardenTypes';
 import { plantCatalog } from './plantCatalog';
@@ -36,7 +36,7 @@ const basilGenovesePick = () =>
   )!;
 
 const setEditorPick = async (
-  wrapper: Awaited<ReturnType<typeof renderGuildCard>>,
+  wrapper: Awaited<ReturnType<typeof renderGuildEditor>>,
   pick: CatalogPlantPick,
 ) => {
   const combobox = wrapper.findComponent(PlantCatalogCombobox);
@@ -68,17 +68,10 @@ afterEach(() => {
   cleanup();
 });
 
-const renderGuildCard = async (
-  props: { guildId: string; context: 'guilds' | 'aerialSidebar'; fillCell?: boolean } = {
-    guildId: 'guild',
-    context: 'guilds',
-  },
-) => {
-  const router = await createAuthedTestRouter(
-    props.context === 'guilds' ? `/guilds/${props.guildId}` : `/aerial/${props.guildId}`,
-  );
-  const wrapper = mount(GuildCard, {
-    props,
+const renderGuildEditor = async (guildId = 'guild') => {
+  const router = await createAuthedTestRouter(`/guilds/${guildId}`);
+  const wrapper = mount(GuildEditor, {
+    props: { guildId },
     attachTo: document.body,
     global: { plugins: [router] },
   });
@@ -86,7 +79,7 @@ const renderGuildCard = async (
   return wrapper;
 };
 
-const card = (wrapper: Awaited<ReturnType<typeof renderGuildCard>>) =>
+const card = (wrapper: Awaited<ReturnType<typeof renderGuildEditor>>) =>
   within(wrapper.element as HTMLElement);
 
 const baseThing = (
@@ -100,51 +93,9 @@ const baseThing = (
   ...overrides,
 });
 
-it('shows plant icons on guild list badges without Latin in the label', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
-  store.guilds = [
-    {
-      ...testGuild,
-      name: 'Bed',
-      plants: [baseThing({ id: 'thing-a', plantId: 'plant' })],
-    },
-  ];
-
-  const wrapper = await renderGuildCard({ guildId: 'guild', context: 'aerialSidebar' });
-  const badges = card(wrapper).getByLabelText('Plants in this guild');
-
-  expect(badges.textContent).toContain('Comfrey');
-  expect(badges.textContent).not.toContain('Symphytum');
-  expect(badges.querySelector('use[href="#plant-icon-flower-spike"]')).toBeTruthy();
-});
-
-it('shows compact plant tags when the aerial card fills a grid cell', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
-  store.guilds = [
-    {
-      ...testGuild,
-      name: 'Bed',
-      plants: [baseThing({ id: 'thing-a', plantId: 'plant' })],
-    },
-  ];
-
-  const wrapper = await renderGuildCard({
-    guildId: 'guild',
-    context: 'aerialSidebar',
-    fillCell: true,
-  });
-
-  expect(card(wrapper).getByLabelText('Plants in this guild').textContent).toContain(
-    'Comfrey',
-  );
-  expect(card(wrapper).getByLabelText('Guild fruit and bloom by month')).toBeTruthy();
-});
-
 it('updates guild note from the note textarea', async () => {
   const store = useGardenStore();
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   const note = card(wrapper).getByRole('textbox', { name: 'Guild note' });
   fireEvent.update(note, 'Bed notes');
   fireEvent.blur(note);
@@ -154,7 +105,7 @@ it('updates guild note from the note textarea', async () => {
 it('clears guild note when the textarea is emptied', async () => {
   const store = useGardenStore();
   store.guilds[0] = { ...testGuild, note: 'Old note' };
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   const note = card(wrapper).getByRole('textbox', { name: 'Guild note' });
   fireEvent.update(note, '');
   fireEvent.blur(note);
@@ -164,7 +115,7 @@ it('clears guild note when the textarea is emptied', async () => {
 it('updates guild name from the name input', async () => {
   const store = useGardenStore();
   store.guilds[0]!.name = 'Old';
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   const name = card(wrapper).getByDisplayValue('Old');
   fireEvent.update(name, 'New');
   fireEvent.blur(name);
@@ -184,7 +135,7 @@ it('removes the last duplicate guild plant when remove-one is used', async () =>
     },
   ];
 
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   await fireEvent.click(
     card(wrapper).getByRole('button', { name: 'Remove one plant from bed' }),
   );
@@ -196,7 +147,7 @@ it('deletes the guild when confirmed', async () => {
   const store = useGardenStore();
   const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   card(wrapper).getByRole('button', { name: 'Delete' }).click();
 
   expect(confirm).toHaveBeenCalledWith(
@@ -211,7 +162,7 @@ it('keeps the guild when deletion is cancelled', async () => {
   vi.spyOn(window, 'confirm').mockReturnValue(false);
   const store = useGardenStore();
 
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   await fireEvent.click(card(wrapper).getByRole('button', { name: 'Delete' }));
 
   expect(store.guilds).toEqual([{ ...testGuild, plants: [] }]);
@@ -228,7 +179,7 @@ it('shows remove-all control when there is only one instance', async () => {
     },
   ];
 
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   expect(
     card(wrapper).queryByRole('button', { name: 'Remove one plant from bed' }),
   ).not.toBeInTheDocument();
@@ -251,7 +202,7 @@ it('removes the only instance when remove-all is used', async () => {
     },
   ];
 
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   await fireEvent.click(
     card(wrapper).getByRole('button', { name: 'Remove plant from bed' }),
   );
@@ -271,7 +222,7 @@ it('adds one instance when add-one is used on a single plant row', async () => {
     },
   ];
 
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   await fireEvent.click(
     card(wrapper).getByRole('button', { name: 'Add one plant to bed' }),
   );
@@ -281,7 +232,7 @@ it('adds one instance when add-one is used on a single plant row', async () => {
 });
 
 it('uses a warm card surface when the guild is not on the aerial map', async () => {
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   expect(card(wrapper).getByText('Not on aerial')).toBeVisible();
   expect(
     (wrapper.element as HTMLElement).classList.contains('paper-card-not-on-aerial'),
@@ -300,7 +251,7 @@ it('uses the default card surface when the guild is on the aerial map', async ()
     },
   ];
 
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   expect(card(wrapper).queryByText('Not on aerial')).not.toBeInTheDocument();
   expect(
     (wrapper.element as HTMLElement).classList.contains('paper-card-not-on-aerial'),
@@ -320,7 +271,7 @@ it('shows map size and an icon remove control when the guild is on the aerial ma
     },
   ];
 
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
 
   expect(
     (wrapper.element as HTMLElement).querySelector(
@@ -357,7 +308,7 @@ it('remove-one only affects the subgroup row that has duplicates', async () => {
     },
   ];
 
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   expect(
     card(wrapper).getAllByRole('button', { name: 'Remove one plant from bed' }),
   ).toHaveLength(1);
@@ -370,7 +321,7 @@ it('remove-one only affects the subgroup row that has duplicates', async () => {
 });
 
 it('hides the add-plant editor until Add plant is clicked', async () => {
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   expect(card(wrapper).queryByRole('combobox')).not.toBeInTheDocument();
   expect(
     card(wrapper).queryByRole('button', { name: 'Add to guild' }),
@@ -379,7 +330,7 @@ it('hides the add-plant editor until Add plant is clicked', async () => {
 
 it('adds the default catalog plant when Add to guild is clicked', async () => {
   const store = useGardenStore();
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   await fireEvent.click(
     card(wrapper).getByRole('button', { name: 'Add plant to guild' }),
   );
@@ -393,7 +344,7 @@ it('adds the default catalog plant when Add to guild is clicked', async () => {
 
 it('adds the selected plant when Enter is pressed in the editor', async () => {
   const store = useGardenStore();
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   await fireEvent.click(
     card(wrapper).getByRole('button', { name: 'Add plant to guild' }),
   );
@@ -412,7 +363,7 @@ it('opens the editor for an existing plant and updates it on confirm', async () 
   const thing = baseThing({ id: 'thing-a', plantId: 'plant' });
   store.guilds = [{ ...testGuild, name: 'Bed', plants: [thing] }];
 
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   await fireEvent.click(card(wrapper).getByRole('button', { name: 'Edit plant in bed' }));
   await nextTick();
 
@@ -445,7 +396,7 @@ it('opens the editor for an existing plant and updates it on confirm', async () 
 
 it('cancels add plant without changing the guild', async () => {
   const store = useGardenStore();
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   await fireEvent.click(
     card(wrapper).getByRole('button', { name: 'Add plant to guild' }),
   );
@@ -469,7 +420,7 @@ it('cancels edit plant without changing the guild', async () => {
     },
   ];
 
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   await fireEvent.click(card(wrapper).getByRole('button', { name: 'Edit plant in bed' }));
   await setEditorPick(wrapper, basilGenovesePick());
   await fireEvent.click(
@@ -495,7 +446,7 @@ it('expands a plant group to edit per-instance phase and condition', async () =>
     },
   ];
 
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   expect(card(wrapper).queryByLabelText('Phase')).not.toBeInTheDocument();
 
   await fireEvent.click(card(wrapper).getByRole('button', { name: /Expand Comfrey/ }));
@@ -536,7 +487,7 @@ it('shows average condition in the group header and ignores unset instances', as
     },
   ];
 
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   expect(card(wrapper).getByLabelText('Average condition: Healthy')).toBeVisible();
 });
 
@@ -552,7 +503,7 @@ it('shows a phase icon per instance in the group header, up to eight, then ellip
   );
   store.guilds = [{ ...testGuild, name: 'Bed', plants }];
 
-  const wrapper = await renderGuildCard();
+  const wrapper = await renderGuildEditor();
   expect(card(wrapper).getAllByRole('img', { name: /^Phase:/ })).toHaveLength(4);
   expect(card(wrapper).getByLabelText('More plants')).toBeVisible();
 });

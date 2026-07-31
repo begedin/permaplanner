@@ -31,7 +31,6 @@ defmodule PermaplannerWeb.Router do
     post "/auth/login", AuthController, :login
     post "/auth/logout", AuthController, :logout
     post "/auth/github", AuthController, :github
-    post "/github/oauth/access_token", GithubOAuthController, :create
   end
 
   scope "/api", PermaplannerWeb do

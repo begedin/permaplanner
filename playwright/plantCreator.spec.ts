@@ -1,10 +1,10 @@
-import { test, expect } from '@playwright/test';
 import { createNewPlanThroughGate } from './helpers';
+import { expect, test } from './test';
 
 test.describe('plant creator', () => {
   test('creates a plant', async ({ page }) => {
     await page.goto('/');
-    await createNewPlanThroughGate(page, 'new.json');
+    await createNewPlanThroughGate(page);
 
     await page.getByRole('link', { name: 'Plants' }).click();
 

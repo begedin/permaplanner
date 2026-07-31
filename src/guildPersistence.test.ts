@@ -6,7 +6,7 @@ import {
   splitGuildsForPersistence,
   splitGuildFieldsOnDocument,
 } from './guildPersistence';
-import { migrateGuildsShardRaw, migratePlanDocumentRaw } from './permaplannerFileMigrate';
+import { migratePlanDocumentRaw } from './permaplannerFileMigrate';
 import { buildLocalPlanJsonText } from './permaplannerFileExport';
 import type { GardenDocument } from './gardenDocument';
 import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
@@ -85,7 +85,7 @@ it('splitGuildsForPersistence omits unset phase and vigor', () => {
   ]);
 });
 
-it('mergeGuildsFromPersistence round-trips split shards', () => {
+it('mergeGuildsFromPersistence round-trips split guild fields', () => {
   const split = splitGuildsForPersistence([sampleGuild]);
   expect(mergeGuildsFromPersistence(split.guilds, split.guildLocations)).toEqual([
     sampleGuild,
@@ -113,7 +113,7 @@ it('mergeGuildsFromPersistence reads optional guild notes', () => {
   ]);
 });
 
-it('mergeGuildsFromPersistence drops empty notes from guild shards', () => {
+it('mergeGuildsFromPersistence drops empty notes from guild content', () => {
   const { guildLocations } = splitGuildsForPersistence([sampleGuild]);
   expect(
     mergeGuildsFromPersistence(
@@ -146,31 +146,6 @@ it('buildLocalPlanJsonText omits empty guild notes from saved JSON', () => {
     onboardingState: 'done',
   };
   expect(buildLocalPlanJsonText(snapshot)).not.toContain('"note"');
-});
-
-it('migrateGuildsShardRaw splits v2 merged guilds.json to v3', async () => {
-  const migrated = await migrateGuildsShardRaw({
-    version: 2,
-    guilds: [sampleGuild],
-  });
-  expect(migrated).toMatchObject({
-    version: PERMAPLANNER_FILE_VERSION,
-    guilds: [
-      {
-        id: 'g1',
-        name: 'Edge guild',
-        mulchLevel: 3,
-        plants: [{ id: 't1', name: 'Granny Smith', plantId: 'apple_granny_smith' }],
-      },
-    ],
-    guildLocations: [
-      {
-        id: 'g1',
-        path: [{ x: 10, y: 20 }],
-        plants: [{ id: 't1', x: 1, y: 2, width: 3, height: 4 }],
-      },
-    ],
-  });
 });
 
 it('migratePlanDocumentRaw splits guilds on monolithic v2 saves', async () => {

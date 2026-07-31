@@ -14,7 +14,7 @@ npm run install:toolchain
 
 On macOS this switches the asdf Erlang plugin to [prebuilt binaries](https://github.com/michallepicki/asdf-erlang-prebuilt-macos) and bootstraps Hex/Rebar for the Phoenix app.
 
-Secrets for local dev (GitHub OAuth) live in `.env.1password` — see [`.env.1password.example`](.env.1password.example).
+Secrets for local dev (when needed) live in `.env.1password` — see [`.env.1password.example`](.env.1password.example).
 
 ### Running locally
 
@@ -27,9 +27,7 @@ Secrets for local dev (GitHub OAuth) live in `.env.1password` — see [`.env.1pa
 
 **Use http://localhost:5173 for frontend work.** Vite serves the Vue app with HMR and proxies `/api` to Phoenix.
 
-**http://localhost:8080** is the Phoenix server directly. The OAuth token proxy (`POST /api/github/oauth/access_token`) works here. The UI is only served from a built `dist/` folder (no HMR), so it may be missing or stale unless you've run `npm run build-only`. For a full production-like stack on 8080, use `npm run start` instead.
-
-GitHub OAuth redirect URIs are origin-specific. Add `http://localhost:5173/import` (and production `/import`) for legacy GitHub import. The OAuth token proxy is `POST /api/github/oauth/access_token`.
+**http://localhost:8080** is the Phoenix server directly. The UI is only served from a built `dist/` folder (no HMR), so it may be missing or stale unless you've run `npm run build-only`. For a full production-like stack on 8080, use `npm run start` instead.
 
 ### Database (local)
 
@@ -54,11 +52,8 @@ See [`.cursor/skills/ecto-migrations/SKILL.md`](.cursor/skills/ecto-migrations/S
 npm run deploy:fly
 ```
 
-Build-time: `VITE_GITHUB_CLIENT_ID` (via `.env.fly` and 1Password).
-
 Runtime secrets on Fly:
 
-- `GITHUB_CLIENT_SECRET`
 - `SECRET_KEY_BASE` (64+ bytes): `fly secrets set SECRET_KEY_BASE="$(mix phx.gen.secret)"`
 - `DATABASE_URL` — set automatically by `fly postgres attach permaplanner-db -a permaplanner`
 

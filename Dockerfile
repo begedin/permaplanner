@@ -15,9 +15,6 @@ RUN npm ci --include=dev
 
 COPY --link . .
 
-ARG VITE_GITHUB_CLIENT_ID
-ENV VITE_GITHUB_CLIENT_ID=$VITE_GITHUB_CLIENT_ID
-
 RUN npm run build
 
 FROM ${ELIXIR_IMAGE} AS build

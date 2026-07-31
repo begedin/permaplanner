@@ -52,7 +52,7 @@
   const { hasUnsavedChanges } = storeToRefs(usePlanSaveCoordinator());
 
   const planMenuLabel = computed(() =>
-    hasUnsavedChanges.value ? 'Plan and sync, unsaved changes' : 'Plan and sync',
+    hasUnsavedChanges.value ? 'Plan, unsaved changes' : 'Plan',
   );
 </script>
 <template>

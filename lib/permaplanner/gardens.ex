@@ -126,7 +126,7 @@ defmodule Permaplanner.Gardens do
         "linePhysicalLength" => 1
       },
       "backgroundOpacity" => 0.4,
-      "onboardingState" => "done"
+      "onboardingState" => "initial"
     }
   end
 

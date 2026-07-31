@@ -167,7 +167,7 @@ const parseGuildLocationList = (raw: unknown): PersistedGuildLocation[] => {
   return out;
 };
 
-/** Merge v3 split guild shards (or monolithic fields) into in-memory `Guild[]`. */
+/** Merge v3 split guild fields (or monolithic fields) into in-memory `Guild[]`. */
 export const mergeGuildsFromPersistence = (
   guildsRaw: unknown,
   guildLocationsRaw: unknown,

@@ -1,15 +1,13 @@
-import { test, expect } from '@playwright/test';
 import {
   openPlanSessionDrawer,
   pasteAerialPhotoOntoMap,
   setupAuthenticatedGarden,
 } from './helpers';
+import { expect, test } from './test';
 
-test('onboards', async ({ browser }) => {
-  const context = await browser.newContext({
-    permissions: ['clipboard-read', 'clipboard-write'],
-  });
-  const page = await context.newPage();
+test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
+
+test('onboards', async ({ page }) => {
   await page.goto('/aerial');
 
   await setupAuthenticatedGarden(page);
@@ -58,7 +56,7 @@ test('onboards', async ({ browser }) => {
   await page.getByLabel('Map scale').fill('100');
   await page.keyboard.press('Escape');
 
-  await expect(page.getByRole('dialog', { name: 'Plan and sync' })).toBeHidden();
+  await expect(page.getByRole('dialog', { name: 'Plan' })).toBeHidden();
 
   await expect(page.locator('rect[fill="url(#grid)"]')).toBeVisible();
 

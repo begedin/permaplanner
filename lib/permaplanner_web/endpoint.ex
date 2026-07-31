@@ -1,6 +1,13 @@
 defmodule PermaplannerWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :permaplanner
 
+  if Application.compile_env(:permaplanner, :sql_sandbox) do
+    plug Phoenix.Ecto.SQL.Sandbox,
+      at: "/sandbox",
+      repo: Permaplanner.Repo,
+      header: "x-phoenix-ecto-sandbox"
+  end
+
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 

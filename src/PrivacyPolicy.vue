@@ -22,7 +22,7 @@
       >
         Privacy
       </h1>
-      <p class="mt-2 text-sm text-ink-500">Last updated: 31 May 2026</p>
+      <p class="mt-2 text-sm text-ink-500">Last updated: 31 July 2026</p>
     </header>
 
     <div class="space-y-8 text-sm leading-relaxed">
@@ -34,11 +34,25 @@
           Summary
         </h2>
         <p class="mt-2">
-          Permaplanner is a local-first garden planner. Your plan content (plants, guilds,
-          map layout, notes, and background images) is stored on your device and, if you
-          choose GitHub sync, in your private GitHub repository. The hosted app at
-          <strong>permaplanner.fly.dev</strong> does not store your garden plans on our
-          servers.
+          Permaplanner is a garden planner. When you sign in, your garden plans (plants,
+          guilds, map layout, notes, and background images) are stored on the hosted
+          service so you can reopen them across devices. You can also download and import
+          plan JSON files on your own device. The public app is at
+          <strong>permaplanner.fly.dev</strong>.
+        </p>
+      </section>
+
+      <section aria-labelledby="privacy-account">
+        <h2
+          id="privacy-account"
+          class="text-base font-semibold text-ink-900"
+        >
+          Account data
+        </h2>
+        <p class="mt-2">
+          If you create an account, we store your email address, password credentials
+          (hashed), and authenticator (TOTP) setup needed to sign you in securely. Session
+          cookies keep you signed in while you use the app.
         </p>
       </section>
 
@@ -57,43 +71,10 @@
           </li>
           <li>Onboarding progress in local storage.</li>
           <li>
-            If you use GitHub sync: your chosen repo name, sync metadata, and a GitHub
-            access token in session storage (cleared when you disconnect or close the
-            browser session, depending on your browser).
+            Plan JSON files you choose to download or import (these stay under your
+            control on your device).
           </li>
         </ul>
-        <p class="mt-2">
-          This data stays under your control on your device. We do not receive it when you
-          save locally.
-        </p>
-      </section>
-
-      <section aria-labelledby="privacy-github">
-        <h2
-          id="privacy-github"
-          class="text-base font-semibold text-ink-900"
-        >
-          GitHub sync (optional)
-        </h2>
-        <p class="mt-2">
-          If you connect GitHub, the app talks directly to GitHub’s API from your browser
-          to read and write plan files in a private repository on your account. GitHub
-          processes that data under
-          <a
-            class="underline decoration-parchment-400 underline-offset-2 hover:text-ink-900"
-            href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            GitHub’s privacy statement
-          </a>
-          . We do not copy your synced plans onto our servers.
-        </p>
-        <p class="mt-2">
-          Signing in uses GitHub OAuth. Our server forwards the authorization exchange to
-          GitHub and returns an access token to your browser. We do not persist that token
-          on our servers.
-        </p>
       </section>
 
       <section aria-labelledby="privacy-hosted">
@@ -103,22 +84,23 @@
         >
           What the hosted service processes
         </h2>
-        <p class="mt-2">
-          When you load the public app, our infrastructure may process a small amount of
-          technical data needed to deliver the site:
-        </p>
+        <p class="mt-2">When you use the public app, our infrastructure may process:</p>
         <ul class="mt-2 list-disc space-y-1 pl-5">
           <li>
             Static assets (HTML, JavaScript, CSS) served to your browser, including the
             plant catalog bundled with the app.
           </li>
           <li>
-            Standard web server and proxy logs (for example IP address, request URL, user
-            agent, and timestamps) for security and troubleshooting.
+            Your garden plan documents when you are signed in (saved to our database so
+            autosave and multi-device access work).
           </li>
           <li>
-            Transient OAuth token exchange requests when you connect GitHub (authorization
-            code forwarded to GitHub; token returned to your browser, not stored by us).
+            Optional share links you create for a garden (a public read-only page for that
+            plan until you revoke the link).
+          </li>
+          <li>
+            Standard web server and proxy logs (for example IP address, request URL, user
+            agent, and timestamps) for security and troubleshooting.
           </li>
         </ul>
         <p class="mt-2">
@@ -146,7 +128,8 @@
           </a>
           with primary compute in Amsterdam (<code class="text-xs">ams</code> region).
           Fly.io acts as a hosting provider (processor) when delivering the app and may
-          process the technical data described above.
+          process the technical data described above. Plan documents are stored in the
+          Fly-managed Postgres database attached to the app.
         </p>
       </section>
 
@@ -160,9 +143,9 @@
         <p class="mt-2">
           Where GDPR or UK GDPR applies, we rely on
           <strong>legitimate interests</strong> to operate and secure the hosted app
-          (serving static files, OAuth proxy, and infrastructure logs). If you use GitHub
-          sync, your relationship with GitHub for stored plan data is separate from this
-          hosted app.
+          (serving the app, storing signed-in garden data you create, and infrastructure
+          logs), and on <strong>contract</strong> / steps needed to provide the account
+          and save features you request when you register and use the service.
         </p>
       </section>
 
@@ -174,11 +157,10 @@
           Your rights
         </h2>
         <p class="mt-2">
-          Because we do not hold your garden plans on our servers, most plan data is
-          already under your control (local file or your GitHub repo). For personal data
-          processed when you use the hosted site (such as access logs), you may have
-          rights to access, rectify, erase, restrict, or object, and to lodge a complaint
-          with your supervisory authority.
+          For personal data and garden content we hold when you use a signed-in account,
+          you may have rights to access, rectify, erase, restrict, or object, and to lodge
+          a complaint with your supervisory authority. You can delete gardens from the app
+          and download a JSON copy of a plan before deleting it.
         </p>
         <p class="mt-2">
           To exercise these rights or ask questions, contact us via
@@ -202,9 +184,13 @@
           Retention
         </h2>
         <ul class="mt-2 list-disc space-y-1 pl-5">
-          <li>Plan content: retained on your device or GitHub until you delete it.</li>
           <li>
-            OAuth tokens in your browser: until you disconnect GitHub or clear site data.
+            Account and garden data: until you delete the garden or account, or ask us to
+            erase it.
+          </li>
+          <li>
+            Downloaded plan files on your device: under your control until you delete
+            them.
           </li>
           <li>
             Server and proxy logs: retained only as long as needed for security and

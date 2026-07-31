@@ -27,12 +27,14 @@ export default defineConfig({
     proxy: {
       '/api': phoenixDevUrl,
       '/share': phoenixDevUrl,
+      '/sandbox': phoenixDevUrl,
     },
   },
   preview: {
     proxy: {
       '/api': phoenixDevUrl,
       '/share': phoenixDevUrl,
+      '/sandbox': phoenixDevUrl,
     },
   },
   test: {

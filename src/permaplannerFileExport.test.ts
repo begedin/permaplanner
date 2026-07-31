@@ -1,9 +1,6 @@
 import { expect, it } from 'vitest';
 
-import {
-  buildGithubPlanShardExports,
-  buildLocalPlanJsonText,
-} from './permaplannerFileExport';
+import { buildLocalPlanJsonText } from './permaplannerFileExport';
 import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
 import type { GardenDocument } from './gardenDocument';
 
@@ -24,25 +21,6 @@ const sampleDoc: GardenDocument = {
 it('buildLocalPlanJsonText includes current version', () => {
   const parsed = JSON.parse(buildLocalPlanJsonText(sampleDoc)) as GardenDocument;
   expect(parsed).toMatchObject({ version: PERMAPLANNER_FILE_VERSION, syncRevision: 1 });
-});
-
-it('buildGithubPlanShardExports versions each shard file', () => {
-  const shards = buildGithubPlanShardExports(sampleDoc, {
-    gardenFolderSegment: 'garden',
-  });
-  expect(JSON.parse(shards.configJson)).toMatchObject({
-    version: PERMAPLANNER_FILE_VERSION,
-    onboardingState: 'done',
-  });
-  expect(JSON.parse(shards.plantsJson)).toMatchObject({
-    version: PERMAPLANNER_FILE_VERSION,
-    plants: [],
-  });
-  expect(JSON.parse(shards.guildsJson)).toMatchObject({
-    version: PERMAPLANNER_FILE_VERSION,
-    guilds: [],
-    guildLocations: [],
-  });
 });
 
 it('buildLocalPlanJsonText writes split guild fields', () => {
@@ -90,45 +68,4 @@ it('buildLocalPlanJsonText resolves guild plant names from plant records', () =>
     guilds: { plants: { name: string }[] }[];
   };
   expect(parsed.guilds[0]!.plants[0]!.name).toBe('Thai Basil');
-});
-
-it('buildGithubPlanShardExports resolves guild plant names from plant records', () => {
-  const snapshot: GardenDocument = {
-    ...sampleDoc,
-    plants: [
-      {
-        id: 'up-1',
-        speciesId: 'unknown',
-        cultivarId: null,
-        speciesOverride: { name: 'Lemon Balm' },
-      },
-    ],
-    guilds: [
-      {
-        id: 'g-1',
-        name: 'Tea guild',
-        path: [],
-        mulchLevel: 3,
-        plants: [
-          {
-            id: 'thing-1',
-            plantId: 'up-1',
-            nameOrCultivar: 'Plant',
-            x: 0,
-            y: 0,
-            width: 1,
-            height: 1,
-          },
-        ],
-      },
-    ],
-  };
-
-  const shards = buildGithubPlanShardExports(snapshot, {
-    gardenFolderSegment: 'tea-guild',
-  });
-  const guilds = JSON.parse(shards.guildsJson) as {
-    guilds: { plants: { name: string }[] }[];
-  };
-  expect(guilds.guilds[0]!.plants[0]!.name).toBe('Lemon Balm');
 });

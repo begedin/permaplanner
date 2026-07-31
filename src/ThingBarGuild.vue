@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import GuildCard from './GuildCard.vue';
+  import GuildListRow from './GuildListRow.vue';
 
   defineProps<{
     id: string;
@@ -8,9 +8,8 @@
 </script>
 
 <template>
-  <GuildCard
+  <GuildListRow
     :guild-id="id"
-    context="aerialSidebar"
     :fill-cell="fillCell"
   />
 </template>

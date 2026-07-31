@@ -47,7 +47,7 @@
         class="relative flex flex-col w-[min(100%,280px)] max-w-full h-full paper-surface shadow-parchment-lg overflow-y-auto"
         role="dialog"
         aria-modal="true"
-        aria-label="Plan and sync"
+        aria-label="Plan"
         @click.stop
       >
         <div
