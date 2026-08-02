@@ -82,4 +82,49 @@ test.describe('drawing features', () => {
       currentPoints ?? '',
     );
   });
+
+  test('moves a placed guild bed with the move tool', async ({ page }) => {
+    await page.goto('/aerial');
+    await onboard(page);
+
+    await page.getByRole('link', { name: 'Guilds' }).click();
+    await page.getByRole('button', { name: 'Add guild' }).click();
+    await page.getByRole('link', { name: 'Aerial' }).click();
+
+    await selectGuildAndEditBrush(page, 0);
+    await drawBrushStroke(page, [
+      { x: 400, y: 200 },
+      { x: 400, y: 400 },
+      { x: 410, y: 200 },
+      { x: 410, y: 400 },
+      { x: 420, y: 200 },
+      { x: 420, y: 400 },
+    ]);
+
+    const bed = bedPolygons(page);
+    await expect(bed).toHaveCount(1);
+    const pointsBefore = await bed.first().getAttribute('points');
+    expect(pointsBefore).toBeTruthy();
+
+    await page.getByRole('article', { name: 'New guild' }).first().click();
+    await page.getByRole('button', { name: 'Move guild (M)' }).click();
+    await expect(page.getByRole('button', { name: 'Move guild (M)' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    const box = await bed.first().boundingBox();
+    if (!box) {
+      throw new Error('Bed polygon has no bounding box');
+    }
+    const startX = box.x + box.width / 2;
+    const startY = box.y + box.height / 2;
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(startX + 80, startY + 60, { steps: 10 });
+    await page.mouse.up();
+
+    await expect(bed).toHaveCount(1);
+    await expect(bed.first()).not.toHaveAttribute('points', pointsBefore ?? '');
+  });
 });

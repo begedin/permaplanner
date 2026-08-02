@@ -2,7 +2,8 @@
   import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
   import GardenGuild from './GardenGuild.vue';
-  import { useGardenStore, type Guild } from './useGardenStore';
+  import type { PathPoint } from './guildPathClip';
+  import { useGardenStore } from './useGardenStore';
   import { useCameraStore } from './useCameraStore';
   import { useMapScaleStore } from './useMapScaleStore';
   import { useScene } from './useScene';
@@ -13,13 +14,13 @@
   import GuildTabHeader from './GuildTabHeader.vue';
   import OnboardingText from './OnboardingText.vue';
   import ThingBarGuild from './ThingBarGuild.vue';
+  import { useGuildHover } from './useGuildHover';
   import { useGuildSearch } from './useGuildSearch';
   import { useGuildListScroll } from './useGuildListScroll';
   import { useGuildSelection } from './useGuildSelection';
   import ReferenceLine from './ReferenceLine.vue';
   import { useOnboardingStore } from './useOnboardingStore';
   import { usePermaplannerStore } from './usePermaplannerStore';
-  import { usePlanCommandHistory } from './usePlanCommandHistory';
   import AerialMapToolbar from './AerialMapToolbar.vue';
   import { useAerialTool, useAerialToolHotkeys } from './useAerialTool';
 
@@ -134,7 +135,7 @@
   useScene(container, worldStage);
 
   const garden = useGardenStore();
-  const commandHistory = usePlanCommandHistory();
+  const { hoveredId, clearHover } = useGuildHover();
   const { selectedGuildId, selectGuild, clearSelection } = useGuildSelection();
   const { activeTool, setTool, resetTool } = useAerialTool();
   const { searchQuery, filteredGuilds, hasSearchQuery } = useGuildSearch();
@@ -183,39 +184,32 @@
     setTool,
   });
 
-  onMounted(() => {
-    document.addEventListener('keydown', (e): void => {
-      if (e.key === 'Delete' && selectedGuildId.value !== undefined) {
-        e.preventDefault();
-        e.stopPropagation();
-        const id = selectedGuildId.value;
-        garden.deleteFeature(id);
-        if (!garden.guilds.some((g) => g.id === id)) {
-          void clearSelection();
-        }
-      }
-    });
-  });
-
-  const updateGuild = (guild: Guild) => {
-    commandHistory.runMutation(() => {
-      const index = garden.guilds.findIndex((g) => g.id === guild.id);
-      if (index === -1) {
-        return;
-      }
-      garden.guilds[index] = guild;
-    });
-    void clearSelection();
+  const onDeleteKey = (e: KeyboardEvent): void => {
+    if (e.key !== 'Delete' || selectedGuildId.value === undefined) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    const id = selectedGuildId.value;
+    garden.removeGuild(id);
+    if (!garden.guilds.some((g) => g.id === id)) {
+      void clearSelection();
+    }
   };
 
-  const moveGuild = (guild: Guild) => {
-    commandHistory.runMutation(() => {
-      const index = garden.guilds.findIndex((g) => g.id === guild.id);
-      if (index === -1) {
-        return;
-      }
-      garden.guilds[index] = guild;
-    });
+  onMounted(() => {
+    document.addEventListener('keydown', onDeleteKey);
+  });
+
+  onBeforeUnmount(() => {
+    document.removeEventListener('keydown', onDeleteKey);
+  });
+
+  const commitGuildPath = (guildId: string, path: PathPoint[], deselect = false) => {
+    garden.setGuildPath(guildId, path);
+    if (deselect) {
+      void clearSelection();
+    }
   };
 </script>
 
@@ -345,16 +339,16 @@
             :key="guild.id"
             :selected="selectedGuildId === guild.id"
             :tool="selectedGuildId === guild.id ? activeTool : undefined"
-            :hovered="garden.hoveredId === guild.id"
+            :hovered="hoveredId === guild.id"
             :guild="guild"
             :unit-length-px="mapScale.unitLengthPx"
             @cancel="clearSelection"
             @click.exact="selectGuild(guild.id)"
             @click.shift="garden.removeGuildFromAerialMap(guild.id)"
-            @mouseenter="garden.hoveredId = guild.id"
-            @mouseleave="garden.hoveredId = undefined"
-            @move="moveGuild"
-            @update="updateGuild"
+            @mouseenter="hoveredId = guild.id"
+            @mouseleave="clearHover()"
+            @move="commitGuildPath(guild.id, $event)"
+            @update="commitGuildPath(guild.id, $event, true)"
           ></GardenGuild>
 
           <GardenGuild
@@ -364,7 +358,7 @@
             :tool="activeTool"
             hovered
             selected
-            @update="updateGuild"
+            @update="commitGuildPath(placementGuildDraft.id, $event, true)"
             @cancel="clearSelection"
           />
 

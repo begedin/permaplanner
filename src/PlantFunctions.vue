@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { computed } from 'vue';
-  import { GuildFunction } from './useGardenStore';
+  import { GuildFunction } from './gardenTypes';
 
   const props = withDefaults(defineProps<{ value: GuildFunction[] }>(), {
     value: () => [],

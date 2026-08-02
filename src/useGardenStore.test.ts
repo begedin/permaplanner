@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useGardenStore } from './useGardenStore';
+import { useGuildHover } from './useGuildHover';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
 import { nextTick } from 'vue';
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
+  useGuildHover().clearHover();
   vi.spyOn(window, 'confirm').mockReturnValue(true);
 });
 
@@ -13,7 +15,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-it('createGuild adds a guild and hovers it', async () => {
+it('createGuild adds a guild', async () => {
   const store = useGardenStore();
   expect(store.guilds).toEqual([]);
 
@@ -24,7 +26,6 @@ it('createGuild adds a guild and hovers it', async () => {
     { name: 'New guild', path: [], plants: [], mulchLevel: 1 },
   ]);
   expect(created.id).toEqual(store.guilds[0]!.id);
-  expect(store.hoveredId).toEqual(store.guilds[0]!.id);
 });
 
 it('removeGuild removes guild', () => {
@@ -55,29 +56,28 @@ it('removeGuild does nothing if guild not found', () => {
 it('removeGuild does nothing when deletion is not confirmed', () => {
   vi.spyOn(window, 'confirm').mockReturnValue(false);
   const store = useGardenStore();
+  const { hoveredId } = useGuildHover();
   store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 }];
-  store.hoveredId = 'guild';
+  hoveredId.value = 'guild';
 
   store.removeGuild('guild');
 
   expect(store.guilds).toEqual([
     { id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 },
   ]);
-  expect(store.hoveredId).toBe('guild');
+  expect(hoveredId.value).toBe('guild');
 });
 
-it('deleteFeature removes a guild only after confirmation', () => {
-  const confirm = vi.spyOn(window, 'confirm');
-  confirm.mockReturnValueOnce(false).mockReturnValueOnce(true);
+it('removeGuild clears hover for the deleted guild', () => {
   const store = useGardenStore();
+  const { hoveredId } = useGuildHover();
   store.guilds = [{ id: 'guild', path: [], name: 'Bed', plants: [], mulchLevel: 1 }];
+  hoveredId.value = 'guild';
 
-  store.deleteFeature('guild');
-  expect(store.guilds).toHaveLength(1);
+  store.removeGuild('guild');
 
-  store.deleteFeature('guild');
   expect(store.guilds).toEqual([]);
-  expect(confirm).toHaveBeenCalledWith('Delete guild “Bed”? This cannot be undone.');
+  expect(hoveredId.value).toBeUndefined();
 });
 
 it('removeGuildFromAerialMap clears path only', () => {
@@ -115,13 +115,21 @@ it('removeGuildFromAerialMap does nothing if guild not found', () => {
   expect(store.guilds[0]!.path).toEqual([{ x: 0, y: 0 }]);
 });
 
-it('deactivateAll unsets hovered id', () => {
+it('setGuildPath replaces the guild path', () => {
   const store = useGardenStore();
-  store.hoveredId = 'thing';
+  store.guilds = [
+    { id: 'g1', path: [{ x: 0, y: 0 }], name: 'Bed', plants: [], mulchLevel: 1 },
+  ];
 
-  store.deactivateAll();
+  store.setGuildPath('g1', [
+    { x: 1, y: 2 },
+    { x: 3, y: 4 },
+  ]);
 
-  expect(store.hoveredId).toBeUndefined();
+  expect(store.guilds[0]!.path).toEqual([
+    { x: 1, y: 2 },
+    { x: 3, y: 4 },
+  ]);
 });
 
 it('updateGuildName and updateGuildNote mutate guild fields', () => {

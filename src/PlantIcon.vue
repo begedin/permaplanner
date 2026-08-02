@@ -2,7 +2,7 @@
   import { computed } from 'vue';
 
   import IconSquare from './icons/IconSquare.vue';
-  import type { Plant } from './useGardenStore';
+  import type { Plant } from './gardenTypes';
 
   defineOptions({ inheritAttrs: false });
 

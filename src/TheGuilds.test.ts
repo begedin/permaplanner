@@ -8,11 +8,13 @@ import TheGuilds from './TheGuilds.vue';
 import { createAuthedTestRouter } from './testing/authedTestSession';
 import { routeNames, routeParam } from './router';
 import { useGardenStore } from './useGardenStore';
+import { useGuildHover } from './useGuildHover';
 import { resetGuildSearch } from './useGuildSearch';
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
   resetGuildSearch();
+  useGuildHover().clearHover();
   Element.prototype.scrollIntoView = vi.fn();
 });
 
@@ -90,7 +92,8 @@ it('selects a guild from the list and shows full details', async () => {
 });
 
 it('deselects when the page title is clicked', async () => {
-  const { router, store } = await seedGuilds('/guilds/a');
+  const { router } = await seedGuilds('/guilds/a');
+  const { hoveredId } = useGuildHover();
   render(TheGuilds, { global: { plugins: [router] } });
 
   await fireEvent.click(
@@ -101,7 +104,7 @@ it('deselects when the page title is clicked', async () => {
 
   expect(router.currentRoute.value.name).toBe(routeNames.guilds);
   expect(routeParam(router.currentRoute.value.params, 'guildId')).toBeUndefined();
-  expect(store.hoveredId).toBeUndefined();
+  expect(hoveredId.value).toBeUndefined();
   await waitFor(() => {
     expect(screen.getByRole('heading', { name: 'Guilds', level: 1 })).toBeVisible();
   });

@@ -13,7 +13,7 @@
     GuildLayer,
     PlantOverrideFields,
     UserPlant,
-  } from './useGardenStore';
+  } from './gardenTypes';
   import { plantCatalog } from './plantCatalog';
   import { resolveUserPlant } from './resolvePlant';
   import { PLANT_ICON_OPTIONS } from './plantIconOptions';

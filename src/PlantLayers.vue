@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { computed } from 'vue';
-  import { GuildLayer } from './useGardenStore';
+  import { GuildLayer } from './gardenTypes';
 
   const props = withDefaults(defineProps<{ value: GuildLayer[] }>(), {
     value: () => [] as GuildLayer[],

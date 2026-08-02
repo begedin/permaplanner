@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.22.2
+
+- [REFACTOR] Split the guild card into `GuildEditor`, list row, season strip, and `useGuildCardModel`; removed leftover GitHub OAuth/sync and shard migration paths
+- [REFACTOR] Garden store is mutations-only over the plan document; aerial hover UI lives in `useGuildHover`
+- [REFACTOR] Aerial brush edit and guild move extracted from `GardenGuild` into dedicated path helpers
+- [TWEAK] Playwright e2e covers moving a placed guild bed with the Move tool
+
 ## 0.22.1
 
 - [FIX] Aerial map wheel zoom keeps a stable anchor during trackpad bursts instead of following cursor movement

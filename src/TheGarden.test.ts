@@ -9,6 +9,7 @@ import TheGarden from './TheGarden.vue';
 import { createAuthedTestRouter } from './testing/authedTestSession';
 import { routeNames, routeParam } from './router';
 import { useGardenStore } from './useGardenStore';
+import { useGuildHover } from './useGuildHover';
 import GardenGuild from './GardenGuild.vue';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { useSceneStore } from './useSceneStore';
@@ -25,6 +26,7 @@ beforeAll(() => {
 beforeEach(() => {
   setActivePinia(createTestingPinia({ stubActions: false, createSpy: vi.fn }));
   resetGuildSearch();
+  useGuildHover().clearHover();
   vi.spyOn(window, 'confirm').mockReturnValue(true);
   Element.prototype.scrollIntoView = vi.fn();
   const store = usePermaplannerStore();
@@ -234,10 +236,11 @@ it('scrolls the sidebar to a guild selected on the aerial map', async () => {
 
 it('deselects when placement is cancelled', async () => {
   const store = useGardenStore();
+  const { hoveredId } = useGuildHover();
   store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 }];
   const { router } = await renderGarden('/aerial/guild');
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
-  store.hoveredId = 'guild';
+  hoveredId.value = 'guild';
   await wrapper.vm.$nextTick();
   const guildComponents = wrapper.findAllComponents(GardenGuild);
   const placement = guildComponents.find((c) => c.props('guild')?.id === 'guild');
@@ -246,7 +249,7 @@ it('deselects when placement is cancelled', async () => {
   await router.isReady();
   expect(router.currentRoute.value.name).toBe(routeNames.aerial);
   expect(routeParam(router.currentRoute.value.params, 'guildId')).toBeUndefined();
-  expect(store.hoveredId).toBeUndefined();
+  expect(hoveredId.value).toBeUndefined();
 });
 
 it('shows map tools in the top-right of the aerial map', async () => {

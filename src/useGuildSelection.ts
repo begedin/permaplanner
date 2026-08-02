@@ -3,11 +3,13 @@ import { useRoute, useRouter } from 'vue-router';
 
 import { isAerialRoute, isGuildsRoute, routeNames, routeParam } from './router';
 import { useGardenStore } from './useGardenStore';
+import { useGuildHover } from './useGuildHover';
 
 export const useGuildSelection = () => {
   const route = useRoute();
   const router = useRouter();
   const garden = useGardenStore();
+  const { hoveredId, clearHover } = useGuildHover();
 
   const rawGuildId = computed(() => routeParam(route.params, 'guildId'));
 
@@ -23,7 +25,7 @@ export const useGuildSelection = () => {
     if (!garden.guilds.some((g) => g.id === id)) {
       return;
     }
-    garden.hoveredId = id;
+    hoveredId.value = id;
     if (isGuildsRoute(route.name)) {
       if (routeParam(route.params, 'guildId') === id) {
         return;
@@ -40,7 +42,7 @@ export const useGuildSelection = () => {
   };
 
   const clearSelection = async () => {
-    garden.hoveredId = undefined;
+    clearHover();
     if (isGuildsRoute(route.name) && rawGuildId.value) {
       await router.replace({ name: routeNames.guilds });
       return;
@@ -52,6 +54,7 @@ export const useGuildSelection = () => {
 
   const addGuild = async () => {
     const guild = garden.createGuild();
+    hoveredId.value = guild.id;
     await router.push({ name: routeNames.guildsDetail, params: { guildId: guild.id } });
   };
 

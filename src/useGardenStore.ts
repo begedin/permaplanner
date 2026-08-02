@@ -1,5 +1,5 @@
 import { defineStore, storeToRefs } from 'pinia';
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { uuid } from './utils';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import type { Guild, MulchLevel, Plant } from './gardenTypes';
@@ -7,10 +7,10 @@ import type { GrowthPhase, PlantVigor } from './guildPlantInstanceStatus';
 import { plantCatalog } from './plantCatalog';
 import { confirmGuildDeletion } from './confirmGuildDeletion';
 import { pathBounds } from './guildPathBounds';
+import type { PathPoint } from './guildPathClip';
 import { plantDisplayLabel, resolveUserPlant } from './resolvePlant';
+import { useGuildHover } from './useGuildHover';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
-
-export * from './gardenTypes';
 
 const FALLBACK_PLANT: Plant = {
   id: '__fallback__',
@@ -36,6 +36,7 @@ export const useGardenStore = defineStore('garden', () => {
   const permaplanner = usePermaplannerStore();
   const { plants, guilds } = storeToRefs(permaplanner);
   const commandHistory = usePlanCommandHistory();
+  const { clearHoverIf } = useGuildHover();
 
   const plantsById = computed(() => {
     const m: Record<string, Plant> = {};
@@ -55,36 +56,9 @@ export const useGardenStore = defineStore('garden', () => {
     ),
   );
 
-  const hoveredId = ref<string>();
-
-  const deactivateAll = () => {
-    hoveredId.value = undefined;
-  };
-
   const removeGuildWithoutConfirm = (id: string) => {
     guilds.value = guilds.value.filter((g) => g.id !== id);
-    if (hoveredId.value === id) {
-      hoveredId.value = undefined;
-    }
-  };
-
-  const deleteFeature = (id: string) => {
-    if (guilds.value.some((g) => g.id === id)) {
-      const guild = guilds.value.find((g) => g.id === id);
-      if (!guild || !confirmGuildDeletion(guild.name)) {
-        return;
-      }
-      commandHistory.runMutation(() => removeGuildWithoutConfirm(id));
-      return;
-    }
-
-    commandHistory.runMutation(() => {
-      const guildByPlantId = guilds.value.find((g) => g.plants.some((p) => p.id === id));
-
-      if (guildByPlantId) {
-        guildByPlantId.plants = guildByPlantId.plants.filter((p) => p.id !== id);
-      }
-    });
+    clearHoverIf(id);
   };
 
   const createGuild = (): Guild => {
@@ -98,7 +72,6 @@ export const useGardenStore = defineStore('garden', () => {
         mulchLevel: 1,
       };
       guilds.value.push(created);
-      hoveredId.value = created.id;
     });
     return created;
   };
@@ -118,6 +91,16 @@ export const useGardenStore = defineStore('garden', () => {
       if (g) {
         g.path = [];
       }
+    });
+  };
+
+  const setGuildPath = (guildId: string, path: PathPoint[]) => {
+    commandHistory.runMutation(() => {
+      const guild = guilds.value.find((g) => g.id === guildId);
+      if (!guild) {
+        return;
+      }
+      guild.path = path;
     });
   };
 
@@ -287,15 +270,11 @@ export const useGardenStore = defineStore('garden', () => {
     plants,
     plantsById,
     resolvedPlant,
-    deleteFeature,
-
-    deactivateAll,
-    hoveredId,
-
     guilds,
 
     removeGuild,
     removeGuildFromAerialMap,
+    setGuildPath,
     createGuild,
 
     addPlantToGuild,

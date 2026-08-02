@@ -45,26 +45,20 @@ it('draws a bed', async () => {
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
 
   expect(wrapper.emitted('update')?.at(0)).toEqual([
-    {
-      id: 'guild',
-      name: 'A guild',
-      plants: [],
-      mulchLevel: 1,
-      path: [
-        { x: 12, y: 0 },
-        { x: 9.70820393249937, y: 7.053423027509678 },
-        { x: 3.7082039324993694, y: 11.412678195541842 },
-        { x: -3.708203932499368, y: 11.412678195541844 },
-        { x: -7.053423027509677, y: 9.70820393249937 },
-        { x: -11.412678195541842, y: 3.7082039324993703 },
-        { x: -11.412678195541844, y: -3.7082039324993676 },
-        { x: -9.70820393249937, y: -7.053423027509677 },
-        { x: -3.7082039324993707, y: -11.412678195541842 },
-        { x: 3.7082039324993668, y: -11.412678195541844 },
-        { x: 9.708203932499368, y: -7.05342302750968 },
-        { x: 11.412678195541842, y: -3.708203932499371 },
-      ],
-    },
+    [
+      { x: 12, y: 0 },
+      { x: 9.70820393249937, y: 7.053423027509678 },
+      { x: 3.7082039324993694, y: 11.412678195541842 },
+      { x: -3.708203932499368, y: 11.412678195541844 },
+      { x: -7.053423027509677, y: 9.70820393249937 },
+      { x: -11.412678195541842, y: 3.7082039324993703 },
+      { x: -11.412678195541844, y: -3.7082039324993676 },
+      { x: -9.70820393249937, y: -7.053423027509677 },
+      { x: -3.7082039324993707, y: -11.412678195541842 },
+      { x: 3.7082039324993668, y: -11.412678195541844 },
+      { x: 9.708203932499368, y: -7.05342302750968 },
+      { x: 11.412678195541842, y: -3.708203932499371 },
+    ],
   ]);
 });
 
@@ -247,14 +241,11 @@ it('moves a placed guild', async () => {
   await wrapper.vm.$nextTick();
 
   expect(wrapper.emitted('move')?.at(0)).toEqual([
-    {
-      ...guild,
-      path: [
-        { x: 5, y: 7 },
-        { x: 15, y: 7 },
-        { x: 15, y: 17 },
-      ],
-    },
+    [
+      { x: 5, y: 7 },
+      { x: 15, y: 7 },
+      { x: 15, y: 17 },
+    ],
   ]);
 });
 
@@ -318,14 +309,11 @@ it('moves a placed guild from the mousedown position when scene coordinates are 
 
   expect(clientToSvgUser).toHaveBeenCalled();
   expect(wrapper.findComponent(GardenGuild).emitted('move')?.at(0)).toEqual([
-    {
-      ...guild,
-      path: [
-        { x: 5, y: 7 },
-        { x: 15, y: 7 },
-        { x: 15, y: 17 },
-      ],
-    },
+    [
+      { x: 5, y: 7 },
+      { x: 15, y: 7 },
+      { x: 15, y: 17 },
+    ],
   ]);
 
   clientToSvgUser.mockRestore();
@@ -381,14 +369,11 @@ it('commits the release position on mouseup when the last mousemove is skipped',
   await wrapper.vm.$nextTick();
 
   expect(wrapper.findComponent(GardenGuild).emitted('move')?.at(0)).toEqual([
-    {
-      ...guild,
-      path: [
-        { x: 8, y: 14 },
-        { x: 18, y: 14 },
-        { x: 18, y: 24 },
-      ],
-    },
+    [
+      { x: 8, y: 14 },
+      { x: 18, y: 14 },
+      { x: 18, y: 24 },
+    ],
   ]);
 
   clientToSvgUser.mockRestore();
