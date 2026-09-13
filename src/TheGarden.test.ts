@@ -324,3 +324,68 @@ it('does not edit a bed while the select tool is active', async () => {
 
   expect(store.guilds.find((g) => g.id === 'guild')?.path).toEqual(bed.path);
 });
+
+it('uses an aerial guild click as the merge target, including cancellation', async () => {
+  const store = useGardenStore();
+  const path = [
+    { x: 0, y: 0 },
+    { x: 100, y: 0 },
+    { x: 100, y: 100 },
+    { x: 0, y: 100 },
+  ];
+  store.guilds = [
+    { id: 'a', name: 'A', mulchLevel: 1, plants: [], path },
+    {
+      id: 'b',
+      name: 'B',
+      mulchLevel: 1,
+      plants: [],
+      path: path.map(({ x, y }) => ({ x: x + 200, y })),
+    },
+  ];
+  const router = await createAuthedTestRouter('/aerial');
+  const wrapper = mount(TheGarden, { global: { plugins: [router] } });
+  await flushPromises();
+  await wrapper.get('[data-guild-id="a"] button[aria-pressed]').trigger('click');
+  const target = wrapper
+    .findAllComponents(GardenGuild)
+    .find((c) => c.props('guild').id === 'b');
+  if (!target) throw new Error('Expected aerial target guild');
+  vi.mocked(window.confirm).mockReturnValue(false);
+  await target.get('polygon.pointer-events-fill').trigger('click');
+  await flushPromises();
+  expect(window.confirm).toHaveBeenCalledWith(
+    expect.stringContaining('Merge “A” with “B”?'),
+  );
+  expect(store.guilds).toMatchObject([{ id: 'a' }, { id: 'b' }]);
+  expect(store.mergeSourceId).toBe('a');
+  expect(router.currentRoute.value.name).toBe(routeNames.aerial);
+
+  vi.mocked(window.confirm).mockReturnValue(true);
+  await target.get('polygon.pointer-events-fill').trigger('click');
+  await flushPromises();
+  expect(store.guilds).toMatchObject([{ id: 'a', name: 'A + B' }]);
+  expect(store.mergeSourceId).toBeUndefined();
+  expect(router.currentRoute.value).toMatchObject({
+    name: routeNames.aerialDetail,
+    params: { guildId: 'a' },
+  });
+  wrapper.unmount();
+});
+
+it('shows the merge cursor and cancels with Escape while focus is outside a guild', async () => {
+  const store = useGardenStore();
+  store.guilds = [{ id: 'a', name: 'A', mulchLevel: 1, plants: [], path: [] }];
+  const { view } = await renderGarden();
+  await fireEvent.click(screen.getByRole('button', { name: 'Merge with' }));
+  expect(view.container.querySelector('.guild-merge-mode')).toBeInTheDocument();
+  await fireEvent.keyDown(window, { key: 'Escape' });
+  await waitFor(() => {
+    expect(view.container.querySelector('.guild-merge-mode')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Cancel merge' }),
+    ).not.toBeInTheDocument();
+  });
+  expect(store.guilds).toMatchObject([{ id: 'a', name: 'A' }]);
+  expect(window.confirm).not.toHaveBeenCalled();
+});

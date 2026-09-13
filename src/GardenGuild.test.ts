@@ -1,4 +1,6 @@
 import { mount } from '@vue/test-utils';
+import { reactive, nextTick } from 'vue';
+import { joinPaths } from './guildPathClip';
 import { beforeEach, expect, it, vi } from 'vitest';
 import GardenGuild from './GardenGuild.vue';
 import { setActivePinia } from 'pinia';
@@ -377,5 +379,33 @@ it('commits the release position on mouseup when the last mousemove is skipped',
   ]);
 
   clientToSvgUser.mockRestore();
+  wrapper.unmount();
+});
+
+it('updates a merged area and outlines only its boundaries', async () => {
+  const first = [
+    { x: 0, y: 0 },
+    { x: 10, y: 0 },
+    { x: 10, y: 10 },
+    { x: 0, y: 10 },
+  ];
+  const second = first.map(({ x, y }) => ({ x: x + 20, y }));
+  const guild = reactive({
+    id: 'guild',
+    path: first,
+    plants: [],
+    name: 'A',
+    mulchLevel: 1 as const,
+  });
+  const wrapper = mount(GardenGuild, {
+    props: { guild, unitLengthPx: 5, hovered: false, selected: false },
+  });
+  guild.path = joinPaths(first, second);
+  await nextTick();
+  expect(wrapper.get('polygon').attributes('points')).toContain('30,10');
+  const outline = wrapper.get('path').attributes('d');
+  expect(outline).toContain('M 20,0 L 30,0');
+  expect(outline).not.toContain('M 0,0 L 20,0');
+  expect(outline).not.toContain('M 20,0 L 0,0');
   wrapper.unmount();
 });

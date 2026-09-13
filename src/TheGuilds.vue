@@ -6,6 +6,7 @@
   import GuildEditor from './GuildEditor.vue';
   import GuildTabHeader from './GuildTabHeader.vue';
   import ThingBarGuild from './ThingBarGuild.vue';
+  import { useGuildMergeMode } from './useGuildMergeMode';
   import { useGardenStore } from './useGardenStore';
   import { useGuildSearch } from './useGuildSearch';
   import { useGuildListScroll } from './useGuildListScroll';
@@ -22,6 +23,7 @@
   } as const;
 
   const garden = useGardenStore();
+  const { isMerging } = useGuildMergeMode();
   const { selectedGuildId } = useGuildSelection();
   const { searchQuery, filteredGuilds, hasSearchQuery } = useGuildSearch();
 
@@ -50,7 +52,10 @@
 </script>
 
 <template>
-  <div class="flex flex-col h-full min-h-0 bg-parchment-100/50">
+  <div
+    class="flex flex-col h-full min-h-0 bg-parchment-100/50"
+    :class="{ 'guild-merge-mode': isMerging }"
+  >
     <GuildTabHeader
       v-model:search-query="searchQuery"
       title="Guilds"

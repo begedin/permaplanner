@@ -1,4 +1,11 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/vue';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
 import { setActivePinia } from 'pinia';
@@ -18,7 +25,10 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn();
 });
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 const seedGuilds = async (initialPath = '/guilds') => {
   const router = await createAuthedTestRouter(initialPath);
@@ -209,4 +219,62 @@ it('add guild navigates with the new guild in the route', async () => {
   await waitFor(() => {
     expect(screen.getByRole('button', { name: 'Delete' })).toBeVisible();
   });
+});
+
+it('selects a merge source, confirms the target, and opens the merged guild', async () => {
+  const { router, store } = await seedGuilds();
+  const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+  render(TheGuilds, { global: { plugins: [router] } });
+  await fireEvent.click(
+    within(screen.getByRole('article', { name: 'Alpha guild' })).getByRole('button', {
+      name: 'Merge with',
+    }),
+  );
+  await waitFor(() => {
+    expect(screen.getByRole('button', { name: 'Cancel merge' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('article', { name: 'Alpha guild' })).toHaveClass('ring-2');
+    expect(screen.getByRole('status')).toHaveTextContent('Select another guild');
+  });
+  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBeUndefined();
+  await fireEvent.click(screen.getByRole('article', { name: 'Alpha guild' }));
+  expect(confirm).not.toHaveBeenCalled();
+  await fireEvent.click(screen.getByRole('article', { name: 'Beta guild' }));
+  expect(confirm).toHaveBeenCalledWith(
+    expect.stringContaining('Merge “Alpha guild” with “Beta guild”?'),
+  );
+  expect(store.guilds).toMatchObject([{ id: 'a' }, { id: 'b' }]);
+  confirm.mockReturnValue(true);
+  await fireEvent.keyDown(screen.getByRole('article', { name: 'Beta guild' }), {
+    key: 'Enter',
+  });
+  await waitFor(() => {
+    expect(
+      screen.getByRole('article', { name: 'Alpha guild + Beta guild' }),
+    ).toBeVisible();
+    expect(screen.queryByRole('article', { name: 'Beta guild' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Cancel merge' }),
+    ).not.toBeInTheDocument();
+  });
+  await flushPromises();
+  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe('a');
+});
+
+it('cancels merge selection without modifying either guild', async () => {
+  const { router, store } = await seedGuilds();
+  render(TheGuilds, { global: { plugins: [router] } });
+  const source = screen.getByRole('article', { name: 'Alpha guild' });
+  await fireEvent.click(within(source).getByRole('button', { name: 'Merge with' }));
+  await fireEvent.click(screen.getByRole('button', { name: 'Cancel merge' }));
+  await fireEvent.click(within(source).getByRole('button', { name: 'Merge with' }));
+  await fireEvent.keyDown(window, { key: 'Escape' });
+  await waitFor(() =>
+    expect(
+      screen.queryByRole('button', { name: 'Cancel merge' }),
+    ).not.toBeInTheDocument(),
+  );
+  expect(store.guilds).toMatchObject([{ id: 'a' }, { id: 'b' }]);
 });

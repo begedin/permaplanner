@@ -3,6 +3,7 @@
 
   import GardenGuild from './GardenGuild.vue';
   import type { PathPoint } from './guildPathClip';
+  import { useGuildMergeMode } from './useGuildMergeMode';
   import { useGardenStore } from './useGardenStore';
   import { useCameraStore } from './useCameraStore';
   import { useMapScaleStore } from './useMapScaleStore';
@@ -135,6 +136,7 @@
   useScene(container, worldStage);
 
   const garden = useGardenStore();
+  const { isMerging } = useGuildMergeMode();
   const { hoveredId, clearHover } = useGuildHover();
   const { selectedGuildId, selectGuild, clearSelection } = useGuildSelection();
   const { activeTool, setTool, resetTool } = useAerialTool();
@@ -214,7 +216,10 @@
 </script>
 
 <template>
-  <div class="flex flex-col h-full min-h-0 bg-parchment-100/50">
+  <div
+    class="flex flex-col h-full min-h-0 bg-parchment-100/50"
+    :class="{ 'guild-merge-mode': isMerging }"
+  >
     <GuildTabHeader
       v-model:search-query="searchQuery"
       title="Aerial"

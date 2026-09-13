@@ -22,8 +22,21 @@ export const useGuildSelection = () => {
   });
 
   const selectGuild = async (id: string) => {
-    if (!garden.guilds.some((g) => g.id === id)) {
+    const target = garden.guilds.find((g) => g.id === id);
+    if (!target) {
       return;
+    }
+    const source = garden.guilds.find((g) => g.id === garden.mergeSourceId);
+    if (source) {
+      if (
+        source.id === id ||
+        !window.confirm(
+          `Merge “${source.name}” with “${target.name}”? Their areas, plants, names, and notes will be combined. You can undo this merge.`,
+        )
+      )
+        return;
+      if (!garden.mergeGuilds(source.id, id)) return;
+      id = source.id;
     }
     hoveredId.value = id;
     if (isGuildsRoute(route.name)) {

@@ -5,6 +5,7 @@
   import GuildSeasonStrip from './GuildSeasonStrip.vue';
   import PlantIcon from './PlantIcon.vue';
   import UiIcon from './uiIcons/UiIcon.vue';
+  import { useGardenStore } from './useGardenStore';
   import { useGuildCardModel } from './useGuildCardModel';
   import { useGuildSearch } from './useGuildSearch';
   import { useGuildSelection } from './useGuildSelection';
@@ -15,6 +16,7 @@
     fillCell?: boolean;
   }>();
 
+  const garden = useGardenStore();
   const { selectedGuildId, selectGuild } = useGuildSelection();
   const { searchQuery } = useGuildSearch();
   const {
@@ -32,9 +34,10 @@
   };
 
   const onAerialListKeydown = (e: KeyboardEvent) => {
+    if (e.target !== e.currentTarget) return;
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      void selectGuild(props.guildId);
+      onAerialListClick();
     }
   };
 </script>
@@ -45,6 +48,7 @@
     :class="{
       'h-full min-h-0': fillCell,
       'paper-card-selected': selectedGuildId === guildId,
+      'ring-2 ring-amber-600': garden.mergeSourceId === guildId,
       'paper-card-not-on-aerial': !placedOnMap,
     }"
     :aria-label="guild.name"
@@ -114,6 +118,24 @@
         No plants
       </span>
     </div>
+
+    <button
+      type="button"
+      class="btn-soft-muted btn-soft-sm text-xs px-2 py-1"
+      :aria-pressed="garden.mergeSourceId === guildId"
+      @click.stop="
+        garden.mergeSourceId = garden.mergeSourceId === guildId ? undefined : guildId
+      "
+    >
+      {{ garden.mergeSourceId === guildId ? 'Cancel merge' : 'Merge with' }}
+    </button>
+    <p
+      v-if="garden.mergeSourceId === guildId"
+      class="text-xs text-ink-600"
+      role="status"
+    >
+      Select another guild to merge with.
+    </p>
 
     <GuildSeasonStrip
       :class="{ 'mt-auto': fillCell }"

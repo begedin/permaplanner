@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useGardenStore } from './useGardenStore';
+import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { useGuildHover } from './useGuildHover';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
@@ -244,4 +245,77 @@ it('setGuildThingGrowthPhase and setGuildThingVigor set and clear fields', () =>
   store.setGuildThingVigor('g1', 't1', undefined);
   expect(store.guilds[0]!.plants[0]?.growthPhase).toBeUndefined();
   expect(store.guilds[0]!.plants[0]?.vigor).toBeUndefined();
+});
+
+it('merges guild contents and notes as one undoable change', () => {
+  const store = useGardenStore();
+  const plant = {
+    id: 'p1',
+    plantId: 'comfrey',
+    x: 2,
+    y: 3,
+    width: 4,
+    height: 5,
+    nameOrCultivar: 'Comfrey',
+  };
+  const otherPlant = { ...plant, id: 'p2', x: 20, growthPhase: 'established' as const };
+  const original = [
+    {
+      id: 'a',
+      name: 'A',
+      note: 'First',
+      path: [],
+      plants: [plant],
+      mulchLevel: 1 as const,
+    },
+    {
+      id: 'b',
+      name: 'B',
+      note: 'Second',
+      path: [],
+      plants: [otherPlant],
+      mulchLevel: 2 as const,
+    },
+  ];
+  const merged = [
+    {
+      ...original[0],
+      name: 'A + B',
+      note: 'First + Second',
+      plants: [plant, otherPlant],
+    },
+  ];
+  store.guilds = structuredClone(original);
+  expect(store.mergeGuilds('a', 'b')).toBe(true);
+  expect(store.guilds).toEqual(merged);
+  usePlanCommandHistory().undo();
+  expect(store.guilds).toEqual(original);
+  usePlanCommandHistory().redo();
+  expect(store.guilds).toEqual(merged);
+});
+
+it('ignores missing guilds and self merges', () => {
+  const store = useGardenStore();
+  const guild = { id: 'a', name: 'A', path: [], plants: [], mulchLevel: 1 as const };
+  store.guilds = [guild];
+  expect([
+    store.mergeGuilds('a', 'a'),
+    store.mergeGuilds('a', 'missing'),
+    store.mergeGuilds('missing', 'a'),
+  ]).toEqual([false, false, false]);
+  expect(store.guilds).toEqual([guild]);
+});
+
+it.each([
+  [undefined, 'Second', 'Second'],
+  ['First', undefined, 'First'],
+  [undefined, undefined, undefined],
+])('joins optional notes without empty separators', (first, second, expected) => {
+  const store = useGardenStore();
+  store.guilds = [
+    { id: 'a', name: 'A', note: first, path: [], plants: [], mulchLevel: 1 },
+    { id: 'b', name: 'B', note: second, path: [], plants: [], mulchLevel: 1 },
+  ];
+  store.mergeGuilds('a', 'b');
+  expect(store.guilds).toMatchObject([{ name: 'A + B', note: expected }]);
 });

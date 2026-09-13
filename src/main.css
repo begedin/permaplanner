@@ -214,3 +214,9 @@
     @apply text-parchment-400 hover:text-amber-300;
   }
 }
+
+/* Keep the merge cursor visible over controls and SVG map elements too. */
+.guild-merge-mode,
+.guild-merge-mode * {
+  cursor: copy !important;
+}

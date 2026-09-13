@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.23.0
+
+- [FEATURE] Merge guilds by selecting a source in the list and a target in the list or aerial map, with confirmation, a merge cursor, and Escape to cancel
+- [FEATURE] Guild merges combine aerial areas and plant contents, join names and notes with `+`, and support undo/redo
+- [FIX] Preserve separate aerial areas and holes when joining or subtracting guild paths, without drawing connecting lines between them
+- [DB] Added American sweetgum (Liquidambar styraciflua) to the catalog with Worplesdon, Slender Silhouette, and Rotundiloba cultivars
+- [DB] Added Sweet chestnut (Castanea sativa) to the catalog with Marron de Lyon, Gros Merle, and Paragon cultivars
+
 ## 0.22.2
 
 - [REFACTOR] Split the guild card into `GuildEditor`, list row, season strip, and `useGuildCardModel`; removed leftover GitHub OAuth/sync and shard migration paths

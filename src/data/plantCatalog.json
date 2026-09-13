@@ -2164,6 +2164,67 @@
       "name_latin": "Cornus mas"
     },
     {
+      "id": "american_sweetgum",
+      "name": "American sweetgum",
+      "functions": ["mulcher"],
+      "layers": ["overstory"],
+      "cultivars": [
+        {
+          "id": "worplesdon",
+          "name": "Worplesdon"
+        },
+        {
+          "id": "slender_silhouette",
+          "name": "Slender Silhouette"
+        },
+        {
+          "id": "rotundiloba",
+          "name": "Rotundiloba",
+          "fruiting": null
+        }
+      ],
+      "blooming": {
+        "start": 4,
+        "end": 5
+      },
+      "fruiting": {
+        "start": 9,
+        "end": 10
+      },
+      "defaultIconId": "tree",
+      "name_latin": "Liquidambar styraciflua"
+    },
+    {
+      "id": "sweet_chestnut",
+      "name": "Sweet chestnut",
+      "functions": ["edible", "pollinator_attractor", "mulcher"],
+      "layers": ["overstory"],
+      "cultivars": [
+        {
+          "id": "marron_de_lyon",
+          "name": "Marron de Lyon"
+        },
+        {
+          "id": "gros_merle",
+          "name": "Gros Merle"
+        },
+        {
+          "id": "paragon",
+          "name": "Paragon"
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 7
+      },
+      "fruiting": {
+        "start": 10,
+        "end": 10
+      },
+      "defaultIconId": "chestnut",
+      "name_latin": "Castanea sativa"
+    },
+    {
       "id": "chinese_chestnut",
       "name": "Chinese chestnut",
       "functions": ["edible", "pollinator_attractor", "mulcher"],

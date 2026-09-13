@@ -1,5 +1,5 @@
 import { defineStore, storeToRefs } from 'pinia';
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { uuid } from './utils';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import type { Guild, MulchLevel, Plant } from './gardenTypes';
@@ -7,7 +7,7 @@ import type { GrowthPhase, PlantVigor } from './guildPlantInstanceStatus';
 import { plantCatalog } from './plantCatalog';
 import { confirmGuildDeletion } from './confirmGuildDeletion';
 import { pathBounds } from './guildPathBounds';
-import type { PathPoint } from './guildPathClip';
+import { joinPaths, type PathPoint } from './guildPathClip';
 import { plantDisplayLabel, resolveUserPlant } from './resolvePlant';
 import { useGuildHover } from './useGuildHover';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
@@ -37,6 +37,38 @@ export const useGardenStore = defineStore('garden', () => {
   const { plants, guilds } = storeToRefs(permaplanner);
   const commandHistory = usePlanCommandHistory();
   const { clearHoverIf } = useGuildHover();
+
+  const mergeSourceId = ref<string>();
+  watch(
+    [
+      () => permaplanner.gardenId,
+      () => guilds.value.some((g) => g.id === mergeSourceId.value),
+    ],
+    ([gardenId, sourceExists], [previousGardenId]) => {
+      if (gardenId !== previousGardenId || !sourceExists) {
+        mergeSourceId.value = undefined;
+      }
+    },
+  );
+
+  const mergeGuilds = (sourceId: string, targetId: string): boolean => {
+    const source = guilds.value.find((g) => g.id === sourceId);
+    const target = guilds.value.find((g) => g.id === targetId);
+    if (!source || !target || sourceId === targetId) {
+      return false;
+    }
+    const path = joinPaths(source.path, target.path);
+    commandHistory.runMutation(() => {
+      source.name = `${source.name} + ${target.name}`;
+      const note = [source.note, target.note].filter(Boolean).join(' + ');
+      if (note) source.note = note;
+      source.path = path;
+      source.plants.push(...target.plants);
+      removeGuildWithoutConfirm(targetId);
+    });
+    mergeSourceId.value = undefined;
+    return true;
+  };
 
   const plantsById = computed(() => {
     const m: Record<string, Plant> = {};
@@ -272,6 +304,8 @@ export const useGardenStore = defineStore('garden', () => {
     resolvedPlant,
     guilds,
 
+    mergeSourceId,
+    mergeGuilds,
     removeGuild,
     removeGuildFromAerialMap,
     setGuildPath,

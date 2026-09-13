@@ -29,7 +29,7 @@
     path.value = [...props.guild.path];
   };
 
-  watch(() => props.guild, resetPath, { immediate: true });
+  watch(() => props.guild.path, resetPath, { immediate: true });
 
   const selected = toRef(props, 'selected');
   const tool = toRef(props, 'tool');
@@ -48,6 +48,20 @@
     selected,
     tool,
     onCommit: () => emit('move', [...path.value]),
+  });
+
+  const outline = computed(() => {
+    const edges = path.value.map((start, i) => ({
+      start,
+      end: path.value[(i + 1) % path.value.length]!,
+    }));
+    const keys = new Set(
+      edges.map(({ start, end }) => `${start.x},${start.y}:${end.x},${end.y}`),
+    );
+    return edges
+      .filter(({ start, end }) => !keys.has(`${end.x},${end.y}:${start.x},${start.y}`))
+      .map(({ start, end }) => `M ${start.x},${start.y} L ${end.x},${end.y}`)
+      .join(' ');
   });
 
   const box = computed(() => {
@@ -82,12 +96,17 @@
           ? 'rgba(0, 100, 0, 0.3)'
           : 'rgba(0, 100, 0, 0.2)'
     "
-    stroke="black"
     :class="['pointer-events-fill', isMoving ? 'cursor-move' : undefined]"
     @mousedown="onPathMouseDown"
     @mouseenter="emit('mouseenter')"
     @mouseleave="emit('mouseleave')"
     @click="emit('click', $event)"
+  />
+  <path
+    :d="outline"
+    stroke="black"
+    fill="none"
+    class="pointer-events-none"
   />
   <GardenMeasure
     v-if="box && (hovered || selected)"
