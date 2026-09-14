@@ -39,18 +39,15 @@ export const useGuildSelection = () => {
       id = source.id;
     }
     hoveredId.value = id;
-    if (isGuildsRoute(route.name)) {
-      if (routeParam(route.params, 'guildId') === id) {
-        return;
-      }
-      await router.push({ name: routeNames.guildsDetail, params: { guildId: id } });
-      return;
-    }
-    if (isAerialRoute(route.name)) {
-      if (routeParam(route.params, 'guildId') === id) {
-        return;
-      }
-      await router.push({ name: routeNames.aerialDetail, params: { guildId: id } });
+    if (rawGuildId.value === id) return;
+
+    const name = isGuildsRoute(route.name)
+      ? routeNames.guildsDetail
+      : isAerialRoute(route.name)
+        ? routeNames.aerialDetail
+        : undefined;
+    if (name) {
+      await router.push({ name, params: { guildId: id } });
     }
   };
 

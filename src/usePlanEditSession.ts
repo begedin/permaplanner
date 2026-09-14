@@ -1,19 +1,17 @@
-import { ref } from 'vue';
-
-import type { PlanSavableState } from './planSavableState';
+import { capturePlanSavableState, type PlanSavableState } from './planSavableState';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 
 export const usePlanEditSession = () => {
   const history = usePlanCommandHistory();
-  const editBefore = ref<PlanSavableState | null>(null);
+  let editBefore: PlanSavableState | null = null;
 
   const begin = () => {
-    editBefore.value = history.capturePlanSavableState();
+    editBefore = capturePlanSavableState();
   };
 
   const commit = () => {
-    const before = editBefore.value;
-    editBefore.value = null;
+    const before = editBefore;
+    editBefore = null;
     if (!before) {
       return;
     }
@@ -21,7 +19,7 @@ export const usePlanEditSession = () => {
   };
 
   const cancel = () => {
-    editBefore.value = null;
+    editBefore = null;
   };
 
   return { begin, commit, cancel };

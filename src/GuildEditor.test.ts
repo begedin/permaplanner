@@ -8,6 +8,7 @@ import { createTestingPinia } from '@pinia/testing';
 
 import {
   buildCatalogPickGroups,
+  defaultCatalogPick,
   catalogPickForSpeciesCultivar,
   type CatalogPlantPick,
 } from './catalogPlantPick';
@@ -330,6 +331,8 @@ it('hides the add-plant editor until Add plant is clicked', async () => {
 
 it('adds the default catalog plant when Add to guild is clicked', async () => {
   const store = useGardenStore();
+  const pick = defaultCatalogPick(knownSpecies());
+  if (!pick) throw new Error('Expected a default catalog plant');
   const wrapper = await renderGuildEditor();
   await fireEvent.click(
     card(wrapper).getByRole('button', { name: 'Add plant to guild' }),
@@ -337,7 +340,9 @@ it('adds the default catalog plant when Add to guild is clicked', async () => {
   await nextTick();
   await fireEvent.click(card(wrapper).getByRole('button', { name: 'Add to guild' }));
 
-  expect(store.plants).toMatchObject([{ speciesId: 'apple', cultivarId: null }]);
+  expect(store.plants).toMatchObject([
+    { speciesId: pick.speciesId, cultivarId: pick.cultivarId },
+  ]);
   expect(store.guilds[0].plants).toHaveLength(1);
   expect(card(wrapper).queryByRole('combobox')).not.toBeInTheDocument();
 });

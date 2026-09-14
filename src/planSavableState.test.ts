@@ -3,7 +3,7 @@ import { beforeEach, expect, it } from 'vitest';
 
 import type { Guild, UserPlant } from './gardenTypes';
 import { DEFAULT_ONBOARDING_STATE } from './onboardingTypes';
-import { snapshotPlanCommand } from './planCommand';
+import { usePlanCommandHistory } from './usePlanCommandHistory';
 import {
   applyPlanSavableState,
   capturePlanSavableState,
@@ -139,13 +139,9 @@ it('planSavableStatesEqual detects plant and guild changes', () => {
 
 it('planSavableStatesEqual detects scalar and map scale changes', () => {
   const base = populatedSavableState();
-  expect(planSavableStatesEqual(base, { ...base, backgroundOpacity: 0.1 })).toBe(
-    false,
-  );
+  expect(planSavableStatesEqual(base, { ...base, backgroundOpacity: 0.1 })).toBe(false);
   expect(planSavableStatesEqual(base, { ...base, syncRevision: 99 })).toBe(false);
-  expect(planSavableStatesEqual(base, { ...base, onboardingState: 'done' })).toBe(
-    false,
-  );
+  expect(planSavableStatesEqual(base, { ...base, onboardingState: 'done' })).toBe(false);
   expect(
     planSavableStatesEqual(base, {
       ...base,
@@ -179,7 +175,7 @@ it('planSavableStatesEqual compares background image by reference', () => {
   ).toBe(false);
 });
 
-it('snapshotPlanCommand do and undo swap plan state', () => {
+it('undo and redo restore captured plan state', () => {
   seedStoresFromState(populatedSavableState());
   const before = capturePlanSavableState();
 
@@ -188,12 +184,13 @@ it('snapshotPlanCommand do and undo swap plan state', () => {
   permaplanner.guilds = [];
   const after = capturePlanSavableState();
 
-  const command = snapshotPlanCommand(before, after);
+  const history = usePlanCommandHistory();
+  history.commitSnapshot(before);
   expect(capturePlanSavableState()).toEqual(after);
 
-  command.undo();
+  history.undo();
   expect(capturePlanSavableState()).toEqual(before);
 
-  command.do();
+  history.redo();
   expect(capturePlanSavableState()).toEqual(after);
 });

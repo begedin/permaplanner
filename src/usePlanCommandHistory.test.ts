@@ -2,7 +2,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { beforeEach, expect, it } from 'vitest';
 
 import type { Guild } from './gardenTypes';
-import { planSavableStatesEqual } from './planSavableState';
+import { capturePlanSavableState, planSavableStatesEqual } from './planSavableState';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 
@@ -64,7 +64,7 @@ it('clear drops undo and redo stacks', () => {
 it('commitSnapshot records a single edit session', () => {
   const store = usePermaplannerStore();
   const history = usePlanCommandHistory();
-  const before = history.capturePlanSavableState();
+  const before = capturePlanSavableState();
 
   store.guilds = [testGuild()];
   history.commitSnapshot(before);
@@ -74,8 +74,7 @@ it('commitSnapshot records a single edit session', () => {
 });
 
 it('planSavableStatesEqual compares background image by reference', () => {
-  const history = usePlanCommandHistory();
-  const withImage = history.capturePlanSavableState();
+  const withImage = capturePlanSavableState();
   withImage.backgroundImageDataUrl = 'data:image/png;base64,abc';
 
   const sameImage = { ...withImage };
@@ -83,4 +82,36 @@ it('planSavableStatesEqual compares background image by reference', () => {
 
   expect(planSavableStatesEqual(withImage, sameImage)).toBe(true);
   expect(planSavableStatesEqual(withImage, withoutImage)).toBe(false);
+});
+
+it('keeps redo available after a no-op but clears it after a new edit', () => {
+  const store = usePermaplannerStore();
+  const history = usePlanCommandHistory();
+  history.runMutation(() => {
+    store.guilds = [testGuild()];
+  });
+  history.undo();
+  history.runMutation(() => {
+    store.guilds = [];
+  });
+  expect(history).toMatchObject({ canUndo: false, canRedo: true });
+  history.runMutation(() => {
+    store.guilds = [{ ...testGuild(), name: 'New bed' }];
+  });
+  expect(history).toMatchObject({ canUndo: true, canRedo: false });
+  history.undo();
+  expect(store.guilds).toEqual([]);
+});
+
+it('applies edits without recording while autosave is suppressed', () => {
+  const store = usePermaplannerStore();
+  const history = usePlanCommandHistory();
+  const before = capturePlanSavableState();
+  store.suppressAutosaveDepth = 1;
+  history.runMutation(() => {
+    store.guilds = [testGuild()];
+  });
+  history.commitSnapshot(before);
+  expect(store.guilds).toEqual([testGuild()]);
+  expect(history).toMatchObject({ canUndo: false, canRedo: false });
 });

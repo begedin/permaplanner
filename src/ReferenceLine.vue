@@ -1,6 +1,7 @@
 <script lang="ts" setup>
   import { computed, onBeforeUnmount } from 'vue';
   import { storeToRefs } from 'pinia';
+  import { capturePlanSavableState } from './planSavableState';
   import { advanceOnboardingState } from './onboardingTypes';
   import { useMapScaleStore } from './useMapScaleStore';
   import { usePermaplannerStore } from './usePermaplannerStore';
@@ -24,7 +25,7 @@
     onMouseMove?: () => void,
   ) => {
     activeDragAbort?.abort();
-    const before = commandHistory.capturePlanSavableState();
+    const before = capturePlanSavableState();
     const controller = new AbortController();
     activeDragAbort = controller;
 

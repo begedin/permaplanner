@@ -37,3 +37,11 @@ erl_crash.dump
 *.sw?
 
 *.tsbuildinfo
+
+# Local repository metadata, agent/editor caches, and credentials
+.git
+.agents
+.elixir_ls
+.dexter.db*
+.env
+.env.*
