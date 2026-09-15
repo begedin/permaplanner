@@ -8,6 +8,7 @@ export const UI_ICON_IDS = [
   'remove',
   'trash',
   'unmap',
+  'merge',
   'chevron-down',
   'document',
   'star',

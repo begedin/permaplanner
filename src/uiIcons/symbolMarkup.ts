@@ -31,6 +31,12 @@ export const UI_ICON_SYMBOL_INNER: Record<UiIconId, string> = {
     <path fill="#d8c8b0" d="M14 18 L34 18 L32 38 Q30 40 24 40 Q18 40 16 38 Z" />
     <path d="M20 22 L20 34 M24 22 L24 34 M28 22 L28 34" />
   `,
+  merge: `
+    <circle cx="24" cy="24" r="14" />
+    <path d="M17 31 L17 28 Q17 24 24 24 L24 17" />
+    <path d="M31 31 L31 28 Q31 24 24 24" />
+    <path d="M20 21 L24 17 L28 21" />
+  `,
   unmap: `
     <circle cx="24" cy="24" r="14" />
     <path d="M14 24 Q24 25 34 24" />

@@ -65,18 +65,32 @@
           :query="searchQuery"
         />
       </p>
-      <div
-        v-if="placedOnMap"
-        class="flex flex-row items-center gap-1 shrink-0"
-      >
+      <div class="flex flex-row items-center shrink-0">
         <span
           v-if="guildMapSizeLabel"
-          class="text-[11px] leading-tight text-ink-500 tabular-nums"
+          class="mr-2 text-[11px] leading-tight text-ink-500 tabular-nums"
           aria-label="Guild size on aerial map"
         >
           {{ guildMapSizeLabel }}
         </span>
         <button
+          type="button"
+          :title="garden.mergeSourceId === guildId ? 'Cancel merge' : 'Merge with'"
+          :aria-label="garden.mergeSourceId === guildId ? 'Cancel merge' : 'Merge with'"
+          :aria-pressed="garden.mergeSourceId === guildId"
+          class="btn-icon inline-flex size-6 shrink-0 items-center justify-center p-0.5 hover:bg-amber-100"
+          :class="{ 'bg-amber-100': garden.mergeSourceId === guildId }"
+          @click.stop="
+            garden.mergeSourceId = garden.mergeSourceId === guildId ? undefined : guildId
+          "
+        >
+          <UiIcon
+            :name="garden.mergeSourceId === guildId ? 'remove' : 'merge'"
+            class="size-4"
+          />
+        </button>
+        <button
+          v-if="placedOnMap"
           type="button"
           title="Remove from aerial map"
           aria-label="Remove from aerial map"
@@ -119,16 +133,6 @@
       </span>
     </div>
 
-    <button
-      type="button"
-      class="btn-soft-muted btn-soft-sm text-xs px-2 py-1"
-      :aria-pressed="garden.mergeSourceId === guildId"
-      @click.stop="
-        garden.mergeSourceId = garden.mergeSourceId === guildId ? undefined : guildId
-      "
-    >
-      {{ garden.mergeSourceId === guildId ? 'Cancel merge' : 'Merge with' }}
-    </button>
     <p
       v-if="garden.mergeSourceId === guildId"
       class="text-xs text-ink-600"

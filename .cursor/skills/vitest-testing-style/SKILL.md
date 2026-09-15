@@ -11,11 +11,11 @@ description: >-
 
 ## Queries and interactions
 
-| Query | Waits? | If missing | Use for |
-|-------|--------|------------|---------|
-| **`getBy*`** | No | Throws | Inside **`waitFor`** with **`expect`** + jest-dom matchers; or sync UI right after `render()` |
-| **`queryBy*`** | No | Returns `null` | **`expect(…).not.toBeInTheDocument()`** (absence) |
-| **`findBy*`** | Yes | Throws | **Interactions only** — pass to `fireEvent.click`, etc. Do **not** wrap in `expect` |
+| Query          | Waits? | If missing     | Use for                                                                                       |
+| -------------- | ------ | -------------- | --------------------------------------------------------------------------------------------- |
+| **`getBy*`**   | No     | Throws         | Inside **`waitFor`** with **`expect`** + jest-dom matchers; or sync UI right after `render()` |
+| **`queryBy*`** | No     | Returns `null` | **`expect(…).not.toBeInTheDocument()`** (absence)                                             |
+| **`findBy*`**  | Yes    | Throws         | **Interactions only** — pass to `fireEvent.click`, etc. Do **not** wrap in `expect`           |
 
 There is no async query that returns `null`. **`queryBy*` is not a wait helper** — it is only for asserting something is **not** in the DOM.
 
@@ -73,8 +73,10 @@ Vitest loads jest-dom in [`src/testing/vitestSetup.ts`](../testing/vitestSetup.t
 
 ## Assertions
 
+- Assert user-visible behavior and semantic structure rather than implementation details. When order matters (such as toolbar icons or list actions), query the relevant collection by role and compare its ordered labels or accessible names in one assertion. Avoid assertions on SVG symbol IDs, exact child markup, or `nextElementSibling` when the actual requirement is which controls appear and in what order. Scope queries to the relevant region when other controls are present.
+
 - Prefer **one structured assertion** over many field-by-field `expect`s, especially on indexed access like `arr[0]!.foo` (avoid non-null `!` for convenience when a matcher can express the same intent).
-- Use **`toMatchObject`** when checking that a value includes an expected *subset* of fields (e.g. whole store: `{ fileName, guilds: [guild] }`).
+- Use **`toMatchObject`** when checking that a value includes an expected _subset_ of fields (e.g. whole store: `{ fileName, guilds: [guild] }`).
 - Use **`toEqual`** when the expected value is fully known and you want **deep equality** (e.g. `expect(x).toEqual([guild])`).
 - Reuse **named constants** for expected domain objects in the test (build once, assert against them) so expectations stay aligned with `toMatchObject` / `toEqual`.
 - **Avoid** redundant overlapping assertions (e.g. `toHaveLength(1)` plus fully specifying the single element) unless they clarify a distinct failure mode.

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.23.1
+
+- [TWEAK] Replace the guild merge text button with a circular icon beside the aerial-map remove button; tighten button spacing and separate controls from map dimensions
+- [TEST] Assert ordered action labels instead of SVG markup and sibling relationships; document this guideline in the testing skill
+
 ## 0.23.0
 
 - [FEATURE] Merge guilds by selecting a source in the list and a target in the list or aerial map, with confirmation, a merge cursor, and Escape to cancel
