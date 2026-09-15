@@ -14,7 +14,7 @@ import {
 } from './catalogPlantPick';
 import GuildEditor from './GuildEditor.vue';
 import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
-import type { GardenThing, Guild } from './gardenTypes';
+import type { GardenThing, Guild, GuildLayer } from './gardenTypes';
 import { plantCatalog } from './plantCatalog';
 import { createAuthedTestRouter } from './testing/authedTestSession';
 import { useGardenStore } from './useGardenStore';
@@ -323,7 +323,9 @@ it('remove-one only affects the subgroup row that has duplicates', async () => {
 
 it('hides the add-plant editor until Add plant is clicked', async () => {
   const wrapper = await renderGuildEditor();
-  expect(card(wrapper).queryByRole('combobox')).not.toBeInTheDocument();
+  expect(
+    card(wrapper).queryByRole('combobox', { name: 'Species and cultivar' }),
+  ).not.toBeInTheDocument();
   expect(
     card(wrapper).queryByRole('button', { name: 'Add to guild' }),
   ).not.toBeInTheDocument();
@@ -344,7 +346,9 @@ it('adds the default catalog plant when Add to guild is clicked', async () => {
     { speciesId: pick.speciesId, cultivarId: pick.cultivarId },
   ]);
   expect(store.guilds[0].plants).toHaveLength(1);
-  expect(card(wrapper).queryByRole('combobox')).not.toBeInTheDocument();
+  expect(
+    card(wrapper).queryByRole('combobox', { name: 'Species and cultivar' }),
+  ).not.toBeInTheDocument();
 });
 
 it('adds the selected plant when Enter is pressed in the editor', async () => {
@@ -356,7 +360,10 @@ it('adds the selected plant when Enter is pressed in the editor', async () => {
   await nextTick();
 
   await setEditorPick(wrapper, comfreyPick());
-  await fireEvent.keyDown(card(wrapper).getByRole('combobox'), { key: 'Enter' });
+  await fireEvent.keyDown(
+    card(wrapper).getByRole('combobox', { name: 'Species and cultivar' }),
+    { key: 'Enter' },
+  );
 
   expect(store.guilds[0].plants).toHaveLength(1);
   expect(store.plants[0]).toMatchObject({ speciesId: 'comfrey', cultivarId: null });
@@ -372,7 +379,9 @@ it('opens the editor for an existing plant and updates it on confirm', async () 
   await fireEvent.click(card(wrapper).getByRole('button', { name: 'Edit plant in bed' }));
   await nextTick();
 
-  expect(card(wrapper).getByRole('combobox')).toBeVisible();
+  expect(
+    card(wrapper).getByRole('combobox', { name: 'Species and cultivar' }),
+  ).toBeVisible();
   expect(
     card(wrapper).queryByRole('button', { name: 'Add plant to guild' }),
   ).not.toBeInTheDocument();
@@ -410,7 +419,9 @@ it('cancels add plant without changing the guild', async () => {
   );
 
   expect(store.guilds[0].plants).toEqual([]);
-  expect(card(wrapper).queryByRole('combobox')).not.toBeInTheDocument();
+  expect(
+    card(wrapper).queryByRole('combobox', { name: 'Species and cultivar' }),
+  ).not.toBeInTheDocument();
   expect(card(wrapper).getByRole('button', { name: 'Add plant to guild' })).toBeVisible();
 });
 
@@ -511,4 +522,131 @@ it('shows a phase icon per instance in the group header, up to eight, then ellip
   const wrapper = await renderGuildEditor();
   expect(card(wrapper).getAllByRole('img', { name: /^Phase:/ })).toHaveLength(4);
   expect(card(wrapper).getByLabelText('More plants')).toBeVisible();
+});
+
+it('sorts and optionally groups by layer, with unassigned plants last', async () => {
+  const store = useGardenStore();
+  store.plants = [
+    {
+      id: 'apple',
+      speciesId: 'apple',
+      cultivarId: null,
+      speciesOverride: { layers: [] },
+    },
+    {
+      id: 'basil',
+      speciesId: 'basil',
+      cultivarId: null,
+      speciesOverride: { layers: ['root', 'herb'] },
+    },
+    {
+      id: 'comfrey',
+      speciesId: 'comfrey',
+      cultivarId: null,
+      speciesOverride: { layers: ['ground_cover'] },
+    },
+    {
+      id: 'other',
+      speciesId: 'comfrey',
+      cultivarId: null,
+      speciesOverride: { name: 'Other', layers: ['herb'] },
+    },
+  ];
+  const plants = ['other', 'apple', 'basil', 'comfrey', 'basil'].map((plantId, index) =>
+    baseThing({ id: `thing-${index}`, plantId }),
+  );
+  store.guilds = [{ ...testGuild, plants }];
+  const wrapper = await renderGuildEditor();
+  const sortControls = within(
+    card(wrapper).getByRole('radiogroup', { name: 'Sort guild plants by' }),
+  );
+  expect(
+    sortControls.getAllByRole('radio').map((radio) => (radio as HTMLInputElement).value),
+  ).toEqual(['name', 'layer']);
+  expect(sortControls.getByRole('radio', { name: 'Name' })).toBeChecked();
+  await fireEvent.click(
+    card(wrapper).getByRole('button', { name: 'Expand Basil (Ocimum basilicum)' }),
+  );
+  await fireEvent.click(card(wrapper).getByRole('radio', { name: 'Layers' }));
+  expect(card(wrapper).getByRole('radio', { name: 'Layers' })).toBeChecked();
+  expect(
+    card(wrapper)
+      .getAllByRole('button', { name: /^(Expand|Collapse) / })
+      .map((button) => button.getAttribute('aria-label')),
+  ).toEqual([
+    'Collapse Basil (Ocimum basilicum)',
+    'Expand Other (Symphytum officinale)',
+    'Expand Comfrey (Symphytum officinale)',
+    'Expand Apple (Malus domestica)',
+  ]);
+  expect(card(wrapper).getAllByLabelText('Phase')).toHaveLength(2);
+  expect(card(wrapper).getByText('Herb, Root')).toBeVisible();
+  expect(card(wrapper).getByText('No layer assigned')).toBeVisible();
+  expect(card(wrapper).queryByRole('heading', { level: 4 })).not.toBeInTheDocument();
+  const toggle = card(wrapper).getByRole('button', { name: 'Group by layer' });
+  await fireEvent.click(toggle);
+  expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  expect(
+    card(wrapper)
+      .getAllByRole('heading', { level: 4 })
+      .map((heading) => heading.textContent?.trim()),
+  ).toEqual(['Herb', 'Ground Cover', 'No layer assigned']);
+  await fireEvent.click(toggle);
+  expect(card(wrapper).queryByRole('heading', { level: 4 })).not.toBeInTheDocument();
+  await fireEvent.click(toggle);
+  await fireEvent.click(card(wrapper).getByRole('radio', { name: 'Name' }));
+  expect(
+    card(wrapper).queryByRole('button', { name: 'Group by layer' }),
+  ).not.toBeInTheDocument();
+  expect(card(wrapper).queryByRole('heading', { level: 4 })).not.toBeInTheDocument();
+  expect(
+    card(wrapper)
+      .getAllByRole('button', { name: /^(Expand|Collapse) / })
+      .map((button) => button.getAttribute('aria-label')),
+  ).toEqual([
+    'Expand Apple (Malus domestica)',
+    'Collapse Basil (Ocimum basilicum)',
+    'Expand Comfrey (Symphytum officinale)',
+    'Expand Other (Symphytum officinale)',
+  ]);
+  expect(store.guilds).toEqual([{ ...testGuild, plants }]);
+  wrapper.unmount();
+});
+
+it('orders all layer groups from canopy to roots using the highest layer of each plant', async () => {
+  const store = useGardenStore();
+  const layers: GuildLayer[] = [
+    'root',
+    'ground_cover',
+    'herb',
+    'vine',
+    'shrub',
+    'understory',
+    'overstory',
+  ];
+  store.plants = layers.map((layer) => ({
+    id: layer,
+    speciesId: 'comfrey',
+    cultivarId: null,
+    speciesOverride: {
+      name: layer,
+      layers: layer === 'overstory' ? ['root', 'overstory'] : [layer],
+    },
+  }));
+  store.guilds = [
+    {
+      ...testGuild,
+      plants: layers.map((layer) => baseThing({ id: `thing-${layer}`, plantId: layer })),
+    },
+  ];
+  const wrapper = await renderGuildEditor();
+  await fireEvent.click(card(wrapper).getByRole('radio', { name: 'Layers' }));
+  await fireEvent.click(card(wrapper).getByRole('button', { name: 'Group by layer' }));
+  expect(
+    card(wrapper)
+      .getAllByRole('heading', { level: 4 })
+      .map((heading) => heading.textContent?.trim()),
+  ).toEqual(['Overstory', 'Understory', 'Vine', 'Shrub', 'Herb', 'Ground Cover', 'Root']);
+  expect(card(wrapper).getByText('Overstory, Root')).toBeVisible();
+  wrapper.unmount();
 });

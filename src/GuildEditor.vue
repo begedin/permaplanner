@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-  import { toRef } from 'vue';
+  import { computed, ref, toRef } from 'vue';
+  import type { GuildLayer } from './gardenTypes';
 
   import HighlightText from './HighlightText.vue';
   import {
@@ -19,6 +20,8 @@
   import PlantIcon from './PlantIcon.vue';
   import PlantVigorIcon from './PlantVigorIcon.vue';
   import PlantVigorRating from './PlantVigorRating.vue';
+  import RadioButtonGroup from './RadioButtonGroup.vue';
+  import ToggleButton from './ToggleButton.vue';
   import UiIcon from './uiIcons/UiIcon.vue';
   import { useGuildCardModel } from './useGuildCardModel';
   import { useGuildSearch } from './useGuildSearch';
@@ -66,6 +69,34 @@
     setThingGrowthPhase,
     setThingVigorLevel,
   } = useGuildCardModel(toRef(props, 'guildId'));
+
+  const plantSort = ref<'name' | 'layer'>('name');
+  const groupPlants = ref(false);
+  const layerRank = {
+    overstory: 0,
+    understory: 1,
+    vine: 2,
+    shrub: 3,
+    herb: 4,
+    ground_cover: 5,
+    root: 6,
+  } satisfies Record<GuildLayer, number>;
+  const sortedGuildPlants = computed(() => {
+    const rows = groupedGuildPlants.value.map((row) => ({
+      ...row,
+      layerRank: Math.min(
+        ...row.representativeResolved.layers.map((layer) => layerRank[layer]),
+        Object.keys(layerRank).length,
+      ),
+      layerLabels: [...row.representativeResolved.layers]
+        .sort((a, b) => layerRank[a] - layerRank[b])
+        .map((layer) => guildLayers.value[layer].label),
+    }));
+    if (plantSort.value === 'layer') {
+      rows.sort((a, b) => a.layerRank - b.layerRank);
+    }
+    return rows;
+  });
 </script>
 
 <template>
@@ -157,10 +188,39 @@
           aria-label="Plants in this guild"
         >
           <GuildCardSectionLabel>Plants</GuildCardSectionLabel>
+          <div class="flex flex-wrap items-center gap-2 text-xs text-ink-600">
+            <span>Sort by</span>
+            <RadioButtonGroup
+              v-model="plantSort"
+              :name="`guild-plant-sort-${guildId}`"
+              label="Sort guild plants by"
+              :options="[
+                { value: 'name', label: 'Name' },
+                { value: 'layer', label: 'Layers' },
+              ]"
+            />
+            <ToggleButton
+              v-if="plantSort === 'layer'"
+              v-model="groupPlants"
+            >
+              Group by layer
+            </ToggleButton>
+          </div>
           <template
-            v-for="row in groupedGuildPlants"
+            v-for="(row, index) in sortedGuildPlants"
             :key="row.plantId"
           >
+            <h4
+              v-if="
+                plantSort === 'layer' &&
+                groupPlants &&
+                (index === 0 ||
+                  row.layerLabels[0] !== sortedGuildPlants[index - 1]?.layerLabels[0])
+              "
+              class="mt-2 rounded-md bg-sage-100 px-2 py-1 text-xs font-semibold text-ink-700"
+            >
+              {{ row.layerLabels[0] || 'No layer assigned' }}
+            </h4>
             <div
               v-if="isEditingRow(row)"
               class="flex flex-row items-center gap-1 w-full border-b border-blossom-300 py-1 pl-1"
@@ -223,6 +283,12 @@
                       :text="row.label"
                       :query="searchQuery"
                     /><template v-if="row.count > 1"> ({{ row.count }}) </template>
+                  </span>
+                  <span
+                    v-if="plantSort === 'layer'"
+                    class="text-[10px] leading-tight text-ink-500"
+                  >
+                    {{ row.layerLabels.join(', ') || 'No layer assigned' }}
                   </span>
                   <span
                     v-if="phenologySummaryForThingIds(row.thingIds)"

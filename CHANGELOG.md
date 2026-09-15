@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.24.0
+
+- [FEATURE] Sort plants in the selected guild detail card by name or layer, with optional layer grouping
+- [TWEAK] Order layers from highest to lowest: overstory, understory, vine, shrub, herb, ground cover, and root; place unassigned plants last
+- [REFACTOR] Extract reusable radio button group and toggle button components with accessible states and disabled support
+
 ## 0.23.1
 
 - [TWEAK] Replace the guild merge text button with a circular icon beside the aerial-map remove button; tighten button spacing and separate controls from map dimensions
