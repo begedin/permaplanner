@@ -36,7 +36,6 @@ const populatedSavableState = (): PlanSavableState => ({
   guilds: [testGuild()],
   backgroundOpacity: 0.55,
   backgroundImageDataUrl: 'data:image/png;base64,abc',
-  syncRevision: 3,
   onboardingState: 'movingFirst',
   mapScale: {
     start: { x: 10, y: 20 },
@@ -52,7 +51,6 @@ const seedStoresFromState = (state: PlanSavableState): void => {
   permaplanner.guilds = structuredClone(state.guilds);
   permaplanner.backgroundOpacity = state.backgroundOpacity;
   permaplanner.backgroundImageDataUrl = state.backgroundImageDataUrl;
-  permaplanner.syncRevision = state.syncRevision;
   permaplanner.onboardingState = state.onboardingState;
   Object.assign(mapScale.start, state.mapScale.start);
   Object.assign(mapScale.end, state.mapScale.end);
@@ -87,7 +85,6 @@ it('applyPlanSavableState restores all savable fields', () => {
   expect(permaplanner.guilds).toEqual(state.guilds);
   expect(permaplanner.backgroundOpacity).toBe(state.backgroundOpacity);
   expect(permaplanner.backgroundImageDataUrl).toBe(state.backgroundImageDataUrl);
-  expect(permaplanner.syncRevision).toBe(state.syncRevision);
   expect(permaplanner.onboardingState).toBe(state.onboardingState);
   expect(mapScale.start).toEqual(state.mapScale.start);
   expect(mapScale.end).toEqual(state.mapScale.end);
@@ -106,7 +103,6 @@ it('capture and apply round-trip empty plan state', () => {
     guilds: [],
     backgroundOpacity: 0.4,
     backgroundImageDataUrl: undefined,
-    syncRevision: 0,
     onboardingState: DEFAULT_ONBOARDING_STATE,
     mapScale: {
       start: { x: 20, y: 20 },
@@ -140,7 +136,6 @@ it('planSavableStatesEqual detects plant and guild changes', () => {
 it('planSavableStatesEqual detects scalar and map scale changes', () => {
   const base = populatedSavableState();
   expect(planSavableStatesEqual(base, { ...base, backgroundOpacity: 0.1 })).toBe(false);
-  expect(planSavableStatesEqual(base, { ...base, syncRevision: 99 })).toBe(false);
   expect(planSavableStatesEqual(base, { ...base, onboardingState: 'done' })).toBe(false);
   expect(
     planSavableStatesEqual(base, {
@@ -193,4 +188,15 @@ it('undo and redo restore captured plan state', () => {
 
   history.redo();
   expect(capturePlanSavableState()).toEqual(after);
+});
+
+it('applying an undo snapshot preserves the latest server revision', () => {
+  const state = capturePlanSavableState();
+  const store = usePermaplannerStore();
+  store.setSyncRevision(12);
+
+  applyPlanSavableState(state);
+
+  expect(store.syncRevision).toBe(12);
+  expect(planSavableStatesEqual(state, capturePlanSavableState())).toBe(true);
 });

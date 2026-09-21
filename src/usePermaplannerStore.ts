@@ -4,13 +4,8 @@ import { nextTick, ref } from 'vue';
 import { type GardenDocument, parseGardenDocument } from './gardenDocument';
 import { type Guild, type UserPlant } from './gardenTypes';
 import { useMapScaleStore } from './useMapScaleStore';
-import {
-  PERMAPLANNER_FILE_VERSION,
-} from './permaplannerFileVersion';
-import {
-  DEFAULT_ONBOARDING_STATE,
-  type OnboardingState,
-} from './onboardingTypes';
+import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
+import { DEFAULT_ONBOARDING_STATE, type OnboardingState } from './onboardingTypes';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 
 const defaultUserPlants = (): UserPlant[] => [];
@@ -34,7 +29,6 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
   const syncRevision = ref(0);
   const onboardingState = ref<OnboardingState>(DEFAULT_ONBOARDING_STATE);
 
-  const suppressAutosaveDepth = ref(0);
   const isBulkPlanUpdate = ref(false);
 
   const snapshot = (): GardenDocument => {
@@ -80,16 +74,11 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     return doc;
   };
 
-  const noteBackgroundImageSaved = () => {
-    backgroundImageSavedDataUrl.value = backgroundImageDataUrl.value;
-  };
-
   const hydrateFromDocument = async (
     doc: GardenDocument,
     meta?: { id?: string; name?: string },
   ) => {
     isBulkPlanUpdate.value = true;
-    suppressAutosaveDepth.value += 1;
     try {
       backgroundImageDataUrl.value = doc.backgroundImage;
       backgroundImageSavedDataUrl.value = doc.backgroundImage;
@@ -104,8 +93,6 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       usePlanCommandHistory().clear();
     } finally {
       await nextTick();
-      suppressAutosaveDepth.value -= 1;
-      await nextTick();
       isBulkPlanUpdate.value = false;
     }
   };
@@ -117,7 +104,6 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
 
   const resetToNewPlan = async () => {
     isBulkPlanUpdate.value = true;
-    suppressAutosaveDepth.value += 1;
     try {
       gardenId.value = undefined;
       gardenName.value = undefined;
@@ -131,8 +117,6 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       useMapScaleStore().resetToDefaults();
       usePlanCommandHistory().clear();
     } finally {
-      await nextTick();
-      suppressAutosaveDepth.value -= 1;
       await nextTick();
       isBulkPlanUpdate.value = false;
     }
@@ -149,11 +133,9 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     gardenName,
     snapshot,
     snapshotForServer,
-    noteBackgroundImageSaved,
     hydrateFromDocument,
     loadFromRaw,
     resetToNewPlan,
-    suppressAutosaveDepth,
     isBulkPlanUpdate,
     backgroundImageDataUrl,
     backgroundImageSavedDataUrl,

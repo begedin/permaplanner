@@ -10,6 +10,8 @@ import PlanSessionPanel from './PlanSessionPanel.vue';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { seedAuthedTestSession } from './testing/authedTestSession';
 import { routeNames } from './router';
+import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
+import { useAuthStore } from './stores/useAuthStore';
 
 vi.mock('./api/gardenShares');
 
@@ -157,4 +159,18 @@ it('copies HTML and JSON share links to the clipboard', async () => {
   await waitFor(() => {
     expect(writeText).toHaveBeenCalledWith(existingShareJsonHref);
   });
+});
+
+it('cancels sign out before changing the session when unsaved changes are kept', async () => {
+  renderPanel();
+  usePlanSaveCoordinator().markSaved();
+  usePermaplannerStore().backgroundOpacity = 0.7;
+  const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
+
+  expect(confirm).toHaveBeenCalledWith('You have unsaved changes. Leave without saving?');
+  expect(useAuthStore().logout).not.toHaveBeenCalled();
+  expect(usePermaplannerStore().gardenId).toBe('g1');
+  confirm.mockRestore();
 });

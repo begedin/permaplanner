@@ -7,6 +7,7 @@
   import { useGardenStore } from './useGardenStore';
   import { useGuildSelection } from './useGuildSelection';
   import { usePlanCommandHistory } from './usePlanCommandHistory';
+  import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
   import { useSearchFocusHotkeys } from './useSearchFocusHotkeys';
 
   const props = defineProps<{
@@ -19,6 +20,7 @@
   }>();
 
   const garden = useGardenStore();
+  const saveCoordinator = usePlanSaveCoordinator();
   const { selectedGuildId, clearSelection, addGuild } = useGuildSelection();
   const commandHistory = usePlanCommandHistory();
   const { canUndo, canRedo } = storeToRefs(commandHistory);
@@ -114,6 +116,14 @@
         @click="addGuild"
       >
         Add guild
+      </button>
+      <button
+        type="button"
+        class="btn-soft-primary px-3 py-1.5 text-sm disabled:opacity-50"
+        :disabled="!saveCoordinator.canSave"
+        @click="saveCoordinator.save()"
+      >
+        {{ saveCoordinator.status === 'saving' ? 'Saving…' : 'Save' }}
       </button>
     </div>
   </div>

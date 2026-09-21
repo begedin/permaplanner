@@ -92,7 +92,7 @@
           </li>
           <li>
             Your garden plan documents when you are signed in (saved to our database so
-            autosave and multi-device access work).
+            saving and multi-device access work).
           </li>
           <li>
             Optional share links you create for a garden (a public read-only page for that

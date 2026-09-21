@@ -10,7 +10,6 @@ export type PlanSavableState = {
   guilds: Guild[];
   backgroundOpacity: number;
   backgroundImageDataUrl: string | undefined;
-  syncRevision: number;
   onboardingState: OnboardingState;
   mapScale: {
     start: { x: number; y: number };
@@ -35,7 +34,6 @@ export const capturePlanSavableState = (): PlanSavableState => {
     guilds: clone(permaplanner.guilds),
     backgroundOpacity: permaplanner.backgroundOpacity,
     backgroundImageDataUrl: permaplanner.backgroundImageDataUrl,
-    syncRevision: permaplanner.syncRevision,
     onboardingState: permaplanner.onboardingState,
     mapScale: {
       start: { x: start.value.x, y: start.value.y },
@@ -53,7 +51,6 @@ export const applyPlanSavableState = (state: PlanSavableState): void => {
   permaplanner.guilds = clone(state.guilds);
   permaplanner.backgroundOpacity = state.backgroundOpacity;
   permaplanner.backgroundImageDataUrl = state.backgroundImageDataUrl;
-  permaplanner.syncRevision = state.syncRevision;
   permaplanner.onboardingState = state.onboardingState;
   start.value.x = state.mapScale.start.x;
   start.value.y = state.mapScale.start.y;
@@ -71,7 +68,6 @@ export const planSavableStatesEqual = (
   }
   if (
     a.backgroundOpacity !== b.backgroundOpacity ||
-    a.syncRevision !== b.syncRevision ||
     a.onboardingState !== b.onboardingState ||
     a.mapScale.linePhysicalLength !== b.mapScale.linePhysicalLength ||
     !mapScalePointsEqual(a.mapScale.start, b.mapScale.start) ||

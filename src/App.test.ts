@@ -76,3 +76,40 @@ it('shows an unsaved dot on the plan menu button', async () => {
     expect(screen.getByRole('button', { name: 'Plan, unsaved changes' })).toBeVisible();
   });
 });
+
+it('prompts on page unload only while the plan has unsaved changes', async () => {
+  const store = usePermaplannerStore();
+  store.gardenId = 'g1';
+  const coordinator = usePlanSaveCoordinator();
+  coordinator.markSaved();
+  const view = renderApp();
+  const clean = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(clean);
+  expect(clean.defaultPrevented).toBe(false);
+  store.backgroundOpacity = 0.7;
+  const dirty = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(dirty);
+  expect(dirty.defaultPrevented).toBe(true);
+  view.unmount();
+  const unmounted = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(unmounted);
+  expect(unmounted.defaultPrevented).toBe(false);
+});
+
+it('allows garden view changes but prompts before leaving for import', async () => {
+  const store = usePermaplannerStore();
+  store.gardenId = 'g1';
+  usePlanSaveCoordinator().markSaved();
+  store.backgroundOpacity = 0.7;
+  const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+  await router.push('/aerial');
+  expect(router.currentRoute.value.name).toBe(routeNames.aerial);
+  expect(confirm).not.toHaveBeenCalled();
+  await router.push('/import');
+  expect(router.currentRoute.value.name).toBe(routeNames.aerial);
+  expect(confirm).toHaveBeenCalledTimes(1);
+  confirm.mockReturnValue(true);
+  await router.push('/import');
+  expect(router.currentRoute.value.name).toBe(routeNames.import);
+  confirm.mockRestore();
+});

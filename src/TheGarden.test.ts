@@ -389,3 +389,30 @@ it('shows the merge cursor and cancels with Escape while focus is outside a guil
   expect(store.guilds).toMatchObject([{ id: 'a', name: 'A' }]);
   expect(window.confirm).not.toHaveBeenCalled();
 });
+
+it('shift-clicking a guild leaves its aerial outline intact', async () => {
+  const store = useGardenStore();
+  const guild = {
+    id: 'bed',
+    name: 'Bed',
+    mulchLevel: 1 as const,
+    plants: [],
+    path: [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 100 },
+    ],
+  };
+  store.guilds = [guild];
+  const router = await createAuthedTestRouter('/aerial');
+  const wrapper = mount(TheGarden, { global: { plugins: [router] } });
+
+  await wrapper
+    .getComponent(GardenGuild)
+    .find('polygon.pointer-events-fill')
+    .trigger('click', { shiftKey: true });
+
+  expect(store.guilds).toEqual([guild]);
+  expect(store.removeGuildFromAerialMap).not.toHaveBeenCalled();
+  wrapper.unmount();
+});

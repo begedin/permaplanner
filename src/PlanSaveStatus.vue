@@ -1,5 +1,4 @@
 <script setup lang="ts">
-  import { onMounted } from 'vue';
   import { storeToRefs } from 'pinia';
 
   import { planSaveStatusLabel, usePlanSaveCoordinator } from './usePlanSaveCoordinator';
@@ -7,10 +6,6 @@
   const planSaveCoordinator = usePlanSaveCoordinator();
   const { status, errorMessage, details, hasUnsavedChanges } =
     storeToRefs(planSaveCoordinator);
-
-  onMounted(() => {
-    void planSaveCoordinator.refreshDetails();
-  });
 
   const statusClass = (value: string): string => {
     switch (value) {
@@ -54,33 +49,19 @@
           type="button"
           class="btn-soft-muted btn-soft-sm shrink-0 px-1.5 py-0.5 text-ink-700"
           aria-label="Retry save"
-          @click="planSaveCoordinator.retry()"
+          @click="planSaveCoordinator.save()"
         >
           ↻
         </button>
       </div>
-      <template
-        v-for="(detail, index) in details"
-        :key="index"
+      <p
+        v-for="detail in details"
+        :key="detail.label"
+        class="text-ink-600"
       >
-        <p
-          v-if="detail.kind === 'text'"
-          class="text-ink-600"
-        >
-          {{ detail.label }}:
-          <strong class="text-ink-800">{{ detail.value }}</strong>
-        </p>
-        <p v-else-if="detail.kind === 'link'">
-          <a
-            class="text-sage-800 hover:text-sage-800 underline break-all"
-            :href="detail.href"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {{ detail.label }}
-          </a>
-        </p>
-      </template>
+        {{ detail.label }}:
+        <strong class="text-ink-800">{{ detail.value }}</strong>
+      </p>
       <p
         v-if="errorMessage"
         class="text-red-700"

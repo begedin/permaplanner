@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { computed, onMounted, ref, watch } from 'vue';
   import { storeToRefs } from 'pinia';
+  import { useEventListener } from '@vueuse/core';
   import { useRoute } from 'vue-router';
 
   import AppFooter from './AppFooter.vue';
@@ -50,6 +51,13 @@
 
   const planDrawerOpen = ref(false);
   const { hasUnsavedChanges } = storeToRefs(usePlanSaveCoordinator());
+
+  useEventListener(window, 'beforeunload', (event) => {
+    if (hasUnsavedChanges.value) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+  });
 
   const planMenuLabel = computed(() =>
     hasUnsavedChanges.value ? 'Plan, unsaved changes' : 'Plan',

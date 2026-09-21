@@ -349,7 +349,6 @@
             :unit-length-px="mapScale.unitLengthPx"
             @cancel="clearSelection"
             @click.exact="selectGuild(guild.id)"
-            @click.shift="garden.removeGuildFromAerialMap(guild.id)"
             @mouseenter="hoveredId = guild.id"
             @mouseleave="clearHover()"
             @move="commitGuildPath(guild.id, $event)"

@@ -1,186 +1,208 @@
 import { flushPromises } from '@vue/test-utils';
-import { setActivePinia } from 'pinia';
-import { createPinia } from 'pinia';
+import { setActivePinia, createPinia } from 'pinia';
 import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 
 import * as gardensApi from './api/gardens';
-import { resetPlanSaveSerialQueueForTests } from './planSaveSerialQueue';
+import { ApiError } from './api/client';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
 import { useAuthStore } from './stores/useAuthStore';
+import { useGardenSessionStore } from './stores/useGardenSessionStore';
 
-vi.mock('./api/gardens', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./api/gardens')>();
-  return {
-    ...actual,
-    updateGarden: vi.fn(),
-    listGardens: vi.fn().mockResolvedValue([]),
-  };
-});
+vi.mock('./api/gardens', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./api/gardens')>()),
+  updateGarden: vi.fn(),
+  listGardens: vi.fn().mockResolvedValue([]),
+}));
 
 beforeEach(() => {
   setActivePinia(createPinia());
-  resetPlanSaveSerialQueueForTests();
   useAuthStore().user = { id: 'u1', email: 't@example.com', totpConfirmed: true };
+  usePermaplannerStore().gardenId = 'g1';
+  vi.mocked(gardensApi.updateGarden).mockResolvedValue(1);
 });
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
   vi.mocked(gardensApi.updateGarden).mockReset();
 });
 
-it('autosaves to server after edit', async () => {
-  vi.mocked(gardensApi.updateGarden).mockResolvedValue(1);
+const plant = { id: 'p1', speciesId: 'comfrey', cultivarId: null };
 
-  const store = usePermaplannerStore();
-  store.gardenId = 'g1';
-  store.gardenName = 'garden.json';
-
-  const coordinator = usePlanSaveCoordinator();
-  coordinator.markSaved();
-
-  usePlanCommandHistory().runMutation(() => {
-    store.plants.push({
-      id: 'p1',
-      speciesId: 'comfrey',
-      cultivarId: null,
-    });
-  });
-  await flushPromises();
-
-  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
-  expect(coordinator.status).toBe('saved');
-});
-
-it('does not mark server unsaved before markSaved', () => {
-  const store = usePermaplannerStore();
-  store.gardenId = 'g1';
-
-  const coordinator = usePlanSaveCoordinator();
-  usePlanCommandHistory().runMutation(() => {
-    store.plants.push({
-      id: 'p1',
-      speciesId: 'comfrey',
-      cultivarId: null,
-    });
-  });
-
-  expect(coordinator.hasUnsavedChanges).toBe(false);
-});
-
-it('saveNow forces server save', async () => {
-  vi.mocked(gardensApi.updateGarden).mockResolvedValue(0);
-
-  const store = usePermaplannerStore();
-  store.gardenId = 'g1';
-
-  const coordinator = usePlanSaveCoordinator();
-  coordinator.markSaved();
-
-  await coordinator.saveNow();
-
-  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
-});
-
-it('does not autosave again after failure until next edit or manual save', async () => {
+it('only saves after an explicit request, with no automatic saves after edits or undo', async () => {
   vi.useFakeTimers();
-  vi.mocked(gardensApi.updateGarden).mockRejectedValue(new Error('db down'));
-
   const store = usePermaplannerStore();
-  store.gardenId = 'g1';
-
   const coordinator = usePlanSaveCoordinator();
   coordinator.markSaved();
-
-  usePlanCommandHistory().runMutation(() => {
-    store.plants.push({
-      id: 'p1',
-      speciesId: 'comfrey',
-      cultivarId: null,
-    });
+  const history = usePlanCommandHistory();
+  history.runMutation(() => {
+    store.plants = [plant];
   });
-  await flushPromises();
+  await vi.advanceTimersByTimeAsync(10000);
+
+  expect(gardensApi.updateGarden).not.toHaveBeenCalled();
+  expect(coordinator).toMatchObject({ status: 'unsaved', canSave: true });
+  await coordinator.save();
+  expect(coordinator).toMatchObject({ status: 'saved', canSave: false });
+
+  history.undo();
+  await vi.advanceTimersByTimeAsync(10000);
   expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
-  expect(coordinator.status).toBe('error');
-
-  await vi.advanceTimersByTimeAsync(50);
-  await flushPromises();
-  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
-
-  vi.mocked(gardensApi.updateGarden).mockResolvedValue(1);
-  await coordinator.saveNow();
-  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(2);
-
-  vi.mocked(gardensApi.updateGarden).mockRejectedValue(new Error('db down again'));
-  usePlanCommandHistory().runMutation(() => {
-    store.plants.push({
-      id: 'p2',
-      speciesId: 'comfrey',
-      cultivarId: null,
-    });
-  });
-  await flushPromises();
-  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(3);
+  expect(coordinator.canSave).toBe(true);
+  await coordinator.save();
+  expect(vi.mocked(gardensApi.updateGarden).mock.calls[1]).toEqual([
+    'g1',
+    expect.objectContaining({ syncRevision: 1, plants: [] }),
+  ]);
 });
 
-it('omits backgroundImage from server save when only other fields change', async () => {
-  vi.mocked(gardensApi.updateGarden).mockResolvedValue(1);
-
+it('does not save a clean plan and becomes clean when undo returns to the saved state', async () => {
   const store = usePermaplannerStore();
-  store.gardenId = 'g1';
-  store.backgroundImageDataUrl = 'data:image/png;base64,abc';
-  store.backgroundImageSavedDataUrl = 'data:image/png;base64,abc';
-
   const coordinator = usePlanSaveCoordinator();
   coordinator.markSaved();
-
-  usePlanCommandHistory().runMutation(() => {
-    store.plants.push({
-      id: 'p1',
-      speciesId: 'comfrey',
-      cultivarId: null,
-    });
+  const history = usePlanCommandHistory();
+  history.runMutation(() => {
+    store.plants = [plant];
   });
-  await flushPromises();
-
-  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
-  const [, document] = vi.mocked(gardensApi.updateGarden).mock.calls[0]!;
-  expect(document).not.toHaveProperty('backgroundImage');
+  history.undo();
+  expect(coordinator).toMatchObject({ canSave: false, hasUnsavedChanges: false });
+  await coordinator.save();
+  expect(gardensApi.updateGarden).not.toHaveBeenCalled();
+  history.redo();
+  expect(coordinator.canSave).toBe(true);
 });
 
-it('sends backgroundImage when it changes and supports undo', async () => {
+it('does not mark the initial load unsaved before markSaved', () => {
+  usePermaplannerStore().plants = [plant];
+  expect(usePlanSaveCoordinator().hasUnsavedChanges).toBe(false);
+});
+
+it('preserves edits made during a save as dirty without scheduling another save', async () => {
   vi.useFakeTimers();
-  vi.mocked(gardensApi.updateGarden).mockResolvedValue(1);
-
   const store = usePermaplannerStore();
-  store.gardenId = 'g1';
-
   const coordinator = usePlanSaveCoordinator();
   coordinator.markSaved();
+  store.plants = [plant];
+  let finishSave!: (revision: number) => void;
+  vi.mocked(gardensApi.updateGarden).mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finishSave = resolve;
+      }),
+  );
+  const pending = coordinator.save();
+  await flushPromises();
+  expect(coordinator).toMatchObject({
+    status: 'saving',
+    canSave: false,
+    hasUnsavedChanges: true,
+  });
+  store.backgroundOpacity = 0.8;
+  await coordinator.save();
+  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
+  finishSave(1);
+  await pending;
+  await vi.advanceTimersByTimeAsync(10000);
+  expect(coordinator).toMatchObject({ status: 'unsaved', canSave: true });
+  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
+});
 
+it('keeps changes and undo history on a conflict and allows an explicit retry', async () => {
+  const store = usePermaplannerStore();
+  const coordinator = usePlanSaveCoordinator();
+  coordinator.markSaved();
+  const history = usePlanCommandHistory();
+  history.runMutation(() => {
+    store.plants = [plant];
+  });
+  vi.mocked(gardensApi.updateGarden).mockRejectedValueOnce(new ApiError(409, {}));
+  await coordinator.save();
+  expect(store).toMatchObject({ plants: [plant], syncRevision: 0 });
+  expect(history.canUndo).toBe(true);
+  expect(coordinator).toMatchObject({
+    status: 'error',
+    canSave: true,
+    errorMessage: expect.stringContaining('Your changes are still here'),
+  });
+  await coordinator.save();
+  expect(coordinator).toMatchObject({ status: 'saved', canSave: false });
+});
+
+it('omits unchanged images and explicitly saves image removal after undo during upload', async () => {
+  const store = usePermaplannerStore();
+  const coordinator = usePlanSaveCoordinator();
+  coordinator.markSaved();
+  store.plants = [plant];
+  await coordinator.save();
+  expect(vi.mocked(gardensApi.updateGarden).mock.calls[0]?.[1]).not.toHaveProperty(
+    'backgroundImage',
+  );
   const history = usePlanCommandHistory();
   history.runMutation(() => {
     store.backgroundImageDataUrl = 'data:image/png;base64,new';
   });
+  let finishSave!: (revision: number) => void;
+  vi.mocked(gardensApi.updateGarden).mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finishSave = resolve;
+      }),
+  );
+  const pending = coordinator.save();
   await flushPromises();
-  await vi.advanceTimersByTimeAsync(50);
-  await flushPromises();
-
-  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
-  expect(vi.mocked(gardensApi.updateGarden).mock.calls[0]![1]).toMatchObject({
-    backgroundImage: 'data:image/png;base64,new',
-  });
-
-  vi.mocked(gardensApi.updateGarden).mockClear();
-
   history.undo();
-  await flushPromises();
-  await vi.advanceTimersByTimeAsync(50);
-  await flushPromises();
+  expect(coordinator.hasUnsavedChanges).toBe(true);
+  finishSave(2);
+  await pending;
+  expect(coordinator.canSave).toBe(true);
+  await coordinator.save();
+  expect(vi.mocked(gardensApi.updateGarden).mock.calls[2]).toEqual([
+    'g1',
+    expect.objectContaining({ syncRevision: 2, backgroundImage: null }),
+  ]);
+});
 
-  expect(gardensApi.updateGarden).toHaveBeenCalledTimes(1);
-  expect(vi.mocked(gardensApi.updateGarden).mock.calls[0]![1]).toMatchObject({
-    backgroundImage: null,
+it('asks before leaving with unsaved changes and respects cancellation', () => {
+  const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+  const coordinator = usePlanSaveCoordinator();
+  coordinator.markSaved();
+  expect(coordinator.confirmLeave()).toBe(true);
+  expect(confirm).not.toHaveBeenCalled();
+  usePermaplannerStore().plants = [plant];
+  expect(coordinator.confirmLeave()).toBe(false);
+  confirm.mockReturnValue(true);
+  expect(coordinator.confirmLeave()).toBe(true);
+});
+
+it('updates save details directly from the garden list', () => {
+  const store = usePermaplannerStore();
+  store.gardenName = 'Backyard';
+  const coordinator = usePlanSaveCoordinator();
+  expect(coordinator.details).toEqual([
+    { label: 'Garden', value: 'Backyard' },
+    { label: 'Last saved', value: '—' },
+  ]);
+  const updatedAt = '2026-09-21T12:00:00.000Z';
+  useGardenSessionStore().gardens = [
+    { id: 'g1', name: 'Backyard', syncRevision: 1, updatedAt },
+  ];
+  expect(coordinator.details).toEqual([
+    { label: 'Garden', value: 'Backyard' },
+    { label: 'Last saved', value: new Date(updatedAt).toLocaleString() },
+  ]);
+});
+
+it('keeps a successful save clean when refreshing the garden list fails', async () => {
+  const coordinator = usePlanSaveCoordinator();
+  coordinator.markSaved();
+  usePermaplannerStore().plants = [plant];
+  vi.mocked(gardensApi.listGardens).mockRejectedValueOnce(new Error('Network error'));
+  await coordinator.save();
+  expect(coordinator).toMatchObject({
+    status: 'saved',
+    canSave: false,
+    errorMessage: undefined,
   });
 });

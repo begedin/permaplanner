@@ -103,11 +103,11 @@ it('keeps redo available after a no-op but clears it after a new edit', () => {
   expect(store.guilds).toEqual([]);
 });
 
-it('applies edits without recording while autosave is suppressed', () => {
+it('applies edits without recording during bulk plan updates', () => {
   const store = usePermaplannerStore();
   const history = usePlanCommandHistory();
   const before = capturePlanSavableState();
-  store.suppressAutosaveDepth = 1;
+  store.isBulkPlanUpdate = true;
   history.runMutation(() => {
     store.guilds = [testGuild()];
   });

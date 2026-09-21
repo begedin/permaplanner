@@ -22,6 +22,7 @@ import { useAuthStore } from './stores/useAuthStore';
 import { needsGardenSetup } from './useAuthGate';
 import { bootstrapGardenSession, isGardenBootstrapping } from './useGardenSession';
 import { useGardenStore } from './useGardenStore';
+import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
 
 export const routeNames = {
   login: 'login',
@@ -125,7 +126,16 @@ const routes: RouteRecordRaw[] = [
 export const createAppRouter = (history: RouterHistory = createWebHistory()) => {
   const router = createRouter({ history, routes });
 
-  router.beforeEach(async (to) => {
+  router.beforeEach(async (to, from) => {
+    if (
+      from.name &&
+      to.name !== from.name &&
+      (to.name === routeNames.import ||
+        publicRouteNames.has(to.name as typeof routeNames.login)) &&
+      !usePlanSaveCoordinator().confirmLeave()
+    ) {
+      return false;
+    }
     const auth = useAuthStore();
     if (auth.bootstrapping) {
       await auth.bootstrap();
@@ -141,7 +151,10 @@ export const createAppRouter = (history: RouterHistory = createWebHistory()) => 
       await bootstrapGardenSession();
     }
 
-    if (auth.user?.totpConfirmed && (to.name === routeNames.login || to.name === routeNames.register)) {
+    if (
+      auth.user?.totpConfirmed &&
+      (to.name === routeNames.login || to.name === routeNames.register)
+    ) {
       return { name: routeNames.guilds, replace: true };
     }
 

@@ -138,11 +138,8 @@
     }
   };
 
-  const savePlan = async () => {
-    await planSaveCoordinator.saveNow();
-  };
-
   const logout = async () => {
+    if (!planSaveCoordinator.confirmLeave()) return;
     await auth.logout();
     await resetGardenSession();
     await router.replace({ name: routeNames.login });
@@ -159,7 +156,8 @@
       <button
         type="button"
         class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
-        @click="savePlan"
+        :disabled="!planSaveCoordinator.canSave"
+        @click="planSaveCoordinator.save()"
       >
         Save plan
       </button>

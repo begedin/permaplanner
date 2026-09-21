@@ -7,14 +7,13 @@ import {
   planSavableStatesEqual,
   type PlanSavableState,
 } from './planSavableState';
-import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
 import { usePermaplannerStore } from './usePermaplannerStore';
 
 type PlanEdit = { before: PlanSavableState; after: PlanSavableState };
 
 const shouldRecordCommands = (): boolean => {
   const permaplanner = usePermaplannerStore();
-  return permaplanner.suppressAutosaveDepth === 0 && !permaplanner.isBulkPlanUpdate;
+  return !permaplanner.isBulkPlanUpdate;
 };
 
 export const usePlanCommandHistory = defineStore('planCommandHistory', () => {
@@ -33,7 +32,6 @@ export const usePlanCommandHistory = defineStore('planCommandHistory', () => {
     if (planSavableStatesEqual(before, after)) return;
     undoStack.value = [...undoStack.value, { before, after }];
     redoStack.value = [];
-    usePlanSaveCoordinator().onEditApplied();
   };
 
   const runMutation = (mutate: () => void) => {
@@ -59,7 +57,6 @@ export const usePlanCommandHistory = defineStore('planCommandHistory', () => {
       applyingDepth -= 1;
     }
     redoStack.value = [...redoStack.value, edit];
-    usePlanSaveCoordinator().onEditApplied();
   };
 
   const redo = () => {
@@ -75,7 +72,6 @@ export const usePlanCommandHistory = defineStore('planCommandHistory', () => {
       applyingDepth -= 1;
     }
     undoStack.value = [...undoStack.value, edit];
-    usePlanSaveCoordinator().onEditApplied();
   };
 
   const clear = () => {
