@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, type ShallowRef } from 'vue';
 
 import {
   applyPlanSavableState,
@@ -44,35 +44,27 @@ export const usePlanCommandHistory = defineStore('planCommandHistory', () => {
     commitSnapshot(before);
   };
 
-  const undo = () => {
-    const edit = undoStack.value.at(-1);
+  const replayEdit = (
+    source: ShallowRef<PlanEdit[]>,
+    destination: ShallowRef<PlanEdit[]>,
+    snapshot: keyof PlanEdit,
+  ) => {
+    const edit = source.value.at(-1);
     if (!edit) {
       return;
     }
-    undoStack.value = undoStack.value.slice(0, -1);
+    source.value = source.value.slice(0, -1);
     applyingDepth += 1;
     try {
-      applyPlanSavableState(edit.before);
+      applyPlanSavableState(edit[snapshot]);
     } finally {
       applyingDepth -= 1;
     }
-    redoStack.value = [...redoStack.value, edit];
+    destination.value = [...destination.value, edit];
   };
 
-  const redo = () => {
-    const edit = redoStack.value.at(-1);
-    if (!edit) {
-      return;
-    }
-    redoStack.value = redoStack.value.slice(0, -1);
-    applyingDepth += 1;
-    try {
-      applyPlanSavableState(edit.after);
-    } finally {
-      applyingDepth -= 1;
-    }
-    undoStack.value = [...undoStack.value, edit];
-  };
+  const undo = () => replayEdit(undoStack, redoStack, 'before');
+  const redo = () => replayEdit(redoStack, undoStack, 'after');
 
   const clear = () => {
     undoStack.value = [];

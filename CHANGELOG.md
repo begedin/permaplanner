@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.24.2
+
+- [REFACTOR] Consolidate undo and redo replay logic while preserving history behavior
+
 ## 0.24.1
 
 - [REFACTOR] Simplify search highlight range calculation to a single pass while preserving highlighting behavior
