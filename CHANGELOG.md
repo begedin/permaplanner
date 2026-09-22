@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.24.1
+
+- [REFACTOR] Simplify search highlight range calculation to a single pass while preserving highlighting behavior
+
 ## 0.24.0
 
 - [FEATURE] Sort plants in the selected guild detail card by name or layer, with optional layer grouping

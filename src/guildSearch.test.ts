@@ -165,13 +165,26 @@ it('highlights fuzzy prefix matches as one span', () => {
   ]);
 });
 
-it('spans disjoint fuzzy indices into one highlight', () => {
-  expect(
-    spanHighlightRanges([
+it.each<{ ranges: [number, number][]; expected: [number, number][] }>([
+  { ranges: [], expected: [] },
+  { ranges: [[3, 5]], expected: [[3, 5]] },
+  {
+    ranges: [
       [0, 2],
       [5, 6],
-    ]),
-  ).toEqual([[0, 6]]);
+    ],
+    expected: [[0, 6]],
+  },
+  {
+    ranges: [
+      [5, 6],
+      [0, 10],
+      [2, 4],
+    ],
+    expected: [[0, 10]],
+  },
+])('spans fuzzy indices $ranges into $expected', ({ ranges, expected }) => {
+  expect(spanHighlightRanges(ranges)).toEqual(expected);
 });
 
 it('uses platform-specific shortcuts in the search placeholder', () => {

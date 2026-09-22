@@ -118,24 +118,14 @@ export const spanHighlightRanges = (ranges: InclusiveRange[]): InclusiveRange[] 
     return [];
   }
 
-  const sorted = [...ranges].sort((a, b) => a[0] - b[0]);
-  const merged: InclusiveRange[] = [sorted[0]!];
-
-  for (let i = 1; i < sorted.length; i++) {
-    const cur = sorted[i]!;
-    const last = merged[merged.length - 1]!;
-    if (cur[0] <= last[1] + 1) {
-      last[1] = Math.max(last[1], cur[1]);
-    } else {
-      merged.push(cur);
-    }
+  let start = Infinity;
+  let end = -Infinity;
+  for (const [rangeStart, rangeEnd] of ranges) {
+    start = Math.min(start, rangeStart);
+    end = Math.max(end, rangeEnd);
   }
 
-  if (merged.length <= 1) {
-    return merged;
-  }
-
-  return [[merged[0]![0], merged[merged.length - 1]![1]]];
+  return [[start, end]];
 };
 
 export const highlightSegments = (text: string, query: string): HighlightSegment[] => {
