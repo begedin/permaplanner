@@ -2,13 +2,13 @@ defmodule PermaplannerWeb.GardenShareJSON do
   @moduledoc false
 
   alias Permaplanner.Gardens.Share
-  alias PermaplannerWeb.GardenShareHTML
+  alias Permaplanner.Gardens.ShareSummary
 
   def show(%{garden_name: garden_name, guilds: guilds}) do
     %{
       gardenName: garden_name,
       guilds: guilds,
-      summary: GardenShareHTML.guild_content(guilds)
+      summary: ShareSummary.build(guilds)
     }
   end
 

@@ -1,0 +1,146 @@
+[
+  {
+    "name": "empty garden",
+    "guilds": [],
+    "summary": "(no guilds)"
+  },
+  {
+    "name": "all stages and vigor labels",
+    "guilds": [
+      {
+        "id": "g1",
+        "name": "Season bed",
+        "path": [],
+        "mulchLevel": 5,
+        "plants": [
+          {
+            "id": "t1",
+            "plantId": "p1",
+            "nameOrCultivar": "Plant 1",
+            "x": 0,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "growthPhase": "sown",
+            "vigor": 1
+          },
+          {
+            "id": "t2",
+            "plantId": "p2",
+            "nameOrCultivar": "Plant 2",
+            "x": 0,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "growthPhase": "germinated",
+            "vigor": 2
+          },
+          {
+            "id": "t3",
+            "plantId": "p3",
+            "nameOrCultivar": "Plant 3",
+            "x": 0,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "growthPhase": "transplanted",
+            "vigor": 3
+          },
+          {
+            "id": "t4",
+            "plantId": "p4",
+            "nameOrCultivar": "Plant 4",
+            "x": 0,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "growthPhase": "young",
+            "vigor": 4
+          },
+          {
+            "id": "t5",
+            "plantId": "p5",
+            "nameOrCultivar": "Plant 5",
+            "x": 0,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "growthPhase": "established",
+            "vigor": 5
+          },
+          {
+            "id": "t6",
+            "plantId": "p6",
+            "nameOrCultivar": "Plant 6",
+            "x": 0,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "growthPhase": "producing"
+          },
+          {
+            "id": "t7",
+            "plantId": "p7",
+            "nameOrCultivar": "Plant 7",
+            "x": 0,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "growthPhase": "post_production"
+          }
+        ]
+      }
+    ],
+    "summary": "Season bed\n\n- id: g1\n- plants:\n  - Plant 1\n    - condition: Struggling (1/5)\n    - stage: Sown\n  - Plant 2\n    - condition: Stressed (2/5)\n    - stage: Germinated\n  - Plant 3\n    - condition: Fair (3/5)\n    - stage: Transplanted\n  - Plant 4\n    - condition: Healthy (4/5)\n    - stage: Young\n  - Plant 5\n    - condition: Thriving (5/5)\n    - stage: Established\n  - Plant 6\n    - condition: unknown\n    - stage: Producing\n  - Plant 7\n    - condition: unknown\n    - stage: Post-production\n- mulch level: 5/5\n- note: (none)"
+  },
+  {
+    "name": "multiple guilds, blank labels, optional fields and escaping",
+    "guilds": [
+      {
+        "id": "  ",
+        "name": " \t",
+        "path": [],
+        "mulchLevel": 1,
+        "note": "  ",
+        "plants": []
+      },
+      {
+        "id": " g2 ",
+        "name": " Herbs & <fruit> ",
+        "path": [],
+        "mulchLevel": 3,
+        "note": " North bed\nSecond line ",
+        "plants": [
+          {
+            "id": "t1",
+            "plantId": "p1",
+            "nameOrCultivar": " Žalfija & <basil> ",
+            "x": 0,
+            "y": 0,
+            "width": 16,
+            "height": 16
+          },
+          {
+            "id": "t2",
+            "plantId": " p2 ",
+            "nameOrCultivar": " ",
+            "x": 0,
+            "y": 0,
+            "width": 16,
+            "height": 16
+          },
+          {
+            "id": "t3",
+            "plantId": "",
+            "nameOrCultivar": "",
+            "x": 0,
+            "y": 0,
+            "width": 16,
+            "height": 16
+          }
+        ]
+      }
+    ],
+    "summary": "(unnamed guild)\n\n- id: n/a\n- plants:\n  - (none)\n- mulch level: 1/5\n- note: (none)\n\n---\n\nHerbs & <fruit>\n\n- id: g2\n- plants:\n  - Žalfija & <basil>\n    - condition: unknown\n    - stage: unknown\n  - p2\n    - condition: unknown\n    - stage: unknown\n  - (unknown plant)\n    - condition: unknown\n    - stage: unknown\n- mulch level: 3/5\n- note: North bed\nSecond line"
+  }
+]

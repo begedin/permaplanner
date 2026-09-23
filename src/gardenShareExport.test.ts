@@ -1,5 +1,7 @@
 import { expect, it } from 'vitest';
 
+import summaryFixtureJson from '../test/fixtures/garden_share_summaries.json?raw';
+
 import type { GardenDocument } from './gardenDocument';
 import type { Guild } from './gardenTypes';
 import {
@@ -44,23 +46,12 @@ const sampleDoc: GardenDocument = {
   onboardingState: 'done',
 };
 
-it('buildGardenShareSummary formats guild blocks like the public share page', () => {
-  const summary = buildGardenShareSummary([
-    {
-      id: 'g1',
-      name: 'Edge guild',
-      mulchLevel: 3,
-      note: 'North bed',
-      plants: [{ name: 'Thai Basil', growthPhase: 'young', vigor: 4 }],
-    },
-  ]);
+// Shared with ExUnit so clipboard JSON and public HTML/JSON follow one contract.
+const summaryFixtures: { name: string; guilds: Guild[]; summary: string }[] =
+  JSON.parse(summaryFixtureJson);
 
-  expect(summary).toContain('Edge guild');
-  expect(summary).toContain('Thai Basil');
-  expect(summary).toContain('Healthy (4/5)');
-  expect(summary).toContain('Young');
-  expect(summary).toContain('mulch level: 3/5');
-  expect(summary).toContain('North bed');
+it.each(summaryFixtures)('formats the shared summary: $name', ({ guilds, summary }) => {
+  expect(buildGardenShareSummary(guilds)).toBe(summary);
 });
 
 it('buildGardenSharePayload matches the public share JSON shape', () => {
@@ -83,8 +74,4 @@ it('buildGardenShareJsonText pretty-prints the share payload', () => {
     guilds: [sampleGuild],
     summary: expect.stringContaining('Thai Basil'),
   });
-});
-
-it('buildGardenShareSummary returns a placeholder for empty guild lists', () => {
-  expect(buildGardenShareSummary([])).toBe('(no guilds)');
 });

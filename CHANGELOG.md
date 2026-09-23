@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.25.1
+
+- [REFACTOR] Render garden share summaries from the current guild model and share server summary generation between HTML and JSON responses
+- [TEST] Verify client and server share summaries against shared fixtures covering labels, empty values, and HTML escaping
+
 ## 0.25.0
 
 - [REFACTOR] Remove frontend migration runners; export the existing merged backend document format

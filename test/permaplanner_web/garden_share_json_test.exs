@@ -4,29 +4,23 @@ defmodule PermaplannerWeb.GardenShareJSONTest do
   alias Permaplanner.Gardens.Share
   alias PermaplannerWeb.GardenShareJSON
 
-  @sample_guilds [
-    %{
-      "id" => "g1",
-      "name" => "Edge guild",
-      "mulchLevel" => 3,
-      "note" => "North bed",
-      "plants" => [
-        %{
-          "name" => "Thai Basil",
-          "growthPhase" => "young",
-          "vigor" => 4
-        }
-      ]
-    }
-  ]
+  @fixtures Path.expand("../fixtures/garden_share_summaries.json", __DIR__)
+            |> File.read!()
+            |> Jason.decode!()
 
-  test "show returns garden name, guilds, and summary text" do
-    result = GardenShareJSON.show(%{garden_name: "Backyard", guilds: @sample_guilds})
+  for fixture <- @fixtures do
+    @guilds fixture["guilds"]
+    @summary fixture["summary"]
+    test "show returns the shared summary: #{fixture["name"]}" do
+      guilds = @guilds
+      summary = @summary
 
-    assert result.gardenName == "Backyard"
-    assert result.guilds == @sample_guilds
-    assert result.summary =~ "Edge guild"
-    assert result.summary =~ "Thai Basil"
+      assert GardenShareJSON.show(%{garden_name: "Backyard", guilds: guilds}) == %{
+               gardenName: "Backyard",
+               guilds: guilds,
+               summary: summary
+             }
+    end
   end
 
   test "index returns api share metadata list" do
