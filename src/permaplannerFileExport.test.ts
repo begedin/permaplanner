@@ -1,11 +1,11 @@
 import { expect, it } from 'vitest';
 
 import { buildLocalPlanJsonText } from './permaplannerFileExport';
-import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
+import { GARDEN_DOCUMENT_VERSION } from './gardenDocument';
 import type { GardenDocument } from './gardenDocument';
 
 const sampleDoc: GardenDocument = {
-  version: PERMAPLANNER_FILE_VERSION,
+  version: GARDEN_DOCUMENT_VERSION,
   syncRevision: 1,
   plants: [],
   guilds: [],
@@ -20,16 +20,7 @@ const sampleDoc: GardenDocument = {
 
 it('buildLocalPlanJsonText includes current version', () => {
   const parsed = JSON.parse(buildLocalPlanJsonText(sampleDoc)) as GardenDocument;
-  expect(parsed).toMatchObject({ version: PERMAPLANNER_FILE_VERSION, syncRevision: 1 });
-});
-
-it('buildLocalPlanJsonText writes split guild fields', () => {
-  const parsed = JSON.parse(buildLocalPlanJsonText(sampleDoc)) as Record<string, unknown>;
-  expect(parsed).toMatchObject({
-    version: PERMAPLANNER_FILE_VERSION,
-    guilds: [],
-    guildLocations: [],
-  });
+  expect(parsed).toMatchObject({ version: GARDEN_DOCUMENT_VERSION, syncRevision: 1 });
 });
 
 it('buildLocalPlanJsonText resolves guild plant names from plant records', () => {
@@ -64,8 +55,7 @@ it('buildLocalPlanJsonText resolves guild plant names from plant records', () =>
     ],
   };
 
-  const parsed = JSON.parse(buildLocalPlanJsonText(snapshot)) as {
-    guilds: { plants: { name: string }[] }[];
-  };
-  expect(parsed.guilds[0]!.plants[0]!.name).toBe('Thai Basil');
+  expect(JSON.parse(buildLocalPlanJsonText(snapshot))).toMatchObject({
+    guilds: [{ plants: [{ nameOrCultivar: 'Thai Basil' }] }],
+  });
 });

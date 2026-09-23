@@ -2,7 +2,7 @@ import { setActivePinia } from 'pinia';
 import { createPinia } from 'pinia';
 import { beforeEach, expect, it } from 'vitest';
 
-import { parseGardenDocument } from './gardenDocument';
+import type { GardenDocument } from './gardenDocument';
 import { buildLocalPlanJsonText } from './permaplannerFileExport';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import type { Guild } from './gardenTypes';
@@ -25,7 +25,7 @@ it('hydrates from document snapshot round-trip', async () => {
   store.gardenName = 'garden.json';
 
   const snap = store.snapshot();
-  const parsed = await parseGardenDocument(JSON.parse(buildLocalPlanJsonText(snap)));
+  const parsed = JSON.parse(buildLocalPlanJsonText(snap)) as GardenDocument;
 
   setActivePinia(createPinia());
   const reloaded = usePermaplannerStore();

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.25.0
+
+- [REFACTOR] Remove frontend migration runners; export the existing merged backend document format
+- [FIX] Convert downloaded files with split guild geometry at the frontend import entry point, preserving guild and plant positions by ID
+
 ## 0.24.2
 
 - [REFACTOR] Consolidate undo and redo replay logic while preserving history behavior

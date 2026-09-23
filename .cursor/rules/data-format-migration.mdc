@@ -1,19 +1,19 @@
 ---
-description: Plan document schema changes require version bump and migrations. Follow the data-format-migration skill.
+description: The frontend matches the backend contract; file import handles split guild layouts.
 globs:
-  - src/permaplannerFileVersion.ts
-  - src/permaplannerFileMigrate.ts
-  - src/permaplannerFileMigrate.test.ts
-  - src/migrations/**/*
+  - lib/permaplanner/gardens/garden.ex
+  - lib/permaplanner/legacy_import/adapters/local_file.ex
+  - priv/repo/migrations/**/*
+  - src/legacyImport/localFile.ts
+  - src/gardenDocument.ts
   - src/usePermaplannerStore.ts
   - playwright/fixtures/**/*
 alwaysApply: false
 ---
 
-# Plan data migrations
+# Garden document migrations
 
-When this rule applies, read and follow [`.cursor/skills/data-format-migration/SKILL.md`](../skills/data-format-migration/SKILL.md) **before** editing.
-
-- Bump `PERMAPLANNER_FILE_VERSION` and add a migration step for every persisted shape change.
-- Keep `version` on server documents and downloadable JSON exports.
-- Add or update tests in `permaplannerFileMigrate.test.ts`; run related unit tests after changes.
+Read [the data-format-migration skill](../skills/data-format-migration/SKILL.md)
+before changing persisted fields. Keep file compatibility at the frontend file import
+entry point. Add an Ecto data migration only when the stored backend format changes.
+Keep compatibility limited to the split-file transform. Preserve `syncRevision` during backfills.

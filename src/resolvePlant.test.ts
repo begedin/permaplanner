@@ -1,7 +1,6 @@
 import { expect, it } from 'vitest';
 import { plantCatalog } from './plantCatalog';
 import {
-  normalizePlantsFromFile,
   plantDisplayLabel,
   plantGuildGroupEnglishLabel,
   plantGuildGroupLabel,
@@ -104,25 +103,4 @@ it('uses English-only labels and separate Latin tooltip for guild list badges', 
   expect(plantGuildGroupEnglishLabel({ ...p, cultivarId: null, cultivar: null })).toBe(
     'Apple',
   );
-});
-
-it('migrates legacy plan rows to user plants', () => {
-  const raw = [
-    {
-      id: 'apple_granny_smith',
-      name: 'Apple',
-      cultivar: 'Granny Smith',
-      background: 'bg_1',
-      feature: 'apple',
-      feature_tint: '#00DD00',
-      functions: [],
-      layers: [],
-    },
-  ];
-  const migrated = normalizePlantsFromFile(raw, plantCatalog);
-  expect(migrated[0]).toMatchObject({
-    id: 'apple_granny_smith',
-    speciesId: 'apple',
-    cultivarId: 'granny_smith',
-  });
 });

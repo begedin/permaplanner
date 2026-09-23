@@ -22,9 +22,22 @@ defmodule PermaplannerWeb.GardenShareControllerTest do
               %{
                 "id" => "g1",
                 "name" => "Edge guild",
+                "path" => [],
                 "mulchLevel" => 3,
                 "note" => "North bed",
-                "plants" => [%{"name" => "Thai Basil", "growthPhase" => "young", "vigor" => 4}]
+                "plants" => [
+                  %{
+                    "nameOrCultivar" => "Thai Basil",
+                    "id" => "t1",
+                    "plantId" => "p1",
+                    "x" => 0,
+                    "y" => 0,
+                    "width" => 16,
+                    "height" => 16,
+                    "growthPhase" => "young",
+                    "vigor" => 4
+                  }
+                ]
               }
             ]
           })
@@ -53,9 +66,22 @@ defmodule PermaplannerWeb.GardenShareControllerTest do
                %{
                  "id" => "g1",
                  "name" => "Edge guild",
+                 "path" => [],
                  "mulchLevel" => 3,
                  "note" => "North bed",
-                 "plants" => [%{"name" => "Thai Basil", "growthPhase" => "young", "vigor" => 4}]
+                 "plants" => [
+                   %{
+                     "nameOrCultivar" => "Thai Basil",
+                     "id" => "t1",
+                     "plantId" => "p1",
+                     "x" => 0,
+                     "y" => 0,
+                     "width" => 16,
+                     "height" => 16,
+                     "growthPhase" => "young",
+                     "vigor" => 4
+                   }
+                 ]
                }
              ],
              "summary" => summary
@@ -79,9 +105,22 @@ defmodule PermaplannerWeb.GardenShareControllerTest do
         %{
           "id" => "g2",
           "name" => "Updated guild",
+          "path" => [],
           "mulchLevel" => 2,
           "note" => "Changed",
-          "plants" => [%{"name" => "Mint", "growthPhase" => "established", "vigor" => 5}]
+          "plants" => [
+            %{
+              "nameOrCultivar" => "Mint",
+              "id" => "t2",
+              "plantId" => "p2",
+              "x" => 0,
+              "y" => 0,
+              "width" => 16,
+              "height" => 16,
+              "growthPhase" => "established",
+              "vigor" => 5
+            }
+          ]
         }
       ])
 
@@ -99,9 +138,22 @@ defmodule PermaplannerWeb.GardenShareControllerTest do
              %{
                "id" => "g2",
                "name" => "Updated guild",
+               "path" => [],
                "mulchLevel" => 2,
                "note" => "Changed",
-               "plants" => [%{"name" => "Mint", "growthPhase" => "established", "vigor" => 5}]
+               "plants" => [
+                 %{
+                   "nameOrCultivar" => "Mint",
+                   "id" => "t2",
+                   "plantId" => "p2",
+                   "x" => 0,
+                   "y" => 0,
+                   "width" => 16,
+                   "height" => 16,
+                   "growthPhase" => "established",
+                   "vigor" => 5
+                 }
+               ]
              }
            ]
 

@@ -1,10 +1,13 @@
 import { defineStore } from 'pinia';
 import { nextTick, ref } from 'vue';
 
-import { type GardenDocument, parseGardenDocument } from './gardenDocument';
+import {
+  GARDEN_DOCUMENT_VERSION,
+  type GardenDocument,
+  type GardenDocumentPayload,
+} from './gardenDocument';
 import { type Guild, type UserPlant } from './gardenTypes';
 import { useMapScaleStore } from './useMapScaleStore';
-import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
 import { DEFAULT_ONBOARDING_STATE, type OnboardingState } from './onboardingTypes';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 
@@ -35,7 +38,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     const mapScale = useMapScaleStore();
     const bg = backgroundImageDataUrl.value;
     const doc: GardenDocument = {
-      version: PERMAPLANNER_FILE_VERSION,
+      version: GARDEN_DOCUMENT_VERSION,
       syncRevision: syncRevision.value,
       plants: plants.value,
       guilds: guilds.value,
@@ -53,10 +56,8 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     return doc;
   };
 
-  /** Plan JSON for server save — omits background unless it changed since last save. */
-  const snapshotForServer = ():
-    | GardenDocument
-    | (Omit<GardenDocument, 'backgroundImage'> & { backgroundImage?: string | null }) => {
+  /** API-update snapshot; omits the background image unless it changed. */
+  const snapshotForServer = (): GardenDocumentPayload => {
     const doc = snapshot();
     const current = backgroundImageDataUrl.value;
     const saved = backgroundImageSavedDataUrl.value;
@@ -84,7 +85,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       backgroundImageSavedDataUrl.value = doc.backgroundImage;
       backgroundOpacity.value = doc.backgroundOpacity;
       plants.value = doc.plants;
-      guilds.value = doc.guilds ?? [];
+      guilds.value = doc.guilds;
       syncRevision.value = doc.syncRevision;
       onboardingState.value = doc.onboardingState;
       applyToMapScale(doc);
@@ -95,11 +96,6 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
       await nextTick();
       isBulkPlanUpdate.value = false;
     }
-  };
-
-  const loadFromRaw = async (raw: unknown, meta?: { id?: string; name?: string }) => {
-    const doc = await parseGardenDocument(raw);
-    await hydrateFromDocument(doc, meta);
   };
 
   const resetToNewPlan = async () => {
@@ -134,7 +130,6 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     snapshot,
     snapshotForServer,
     hydrateFromDocument,
-    loadFromRaw,
     resetToNewPlan,
     isBulkPlanUpdate,
     backgroundImageDataUrl,

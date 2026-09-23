@@ -6,7 +6,7 @@ import {
   type GrowthPhase,
   type PlantVigor,
 } from './guildPlantInstanceStatus';
-import { withPersistedGuildPlantLabels } from './permaplannerFileExport';
+import { withPersistedGuildPlantLabels } from './guildPlantLabels';
 
 export type GardenSharePayload = {
   gardenName: string;

@@ -26,14 +26,22 @@ defmodule PermaplannerWeb.GardenControllerTest do
     assert %{"gardens" => []} = json_response(conn, 200)
 
     conn = post(conn, "/api/gardens", %{"name" => "Backyard"})
-    assert %{"garden" => %{"name" => "Backyard", "document" => document}} = json_response(conn, 201)
-    assert document["version"] == 5
+
+    assert %{"garden" => %{"name" => "Backyard", "document" => document}} =
+             json_response(conn, 201)
+
+    assert document["version"] == Garden.current_file_version()
+    refute Map.has_key?(document, "guildLocations")
   end
 
   test "updates garden with conflict on stale revision", %{conn: conn, user: user} do
     {:ok, garden} = Gardens.create_garden(user, %{"name" => "Plot"})
     stale_doc = Map.put(garden.document, "syncRevision", 0)
-    {:ok, garden} = Gardens.update_garden(user, garden.id, %{"document" => Map.put(garden.document, "syncRevision", 0)})
+
+    {:ok, garden} =
+      Gardens.update_garden(user, garden.id, %{
+        "document" => Map.put(garden.document, "syncRevision", 0)
+      })
 
     conn =
       put(conn, "/api/gardens/#{garden.id}", %{
@@ -56,6 +64,40 @@ defmodule PermaplannerWeb.GardenControllerTest do
     assert %{"syncRevision" => 1} = json_response(conn, 200)
   end
 
+  test "round-trips merged guild content and geometry", %{conn: conn, user: user} do
+    {:ok, garden} = Gardens.create_garden(user, %{"name" => "Plot"})
+
+    document =
+      Map.put(Gardens.default_document(), "guilds", [
+        %{
+          "id" => "g1",
+          "name" => "Herbs",
+          "mulchLevel" => 3,
+          "note" => "North bed",
+          "path" => [%{"x" => 10, "y" => 20}],
+          "plants" => [
+            %{
+              "id" => "t1",
+              "plantId" => "p1",
+              "nameOrCultivar" => "Herb",
+              "growthPhase" => "young",
+              "vigor" => 4,
+              "x" => 5,
+              "y" => 6,
+              "width" => 7,
+              "height" => 8
+            }
+          ]
+        }
+      ])
+
+    conn = put(conn, "/api/gardens/#{garden.id}", %{"document" => document, "syncRevision" => 0})
+    assert %{"syncRevision" => 1} = json_response(conn, 200)
+    conn = get(conn, "/api/gardens/#{garden.id}")
+    assert %{"garden" => %{"document" => saved}} = json_response(conn, 200)
+    assert saved == Map.put(document, "syncRevision", 1)
+  end
+
   test "stores background image in a separate table", %{conn: conn, user: user} do
     document =
       Gardens.default_document()
@@ -75,7 +117,10 @@ defmodule PermaplannerWeb.GardenControllerTest do
     assert response_document["backgroundImage"] == @png_data_url
   end
 
-  test "update without backgroundImage leaves stored background unchanged", %{conn: conn, user: user} do
+  test "update without backgroundImage leaves stored background unchanged", %{
+    conn: conn,
+    user: user
+  } do
     document =
       Gardens.default_document()
       |> Map.put("backgroundImage", @png_data_url)
@@ -128,7 +173,9 @@ defmodule PermaplannerWeb.GardenControllerTest do
   end
 
   defp registered_user! do
-    {:ok, user} = Accounts.register_user(%{email: "garden@example.com", password: "valid_password_12"})
+    {:ok, user} =
+      Accounts.register_user(%{email: "garden@example.com", password: "valid_password_12"})
+
     {:ok, totp} = Accounts.totp_setup_for_user(user)
     code = NimbleTOTP.verification_code(Base.decode32!(totp.secret, padding: false))
     {:ok, user, _} = Accounts.confirm_totp_registration(user, code)

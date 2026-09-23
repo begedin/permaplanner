@@ -7,7 +7,7 @@ import {
   buildGardenSharePayload,
   buildGardenShareSummary,
 } from './gardenShareExport';
-import { PERMAPLANNER_FILE_VERSION } from './permaplannerFileVersion';
+import { GARDEN_DOCUMENT_VERSION } from './gardenDocument';
 
 const sampleGuild: Guild = {
   id: 'g1',
@@ -31,7 +31,7 @@ const sampleGuild: Guild = {
 };
 
 const sampleDoc: GardenDocument = {
-  version: PERMAPLANNER_FILE_VERSION,
+  version: GARDEN_DOCUMENT_VERSION,
   syncRevision: 1,
   plants: [],
   guilds: [sampleGuild],

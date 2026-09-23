@@ -23,7 +23,7 @@ Secrets for local dev (when needed) live in `.env.1password` — see [`.env.1pas
 | `npm run dev`               | Phoenix (8080) + Vite dev server (5173), with 1Password env                |
 | `npm run dev:plain`         | Same, without `op run`                                                     |
 | `npm run start`             | Production-like Phoenix only on 8080 (requires `npm run build-only` first) |
-| `npm run start:server:test` | ExUnit tests for the Phoenix app                                         |
+| `npm run start:server:test` | ExUnit tests for the Phoenix app                                           |
 
 **Use http://localhost:5173 for frontend work.** Vite serves the Vue app with HMR and proxies `/api` to Phoenix.
 
@@ -85,3 +85,14 @@ Runtime resolution and labels are implemented in [`src/resolvePlant.ts`](src/res
 ## Badges
 
 [![codecov](https://codecov.io/gh/begedin/permaplanner/graph/badge.svg?token=EG2DRHVP86)](https://codecov.io/gh/begedin/permaplanner)
+
+## Garden document format
+
+Stored documents, API responses, frontend state, and downloadable JSON use the
+existing merged guild format (version 5). `syncRevision` tracks save conflicts.
+
+Before sending JSON to `/api/legacy-import/local`, the frontend file importer checks
+for `guildLocations`, joins geometry to guilds and plant instances by ID, and
+renames instance `name` to `nameOrCultivar`. The backend then imports the current
+format. Other historical field conversions are not
+supported. Existing database documents need no backfill.

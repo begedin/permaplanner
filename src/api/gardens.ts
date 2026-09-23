@@ -1,4 +1,5 @@
-import type { GardenDocument } from '../gardenDocument';
+import type { GardenDocument, GardenDocumentPayload } from '../gardenDocument';
+import { withPersistedGuildPlantLabels } from '../guildPlantLabels';
 import { apiFetch, expectJson } from './client';
 
 export type GardenSummary = {
@@ -25,26 +26,21 @@ export const listGardens = async (): Promise<GardenSummary[]> => {
   return data.gardens;
 };
 
-export const createGarden = async (name?: string): Promise<GardenRecord> => {
-  const data = await expectJson<{ garden: GardenRecord }>(
+const readGardenRecord = async (response: Response): Promise<GardenRecord> => {
+  const { garden } = await expectJson<{ garden: GardenRecord }>(response);
+  return garden;
+};
+
+export const createGarden = async (name?: string): Promise<GardenRecord> =>
+  readGardenRecord(
     await apiFetch('/api/gardens', {
       method: 'POST',
       body: JSON.stringify(name ? { name } : {}),
     }),
   );
-  return data.garden;
-};
 
-export const fetchGarden = async (id: string): Promise<GardenRecord> => {
-  const data = await expectJson<{ garden: GardenRecord }>(
-    await apiFetch(`/api/gardens/${id}`),
-  );
-  return data.garden;
-};
-
-export type GardenDocumentPayload = Omit<GardenDocument, 'backgroundImage'> & {
-  backgroundImage?: string | null;
-};
+export const fetchGarden = async (id: string): Promise<GardenRecord> =>
+  readGardenRecord(await apiFetch(`/api/gardens/${id}`));
 
 export const updateGarden = async (
   id: string,
@@ -53,17 +49,20 @@ export const updateGarden = async (
   const data = await expectJson<{ syncRevision: number }>(
     await apiFetch(`/api/gardens/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ document, syncRevision: document.syncRevision }),
+      body: JSON.stringify({
+        document: withPersistedGuildPlantLabels(document),
+        syncRevision: document.syncRevision,
+      }),
     }),
   );
   return data.syncRevision;
 };
 
 export const importGardenDocument = async (opts: {
-  document: GardenDocument;
+  document: unknown;
   name?: string;
-}): Promise<GardenRecord> => {
-  const data = await expectJson<{ garden: GardenRecord }>(
+}): Promise<GardenRecord> =>
+  readGardenRecord(
     await apiFetch('/api/legacy-import/local', {
       method: 'POST',
       body: JSON.stringify({
@@ -72,8 +71,6 @@ export const importGardenDocument = async (opts: {
       }),
     }),
   );
-  return data.garden;
-};
 
 export const deleteGarden = async (id: string): Promise<void> => {
   await apiFetch(`/api/gardens/${id}`, { method: 'DELETE' });
