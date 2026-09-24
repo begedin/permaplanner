@@ -16,10 +16,9 @@
   import { useOnboardingStore } from './useOnboardingStore';
   import { usePermaplannerStore } from './usePermaplannerStore';
   import { usePlanEditSession } from './usePlanEditSession';
-  import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
   import { useAuthStore } from './stores/useAuthStore';
   import { isAerialRoute, routeNames } from './router';
-  import { resetGardenSession } from './useGardenSession';
+  import { useGardenSessionStore } from './stores/useGardenSessionStore';
   import { useRoute } from 'vue-router';
 
   const permaplannerStore = usePermaplannerStore();
@@ -28,7 +27,7 @@
   const auth = useAuthStore();
   const router = useRouter();
   const route = useRoute();
-  const planSaveCoordinator = usePlanSaveCoordinator();
+  const gardenSession = useGardenSessionStore();
 
   const mapScaleEditSession = usePlanEditSession();
   const backgroundOpacityEditSession = usePlanEditSession();
@@ -139,9 +138,9 @@
   };
 
   const logout = async () => {
-    if (!planSaveCoordinator.confirmLeave()) return;
+    if (!gardenSession.confirmLeave()) return;
     await auth.logout();
-    await resetGardenSession();
+    await gardenSession.reset();
     await router.replace({ name: routeNames.login });
   };
 </script>
@@ -156,8 +155,8 @@
       <button
         type="button"
         class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
-        :disabled="!planSaveCoordinator.canSave"
-        @click="planSaveCoordinator.save()"
+        :disabled="!gardenSession.canSave"
+        @click="gardenSession.save()"
       >
         Save plan
       </button>

@@ -1,11 +1,21 @@
 <script setup lang="ts">
   import { storeToRefs } from 'pinia';
 
-  import { planSaveStatusLabel, usePlanSaveCoordinator } from './usePlanSaveCoordinator';
+  import {
+    useGardenSessionStore,
+    type PlanSaveStatus,
+  } from './stores/useGardenSessionStore';
 
-  const planSaveCoordinator = usePlanSaveCoordinator();
-  const { status, errorMessage, details, hasUnsavedChanges } =
-    storeToRefs(planSaveCoordinator);
+  const gardenSession = useGardenSessionStore();
+  const { status, errorMessage, details, hasUnsavedChanges } = storeToRefs(gardenSession);
+
+  const STATUS_LABEL: Record<PlanSaveStatus, string> = {
+    inactive: 'Off',
+    unsaved: 'Unsaved',
+    saving: 'Saving…',
+    saved: 'Saved',
+    error: 'Failed',
+  };
 
   const statusClass = (value: string): string => {
     switch (value) {
@@ -42,14 +52,14 @@
           class="font-medium"
           :class="statusClass(status)"
         >
-          {{ planSaveStatusLabel(status) }}
+          {{ STATUS_LABEL[status] }}
         </span>
         <button
           v-if="status === 'error'"
           type="button"
           class="btn-soft-muted btn-soft-sm shrink-0 px-1.5 py-0.5 text-ink-700"
           aria-label="Retry save"
-          @click="planSaveCoordinator.save()"
+          @click="gardenSession.save()"
         >
           ↻
         </button>

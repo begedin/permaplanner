@@ -9,7 +9,7 @@ import * as gardensApi from './api/gardens';
 import PlanSessionDrawer from './PlanSessionDrawer.vue';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
-import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
+import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import { seedAuthedTestSession } from './testing/authedTestSession';
 
 import { routeNames } from './router';
@@ -69,8 +69,7 @@ it('shows unsaved indicator inside the drawer when there are changes', async () 
   const store = usePermaplannerStore();
   store.gardenId = 'g1';
   store.gardenName = 'plan.json';
-  const coordinator = usePlanSaveCoordinator();
-  coordinator.markSaved();
+  useGardenSessionStore().markSaved();
   usePlanCommandHistory().runMutation(() => {
     store.plants.push({
       id: 'p1',

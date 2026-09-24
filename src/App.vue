@@ -12,15 +12,15 @@
   import UiIconSprite from './uiIcons/UiIconSprite.vue';
   import PlantParts from './PlantParts.vue';
   import { showMainApp } from './useAuthGate';
-  import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
-  import { bootstrapGardenSession, isGardenBootstrapping } from './useGardenSession';
   import { usePlanUndoRedoHotkeys } from './usePlanUndoRedoHotkeys';
   import { useCalendarSelection } from './useCalendarSelection';
   import { useGuildSelection } from './useGuildSelection';
   import { routeNames } from './router';
   import { useAuthStore } from './stores/useAuthStore';
+  import { useGardenSessionStore } from './stores/useGardenSessionStore';
 
   const auth = useAuthStore();
+  const gardenSession = useGardenSessionStore();
   onMounted(() => {
     void auth.bootstrap();
   });
@@ -28,8 +28,8 @@
   watch(
     () => auth.user?.totpConfirmed,
     (confirmed) => {
-      if (confirmed && isGardenBootstrapping.value) {
-        void bootstrapGardenSession();
+      if (confirmed && gardenSession.isBootstrapping) {
+        void gardenSession.bootstrap();
       }
     },
     { immediate: true },
@@ -50,7 +50,7 @@
   const { calendarTabTo } = useCalendarSelection();
 
   const planDrawerOpen = ref(false);
-  const { hasUnsavedChanges } = storeToRefs(usePlanSaveCoordinator());
+  const { hasUnsavedChanges } = storeToRefs(gardenSession);
 
   useEventListener(window, 'beforeunload', (event) => {
     if (hasUnsavedChanges.value) {

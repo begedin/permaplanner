@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.25.2
+
+- [REFACTOR] Centralize garden activation, bootstrap, reset, and save lifecycle state in the garden session store
+- [FIX] Ignore stale garden loads, list refreshes, and save results after switching or resetting the active garden
+
 ## 0.25.1
 
 - [REFACTOR] Render garden share summaries from the current guild model and share server summary generation between HTML and JSON responses

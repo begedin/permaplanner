@@ -14,21 +14,15 @@ import {
   seedAuthedTestSession,
 } from './testing/authedTestSession';
 import { routeNames, routeParam } from './router';
-import { isGardenBootstrapping } from './useGardenSession';
+import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import { useGardenStore } from './useGardenStore';
 import { useGuildSelection } from './useGuildSelection';
 
-vi.mock('./useGardenSession', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./useGardenSession')>();
-  return {
-    ...actual,
-    bootstrapGardenSession: vi.fn().mockResolvedValue(undefined),
-  };
-});
-
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
-  isGardenBootstrapping.value = false;
+  const gardenSession = useGardenSessionStore();
+  gardenSession.isBootstrapping = false;
+  vi.spyOn(gardenSession, 'bootstrap').mockResolvedValue();
 });
 
 afterEach(() => cleanup());
@@ -43,8 +37,8 @@ const SelectionProbe = defineComponent({
 });
 
 it('keeps the guild route while the plan session is restoring', async () => {
-  isGardenBootstrapping.value = true;
   seedAuthedTestSession();
+  useGardenSessionStore().isBootstrapping = true;
   const router = createAppRouter(createMemoryHistory());
 
   await router.push({ name: routeNames.guildsDetail, params: { guildId: 'alpha' } });
@@ -57,7 +51,7 @@ it('keeps the guild route while the plan session is restoring', async () => {
 
   const store = useGardenStore();
   store.guilds = [{ id: 'alpha', name: 'Alpha', path: [], plants: [], mulchLevel: 1 }];
-  isGardenBootstrapping.value = false;
+  useGardenSessionStore().isBootstrapping = false;
   await flushPromises();
 
   await waitFor(() => {
@@ -66,8 +60,8 @@ it('keeps the guild route while the plan session is restoring', async () => {
 });
 
 it('clears an unknown guild route after the plan session finishes restoring', async () => {
-  isGardenBootstrapping.value = true;
   seedAuthedTestSession();
+  useGardenSessionStore().isBootstrapping = true;
   const router = createAppRouter(createMemoryHistory());
 
   await router.push({ name: routeNames.aerialDetail, params: { guildId: 'missing' } });
@@ -77,7 +71,7 @@ it('clears an unknown guild route after the plan session finishes restoring', as
 
   expect(router.currentRoute.value.name).toBe(routeNames.aerialDetail);
 
-  isGardenBootstrapping.value = false;
+  useGardenSessionStore().isBootstrapping = false;
   await flushPromises();
   await router.isReady();
 

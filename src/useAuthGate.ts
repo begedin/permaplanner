@@ -2,13 +2,13 @@ import { computed } from 'vue';
 
 import { useAuthStore } from './stores/useAuthStore';
 import { useGardenSessionStore } from './stores/useGardenSessionStore';
-import { isGardenBootstrapping } from './useGardenSession';
 
 export type AuthGateMode = 'loading' | 'ready';
 
 export const authGateMode = computed((): AuthGateMode | null => {
   const auth = useAuthStore();
-  if (auth.bootstrapping || isGardenBootstrapping.value) {
+  const gardenSession = useGardenSessionStore();
+  if (auth.bootstrapping || gardenSession.isBootstrapping) {
     return 'loading';
   }
   if (!auth.user?.totpConfirmed) {
@@ -21,8 +21,9 @@ export const showMainApp = computed(() => authGateMode.value === 'ready');
 
 export const needsGardenSetup = computed(() => {
   const auth = useAuthStore();
-  if (auth.bootstrapping || isGardenBootstrapping.value || !auth.user?.totpConfirmed) {
+  const gardenSession = useGardenSessionStore();
+  if (auth.bootstrapping || gardenSession.isBootstrapping || !auth.user?.totpConfirmed) {
     return false;
   }
-  return useGardenSessionStore().gardens.length === 0;
+  return gardenSession.gardens.length === 0;
 });

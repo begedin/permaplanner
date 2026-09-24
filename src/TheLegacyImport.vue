@@ -5,11 +5,9 @@
   import { pickAndImportLocalFile } from './legacyImport/localFile';
   import { routeNames } from './router';
   import { useGardenSessionStore } from './stores/useGardenSessionStore';
-  import { useGardenSession } from './useGardenSession';
 
   const router = useRouter();
   const gardenSession = useGardenSessionStore();
-  const { createEmptyGarden, activateGarden } = useGardenSession();
 
   const actionError = ref<string | undefined>();
 
@@ -17,9 +15,8 @@
     actionError.value = undefined;
     try {
       const garden = await pickAndImportLocalFile();
-      await gardenSession.refreshList();
-      gardenSession.setActiveGardenId(garden.id);
-      await activateGarden(garden.id);
+      await gardenSession.activateGardenRecord(garden);
+      await gardenSession.refreshList().catch(() => undefined);
       await router.replace({ name: routeNames.guilds });
     } catch (e) {
       if (e instanceof DOMException && e.name === 'AbortError') {
@@ -32,7 +29,7 @@
   const startEmpty = async () => {
     actionError.value = undefined;
     try {
-      await createEmptyGarden('My garden');
+      await gardenSession.createEmptyGarden('My garden');
       await router.replace({ name: routeNames.guilds });
     } catch (e) {
       actionError.value = e instanceof Error ? e.message : String(e);

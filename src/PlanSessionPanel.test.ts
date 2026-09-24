@@ -10,7 +10,7 @@ import PlanSessionPanel from './PlanSessionPanel.vue';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { seedAuthedTestSession } from './testing/authedTestSession';
 import { routeNames } from './router';
-import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
+import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import { useAuthStore } from './stores/useAuthStore';
 
 vi.mock('./api/gardenShares');
@@ -163,7 +163,7 @@ it('copies HTML and JSON share links to the clipboard', async () => {
 
 it('cancels sign out before changing the session when unsaved changes are kept', async () => {
   renderPanel();
-  usePlanSaveCoordinator().markSaved();
+  useGardenSessionStore().markSaved();
   usePermaplannerStore().backgroundOpacity = 0.7;
   const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
 

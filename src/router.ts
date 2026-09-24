@@ -20,9 +20,8 @@ import ThePlants from './ThePlants.vue';
 import TheRegister from './TheRegister.vue';
 import { useAuthStore } from './stores/useAuthStore';
 import { needsGardenSetup } from './useAuthGate';
-import { bootstrapGardenSession, isGardenBootstrapping } from './useGardenSession';
 import { useGardenStore } from './useGardenStore';
-import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
+import { useGardenSessionStore } from './stores/useGardenSessionStore';
 
 export const routeNames = {
   login: 'login',
@@ -60,7 +59,7 @@ const selectionRedirect = (
   guilds: readonly Guild[],
   resolvePlant: (id: string) => Plant,
 ): RouteLocationRaw | undefined => {
-  if (isGardenBootstrapping.value) {
+  if (useGardenSessionStore().isBootstrapping) {
     return undefined;
   }
 
@@ -125,14 +124,36 @@ const routes: RouteRecordRaw[] = [
 
 export const createAppRouter = (history: RouterHistory = createWebHistory()) => {
   const router = createRouter({ history, routes });
+  let watchingGardenBootstrap = false;
 
   router.beforeEach(async (to, from) => {
+    const gardenSession = useGardenSessionStore();
+    if (!watchingGardenBootstrap) {
+      watchingGardenBootstrap = true;
+      watch(
+        () => gardenSession.isBootstrapping,
+        async (booting, wasBooting) => {
+          if (wasBooting && !booting) {
+            const garden = useGardenStore();
+            const redirect = selectionRedirect(
+              router.currentRoute.value,
+              garden.guilds,
+              (id) => garden.resolvedPlant(id),
+            );
+            if (redirect) {
+              await router.replace(redirect);
+            }
+          }
+        },
+      );
+    }
+
     if (
       from.name &&
       to.name !== from.name &&
       (to.name === routeNames.import ||
         publicRouteNames.has(to.name as typeof routeNames.login)) &&
-      !usePlanSaveCoordinator().confirmLeave()
+      !gardenSession.confirmLeave()
     ) {
       return false;
     }
@@ -147,8 +168,8 @@ export const createAppRouter = (history: RouterHistory = createWebHistory()) => 
       return { name: routeNames.login, replace: true };
     }
 
-    if (auth.user?.totpConfirmed && isGardenBootstrapping.value) {
-      await bootstrapGardenSession();
+    if (auth.user?.totpConfirmed && gardenSession.isBootstrapping) {
+      await gardenSession.bootstrap();
     }
 
     if (
@@ -169,18 +190,6 @@ export const createAppRouter = (history: RouterHistory = createWebHistory()) => 
 
     const garden = useGardenStore();
     return selectionRedirect(to, garden.guilds, (id) => garden.resolvedPlant(id)) ?? true;
-  });
-
-  watch(isGardenBootstrapping, async (booting, wasBooting) => {
-    if (wasBooting && !booting) {
-      const garden = useGardenStore();
-      const redirect = selectionRedirect(router.currentRoute.value, garden.guilds, (id) =>
-        garden.resolvedPlant(id),
-      );
-      if (redirect) {
-        await router.replace(redirect);
-      }
-    }
   });
 
   return router;

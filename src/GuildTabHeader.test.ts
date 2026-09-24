@@ -8,7 +8,7 @@ import { createMemoryHistory } from 'vue-router';
 import GuildTabHeader from './GuildTabHeader.vue';
 import { createAppRouter } from './router';
 import { createAuthedTestRouter } from './testing/authedTestSession';
-import { usePlanSaveCoordinator } from './usePlanSaveCoordinator';
+import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import * as gardensApi from './api/gardens';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
@@ -74,8 +74,7 @@ it('places Save after Add guild and enables it only for unsaved changes', async 
   const router = await createAuthedTestRouter();
   const store = usePermaplannerStore();
   store.gardenId = 'g1';
-  const coordinator = usePlanSaveCoordinator();
-  coordinator.markSaved();
+  useGardenSessionStore().markSaved();
   vi.mocked(gardensApi.updateGarden).mockResolvedValue(1);
   render(GuildTabHeader, { props: { title: 'Guilds' }, global: { plugins: [router] } });
 
