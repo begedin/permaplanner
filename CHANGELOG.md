@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.25.3
+
+- [DB] Added Seed-grown (unknown variety) peach to the catalog
+- [DB] Added Italian aster (Aster amellus) to the catalog with King George, Brilliant, and Blue King cultivars
+- [DB] Added Golden rain tree (Koelreuteria paniculata) to the catalog with Fastigiata, September, and Rose Lantern cultivars
+
 ## 0.25.2
 
 - [REFACTOR] Centralize garden activation, bootstrap, reset, and save lifecycle state in the garden session store

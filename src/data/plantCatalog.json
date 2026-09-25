@@ -9,6 +9,66 @@
       "defaultIconId": "seedling"
     },
     {
+      "id": "aster",
+      "name": "Italian aster",
+      "name_latin": "Aster amellus",
+      "functions": ["pollinator_attractor"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "king_george",
+          "name": "King George"
+        },
+        {
+          "id": "brilliant",
+          "name": "Brilliant"
+        },
+        {
+          "id": "blue_king",
+          "name": "Blue King"
+        }
+      ],
+      "blooming": {
+        "start": 8,
+        "end": 10
+      },
+      "defaultIconId": "flower"
+    },
+    {
+      "id": "golden_rain_tree",
+      "name": "Golden rain tree",
+      "name_latin": "Koelreuteria paniculata",
+      "functions": ["pollinator_attractor"],
+      "layers": ["understory"],
+      "cultivars": [
+        {
+          "id": "fastigiata",
+          "name": "Fastigiata (Upright)"
+        },
+        {
+          "id": "september",
+          "name": "September",
+          "blooming": {
+            "start": 8,
+            "end": 9
+          }
+        },
+        {
+          "id": "rose_lantern",
+          "name": "Rose Lantern",
+          "blooming": {
+            "start": 8,
+            "end": 9
+          }
+        }
+      ],
+      "blooming": {
+        "start": 6,
+        "end": 7
+      },
+      "defaultIconId": "tree"
+    },
+    {
       "id": "nashi_pear",
       "name": "Nashi pear",
       "functions": ["edible", "pollinator_attractor"],
@@ -1223,6 +1283,10 @@
         {
           "id": "contender",
           "name": "Contender"
+        },
+        {
+          "id": "seed_grown_unknown",
+          "name": "Seed-grown (unknown variety)"
         }
       ],
       "blooming": {
