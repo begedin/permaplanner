@@ -9,6 +9,32 @@
       "defaultIconId": "seedling"
     },
     {
+      "id": "pampas_grass",
+      "name": "Pampas grass",
+      "name_latin": "Cortaderia selloana",
+      "functions": [],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "rosea",
+          "name": "Rosea (Pink)"
+        },
+        {
+          "id": "pumila",
+          "name": "Pumila (Dwarf cream)"
+        },
+        {
+          "id": "highfield_pink",
+          "name": "Highfield Pink"
+        }
+      ],
+      "blooming": {
+        "start": 8,
+        "end": 10
+      },
+      "defaultIconId": "grain"
+    },
+    {
       "id": "aster",
       "name": "Italian aster",
       "name_latin": "Aster amellus",

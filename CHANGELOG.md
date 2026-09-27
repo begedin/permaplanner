@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.25.4
+
+- [DB] Added Pampas grass (Cortaderia selloana) to the catalog with Rosea, Pumila, and Highfield Pink cultivars
+
 ## 0.25.3
 
 - [DB] Added Seed-grown (unknown variety) peach to the catalog
