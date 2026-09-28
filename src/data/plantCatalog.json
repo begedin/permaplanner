@@ -9,6 +9,39 @@
       "defaultIconId": "seedling"
     },
     {
+      "id": "paulownia",
+      "name": "Paulownia (Empress tree)",
+      "functions": ["pollinator_attractor"],
+      "layers": ["overstory"],
+      "cultivars": [
+        {
+          "id": "hulsdonk",
+          "name": "Hulsdonk",
+          "name_latin": "Paulownia tomentosa 'Hulsdonk'",
+          "blooming": {
+            "start": 5,
+            "end": 5
+          }
+        },
+        {
+          "id": "fast_blue",
+          "name": "Fast Blue",
+          "name_latin": "Paulownia fortunei 'Minfast'",
+          "layers": ["understory"]
+        },
+        {
+          "id": "shan_tong",
+          "name": "Shan Tong",
+          "name_latin": "Paulownia tomentosa × Paulownia fortunei 'Shan Tong'"
+        }
+      ],
+      "blooming": {
+        "start": 4,
+        "end": 5
+      },
+      "defaultIconId": "tree"
+    },
+    {
       "id": "pampas_grass",
       "name": "Pampas grass",
       "name_latin": "Cortaderia selloana",

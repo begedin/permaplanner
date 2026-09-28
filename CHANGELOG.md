@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.25.5
+
+- [DB] Added Paulownia (Empress tree) to the catalog with Hulsdonk, Fast Blue, and Shan Tong cultivars
+
 ## 0.25.4
 
 - [DB] Added Pampas grass (Cortaderia selloana) to the catalog with Rosea, Pumila, and Highfield Pink cultivars
