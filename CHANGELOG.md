@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.25.6
+
+- [DB] Added Abraxas rosemary (Salvia rosmarinus) to the catalog
+- [DB] Added Hebe (Veronica pinguifolia) to the catalog with the Green Feeling Sutherlandii cultivar
+- [DB] Added Clematis to the catalog with Jackmanii, Nelly Moser, and The President cultivars
+- [DB] Added Heather (Calluna vulgaris) to the catalog with Dark Beauty, Silver Knight, and Firefly cultivars
+
 ## 0.25.5
 
 - [DB] Added Paulownia (Empress tree) to the catalog with Hulsdonk, Fast Blue, and Shan Tong cultivars

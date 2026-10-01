@@ -9,6 +9,94 @@
       "defaultIconId": "seedling"
     },
     {
+      "id": "hebe",
+      "name": "Hebe",
+      "name_latin": "Veronica pinguifolia",
+      "functions": ["pollinator_attractor"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "sutherlandii",
+          "name": "Green Feeling Sutherlandii",
+          "blooming": {
+            "start": 6,
+            "end": 7
+          }
+        }
+      ],
+      "defaultIconId": "flower-spike"
+    },
+    {
+      "id": "clematis",
+      "name": "Clematis",
+      "functions": [],
+      "layers": ["vine"],
+      "cultivars": [
+        {
+          "id": "jackmanii",
+          "name": "Jackmanii",
+          "name_latin": "Clematis 'Jackmanii'",
+          "blooming": {
+            "start": 6,
+            "end": 9
+          }
+        },
+        {
+          "id": "nelly_moser",
+          "name": "Nelly Moser",
+          "name_latin": "Clematis 'Nelly Moser'",
+          "blooming": {
+            "start": 5,
+            "end": 9
+          }
+        },
+        {
+          "id": "the_president",
+          "name": "The President",
+          "name_latin": "Clematis 'The President'",
+          "blooming": {
+            "start": 5,
+            "end": 9
+          }
+        }
+      ],
+      "defaultIconId": "flower"
+    },
+    {
+      "id": "heather",
+      "name": "Heather",
+      "name_latin": "Calluna vulgaris",
+      "functions": ["pollinator_attractor", "ground_cover"],
+      "layers": ["shrub", "ground_cover"],
+      "cultivars": [
+        {
+          "id": "dark_beauty",
+          "name": "Dark Beauty",
+          "blooming": {
+            "start": 8,
+            "end": 10
+          }
+        },
+        {
+          "id": "silver_knight",
+          "name": "Silver Knight",
+          "blooming": {
+            "start": 8,
+            "end": 9
+          }
+        },
+        {
+          "id": "firefly",
+          "name": "Firefly"
+        }
+      ],
+      "blooming": {
+        "start": 7,
+        "end": 9
+      },
+      "defaultIconId": "flower-spike"
+    },
+    {
       "id": "paulownia",
       "name": "Paulownia (Empress tree)",
       "functions": ["pollinator_attractor"],
@@ -2420,6 +2508,10 @@
         {
           "id": "prostratus",
           "name": "Prostratus (prostrate)"
+        },
+        {
+          "id": "abraxas",
+          "name": "Abraxas"
         }
       ],
       "blooming": {
