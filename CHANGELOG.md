@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.25.7
+
+- [DB] Added bigleaf, panicle, smooth, and oakleaf hydrangeas to the catalog with three cultivars each
+
 ## 0.25.6
 
 - [DB] Added Abraxas rosemary (Salvia rosmarinus) to the catalog

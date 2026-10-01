@@ -9,6 +9,97 @@
       "defaultIconId": "seedling"
     },
     {
+      "id": "bigleaf_hydrangea",
+      "name": "Bigleaf hydrangea",
+      "name_latin": "Hydrangea macrophylla",
+      "functions": [],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "endless_summer_original",
+          "name": "Endless Summer The Original"
+        },
+        {
+          "id": "nikko_blue",
+          "name": "Nikko Blue"
+        },
+        {
+          "id": "blushing_bride",
+          "name": "Blushing Bride"
+        }
+      ],
+      "defaultIconId": "bouquet"
+    },
+    {
+      "id": "panicle_hydrangea",
+      "name": "Panicle hydrangea",
+      "name_latin": "Hydrangea paniculata",
+      "functions": ["pollinator_attractor"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "limelight",
+          "name": "Limelight",
+          "functions": []
+        },
+        {
+          "id": "little_lime",
+          "name": "Little Lime",
+          "functions": []
+        },
+        {
+          "id": "brussels_lace",
+          "name": "Brussels Lace"
+        }
+      ],
+      "defaultIconId": "bouquet"
+    },
+    {
+      "id": "smooth_hydrangea",
+      "name": "Smooth hydrangea",
+      "name_latin": "Hydrangea arborescens",
+      "functions": ["pollinator_attractor"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "annabelle",
+          "name": "Annabelle",
+          "functions": []
+        },
+        {
+          "id": "haas_halo",
+          "name": "Haas' Halo"
+        },
+        {
+          "id": "white_dome",
+          "name": "White Dome"
+        }
+      ],
+      "defaultIconId": "bouquet"
+    },
+    {
+      "id": "oakleaf_hydrangea",
+      "name": "Oakleaf hydrangea",
+      "name_latin": "Hydrangea quercifolia",
+      "functions": ["pollinator_attractor"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "alice",
+          "name": "Alice"
+        },
+        {
+          "id": "ruby_slippers",
+          "name": "Ruby Slippers"
+        },
+        {
+          "id": "snow_queen",
+          "name": "Snow Queen"
+        }
+      ],
+      "defaultIconId": "bouquet"
+    },
+    {
       "id": "hebe",
       "name": "Hebe",
       "name_latin": "Veronica pinguifolia",
