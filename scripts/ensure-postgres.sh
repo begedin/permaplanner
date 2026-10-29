@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Ensure the asdf Postgres instance for this project is running on 5433 with the
+# Ensure the asdf Postgres instance for this project is running on 5434 with the
 # expected databases before starting dev.
 #
 # - Not running → start via pg_ctl (asdf PGDATA)
@@ -11,10 +11,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-PGPORT=5433
+PGPORT=5434
 DEV_DB=permaplanner_dev
 TEST_DB=permaplanner_test
-PGDATA="$(asdf where postgres)/data"
+POSTGRES_HOME="$(asdf where postgres)"
+export PATH="${POSTGRES_HOME}/bin:${PATH}"
+PGDATA="${POSTGRES_HOME}/data"
 PGLOG="$(dirname "$PGDATA")/postgres.log"
 POSTGRES_CONF="$PGDATA/postgresql.conf"
 
@@ -87,22 +89,18 @@ if ! postgres_ready; then
   fi
 fi
 
-user_dbs=()
+user_dbs="$(list_user_databases)"
+unexpected=""
 while IFS= read -r db; do
   [[ -z "$db" ]] && continue
-  user_dbs+=("$db")
-done < <(list_user_databases)
-
-unexpected=()
-for db in "${user_dbs[@]}"; do
   if [[ "$db" != "$DEV_DB" && "$db" != "$TEST_DB" ]]; then
-    unexpected+=("$db")
+    unexpected="${unexpected}  ${db}"$'\n'
   fi
-done
+done <<<"$user_dbs"
 
-if [[ ${#unexpected[@]} -gt 0 ]]; then
+if [[ -n "$unexpected" ]]; then
   echo "Unexpected databases on asdf Postgres (port ${PGPORT}):" >&2
-  printf '  %s\n' "${unexpected[@]}" >&2
+  printf '%s' "$unexpected" >&2
   echo "This instance should only contain ${DEV_DB} and ${TEST_DB}." >&2
   exit 1
 fi

@@ -40,6 +40,18 @@ clean_failed_kerl_builds() {
 
 ensure_erlang_prebuilt_plugin
 clean_failed_kerl_builds
+
+# Homebrew's ICU and OpenSSL are keg-only; PostgreSQL's configure step needs
+# their pkg-config files, and the asdf plugin uses ICU's uconv executable.
+if [[ "${OSTYPE:-}" == darwin* ]] && command -v brew >/dev/null 2>&1; then
+  icu_prefix="$(brew --prefix icu4c)"
+  openssl_prefix="$(brew --prefix openssl@3)"
+  export PATH="${icu_prefix}/bin:${PATH}"
+  export PKG_CONFIG_PATH="${icu_prefix}/lib/pkgconfig:${openssl_prefix}/lib/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
+  # Avoid mixing OpenSSL 3 headers with other installed OpenSSL libraries.
+  export POSTGRES_CONFIGURE_OPTIONS="${POSTGRES_CONFIGURE_OPTIONS:---with-uuid=e2fs --with-openssl --with-zlib --with-includes=${openssl_prefix}/include --with-libraries=${openssl_prefix}/lib}"
+fi
+
 asdf install
 
 if [[ -f mix.exs ]]; then

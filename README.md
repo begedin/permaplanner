@@ -14,6 +14,35 @@ npm run install:toolchain
 
 On macOS this switches the asdf Erlang plugin to [prebuilt binaries](https://github.com/michallepicki/asdf-erlang-prebuilt-macos) and bootstraps Hex/Rebar for the Phoenix app.
 
+PostgreSQL builds from source. On macOS, install Xcode Command Line Tools and the Homebrew build dependencies first:
+
+```bash
+xcode-select --install # Only if Command Line Tools are not already installed
+brew install icu4c openssl@3 pkg-config
+```
+
+After installing the toolchain, install the application dependencies and the browser used by end-to-end tests:
+
+```bash
+npm ci
+mix deps.get
+npx playwright install chromium
+```
+
+Run `npm run dev:plain` to initialize the local databases and start development without 1Password secrets.
+
+### Tests
+
+```bash
+bash scripts/ensure-postgres.sh
+npm run test:unit
+npm run type-check
+mix test
+npm run test:e2e
+```
+
+Stop the development server before running end-to-end tests: Playwright starts its own Phoenix server with the test database and SQL sandbox.
+
 Secrets for local dev (when needed) live in `.env.1password` — see [`.env.1password.example`](.env.1password.example).
 
 ### Running locally
@@ -31,9 +60,9 @@ Secrets for local dev (when needed) live in `.env.1password` — see [`.env.1pas
 
 ### Database (local)
 
-Phoenix expects the **asdf** Postgres instance from [`.tool-versions`](.tool-versions) on **port 5433** (so it does not clash with other local Elixir apps on 5432). Default credentials are in [`config/dev.exs`](config/dev.exs).
+Phoenix expects the **asdf** Postgres instance from [`.tool-versions`](.tool-versions) on **port 5434** (so it does not clash with other local Elixir apps on 5432). Default credentials are in [`config/dev.exs`](config/dev.exs).
 
-`npm run dev` runs [`scripts/ensure-postgres.sh`](scripts/ensure-postgres.sh) first: it starts asdf Postgres on 5433 when needed, runs `mix ecto.setup` when the dev/test databases are missing, and errors if the instance contains unexpected databases.
+`npm run dev` runs [`scripts/ensure-postgres.sh`](scripts/ensure-postgres.sh) first: it starts asdf Postgres on 5434 when needed, runs `mix ecto.setup` when the dev/test databases are missing, and errors if the instance contains unexpected databases.
 
 One-time: if your asdf data directory was previously on 5432, the script rewrites `port` in `$(asdf where postgres)/data/postgresql.conf` and restarts Postgres.
 
