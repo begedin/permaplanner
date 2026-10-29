@@ -9,6 +9,32 @@
       "defaultIconId": "seedling"
     },
     {
+      "id": "crocus",
+      "name": "Spring crocus",
+      "name_latin": "Crocus vernus",
+      "functions": ["pollinator_attractor"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "pickwick",
+          "name": "Pickwick"
+        },
+        {
+          "id": "flower_record",
+          "name": "Flower Record"
+        },
+        {
+          "id": "jeanne_darc",
+          "name": "Jeanne d’Arc (Joan of Arc)"
+        }
+      ],
+      "blooming": {
+        "start": 3,
+        "end": 4
+      },
+      "defaultIconId": "flower"
+    },
+    {
       "id": "hosta",
       "name": "Hosta (plantain lily)",
       "name_latin": "Hosta",

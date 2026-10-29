@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.25.9
+
+- [DB] Added spring crocus (Crocus vernus) to the catalog with Pickwick, Flower Record, and Jeanne d’Arc cultivars and March–April flowering periods
+
 ## 0.25.8
 
 - [DB] Added hosta to the catalog with June, Patriot, and Sum and Substance cultivars and flowering periods
