@@ -9,6 +9,252 @@
       "defaultIconId": "seedling"
     },
     {
+      "id": "hosta",
+      "name": "Hosta (plantain lily)",
+      "name_latin": "Hosta",
+      "functions": ["ground_cover", "pollinator_attractor"],
+      "layers": ["herb", "ground_cover"],
+      "cultivars": [
+        {
+          "id": "june",
+          "name": "June"
+        },
+        {
+          "id": "patriot",
+          "name": "Patriot"
+        },
+        {
+          "id": "sum_and_substance",
+          "name": "Sum and Substance"
+        }
+      ],
+      "blooming": {
+        "start": 7,
+        "end": 8
+      },
+      "defaultIconId": "leaf-herb"
+    },
+    {
+      "id": "hellebore",
+      "name": "Hellebore (Lenten rose)",
+      "name_latin": "Helleborus × hybridus",
+      "functions": ["pollinator_attractor"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "quintessa_wine",
+          "name": "Quintessa Wine"
+        },
+        {
+          "id": "sp_anja_oudolf",
+          "name": "SP Anja Oudolf",
+          "blooming": {
+            "start": 1,
+            "end": 4
+          }
+        },
+        {
+          "id": "sp_conny",
+          "name": "SP Conny"
+        }
+      ],
+      "blooming": {
+        "start": 2,
+        "end": 4
+      },
+      "defaultIconId": "flower-blossom"
+    },
+    {
+      "id": "houseleek",
+      "name": "Houseleek (hens and chicks)",
+      "name_latin": "Sempervivum",
+      "functions": ["ground_cover"],
+      "layers": ["ground_cover"],
+      "cultivars": [
+        {
+          "id": "commander_hay",
+          "name": "Commander Hay"
+        },
+        {
+          "id": "pacific_blue_ice",
+          "name": "Pacific Blue Ice",
+          "blooming": {
+            "start": 7,
+            "end": 8
+          }
+        },
+        {
+          "id": "jade_rose",
+          "name": "Jade Rose",
+          "blooming": {
+            "start": 7,
+            "end": 10
+          }
+        }
+      ],
+      "defaultIconId": "flower-rosette",
+      "blooming": {
+        "start": 6,
+        "end": 8
+      }
+    },
+    {
+      "id": "white_spruce",
+      "name": "White spruce",
+      "name_latin": "Picea glauca",
+      "functions": [],
+      "layers": ["overstory"],
+      "cultivars": [
+        {
+          "id": "conica",
+          "name": "Conica (Dwarf Alberta spruce)",
+          "layers": ["shrub"]
+        },
+        {
+          "id": "alberta_globe",
+          "name": "Alberta Globe",
+          "layers": ["shrub"]
+        },
+        {
+          "id": "alberta_blue",
+          "name": "Alberta Blue",
+          "layers": ["shrub"]
+        }
+      ],
+      "defaultIconId": "evergreen"
+    },
+    {
+      "id": "mexican_orange",
+      "name": "Mexican orange blossom",
+      "name_latin": "Choisya ternata",
+      "functions": ["pollinator_attractor"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "sundance",
+          "name": "Sundance",
+          "name_latin": "Choisya ternata 'Lich'"
+        },
+        {
+          "id": "aztec_pearl",
+          "name": "Aztec Pearl",
+          "name_latin": "Choisya × dewitteana 'Aztec Pearl'",
+          "blooming": {
+            "start": 4,
+            "end": 5
+          }
+        },
+        {
+          "id": "white_dazzler",
+          "name": "White Dazzler",
+          "name_latin": "Choisya × dewitteana 'Londaz'",
+          "blooming": {
+            "start": 4,
+            "end": 5
+          }
+        }
+      ],
+      "defaultIconId": "flower-blossom",
+      "blooming": {
+        "start": 5,
+        "end": 6
+      }
+    },
+    {
+      "id": "tree_peony",
+      "name": "Tree peony",
+      "name_latin": "Paeonia suffruticosa",
+      "functions": [],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "vinova_poloplna",
+          "name": "Vínová poloplná (Wine-red semi-double)",
+          "blooming": {
+            "start": 5,
+            "end": 6
+          }
+        },
+        {
+          "id": "hana_kisoi",
+          "name": "Hana-kisoi (Floral Rivalry)"
+        },
+        {
+          "id": "shima_nishiki",
+          "name": "Shima-nishiki (Island Brocade)"
+        }
+      ],
+      "defaultIconId": "flower-rose",
+      "blooming": {
+        "start": 5,
+        "end": 5
+      }
+    },
+    {
+      "id": "chinese_silver_grass",
+      "name": "Chinese silver grass",
+      "name_latin": "Miscanthus sinensis",
+      "functions": ["mulcher"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "missmini",
+          "name": "Missmini"
+        },
+        {
+          "id": "morning_light",
+          "name": "Morning Light",
+          "blooming": {
+            "start": 9,
+            "end": 10
+          }
+        },
+        {
+          "id": "zebrinus",
+          "name": "Zebrinus (Zebra grass)"
+        }
+      ],
+      "defaultIconId": "grain",
+      "blooming": {
+        "start": 8,
+        "end": 10
+      }
+    },
+    {
+      "id": "highclere_holly",
+      "name": "Highclere holly",
+      "name_latin": "Ilex × altaclerensis",
+      "functions": ["pollinator_attractor"],
+      "layers": ["understory", "shrub"],
+      "cultivars": [
+        {
+          "id": "golden_king",
+          "name": "Golden King",
+          "blooming": {
+            "start": 5,
+            "end": 5
+          }
+        },
+        {
+          "id": "belgica_aurea",
+          "name": "Belgica Aurea"
+        },
+        {
+          "id": "lawsoniana",
+          "name": "Lawsoniana"
+        }
+      ],
+      "defaultIconId": "evergreen",
+      "blooming": {
+        "start": 5,
+        "end": 6
+      },
+      "fruiting": {
+        "start": 10,
+        "end": 2
+      }
+    },
+    {
       "id": "bigleaf_hydrangea",
       "name": "Bigleaf hydrangea",
       "name_latin": "Hydrangea macrophylla",
@@ -17,7 +263,11 @@
       "cultivars": [
         {
           "id": "endless_summer_original",
-          "name": "Endless Summer The Original"
+          "name": "Endless Summer The Original",
+          "blooming": {
+            "start": 6,
+            "end": 10
+          }
         },
         {
           "id": "nikko_blue",
@@ -25,10 +275,18 @@
         },
         {
           "id": "blushing_bride",
-          "name": "Blushing Bride"
+          "name": "Blushing Bride",
+          "blooming": {
+            "start": 6,
+            "end": 10
+          }
         }
       ],
-      "defaultIconId": "bouquet"
+      "defaultIconId": "bouquet",
+      "blooming": {
+        "start": 7,
+        "end": 9
+      }
     },
     {
       "id": "panicle_hydrangea",
@@ -40,7 +298,11 @@
         {
           "id": "limelight",
           "name": "Limelight",
-          "functions": []
+          "functions": [],
+          "blooming": {
+            "start": 7,
+            "end": 10
+          }
         },
         {
           "id": "little_lime",
@@ -52,7 +314,11 @@
           "name": "Brussels Lace"
         }
       ],
-      "defaultIconId": "bouquet"
+      "defaultIconId": "bouquet",
+      "blooming": {
+        "start": 7,
+        "end": 9
+      }
     },
     {
       "id": "smooth_hydrangea",
@@ -75,7 +341,11 @@
           "name": "White Dome"
         }
       ],
-      "defaultIconId": "bouquet"
+      "defaultIconId": "bouquet",
+      "blooming": {
+        "start": 6,
+        "end": 7
+      }
     },
     {
       "id": "oakleaf_hydrangea",
@@ -97,7 +367,11 @@
           "name": "Snow Queen"
         }
       ],
-      "defaultIconId": "bouquet"
+      "defaultIconId": "bouquet",
+      "blooming": {
+        "start": 6,
+        "end": 7
+      }
     },
     {
       "id": "hebe",
@@ -304,7 +578,11 @@
         "start": 6,
         "end": 7
       },
-      "defaultIconId": "tree"
+      "defaultIconId": "tree",
+      "fruiting": {
+        "start": 9,
+        "end": 10
+      }
     },
     {
       "id": "nashi_pear",

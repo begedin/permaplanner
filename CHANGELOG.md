@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.25.8
+
+- [DB] Added hosta to the catalog with June, Patriot, and Sum and Substance cultivars and flowering periods
+
+- [DB] Added hellebore (Helleborus × hybridus) to the catalog with Quintessa Wine, SP Anja Oudolf, and SP Conny cultivars and flowering periods
+
+- [DB] Added missing bloom or fruit periods for 10 catalog plants and all 30 cultivars through inherited defaults and cultivar-specific overrides
+
+- [DB] Added houseleek, white spruce, Mexican orange blossom, tree peony, Chinese silver grass, and Highclere holly to the catalog with three cultivars each, including dwarf white spruces, Vínová poloplná, Missmini, and Golden King
+
 ## 0.25.7
 
 - [DB] Added bigleaf, panicle, smooth, and oakleaf hydrangeas to the catalog with three cultivars each
