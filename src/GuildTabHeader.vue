@@ -2,6 +2,7 @@
   import { computed, ref } from 'vue';
   import { storeToRefs } from 'pinia';
 
+  import AppPageHeader from './AppPageHeader.vue';
   import HighlightText from './HighlightText.vue';
   import { searchInputPlaceholder } from './searchContext';
   import { useGardenStore } from './useGardenStore';
@@ -39,47 +40,47 @@
 </script>
 
 <template>
-  <div
-    class="flex flex-row flex-wrap items-center justify-between gap-2 shrink-0 border-b border-parchment-400/60 paper-surface px-4 py-3"
-  >
-    <nav
-      v-if="selectedGuildId && selectedGuildName"
-      aria-label="Breadcrumb"
-      class="flex flex-row items-center gap-1.5 min-w-0 text-lg font-medium"
-    >
-      <button
-        type="button"
-        class="link-soft text-ink-800 hover:underline shrink-0"
-        :aria-label="`Deselect guild, ${title}`"
-        @click="clearSelection"
+  <AppPageHeader>
+    <template #breadcrumb>
+      <nav
+        v-if="selectedGuildId && selectedGuildName"
+        aria-label="Breadcrumb"
+        class="flex flex-row items-center gap-1.5 min-w-0 text-lg font-medium"
+      >
+        <button
+          type="button"
+          class="link-soft text-ink-800 hover:underline shrink-0"
+          :aria-label="`Deselect guild, ${title}`"
+          @click="clearSelection"
+        >
+          {{ title }}
+        </button>
+        <span
+          class="text-ink-400 shrink-0"
+          aria-hidden="true"
+        >
+          /
+        </span>
+        <span
+          class="text-ink-800 truncate"
+          aria-current="page"
+        >
+          <HighlightText
+            :text="selectedGuildName"
+            :query="searchQuery ?? ''"
+          />
+        </span>
+      </nav>
+      <h1
+        v-else
+        class="text-lg font-medium text-ink-800"
       >
         {{ title }}
-      </button>
-      <span
-        class="text-ink-400 shrink-0"
-        aria-hidden="true"
-      >
-        /
-      </span>
-      <span
-        class="text-ink-800 truncate"
-        aria-current="page"
-      >
-        <HighlightText
-          :text="selectedGuildName"
-          :query="searchQuery ?? ''"
-        />
-      </span>
-    </nav>
-    <h1
-      v-else
-      class="text-lg font-medium text-ink-800"
-    >
-      {{ title }}
-    </h1>
+      </h1>
+    </template>
     <label
       v-if="searchQuery !== undefined"
-      class="order-last w-full min-w-0 sm:order-none sm:w-auto sm:min-w-[14rem]"
+      class="w-56 min-w-0 shrink"
     >
       <span class="sr-only">Search guilds</span>
       <input
@@ -126,5 +127,5 @@
         {{ gardenSession.status === 'saving' ? 'Saving…' : 'Save' }}
       </button>
     </div>
-  </div>
+  </AppPageHeader>
 </template>

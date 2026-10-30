@@ -12,8 +12,6 @@ import { speciesIsPlacedInGuilds } from './calendarGardenPlants';
 import type { Guild, Plant } from './gardenTypes';
 import PrivacyPolicy from './PrivacyPolicy.vue';
 import TheCalendar from './TheCalendar.vue';
-import TheGarden from './TheGarden.vue';
-import TheGuilds from './TheGuilds.vue';
 import TheLegacyImport from './TheLegacyImport.vue';
 import TheLogin from './TheLogin.vue';
 import ThePlants from './ThePlants.vue';
@@ -29,8 +27,6 @@ export const routeNames = {
   import: 'import',
   guilds: 'guilds',
   guildsDetail: 'guilds-detail',
-  aerial: 'aerial',
-  aerialDetail: 'aerial-detail',
   plants: 'plants',
   calendar: 'calendar',
   calendarDetail: 'calendar-detail',
@@ -39,9 +35,6 @@ export const routeNames = {
 
 export const isGuildsRoute = (name: unknown): boolean =>
   name === routeNames.guilds || name === routeNames.guildsDetail;
-
-export const isAerialRoute = (name: unknown): boolean =>
-  name === routeNames.aerial || name === routeNames.aerialDetail;
 
 export const routeParam = (params: unknown, key: string): string | undefined => {
   const value = (params as Record<string, unknown>)[key];
@@ -70,13 +63,6 @@ const selectionRedirect = (
     }
   }
 
-  if (to.name === routeNames.aerialDetail) {
-    const guildId = routeParam(to.params, 'guildId');
-    if (guildId && !guilds.some((guild) => guild.id === guildId)) {
-      return { name: routeNames.aerial };
-    }
-  }
-
   if (to.name === routeNames.calendarDetail) {
     const speciesId = routeParam(to.params, 'speciesId');
     if (speciesId && !speciesIsPlacedInGuilds(guilds, speciesId, resolvePlant)) {
@@ -92,25 +78,16 @@ const routes: RouteRecordRaw[] = [
   { path: '/login', name: routeNames.login, component: TheLogin },
   { path: '/register', name: routeNames.register, component: TheRegister },
   { path: '/import', name: routeNames.import, component: TheLegacyImport },
-  { path: '/guilds', name: routeNames.guilds, component: TheGuilds },
-  { path: '/guilds/:guildId', name: routeNames.guildsDetail, component: TheGuilds },
   {
-    path: '/aerial',
-    name: routeNames.aerial,
-    component: TheGarden,
-    beforeEnter: (to) => {
-      const legacy = to.query.guild;
-      if (typeof legacy === 'string' && legacy.length > 0) {
-        return {
-          name: routeNames.aerialDetail,
-          params: { guildId: legacy },
-          replace: true,
-        };
-      }
-    },
+    path: '/guilds',
+    name: routeNames.guilds,
+    component: () => import('./TheGuilds.vue'),
   },
-  { path: '/aerial/:guildId', name: routeNames.aerialDetail, component: TheGarden },
-  { path: '/garden', redirect: '/aerial' },
+  {
+    path: '/guilds/:guildId',
+    name: routeNames.guildsDetail,
+    component: () => import('./TheGuilds.vue'),
+  },
   { path: '/plants', name: routeNames.plants, component: ThePlants },
   { path: '/calendar', name: routeNames.calendar, component: TheCalendar },
   {

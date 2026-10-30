@@ -26,7 +26,7 @@
         :max="max"
         :step="step"
         :value="value"
-        class="flex-grow flex-shrink w-3/4"
+        class="flex-grow flex-shrink w-3/4 accent-sage-600"
         @pointerdown="emit('edit-start')"
         @input="
           emit('update:value', parseFloat(($event.target as HTMLInputElement).value))

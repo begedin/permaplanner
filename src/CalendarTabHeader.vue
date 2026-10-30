@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { ref } from 'vue';
 
+  import AppPageHeader from './AppPageHeader.vue';
   import HighlightText from './HighlightText.vue';
   import { searchInputPlaceholder } from './searchContext';
   import { useCalendarSelection } from './useCalendarSelection';
@@ -23,45 +24,45 @@
 </script>
 
 <template>
-  <div
-    class="flex flex-row flex-wrap items-center justify-between gap-2 shrink-0 border-b border-parchment-400/60 paper-surface px-4 py-3"
-  >
-    <nav
-      v-if="selectedSpeciesId && selectedSpeciesName"
-      aria-label="Breadcrumb"
-      class="flex flex-row items-center gap-1.5 min-w-0 text-lg font-medium"
-    >
-      <button
-        type="button"
-        class="link-soft text-ink-800 hover:underline shrink-0"
-        aria-label="Deselect plant, Calendar"
-        @click="clearSelection"
+  <AppPageHeader>
+    <template #breadcrumb>
+      <nav
+        v-if="selectedSpeciesId && selectedSpeciesName"
+        aria-label="Breadcrumb"
+        class="flex flex-row items-center gap-1.5 min-w-0 text-lg font-medium"
+      >
+        <button
+          type="button"
+          class="link-soft text-ink-800 hover:underline shrink-0"
+          aria-label="Deselect plant, Calendar"
+          @click="clearSelection"
+        >
+          Calendar
+        </button>
+        <span
+          class="text-ink-400 shrink-0"
+          aria-hidden="true"
+        >
+          /
+        </span>
+        <span
+          class="text-ink-800 truncate"
+          aria-current="page"
+        >
+          <HighlightText
+            :text="selectedSpeciesName"
+            :query="searchQuery"
+          />
+        </span>
+      </nav>
+      <h1
+        v-else
+        class="text-lg font-medium text-ink-800"
       >
         Calendar
-      </button>
-      <span
-        class="text-ink-400 shrink-0"
-        aria-hidden="true"
-      >
-        /
-      </span>
-      <span
-        class="text-ink-800 truncate"
-        aria-current="page"
-      >
-        <HighlightText
-          :text="selectedSpeciesName"
-          :query="searchQuery"
-        />
-      </span>
-    </nav>
-    <h1
-      v-else
-      class="text-lg font-medium text-ink-800"
-    >
-      Calendar
-    </h1>
-    <label class="order-last w-full min-w-0 sm:order-none sm:w-auto sm:min-w-[14rem]">
+      </h1>
+    </template>
+    <label class="w-56 min-w-0 shrink">
       <span class="sr-only">Search garden plants</span>
       <input
         ref="searchInputRef"
@@ -72,5 +73,5 @@
         @input="emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
       />
     </label>
-  </div>
+  </AppPageHeader>
 </template>

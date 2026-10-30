@@ -7,7 +7,12 @@ const bedPolygons = (page: Page) =>
   page.locator('[data-main-svg] polygon.pointer-events-fill');
 
 const drawBrushStroke = async (page: Page, points: { x: number; y: number }[]) => {
-  const [first, ...rest] = points;
+  const mapBounds = await page.getByRole('region', { name: 'Aerial map' }).boundingBox();
+  if (!mapBounds) throw new Error('Map has no bounding box');
+  const [first, ...rest] = points.map((point) => ({
+    x: mapBounds.x + point.x - 300,
+    y: point.y,
+  }));
   if (!first) {
     throw new Error('drawBrushStroke requires at least one point');
   }
@@ -21,7 +26,11 @@ const drawBrushStroke = async (page: Page, points: { x: number; y: number }[]) =
 };
 
 const selectGuildAndEditBrush = async (page: Page, articleIndex: number) => {
-  await page.getByRole('article', { name: 'New guild' }).nth(articleIndex).click();
+  await page
+    .getByRole('complementary', { name: 'Guild list' })
+    .getByRole('article', { name: 'New guild' })
+    .nth(articleIndex)
+    .click();
   await page.getByRole('button', { name: 'Edit brush (B)' }).click();
   await expect(page.getByRole('button', { name: 'Edit brush (B)' })).toHaveAttribute(
     'aria-pressed',
@@ -36,12 +45,12 @@ test.describe('drawing features', () => {
   });
 
   test('creates and edits guild beds on the aerial map', async ({ page }) => {
-    await page.goto('/aerial');
+    await page.goto('/guilds');
     await onboard(page);
 
     await page.getByRole('link', { name: 'Guilds' }).click();
     await page.getByRole('button', { name: 'Add guild' }).click();
-    await page.getByRole('link', { name: 'Aerial' }).click();
+    await page.getByRole('link', { name: 'Guilds' }).click();
 
     await selectGuildAndEditBrush(page, 0);
     await drawBrushStroke(page, [
@@ -58,7 +67,7 @@ test.describe('drawing features', () => {
 
     await page.getByRole('link', { name: 'Guilds' }).click();
     await page.getByRole('button', { name: 'Add guild' }).click();
-    await page.getByRole('link', { name: 'Aerial' }).click();
+    await page.getByRole('link', { name: 'Guilds' }).click();
 
     await selectGuildAndEditBrush(page, 1);
     await drawBrushStroke(page, [
@@ -84,12 +93,12 @@ test.describe('drawing features', () => {
   });
 
   test('moves a placed guild bed with the move tool', async ({ page }) => {
-    await page.goto('/aerial');
+    await page.goto('/guilds');
     await onboard(page);
 
     await page.getByRole('link', { name: 'Guilds' }).click();
     await page.getByRole('button', { name: 'Add guild' }).click();
-    await page.getByRole('link', { name: 'Aerial' }).click();
+    await page.getByRole('link', { name: 'Guilds' }).click();
 
     await selectGuildAndEditBrush(page, 0);
     await drawBrushStroke(page, [

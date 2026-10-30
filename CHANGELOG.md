@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- [FEATURE] Combine guild details and the aerial map in one Guilds view, retaining the guild sidebar and animating the details panel between hidden and one third of the main area.
+- [FEATURE] Consolidate navigation, breadcrumbs, search, and actions into one header with labeled navigation icons.
+- [FEATURE] Add an animated plan sidebar with two-column JSON and sharing actions, an aligned close button, and account links at the bottom.
+- [FEATURE] Move map scale and background opacity into a collapsible, animated map settings panel with sage sliders and translucent backgrounds.
+- [FIX] Populate the plant icon picker from the complete icon catalog so new icons are always available.
+- [FIX] Ignore the map Delete shortcut while editing text fields.
+- [CHANGE] Show fewer calendar cards per row at each responsive breakpoint.
+
 - [FIX] Use distinct raspberry, Yamlina, goji, currant, and elderflower icons instead of blueberry placeholders.
 
 - [FIX] Give mulberry its own elongated clustered fruit icon.

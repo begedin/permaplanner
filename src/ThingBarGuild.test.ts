@@ -14,7 +14,7 @@ beforeEach(() => {
 });
 
 const renderOnAerial = async () => {
-  const router = await createAuthedTestRouter('/aerial');
+  const router = await createAuthedTestRouter('/guilds');
   return router;
 };
 
@@ -50,7 +50,7 @@ it('shows guild name, compact plant tags, and season section', async () => {
     },
   ];
   const router = await renderOnAerial();
-  await router.push({ name: routeNames.aerialDetail, params: { guildId: 'guild' } });
+  await router.push({ name: routeNames.guildsDetail, params: { guildId: 'guild' } });
 
   const wrapper = render(ThingBarGuild, {
     props: { id: 'guild' },
@@ -88,7 +88,7 @@ it('marks the card as current when this guild is selected on the map', async () 
     },
   ];
   const router = await renderOnAerial();
-  await router.push({ name: routeNames.aerialDetail, params: { guildId: 'guild' } });
+  await router.push({ name: routeNames.guildsDetail, params: { guildId: 'guild' } });
 
   const wrapper = render(ThingBarGuild, {
     props: { id: 'guild' },
@@ -128,7 +128,7 @@ it('shows map size and icon remove when the guild is placed on the aerial map', 
   ).toEqual(['Merge with', 'Remove from aerial map']);
 });
 
-it('selects the guild in the aerial route when the card is clicked', async () => {
+it('selects the guild in the guild route when the card is clicked', async () => {
   const store = useGardenStore();
   store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
   store.guilds = [
@@ -160,6 +160,6 @@ it('selects the guild in the aerial route when the card is clicked', async () =>
   await flushPromises();
   await router.isReady();
 
-  expect(router.currentRoute.value.name).toBe(routeNames.aerialDetail);
+  expect(router.currentRoute.value.name).toBe(routeNames.guildsDetail);
   expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe('guild');
 });

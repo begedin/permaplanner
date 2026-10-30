@@ -26,10 +26,6 @@
 
   const calendarSidebarWidth = '20rem';
 
-  const calendarListGridStyle = {
-    gridTemplateColumns: 'repeat(auto-fill, minmax(17rem, 1fr))',
-  };
-
   const gardenLayoutTransition = {
     layout: { type: 'spring', stiffness: 400, damping: 38 },
   } as const;
@@ -165,10 +161,9 @@
               class="calendar-list flex-1 min-h-0 overflow-x-hidden overflow-y-auto p-2 grid gap-2"
               :class="
                 selectedSpeciesId
-                  ? 'calendar-list--single-col auto-rows-min'
-                  : 'items-stretch'
+                  ? 'grid-cols-1 auto-rows-min'
+                  : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 items-stretch'
               "
-              :style="calendarListGridStyle"
             >
               <motion.div
                 v-for="row in filteredSpeciesRows"

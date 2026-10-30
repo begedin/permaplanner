@@ -1,6 +1,10 @@
 <script setup lang="ts">
   import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
+  import UiIcon from './uiIcons/UiIcon.vue';
+  import ToolSlider from './ToolSlider.vue';
+  import { usePlanEditSession } from './usePlanEditSession';
+  import GuildEditor from './GuildEditor.vue';
   import GardenGuild from './GardenGuild.vue';
   import type { PathPoint } from './guildPathClip';
   import { useGuildMergeMode } from './useGuildMergeMode';
@@ -26,8 +30,7 @@
   import { useAerialTool, useAerialToolHotkeys } from './useAerialTool';
 
   const permaplannerStore = usePermaplannerStore();
-
-  const showThingBar = computed(() => Boolean(permaplannerStore.gardenId));
+  const mapSettingsOpen = ref(false);
 
   const {
     setupBackgroundImagePaste,
@@ -133,6 +136,30 @@
 
   const mapScale = useMapScaleStore();
 
+  const mapScaleEditSession = usePlanEditSession();
+  const backgroundOpacityEditSession = usePlanEditSession();
+
+  let mapScaleOnboardingTimer: ReturnType<typeof setTimeout> | undefined;
+
+  const finishMapScaleEdit = () => {
+    mapScaleEditSession.commit();
+    if (mapScale.linePhysicalLength === 1) {
+      return;
+    }
+    onboarding.onboardingState = 'settingLength';
+    if (mapScaleOnboardingTimer !== undefined) {
+      clearTimeout(mapScaleOnboardingTimer);
+    }
+    mapScaleOnboardingTimer = setTimeout(() => {
+      onboarding.onboardingState = 'done';
+      mapScaleOnboardingTimer = undefined;
+    }, 1000);
+  };
+
+  onBeforeUnmount(() => {
+    if (mapScaleOnboardingTimer !== undefined) clearTimeout(mapScaleOnboardingTimer);
+  });
+
   useScene(container, worldStage);
 
   const garden = useGardenStore();
@@ -187,7 +214,12 @@
   });
 
   const onDeleteKey = (e: KeyboardEvent): void => {
-    if (e.key !== 'Delete' || selectedGuildId.value === undefined) {
+    if (
+      e.key !== 'Delete' ||
+      selectedGuildId.value === undefined ||
+      (e.target instanceof HTMLElement &&
+        (e.target.closest('input, textarea, select') || e.target.isContentEditable))
+    ) {
       return;
     }
     e.preventDefault();
@@ -222,17 +254,22 @@
   >
     <GuildTabHeader
       v-model:search-query="searchQuery"
-      title="Aerial"
+      title="Guilds"
     />
 
-    <div class="flex flex-1 min-h-0">
+    <div class="flex flex-col md:flex-row flex-1 min-h-0 min-w-0">
       <aside
-        v-if="showThingBar"
-        class="flex flex-col min-h-0 min-w-0 border-r border-parchment-400/60 paper-surface w-full md:w-72 md:shrink-0"
+        class="flex flex-col min-h-0 min-w-0 max-h-40 md:max-h-none md:w-72 md:shrink-0 border-r border-parchment-400/60 paper-surface"
         aria-label="Guild list"
       >
         <div
-          v-if="filteredGuilds.length === 0 && hasSearchQuery"
+          v-if="garden.guilds.length === 0"
+          class="p-4 text-ink-600 text-sm"
+        >
+          No guilds yet. Click <strong>Add guild</strong> to create one.
+        </div>
+        <div
+          v-else-if="filteredGuilds.length === 0 && hasSearchQuery"
           class="p-4 text-ink-600 text-sm"
         >
           No guilds match “{{ searchQuery.trim() }}”.
@@ -240,7 +277,7 @@
         <div
           v-else
           ref="guildListScroll"
-          class="flex-1 min-h-0 overflow-x-hidden overflow-y-auto p-2 flex flex-col gap-2"
+          class="guild-list flex-1 min-h-0 overflow-x-hidden overflow-y-auto p-2 flex flex-col gap-2"
         >
           <ThingBarGuild
             v-for="guild in filteredGuilds"
@@ -249,133 +286,265 @@
           />
         </div>
       </aside>
-
-      <section
-        class="relative flex flex-1 min-h-0 min-w-0 flex-col"
-        aria-label="Aerial map"
+      <div
+        class="guild-workspace grid flex-1 min-h-0 min-w-0"
+        :class="{ 'guild-workspace--selected': selectedGuildId }"
       >
-        <div class="pointer-events-none absolute top-2 right-2 z-10">
-          <AerialMapToolbar
-            :active-tool="activeTool"
-            :can-use-edit="canUseGuildTools"
-            :can-use-move="canUseGuildTools"
-            @update:active-tool="setTool"
-          />
-        </div>
-        <svg
-          ref="container"
-          :viewBox="svgViewbox"
-          data-main-svg
-          preserveAspectRatio="xMinYMin meet"
-          class="flex-1 min-h-0 w-full"
+        <section
+          class="min-h-0 min-w-0 overflow-hidden paper-surface"
+          :aria-hidden="!selectedGuildId"
+          :inert="!selectedGuildId"
+          aria-label="Guild details"
         >
-          <defs>
-            <pattern
-              id="grid"
-              :height="mapScale.unitLengthPx"
-              :width="mapScale.unitLengthPx"
-              patternUnits="userSpaceOnUse"
-            >
-              <path
-                :d="`M ${mapScale.unitLengthPx} 0 L 0 0 0 ${mapScale.unitLengthPx}`"
-                fill="none"
-                stroke="gray"
-                stroke-width="0.5"
-              />
-            </pattern>
-
-            <radialGradient
-              id="bed-gradient"
-              cx="50%"
-              cy="50%"
-              r="50%"
-            >
-              <stop
-                offset="0%"
-                style="stop-color: #fff; stop-opacity: 1"
-              />
-              <stop
-                offset="100%"
-                style="stop-color: #000; stop-opacity: 0"
-              />
-            </radialGradient>
-          </defs>
-          <rect
-            ref="worldStage"
-            x="0"
-            y="0"
-            :width="worldBounds.width"
-            :height="worldBounds.height"
-            class="fill-parchment-200"
-            data-world-stage
-          />
-          <image
-            v-if="imgDataUrl"
-            :href="imgDataUrl"
-            x="0"
-            y="0"
-            :width="worldBounds.width"
-            :height="worldBounds.height"
-            :opacity="permaplannerStore.backgroundOpacity"
-          />
-          <text
-            v-else
-            :x="worldBounds.width / 2"
-            :y="worldBounds.height / 2"
-            fill="red"
-            text-anchor="middle"
-            dominant-baseline="middle"
-            data-onboarding-text
+          <div
+            class="flex h-full min-h-0 min-w-0 flex-col border-r border-parchment-400/60 p-2"
           >
-            Paste an aerial photo of your plot of land here. You can use Google Maps to
-            take a screenshot
-          </text>
-          <rect
-            v-if="mapScale.unitLengthPx"
-            x="0"
-            y="0"
-            :width="worldBounds.width"
-            :height="worldBounds.height"
-            fill="url(#grid)"
-            class="pointer-events-none"
-          />
-          <GardenGuild
-            v-for="guild in placedGuildsRenderOrder"
-            :key="guild.id"
-            :selected="selectedGuildId === guild.id"
-            :tool="selectedGuildId === guild.id ? activeTool : undefined"
-            :hovered="hoveredId === guild.id"
-            :guild="guild"
-            :unit-length-px="mapScale.unitLengthPx"
-            @cancel="clearSelection"
-            @click.exact="selectGuild(guild.id)"
-            @mouseenter="hoveredId = guild.id"
-            @mouseleave="clearHover()"
-            @move="commitGuildPath(guild.id, $event)"
-            @update="commitGuildPath(guild.id, $event, true)"
-          ></GardenGuild>
+            <GuildEditor
+              v-if="selectedGuildId"
+              :key="selectedGuildId"
+              :guild-id="selectedGuildId"
+              class="flex-1 min-h-0"
+            />
+          </div>
+        </section>
 
-          <GardenGuild
-            v-if="placementGuildDraft"
-            :guild="placementGuildDraft"
-            :unit-length-px="mapScale.unitLengthPx"
-            :tool="activeTool"
-            hovered
-            selected
-            @update="commitGuildPath(placementGuildDraft.id, $event, true)"
-            @cancel="clearSelection"
-          />
+        <section
+          class="relative flex flex-1 min-h-0 min-w-0 flex-col"
+          aria-label="Aerial map"
+        >
+          <div class="pointer-events-none absolute top-2 right-2 z-10">
+            <AerialMapToolbar
+              :active-tool="activeTool"
+              :can-use-edit="canUseGuildTools"
+              :can-use-move="canUseGuildTools"
+              @update:active-tool="setTool"
+            />
+          </div>
+          <svg
+            ref="container"
+            :viewBox="svgViewbox"
+            data-main-svg
+            preserveAspectRatio="xMinYMin meet"
+            class="flex-1 min-h-0 w-full"
+          >
+            <defs>
+              <pattern
+                id="grid"
+                :height="mapScale.unitLengthPx"
+                :width="mapScale.unitLengthPx"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  :d="`M ${mapScale.unitLengthPx} 0 L 0 0 0 ${mapScale.unitLengthPx}`"
+                  fill="none"
+                  stroke="gray"
+                  stroke-width="0.5"
+                />
+              </pattern>
 
-          <OnboardingText
-            v-if="imgDataUrl && onboarding.onboardingState !== 'done'"
-            :x="center.x"
-            :y="center.y"
-            :onboarding-state="onboarding.onboardingState"
-          />
+              <radialGradient
+                id="bed-gradient"
+                cx="50%"
+                cy="50%"
+                r="50%"
+              >
+                <stop
+                  offset="0%"
+                  style="stop-color: #fff; stop-opacity: 1"
+                />
+                <stop
+                  offset="100%"
+                  style="stop-color: #000; stop-opacity: 0"
+                />
+              </radialGradient>
+            </defs>
+            <rect
+              ref="worldStage"
+              x="0"
+              y="0"
+              :width="worldBounds.width"
+              :height="worldBounds.height"
+              class="fill-parchment-200"
+              data-world-stage
+            />
+            <image
+              v-if="imgDataUrl"
+              :href="imgDataUrl"
+              x="0"
+              y="0"
+              :width="worldBounds.width"
+              :height="worldBounds.height"
+              :opacity="permaplannerStore.backgroundOpacity"
+            />
+            <text
+              v-else
+              :x="worldBounds.width / 2"
+              :y="worldBounds.height / 2"
+              fill="red"
+              text-anchor="middle"
+              dominant-baseline="middle"
+              data-onboarding-text
+            >
+              Paste an aerial photo of your plot of land here. You can use Google Maps to
+              take a screenshot
+            </text>
+            <rect
+              v-if="mapScale.unitLengthPx"
+              x="0"
+              y="0"
+              :width="worldBounds.width"
+              :height="worldBounds.height"
+              fill="url(#grid)"
+              class="pointer-events-none"
+            />
+            <GardenGuild
+              v-for="guild in placedGuildsRenderOrder"
+              :key="guild.id"
+              :selected="selectedGuildId === guild.id"
+              :tool="selectedGuildId === guild.id ? activeTool : undefined"
+              :hovered="hoveredId === guild.id"
+              :guild="guild"
+              :unit-length-px="mapScale.unitLengthPx"
+              @cancel="clearSelection"
+              @click.exact="selectGuild(guild.id)"
+              @mouseenter="hoveredId = guild.id"
+              @mouseleave="clearHover()"
+              @move="commitGuildPath(guild.id, $event)"
+              @update="commitGuildPath(guild.id, $event, true)"
+            ></GardenGuild>
 
-          <ReferenceLine />
-        </svg>
-      </section>
+            <GardenGuild
+              v-if="placementGuildDraft"
+              :guild="placementGuildDraft"
+              :unit-length-px="mapScale.unitLengthPx"
+              :tool="activeTool"
+              hovered
+              selected
+              @update="commitGuildPath(placementGuildDraft.id, $event, true)"
+              @cancel="clearSelection"
+            />
+
+            <OnboardingText
+              v-if="imgDataUrl && onboarding.onboardingState !== 'done'"
+              :x="center.x"
+              :y="center.y"
+              :onboarding-state="onboarding.onboardingState"
+            />
+
+            <ReferenceLine />
+          </svg>
+          <div
+            class="map-settings-panel absolute bottom-2 right-2 z-10 flex max-w-[calc(100%-1rem)] flex-col rounded-lg border border-parchment-400/60 bg-parchment-100/85 p-1 shadow-parchment text-sm"
+            :class="{ 'map-settings-panel--open': mapSettingsOpen }"
+            role="group"
+            aria-label="Map settings"
+          >
+            <div
+              id="map-settings-controls"
+              class="map-settings-content"
+              :aria-hidden="!mapSettingsOpen"
+              :inert="!mapSettingsOpen"
+            >
+              <div class="min-h-0 overflow-hidden">
+                <div class="flex flex-col gap-2 p-2">
+                  <ToolSlider
+                    :value="mapScale.linePhysicalLength"
+                    label="Map scale"
+                    :min="1"
+                    :max="300"
+                    :step="1"
+                    @edit-start="mapScaleEditSession.begin"
+                    @update:value="mapScale.linePhysicalLength = $event"
+                    @commit:value="finishMapScaleEdit"
+                  />
+                  <ToolSlider
+                    :value="permaplannerStore.backgroundOpacity"
+                    label="BG opacity"
+                    :min="0"
+                    :max="1"
+                    :step="0.01"
+                    @edit-start="backgroundOpacityEditSession.begin"
+                    @update:value="permaplannerStore.backgroundOpacity = $event"
+                    @commit:value="
+                      () => {
+                        backgroundOpacityEditSession.commit();
+                      }
+                    "
+                  />
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="flex items-center gap-1 rounded px-2 py-1 text-ink-700 hover:bg-sage-200/75"
+              :aria-expanded="mapSettingsOpen"
+              aria-controls="map-settings-controls"
+              @click="mapSettingsOpen = !mapSettingsOpen"
+            >
+              <UiIcon
+                name="guilds"
+                class="size-5"
+              />
+              <span>Map settings</span>
+            </button>
+          </div>
+        </section>
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+  .map-settings-panel {
+    width: 10rem;
+    transition: width 250ms ease-in-out;
+  }
+
+  .map-settings-panel--open {
+    width: 15rem;
+  }
+
+  .map-settings-content {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition:
+      grid-template-rows 250ms ease-in-out,
+      opacity 250ms ease-in-out;
+  }
+
+  .map-settings-panel--open .map-settings-content {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+
+  .guild-workspace {
+    grid-template-rows: minmax(0, 0fr) minmax(0, 1fr);
+    transition:
+      grid-template-columns 300ms ease-in-out,
+      grid-template-rows 300ms ease-in-out;
+  }
+
+  .guild-workspace--selected {
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  @media (min-width: 768px) {
+    .guild-workspace {
+      grid-template-rows: minmax(0, 1fr);
+      grid-template-columns: minmax(0, 0fr) minmax(0, 3fr);
+    }
+
+    .guild-workspace--selected {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .guild-workspace,
+    .map-settings-panel,
+    .map-settings-content {
+      transition: none;
+    }
+  }
+</style>

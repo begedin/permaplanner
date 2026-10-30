@@ -52,7 +52,7 @@
   <div
     role="toolbar"
     aria-label="Map tools"
-    class="pointer-events-auto flex gap-0.5 rounded-lg border border-parchment-400/60 bg-parchment-100/95 p-1 shadow-parchment paper-surface"
+    class="pointer-events-auto flex gap-0.5 rounded-lg border border-parchment-400/60 bg-parchment-100/85 p-1 shadow-parchment"
   >
     <button
       v-for="tool in tools"

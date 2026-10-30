@@ -43,7 +43,7 @@ it('shows plan actions when open', async () => {
 
   await waitFor(() => {
     expect(screen.getByRole('dialog', { name: 'Plan' })).toBeVisible();
-    expect(screen.getByRole('link', { name: 'Import another garden' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Import JSON' })).toBeVisible();
   });
 });
 

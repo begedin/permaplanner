@@ -1,17 +1,13 @@
-import {
-  openPlanSessionDrawer,
-  pasteAerialPhotoOntoMap,
-  setupAuthenticatedGarden,
-} from './helpers';
+import { pasteAerialPhotoOntoMap, setupAuthenticatedGarden } from './helpers';
 import { expect, test } from './test';
 
 test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
 
 test('onboards', async ({ page }) => {
-  await page.goto('/aerial');
+  await page.goto('/guilds');
 
   await setupAuthenticatedGarden(page);
-  await page.goto('/aerial');
+  await page.goto('/guilds');
 
   await expect(page.locator('[data-onboarding-text]')).toHaveText(
     /Paste an aerial photo/,
@@ -52,9 +48,8 @@ test('onboards', async ({ page }) => {
 
   await expect(page.locator('[data-onboarding-text]')).toHaveText(/set the length/);
 
-  await openPlanSessionDrawer(page);
+  await page.getByRole('button', { name: 'Map settings' }).click();
   await page.getByLabel('Map scale').fill('100');
-  await page.keyboard.press('Escape');
 
   await expect(page.getByRole('dialog', { name: 'Plan' })).toBeHidden();
 

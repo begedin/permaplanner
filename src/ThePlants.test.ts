@@ -1,11 +1,13 @@
-import { render, screen, fireEvent, cleanup } from '@testing-library/vue';
+import { render, screen, fireEvent, cleanup, within } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createTestingPinia } from '@pinia/testing';
 
 import { defaultCatalogPick } from './catalogPlantPick';
+import { createAuthedTestRouter } from './testing/authedTestSession';
 import ThePlants from './ThePlants.vue';
 import { setActivePinia } from 'pinia';
 import { useGardenStore } from './useGardenStore';
+import { PLANT_ICON_IDS } from './plantIcons/iconIds';
 import { plantCatalog } from './plantCatalog';
 import { resolveUserPlant } from './resolvePlant';
 
@@ -19,7 +21,8 @@ afterEach(() => {
 });
 
 it('creates a plant from catalog defaults', async () => {
-  render(ThePlants);
+  const router = await createAuthedTestRouter('/plants');
+  render(ThePlants, { global: { plugins: [router] } });
 
   await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
@@ -35,7 +38,8 @@ it('creates a plant from catalog defaults', async () => {
 });
 
 it('can override guild functions and save', async () => {
-  render(ThePlants);
+  const router = await createAuthedTestRouter('/plants');
+  render(ThePlants, { global: { plugins: [router] } });
 
   await fireEvent.click(screen.getByRole('checkbox', { name: 'Wildfire Suppressor' }));
   await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
@@ -46,7 +50,8 @@ it('can override guild functions and save', async () => {
 });
 
 it('can set custom species name', async () => {
-  render(ThePlants);
+  const router = await createAuthedTestRouter('/plants');
+  render(ThePlants, { global: { plugins: [router] } });
 
   await fireEvent.update(
     screen.getByPlaceholderText('Uses catalog name if empty'),
@@ -57,4 +62,24 @@ it('can set custom species name', async () => {
   expect(resolveUserPlant(useGardenStore().plants[0], plantCatalog).name).toBe(
     'Herb patch',
   );
+});
+
+it('offers every plant icon and saves a newly added icon choice', async () => {
+  const router = await createAuthedTestRouter('/plants');
+  render(ThePlants, { global: { plugins: [router] } });
+
+  const picker = within(screen.getByRole('list', { name: 'Plant icons' }));
+  expect(
+    picker.getAllByRole('button').map((button) => button.getAttribute('aria-label')),
+  ).toEqual(PLANT_ICON_IDS);
+
+  await fireEvent.click(picker.getByRole('button', { name: 'bouquet' }));
+  expect(picker.getByRole('button', { name: 'bouquet' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+  expect(useGardenStore().plants).toMatchObject([
+    { speciesOverride: { iconId: 'bouquet' } },
+  ]);
 });

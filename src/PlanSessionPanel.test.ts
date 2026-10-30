@@ -117,7 +117,7 @@ it('copies the current guild share JSON payload to the clipboard', async () => {
 
   renderPanel();
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Copy guild JSON' }));
+  await fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' }));
 
   await waitFor(() => {
     expect(writeText).toHaveBeenCalledTimes(1);

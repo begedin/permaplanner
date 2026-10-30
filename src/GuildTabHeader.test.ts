@@ -79,8 +79,10 @@ it('places Save after Add guild and enables it only for unsaved changes', async 
   render(GuildTabHeader, { props: { title: 'Guilds' }, global: { plugins: [router] } });
 
   expect(
-    screen.getAllByRole('button').map((button) => button.textContent?.trim()),
-  ).toEqual(['Undo', 'Redo', 'Add guild', 'Save']);
+    screen
+      .getAllByRole('button')
+      .map((button) => button.getAttribute('aria-label') ?? button.textContent?.trim()),
+  ).toEqual(['Plan', 'Undo', 'Redo', 'Add guild', 'Save']);
   expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
   await fireEvent.click(screen.getByRole('button', { name: 'Add guild' }));
   await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled());

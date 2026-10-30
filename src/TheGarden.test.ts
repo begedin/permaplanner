@@ -1,4 +1,11 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/vue';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/vue';
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
 import { setActivePinia } from 'pinia';
@@ -39,30 +46,30 @@ afterEach(() => {
   cleanup();
 });
 
-const renderGarden = async (path = '/aerial') => {
+const renderGarden = async (path = '/guilds') => {
   const router = await createAuthedTestRouter(path);
   return { router, view: render(TheGarden, { global: { plugins: [router] } }) };
 };
 
-it('deselects when the aerial page title is clicked', async () => {
+it('deselects when the guild page title is clicked', async () => {
   const store = useGardenStore();
   store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 }];
-  const { router } = await renderGarden('/aerial/guild');
+  const { router } = await renderGarden('/guilds/guild');
 
   expect(screen.getByRole('navigation', { name: 'Breadcrumb' }).textContent).toContain(
     'Guild',
   );
   await fireEvent.click(
-    await screen.findByRole('button', { name: 'Deselect guild, Aerial' }),
+    await screen.findByRole('button', { name: 'Deselect guild, Guilds' }),
   );
   await flushPromises();
   await router.isReady();
 
-  expect(router.currentRoute.value.name).toBe(routeNames.aerial);
+  expect(router.currentRoute.value.name).toBe(routeNames.guilds);
   expect(routeParam(router.currentRoute.value.params, 'guildId')).toBeUndefined();
 });
 
-it('shows the aerial header and guild list in the left sidebar', async () => {
+it('shows the guild header and guild list in the left sidebar', async () => {
   const store = useGardenStore();
   store.guilds = [
     { id: 'guild', name: 'A guild', mulchLevel: 1, plants: [], path: [] },
@@ -71,7 +78,7 @@ it('shows the aerial header and guild list in the left sidebar', async () => {
   await renderGarden();
 
   await waitFor(() => {
-    expect(screen.getByRole('heading', { name: 'Aerial', level: 1 })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Guilds', level: 1 })).toBeVisible();
     expect(screen.getByRole('complementary', { name: 'Guild list' })).toBeVisible();
     expect(screen.getByRole('article', { name: 'A guild' })).toBeVisible();
     expect(screen.getByRole('region', { name: 'Aerial map' })).toBeVisible();
@@ -102,7 +109,7 @@ it('deletes the selected guild on Delete only when confirmed', async () => {
   store.guilds = [
     { id: 'guild', path: [{ x: 0, y: 0 }], name: 'Bed', plants: [], mulchLevel: 1 },
   ];
-  const { router } = await renderGarden('/aerial/guild');
+  const { router } = await renderGarden('/guilds/guild');
 
   const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false);
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }));
@@ -115,7 +122,7 @@ it('deletes the selected guild on Delete only when confirmed', async () => {
   expect(store.guilds).toEqual([]);
   await flushPromises();
   await router.isReady();
-  expect(router.currentRoute.value.name).toBe(routeNames.aerial);
+  expect(router.currentRoute.value.name).toBe(routeNames.guilds);
   expect(routeParam(router.currentRoute.value.params, 'guildId')).toBeUndefined();
 });
 
@@ -146,7 +153,7 @@ it('switches selection to another guild and discards the previous edit', async (
     plants: [],
   };
   store.guilds = [bedA, bedB];
-  const { router } = await renderGarden('/aerial/a');
+  const { router } = await renderGarden('/guilds/a');
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   await wrapper.vm.$nextTick();
 
@@ -171,14 +178,14 @@ it('switches selection to another guild and discards the previous edit', async (
   expect(store.guilds.find((g) => g.id === 'a')?.path).toEqual(bedA.path);
 });
 
-it('scrolls to the selected guild when opening the aerial tab with a selection', async () => {
+it('scrolls to the selected guild when opening the guild view with a selection', async () => {
   const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView');
   const store = useGardenStore();
   store.guilds = [
     { id: 'a', name: 'A', mulchLevel: 1, plants: [], path: [] },
     { id: 'b', name: 'B', mulchLevel: 1, plants: [], path: [] },
   ];
-  await renderGarden('/aerial/b');
+  await renderGarden('/guilds/b');
   await flushPromises();
 
   expect(scrollIntoView).toHaveBeenCalledWith({
@@ -216,7 +223,7 @@ it('scrolls the sidebar to a guild selected on the aerial map', async () => {
     plants: [],
   };
   store.guilds = [bedA, bedB];
-  const { router } = await renderGarden('/aerial');
+  const { router } = await renderGarden('/guilds');
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   await wrapper.vm.$nextTick();
 
@@ -238,7 +245,7 @@ it('deselects when placement is cancelled', async () => {
   const store = useGardenStore();
   const { hoveredId } = useGuildHover();
   store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 }];
-  const { router } = await renderGarden('/aerial/guild');
+  const { router } = await renderGarden('/guilds/guild');
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   hoveredId.value = 'guild';
   await wrapper.vm.$nextTick();
@@ -247,7 +254,7 @@ it('deselects when placement is cancelled', async () => {
   await placement?.vm.$emit('cancel');
   await flushPromises();
   await router.isReady();
-  expect(router.currentRoute.value.name).toBe(routeNames.aerial);
+  expect(router.currentRoute.value.name).toBe(routeNames.guilds);
   expect(routeParam(router.currentRoute.value.params, 'guildId')).toBeUndefined();
   expect(hoveredId.value).toBeUndefined();
 });
@@ -273,7 +280,7 @@ it('disables edit and move tools when no guild is selected', async () => {
 it('activates tools with V, B, and M hotkeys', async () => {
   const store = useGardenStore();
   store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 }];
-  await renderGarden('/aerial/guild');
+  await renderGarden('/guilds/guild');
 
   const selectBtn = screen.getByRole('button', { name: 'Select (V)' });
   const editBtn = screen.getByRole('button', { name: 'Edit brush (B)' });
@@ -310,7 +317,7 @@ it('does not edit a bed while the select tool is active', async () => {
     plants: [],
   };
   store.guilds = [bed];
-  const { router } = await renderGarden('/aerial/guild');
+  const { router } = await renderGarden('/guilds/guild');
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   await wrapper.vm.$nextTick();
 
@@ -343,7 +350,7 @@ it('uses an aerial guild click as the merge target, including cancellation', asy
       path: path.map(({ x, y }) => ({ x: x + 200, y })),
     },
   ];
-  const router = await createAuthedTestRouter('/aerial');
+  const router = await createAuthedTestRouter('/guilds');
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   await flushPromises();
   await wrapper.get('[data-guild-id="a"] button[aria-pressed]').trigger('click');
@@ -359,7 +366,7 @@ it('uses an aerial guild click as the merge target, including cancellation', asy
   );
   expect(store.guilds).toMatchObject([{ id: 'a' }, { id: 'b' }]);
   expect(store.mergeSourceId).toBe('a');
-  expect(router.currentRoute.value.name).toBe(routeNames.aerial);
+  expect(router.currentRoute.value.name).toBe(routeNames.guilds);
 
   vi.mocked(window.confirm).mockReturnValue(true);
   await target.get('polygon.pointer-events-fill').trigger('click');
@@ -367,7 +374,7 @@ it('uses an aerial guild click as the merge target, including cancellation', asy
   expect(store.guilds).toMatchObject([{ id: 'a', name: 'A + B' }]);
   expect(store.mergeSourceId).toBeUndefined();
   expect(router.currentRoute.value).toMatchObject({
-    name: routeNames.aerialDetail,
+    name: routeNames.guildsDetail,
     params: { guildId: 'a' },
   });
   wrapper.unmount();
@@ -404,7 +411,7 @@ it('shift-clicking a guild leaves its aerial outline intact', async () => {
     ],
   };
   store.guilds = [guild];
-  const router = await createAuthedTestRouter('/aerial');
+  const router = await createAuthedTestRouter('/guilds');
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
 
   await wrapper
@@ -415,4 +422,36 @@ it('shift-clicking a guild leaves its aerial outline intact', async () => {
   expect(store.guilds).toEqual([guild]);
   expect(store.removeGuildFromAerialMap).not.toHaveBeenCalled();
   wrapper.unmount();
+});
+
+it('keeps the guild when Delete is pressed while editing its name', async () => {
+  const store = useGardenStore();
+  store.guilds = [{ id: 'guild', path: [], name: 'Bed', plants: [], mulchLevel: 1 }];
+  await renderGarden('/guilds/guild');
+  await fireEvent.keyDown(screen.getByDisplayValue('Bed'), { key: 'Delete' });
+  expect(store.removeGuild).not.toHaveBeenCalled();
+  expect(store.guilds).toMatchObject([{ id: 'guild' }]);
+});
+
+it('edits background opacity from settings inside the aerial map and supports undo', async () => {
+  await renderGarden('/guilds');
+  const map = within(screen.getByRole('region', { name: 'Aerial map' }));
+  const toggle = map.getByRole('button', { name: 'Map settings' });
+  expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  expect(map.queryByRole('slider')).not.toBeInTheDocument();
+  await fireEvent.click(toggle);
+  expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  expect(map.getByRole('slider', { name: /^Map scale/ })).toBeVisible();
+  const opacity = map.getByRole('slider', { name: /^BG opacity/ });
+  const store = usePermaplannerStore();
+  const previousOpacity = store.backgroundOpacity;
+  await fireEvent.pointerDown(opacity);
+  await fireEvent.update(opacity, '0.8');
+  await fireEvent(opacity, new Event('change', { bubbles: true }));
+  expect(store.backgroundOpacity).toBe(0.8);
+  await fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+  expect(store.backgroundOpacity).toBe(previousOpacity);
+  await fireEvent.click(toggle);
+  expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  expect(map.queryByRole('slider')).not.toBeInTheDocument();
 });

@@ -2,6 +2,19 @@ import type { UiIconId } from './iconIds';
 
 /** Inner SVG for each ui-icon symbol (viewBox 0 0 48 48). */
 export const UI_ICON_SYMBOL_INNER: Record<UiIconId, string> = {
+  guilds: `
+    <path d="M10 14 L19 10 L29 14 L38 10 L38 34 L29 38 L19 34 L10 38 Z" />
+    <path d="M19 10 L19 34 M29 14 L29 38" />
+  `,
+  plants: `
+    <path d="M24 38 L24 24" />
+    <path d="M24 28 C12 28 10 20 10 14 C20 14 24 20 24 28 Z" />
+    <path d="M24 23 C24 13 30 10 38 10 C38 19 33 24 24 23 Z" />
+  `,
+  calendar: `
+    <rect x="10" y="13" width="28" height="25" rx="3" />
+    <path d="M17 10 L17 17 M31 10 L31 17 M10 22 L38 22 M17 28 L20 28 M28 28 L31 28 M17 33 L20 33" />
+  `,
   pointer: `
     <path d="M14 10 L14 34 L20 28 L26 38 L30 36 L24 26 L32 26 Z" fill="currentColor" stroke="currentColor" />
   `,

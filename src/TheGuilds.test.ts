@@ -42,16 +42,16 @@ const seedGuilds = async (initialPath = '/guilds') => {
   return { router, store };
 };
 
-it('shows guilds in a multi-column grid when none is selected', async () => {
+it('shows the guild list beside the map when none is selected', async () => {
   const { router } = await seedGuilds();
-  const { container } = render(TheGuilds, { global: { plugins: [router] } });
+  render(TheGuilds, { global: { plugins: [router] } });
 
   await waitFor(() => {
     expect(screen.getByRole('article', { name: 'Alpha guild' })).toBeVisible();
     expect(screen.getByRole('article', { name: 'Beta guild' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Guilds', level: 1 })).toBeVisible();
   });
-  expect(container.querySelector('.guild-list')).toBeTruthy();
+  expect(screen.getByRole('region', { name: 'Aerial map' })).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
 });
 
@@ -252,7 +252,10 @@ it('selects a merge source, confirms the target, and opens the merged guild', as
   });
   await waitFor(() => {
     expect(
-      screen.getByRole('article', { name: 'Alpha guild + Beta guild' }),
+      within(screen.getByRole('complementary', { name: 'Guild list' })).getByRole(
+        'article',
+        { name: 'Alpha guild + Beta guild' },
+      ),
     ).toBeVisible();
     expect(screen.queryByRole('article', { name: 'Beta guild' })).not.toBeInTheDocument();
     expect(

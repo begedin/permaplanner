@@ -19,6 +19,7 @@
   import { PLANT_ICON_OPTIONS } from './plantIconOptions';
   import type { PlantIconId } from './plantIcons/iconIds';
   import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
+  import AppPageHeader from './AppPageHeader.vue';
   import PlantIcon from './PlantIcon.vue';
   import UiIcon from './uiIcons/UiIcon.vue';
   import PlantFunctions from './PlantFunctions.vue';
@@ -217,118 +218,128 @@
   });
 </script>
 <template>
-  <div class="paper-card p-4 grid grid-flow-col items-start gap-8">
-    <div class="flex flex-col gap-1">
-      <div
-        v-for="plant in garden.plants"
-        :key="plant.id"
-        role="button"
-        class="selectable-row"
-        :class="{ 'selectable-row-active': plant.id === plantInEditing.id }"
-        :aria-current="plant.id === plantInEditing.id ? 'true' : undefined"
-        :title="resolveUserPlant(plant, plantCatalog).name"
-        :aria-label="resolveUserPlant(plant, plantCatalog).name"
-        @click="edit(plant)"
-      >
-        <PlantIcon
-          class="w-7 h-7"
-          :plant="resolveUserPlant(plant, plantCatalog)"
-        />
-        <span class="w-28 truncate text-left">{{ plantRowLabel(plant) }}</span>
-        <button
-          type="button"
-          class="btn-danger p-1 rounded-lg text-xs flex items-center justify-center"
-          aria-label="Delete plant"
-          @click.self="remove(plant)"
-        >
-          <UiIcon name="trash" />
-        </button>
-      </div>
-      <button
-        type="button"
-        class="selectable-row"
-        :class="{ 'selectable-row-active': isNew }"
-        :aria-current="isNew ? 'true' : undefined"
-        @click="newPlant"
-      >
-        <UiIcon
-          name="add"
-          class="size-7"
-        />
-        <span class="w-28 truncate text-left">{{ isNew ? 'New plant' : 'New' }}</span>
-      </button>
-    </div>
-
-    <div class="flex flex-col gap-3 min-w-[200px]">
-      <h2 class="text-ink-800 font-medium">Catalog</h2>
-      <PlantCatalogCombobox
-        v-model="editingCatalogPick"
-        label="Catalog species and cultivar"
-      />
-    </div>
-
-    <div class="flex flex-col gap-2 p-2 max-w-md">
-      <div class="flex flex-row items-center gap-2">
-        <PlantIcon
-          class="w-14 h-14 shrink-0 border border-parchment-300/55 rounded-xl"
-          :plant="resolvedPreview"
-        />
-        <p class="text-sm text-ink-600">
-          Preview merges catalog → your species overrides → cultivar → your cultivar
-          overrides.
-        </p>
-      </div>
-
-      <label class="flex flex-col gap-1">
-        <span class="text-ink-800">Custom species name (optional)</span>
-        <input
-          v-model="customSpeciesName"
-          class="p-1 input-soft text-ink-800"
-          placeholder="Uses catalog name if empty"
-        />
-      </label>
-      <label class="flex flex-col gap-1">
-        <span class="text-ink-800">Custom cultivar label (optional)</span>
-        <input
-          v-model="customCultivarName"
-          class="p-1 input-soft text-ink-800"
-          placeholder="Uses catalog cultivar if empty"
-        />
-      </label>
-
+  <div class="flex h-full min-h-0 flex-col">
+    <AppPageHeader>
+      <template #breadcrumb>
+        <h1 class="text-lg font-medium text-ink-800">Plants</h1>
+      </template>
+    </AppPageHeader>
+    <div
+      class="paper-card p-4 grid grid-flow-col items-start gap-8 flex-1 min-h-0 overflow-auto"
+    >
       <div class="flex flex-col gap-1">
-        <span class="text-ink-800">Icon</span>
         <div
-          class="flex flex-row flex-wrap gap-1 max-w-xs"
-          role="list"
+          v-for="plant in garden.plants"
+          :key="plant.id"
+          role="button"
+          class="selectable-row"
+          :class="{ 'selectable-row-active': plant.id === plantInEditing.id }"
+          :aria-current="plant.id === plantInEditing.id ? 'true' : undefined"
+          :title="resolveUserPlant(plant, plantCatalog).name"
+          :aria-label="resolveUserPlant(plant, plantCatalog).name"
+          @click="edit(plant)"
         >
+          <PlantIcon
+            class="w-7 h-7"
+            :plant="resolveUserPlant(plant, plantCatalog)"
+          />
+          <span class="w-28 truncate text-left">{{ plantRowLabel(plant) }}</span>
           <button
-            v-for="iconId in PLANT_ICON_OPTIONS"
-            :key="iconId"
             type="button"
-            class="icon-picker-btn"
-            :class="resolvedPreview.iconId === iconId && 'icon-picker-btn-selected'"
-            :aria-pressed="resolvedPreview.iconId === iconId"
-            :aria-label="iconId"
-            @click="pickIcon(iconId)"
+            class="btn-danger p-1 rounded-lg text-xs flex items-center justify-center"
+            aria-label="Delete plant"
+            @click.self="remove(plant)"
           >
-            <PlantIcon
-              class="w-7 h-7"
-              :plant="{ ...resolvedPreview, iconId }"
-            />
+            <UiIcon name="trash" />
           </button>
         </div>
+        <button
+          type="button"
+          class="selectable-row"
+          :class="{ 'selectable-row-active': isNew }"
+          :aria-current="isNew ? 'true' : undefined"
+          @click="newPlant"
+        >
+          <UiIcon
+            name="add"
+            class="size-7"
+          />
+          <span class="w-28 truncate text-left">{{ isNew ? 'New plant' : 'New' }}</span>
+        </button>
       </div>
 
-      <PlantFunctions v-model:value="editingFunctions" />
-      <PlantLayers v-model:value="editingLayers" />
+      <div class="flex flex-col gap-3 min-w-[200px]">
+        <h2 class="text-ink-800 font-medium">Catalog</h2>
+        <PlantCatalogCombobox
+          v-model="editingCatalogPick"
+          label="Catalog species and cultivar"
+        />
+      </div>
 
-      <button
-        class="px-3 py-1.5 btn-soft-muted btn-soft-sm text-sm"
-        @click="save"
-      >
-        {{ isNew ? 'Create' : 'Save' }}
-      </button>
+      <div class="flex flex-col gap-2 p-2 max-w-md">
+        <div class="flex flex-row items-center gap-2">
+          <PlantIcon
+            class="w-14 h-14 shrink-0 border border-parchment-300/55 rounded-xl"
+            :plant="resolvedPreview"
+          />
+          <p class="text-sm text-ink-600">
+            Preview merges catalog → your species overrides → cultivar → your cultivar
+            overrides.
+          </p>
+        </div>
+
+        <label class="flex flex-col gap-1">
+          <span class="text-ink-800">Custom species name (optional)</span>
+          <input
+            v-model="customSpeciesName"
+            class="p-1 input-soft text-ink-800"
+            placeholder="Uses catalog name if empty"
+          />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-ink-800">Custom cultivar label (optional)</span>
+          <input
+            v-model="customCultivarName"
+            class="p-1 input-soft text-ink-800"
+            placeholder="Uses catalog cultivar if empty"
+          />
+        </label>
+
+        <div class="flex flex-col gap-1">
+          <span class="text-ink-800">Icon</span>
+          <div
+            class="flex flex-row flex-wrap gap-1 max-w-xs"
+            role="list"
+            aria-label="Plant icons"
+          >
+            <button
+              v-for="iconId in PLANT_ICON_OPTIONS"
+              :key="iconId"
+              type="button"
+              class="icon-picker-btn"
+              :class="resolvedPreview.iconId === iconId && 'icon-picker-btn-selected'"
+              :aria-pressed="resolvedPreview.iconId === iconId"
+              :aria-label="iconId"
+              @click="pickIcon(iconId)"
+            >
+              <PlantIcon
+                class="w-7 h-7"
+                :plant="{ ...resolvedPreview, iconId }"
+              />
+            </button>
+          </div>
+        </div>
+
+        <PlantFunctions v-model:value="editingFunctions" />
+        <PlantLayers v-model:value="editingLayers" />
+
+        <button
+          class="px-3 py-1.5 btn-soft-muted btn-soft-sm text-sm"
+          @click="save"
+        >
+          {{ isNew ? 'Create' : 'Save' }}
+        </button>
+      </div>
     </div>
   </div>
 </template>

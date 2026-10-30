@@ -101,11 +101,11 @@ it('allows garden view changes but prompts before leaving for import', async () 
   useGardenSessionStore().markSaved();
   store.backgroundOpacity = 0.7;
   const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
-  await router.push('/aerial');
-  expect(router.currentRoute.value.name).toBe(routeNames.aerial);
+  await router.push('/guilds');
+  expect(router.currentRoute.value.name).toBe(routeNames.guilds);
   expect(confirm).not.toHaveBeenCalled();
   await router.push('/import');
-  expect(router.currentRoute.value.name).toBe(routeNames.aerial);
+  expect(router.currentRoute.value.name).toBe(routeNames.guilds);
   expect(confirm).toHaveBeenCalledTimes(1);
   confirm.mockReturnValue(true);
   await router.push('/import');

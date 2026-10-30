@@ -126,8 +126,8 @@ export const createNewPlanThroughGate = async (page: Page): Promise<void> => {
 
 export const onboard = async (page: Page): Promise<void> => {
   await setupAuthenticatedGarden(page);
-  if (!page.url().includes('/aerial')) {
-    await page.getByRole('link', { name: 'Aerial' }).click();
+  if (!page.url().includes('/guilds')) {
+    await page.getByRole('link', { name: 'Guilds' }).click();
   }
   const map = page.locator('[data-main-svg]');
   await map.waitFor({ state: 'visible', timeout: 15_000 });
@@ -151,7 +151,6 @@ export const onboard = async (page: Page): Promise<void> => {
   await page.mouse.move(bbox.x + bbox.width - 30, bbox.y + 30);
   await page.mouse.up();
 
-  await openPlanSessionDrawer(page);
+  await page.getByRole('button', { name: 'Map settings' }).click();
   await page.getByLabel('Map scale').fill('100');
-  await page.keyboard.press('Escape');
 };
