@@ -99,7 +99,6 @@ it('add guild navigates to the guilds tab with the new guild selected', async ()
   await router.isReady();
 
   render(GuildTabHeader, {
-    props: { title: 'Aerial' },
     global: { plugins: [router] },
   });
 

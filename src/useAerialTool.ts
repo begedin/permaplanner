@@ -26,13 +26,11 @@ export const useAerialTool = () => {
 };
 
 export const useAerialToolHotkeys = (options: {
-  enabled: Ref<boolean>;
-  canUseEdit: Ref<boolean>;
-  canUseMove: Ref<boolean>;
+  canUseGuildTools: Ref<boolean>;
   setTool: (tool: AerialTool) => void;
 }) => {
   useEventListener(document, 'keydown', (e) => {
-    if (!options.enabled.value || isEditableTarget(e.target)) {
+    if (isEditableTarget(e.target)) {
       return;
     }
     if (e.metaKey || e.ctrlKey || e.altKey) {
@@ -45,12 +43,12 @@ export const useAerialToolHotkeys = (options: {
       options.setTool('select');
       return;
     }
-    if (key === 'b' && options.canUseEdit.value) {
+    if (key === 'b' && options.canUseGuildTools.value) {
       e.preventDefault();
       options.setTool('edit');
       return;
     }
-    if (key === 'm' && options.canUseMove.value) {
+    if (key === 'm' && options.canUseGuildTools.value) {
       e.preventDefault();
       options.setTool('move');
     }

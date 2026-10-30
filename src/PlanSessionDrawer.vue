@@ -1,5 +1,6 @@
 <script setup lang="ts">
-  import { computed, onBeforeUnmount, watch } from 'vue';
+  import { computed } from 'vue';
+  import { useEventListener } from '@vueuse/core';
 
   import PlanSessionPanel from './PlanSessionPanel.vue';
   import UiIcon from './uiIcons/UiIcon.vue';
@@ -18,25 +19,8 @@
     open.value = false;
   };
 
-  const onKeydown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && open.value) {
-      close();
-    }
-  };
-
-  watch(
-    () => open.value,
-    (isOpen) => {
-      if (isOpen) {
-        document.addEventListener('keydown', onKeydown);
-      } else {
-        document.removeEventListener('keydown', onKeydown);
-      }
-    },
-  );
-
-  onBeforeUnmount(() => {
-    document.removeEventListener('keydown', onKeydown);
+  useEventListener(document, 'keydown', (e) => {
+    if (e.key === 'Escape' && open.value) close();
   });
 </script>
 

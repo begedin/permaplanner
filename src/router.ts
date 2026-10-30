@@ -81,12 +81,12 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/guilds',
     name: routeNames.guilds,
-    component: () => import('./TheGuilds.vue'),
+    component: () => import('./TheGarden.vue'),
   },
   {
     path: '/guilds/:guildId',
     name: routeNames.guildsDetail,
-    component: () => import('./TheGuilds.vue'),
+    component: () => import('./TheGarden.vue'),
   },
   { path: '/plants', name: routeNames.plants, component: ThePlants },
   { path: '/calendar', name: routeNames.calendar, component: TheCalendar },

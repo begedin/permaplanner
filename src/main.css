@@ -146,14 +146,6 @@
     @apply btn-icon bg-red-100/90 hover:bg-red-200 text-red-900 border border-red-200/60;
   }
 
-  .nav-tab {
-    @apply rounded-lg px-2 py-1 flex-1 text-ink-600 text-center flex items-center justify-center hover:bg-sage-200/75 hover:text-ink-800 transition-[color,background-color,box-shadow] duration-150 ease-out;
-  }
-
-  .nav-tab-active {
-    @apply bg-sage-300/85 shadow-parchment text-ink-800 font-medium;
-  }
-
   .nav-icon-btn {
     @apply flex items-center justify-center size-7 rounded-lg text-ink-700 hover:bg-sage-200/75 hover:text-ink-900 transition-[color,background-color,box-shadow,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage-400/45 active:scale-95;
   }

@@ -4,7 +4,7 @@ import { flushPromises } from '@vue/test-utils';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
 
-import ThingBarGuild from './ThingBarGuild.vue';
+import GuildListRow from './GuildListRow.vue';
 import { createAuthedTestRouter } from './testing/authedTestSession';
 import { routeNames, routeParam } from './router';
 import { useGardenStore } from './useGardenStore';
@@ -13,17 +13,12 @@ beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
 });
 
-const renderOnAerial = async () => {
-  const router = await createAuthedTestRouter('/guilds');
-  return router;
-};
-
 afterEach(() => cleanup());
 
 it('throws if no guild in store', async () => {
-  const router = await renderOnAerial();
+  const router = await createAuthedTestRouter('/guilds');
   expect(() =>
-    render(ThingBarGuild, { props: { id: 'guild' }, global: { plugins: [router] } }),
+    render(GuildListRow, { props: { guildId: 'guild' }, global: { plugins: [router] } }),
   ).toThrow('Guild not found: guild');
 });
 
@@ -49,11 +44,11 @@ it('shows guild name, compact plant tags, and season section', async () => {
       path: [],
     },
   ];
-  const router = await renderOnAerial();
+  const router = await createAuthedTestRouter('/guilds');
   await router.push({ name: routeNames.guildsDetail, params: { guildId: 'guild' } });
 
-  const wrapper = render(ThingBarGuild, {
-    props: { id: 'guild' },
+  const wrapper = render(GuildListRow, {
+    props: { guildId: 'guild' },
     global: { plugins: [router] },
   });
   await waitFor(() => {
@@ -87,11 +82,11 @@ it('marks the card as current when this guild is selected on the map', async () 
       path: [],
     },
   ];
-  const router = await renderOnAerial();
+  const router = await createAuthedTestRouter('/guilds');
   await router.push({ name: routeNames.guildsDetail, params: { guildId: 'guild' } });
 
-  const wrapper = render(ThingBarGuild, {
-    props: { id: 'guild' },
+  const wrapper = render(GuildListRow, {
+    props: { guildId: 'guild' },
     global: { plugins: [router] },
   });
   expect(
@@ -114,9 +109,9 @@ it('shows map size and icon remove when the guild is placed on the aerial map', 
     },
   ];
 
-  const router = await renderOnAerial();
-  const wrapper = render(ThingBarGuild, {
-    props: { id: 'guild' },
+  const router = await createAuthedTestRouter('/guilds');
+  const wrapper = render(GuildListRow, {
+    props: { guildId: 'guild' },
     global: { plugins: [router] },
   });
 
@@ -151,9 +146,9 @@ it('selects the guild in the guild route when the card is clicked', async () => 
     },
   ];
 
-  const router = await renderOnAerial();
-  const wrapper = render(ThingBarGuild, {
-    props: { id: 'guild' },
+  const router = await createAuthedTestRouter('/guilds');
+  const wrapper = render(GuildListRow, {
+    props: { guildId: 'guild' },
     global: { plugins: [router] },
   });
   await fireEvent.click(await wrapper.findByRole('article', { name: 'A guild' }));

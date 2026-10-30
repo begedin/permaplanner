@@ -12,8 +12,6 @@
 
   const props = defineProps<{
     guildId: string;
-    /** Stretch to the grid row height in multi-column guild list browse mode. */
-    fillCell?: boolean;
   }>();
 
   const garden = useGardenStore();
@@ -29,15 +27,15 @@
     removeFromAerialMap,
   } = useGuildCardModel(toRef(props, 'guildId'));
 
-  const onAerialListClick = () => {
+  const onListClick = () => {
     void selectGuild(props.guildId);
   };
 
-  const onAerialListKeydown = (e: KeyboardEvent) => {
+  const onListKeydown = (e: KeyboardEvent) => {
     if (e.target !== e.currentTarget) return;
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      onAerialListClick();
+      onListClick();
     }
   };
 </script>
@@ -46,7 +44,6 @@
   <article
     class="flex flex-col gap-1 items-start justify-start p-2 text-ink-600 w-full min-w-0 max-w-full paper-card-interactive"
     :class="{
-      'h-full min-h-0': fillCell,
       'paper-card-selected': selectedGuildId === guildId,
       'ring-2 ring-amber-600': garden.mergeSourceId === guildId,
       'paper-card-not-on-aerial': !placedOnMap,
@@ -55,8 +52,8 @@
     :data-guild-id="guildId"
     :aria-current="selectedGuildId === guildId ? 'true' : undefined"
     tabindex="0"
-    @click="onAerialListClick"
-    @keydown="onAerialListKeydown"
+    @click="onListClick"
+    @keydown="onListKeydown"
   >
     <div class="flex flex-row items-start justify-between gap-2 w-full shrink-0">
       <p class="font-medium text-ink-800 min-w-0 flex-1">
@@ -142,7 +139,6 @@
     </p>
 
     <GuildSeasonStrip
-      :class="{ 'mt-auto': fillCell }"
       :fruiting="guildMonthPhenologyCounts.fruiting"
       :blooming="guildMonthPhenologyCounts.blooming"
       :tooltip-rows="guildTooltipRows"

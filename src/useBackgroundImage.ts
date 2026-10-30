@@ -1,4 +1,5 @@
 import { computed, ref, watch } from 'vue';
+import { useEventListener } from '@vueuse/core';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 
@@ -44,39 +45,20 @@ export const useBackgroundImage = () => {
     { immediate: true },
   );
 
-  let pasteController: AbortController | null = null;
+  useEventListener(document, 'paste', (e) => {
+    const file = e.clipboardData?.items[0]?.getAsFile();
+    if (!file) return;
 
-  const setupBackgroundImagePaste = () => {
-    pasteController = new AbortController();
-
-    document.addEventListener(
-      'paste',
-      async (e) => {
-        if (!e.clipboardData || !e.clipboardData.items) return;
-        const file = e.clipboardData.items[0].getAsFile();
-        if (!file) {
-          return;
-        }
-
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          usePlanCommandHistory().runMutation(() => {
-            permaplannerStore.backgroundImageDataUrl = reader.result as string;
-          });
-        };
-      },
-
-      { signal: pasteController.signal },
-    );
-  };
-
-  const teardownBackgroundImagePaste = () => pasteController?.abort();
+    const reader = new FileReader();
+    reader.onload = () => {
+      usePlanCommandHistory().runMutation(() => {
+        permaplannerStore.backgroundImageDataUrl = reader.result as string;
+      });
+    };
+    reader.readAsDataURL(file);
+  });
 
   return {
-    setImage,
-    setupBackgroundImagePaste,
-    teardownBackgroundImagePaste,
     imgWidth,
     imgHeight,
     imgDataUrl,

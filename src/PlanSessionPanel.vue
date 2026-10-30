@@ -116,11 +116,11 @@
 <template>
   <div class="flex flex-1 flex-col items-stretch gap-2">
     <PlanSaveStatus />
-    <template v-if="permaplannerStore.gardenName">
-      <span class="text-xs text-ink-600 truncate">{{
-        permaplannerStore.gardenName
-      }}</span>
-    </template>
+    <span
+      v-if="permaplannerStore.gardenName"
+      class="text-xs text-ink-600 truncate"
+      >{{ permaplannerStore.gardenName }}</span
+    >
     <div class="grid grid-cols-2 gap-2">
       <template v-if="permaplannerStore.gardenName">
         <button

@@ -16,8 +16,7 @@
   } from './gardenTypes';
   import { plantCatalog } from './plantCatalog';
   import { resolveUserPlant } from './resolvePlant';
-  import { PLANT_ICON_OPTIONS } from './plantIconOptions';
-  import type { PlantIconId } from './plantIcons/iconIds';
+  import { PLANT_ICON_IDS, type PlantIconId } from './plantIcons/iconIds';
   import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
   import AppPageHeader from './AppPageHeader.vue';
   import PlantIcon from './PlantIcon.vue';
@@ -313,7 +312,7 @@
             aria-label="Plant icons"
           >
             <button
-              v-for="iconId in PLANT_ICON_OPTIONS"
+              v-for="iconId in PLANT_ICON_IDS"
               :key="iconId"
               type="button"
               class="icon-picker-btn"

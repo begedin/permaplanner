@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+  import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
   import UiIcon from './uiIcons/UiIcon.vue';
   import ToolSlider from './ToolSlider.vue';
@@ -15,10 +15,10 @@
 
   import { useBackgroundImage } from './useBackgroundImage';
   import { useCamera } from './useCamera';
-  import { useElementSize } from '@vueuse/core';
+  import { useElementSize, useEventListener } from '@vueuse/core';
   import GuildTabHeader from './GuildTabHeader.vue';
   import OnboardingText from './OnboardingText.vue';
-  import ThingBarGuild from './ThingBarGuild.vue';
+  import GuildListRow from './GuildListRow.vue';
   import { useGuildHover } from './useGuildHover';
   import { useGuildSearch } from './useGuildSearch';
   import { useGuildListScroll } from './useGuildListScroll';
@@ -32,20 +32,7 @@
   const permaplannerStore = usePermaplannerStore();
   const mapSettingsOpen = ref(false);
 
-  const {
-    setupBackgroundImagePaste,
-    teardownBackgroundImagePaste,
-    imgWidth,
-    imgHeight,
-    imgDataUrl,
-    ready,
-  } = useBackgroundImage();
-
-  onBeforeMount(() => {
-    setupBackgroundImagePaste();
-  });
-
-  onBeforeUnmount(() => teardownBackgroundImagePaste());
+  const { imgWidth, imgHeight, imgDataUrl, ready } = useBackgroundImage();
 
   const container = ref<SVGElement>();
 
@@ -170,11 +157,9 @@
   const { searchQuery, filteredGuilds, hasSearchQuery } = useGuildSearch();
   const { guildListScroll } = useGuildListScroll();
 
-  const placedGuilds = computed(() => garden.guilds.filter((g) => g.path.length > 0));
-
   /** Selected guild is drawn first so other beds stay clickable on top while editing. */
   const placedGuildsRenderOrder = computed(() => {
-    const placed = placedGuilds.value;
+    const placed = garden.guilds.filter((g) => g.path.length > 0);
     const selected = selectedGuildId.value;
     if (!selected) {
       return placed;
@@ -207,13 +192,11 @@
   });
 
   useAerialToolHotkeys({
-    enabled: computed(() => true),
-    canUseEdit: canUseGuildTools,
-    canUseMove: canUseGuildTools,
+    canUseGuildTools,
     setTool,
   });
 
-  const onDeleteKey = (e: KeyboardEvent): void => {
+  useEventListener(document, 'keydown', (e) => {
     if (
       e.key !== 'Delete' ||
       selectedGuildId.value === undefined ||
@@ -229,14 +212,6 @@
     if (!garden.guilds.some((g) => g.id === id)) {
       void clearSelection();
     }
-  };
-
-  onMounted(() => {
-    document.addEventListener('keydown', onDeleteKey);
-  });
-
-  onBeforeUnmount(() => {
-    document.removeEventListener('keydown', onDeleteKey);
   });
 
   const commitGuildPath = (guildId: string, path: PathPoint[], deselect = false) => {
@@ -252,10 +227,7 @@
     class="flex flex-col h-full min-h-0 bg-parchment-100/50"
     :class="{ 'guild-merge-mode': isMerging }"
   >
-    <GuildTabHeader
-      v-model:search-query="searchQuery"
-      title="Guilds"
-    />
+    <GuildTabHeader v-model:search-query="searchQuery" />
 
     <div class="flex flex-col md:flex-row flex-1 min-h-0 min-w-0">
       <aside
@@ -279,9 +251,9 @@
           ref="guildListScroll"
           class="guild-list flex-1 min-h-0 overflow-x-hidden overflow-y-auto p-2 flex flex-col gap-2"
         >
-          <ThingBarGuild
+          <GuildListRow
             v-for="guild in filteredGuilds"
-            :id="guild.id"
+            :guild-id="guild.id"
             :key="guild.id"
           />
         </div>
@@ -315,8 +287,7 @@
           <div class="pointer-events-none absolute top-2 right-2 z-10">
             <AerialMapToolbar
               :active-tool="activeTool"
-              :can-use-edit="canUseGuildTools"
-              :can-use-move="canUseGuildTools"
+              :can-use-guild-tools="canUseGuildTools"
               @update:active-tool="setTool"
             />
           </div>
@@ -465,11 +436,7 @@
                     :step="0.01"
                     @edit-start="backgroundOpacityEditSession.begin"
                     @update:value="permaplannerStore.backgroundOpacity = $event"
-                    @commit:value="
-                      () => {
-                        backgroundOpacityEditSession.commit();
-                      }
-                    "
+                    @commit:value="backgroundOpacityEditSession.commit"
                   />
                 </div>
               </div>

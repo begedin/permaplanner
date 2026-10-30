@@ -27,7 +27,7 @@ const renderHeader = async () => {
   await router.push('/guilds');
   await router.isReady();
   return render(GuildTabHeader, {
-    props: { title: 'Guilds', searchQuery: '' },
+    props: { searchQuery: '' },
     global: { plugins: [router] },
   });
 };
@@ -76,7 +76,7 @@ it('places Save after Add guild and enables it only for unsaved changes', async 
   store.gardenId = 'g1';
   useGardenSessionStore().markSaved();
   vi.mocked(gardensApi.updateGarden).mockResolvedValue(1);
-  render(GuildTabHeader, { props: { title: 'Guilds' }, global: { plugins: [router] } });
+  render(GuildTabHeader, { global: { plugins: [router] } });
 
   expect(
     screen

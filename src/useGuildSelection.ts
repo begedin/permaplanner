@@ -41,9 +41,8 @@ export const useGuildSelection = () => {
     hoveredId.value = id;
     if (rawGuildId.value === id) return;
 
-    const name = isGuildsRoute(route.name) ? routeNames.guildsDetail : undefined;
-    if (name) {
-      await router.push({ name, params: { guildId: id } });
+    if (isGuildsRoute(route.name)) {
+      await router.push({ name: routeNames.guildsDetail, params: { guildId: id } });
     }
   };
 
@@ -51,7 +50,6 @@ export const useGuildSelection = () => {
     clearHover();
     if (isGuildsRoute(route.name) && rawGuildId.value) {
       await router.replace({ name: routeNames.guilds });
-      return;
     }
   };
 

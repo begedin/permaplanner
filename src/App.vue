@@ -1,6 +1,5 @@
 <script setup lang="ts">
   import { computed, onMounted, watch } from 'vue';
-  import { storeToRefs } from 'pinia';
   import { useEventListener } from '@vueuse/core';
   import { useRoute } from 'vue-router';
 
@@ -42,10 +41,8 @@
       route.name === routeNames.import,
   );
 
-  const { hasUnsavedChanges } = storeToRefs(gardenSession);
-
   useEventListener(window, 'beforeunload', (event) => {
-    if (hasUnsavedChanges.value) {
+    if (gardenSession.hasUnsavedChanges) {
       event.preventDefault();
       event.returnValue = '';
     }

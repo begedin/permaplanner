@@ -1,15 +1,8 @@
 import { useEventListener } from '@vueuse/core';
 import type { Ref } from 'vue';
 
-export const useSearchFocusHotkeys = (
-  inputRef: Ref<HTMLInputElement | null>,
-  enabled: () => boolean,
-) => {
+export const useSearchFocusHotkeys = (inputRef: Ref<HTMLInputElement | null>) => {
   useEventListener(document, 'keydown', (e) => {
-    if (!enabled()) {
-      return;
-    }
-
     const modFind = (e.metaKey || e.ctrlKey) && e.key === 'f';
     const slash = e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey;
     if (!modFind && !slash) {

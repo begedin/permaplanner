@@ -7,20 +7,14 @@
   import { useCalendarSelection } from './useCalendarSelection';
   import { useSearchFocusHotkeys } from './useSearchFocusHotkeys';
 
-  defineProps<{
-    searchQuery: string;
-  }>();
-
-  const emit = defineEmits<{
-    'update:searchQuery': [value: string];
-  }>();
+  const searchQuery = defineModel<string>('searchQuery', { required: true });
 
   const { selectedSpeciesId, selectedSpeciesName, clearSelection } =
     useCalendarSelection();
   const searchInputRef = ref<HTMLInputElement | null>(null);
   const searchPlaceholder = searchInputPlaceholder();
 
-  useSearchFocusHotkeys(searchInputRef, () => true);
+  useSearchFocusHotkeys(searchInputRef);
 </script>
 
 <template>
@@ -69,8 +63,7 @@
         type="search"
         class="w-full input-soft py-1.5 px-2 text-sm text-ink-800"
         :placeholder="searchPlaceholder"
-        :value="searchQuery"
-        @input="emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
+        v-model="searchQuery"
       />
     </label>
   </AppPageHeader>

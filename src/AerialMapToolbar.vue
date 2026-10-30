@@ -7,8 +7,7 @@
 
   const props = defineProps<{
     activeTool: AerialTool;
-    canUseEdit: boolean;
-    canUseMove: boolean;
+    canUseGuildTools: boolean;
   }>();
 
   const emit = defineEmits<{
@@ -35,14 +34,14 @@
         label: 'Edit brush',
         hotkey: 'B',
         icon: 'edit',
-        disabled: !props.canUseEdit,
+        disabled: !props.canUseGuildTools,
       },
       {
         id: 'move',
         label: 'Move guild',
         hotkey: 'M',
         icon: 'move',
-        disabled: !props.canUseMove,
+        disabled: !props.canUseGuildTools,
       },
     ],
   );

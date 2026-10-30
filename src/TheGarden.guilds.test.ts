@@ -11,7 +11,7 @@ import { flushPromises } from '@vue/test-utils';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
 
-import TheGuilds from './TheGuilds.vue';
+import TheGarden from './TheGarden.vue';
 import { createAuthedTestRouter } from './testing/authedTestSession';
 import { routeNames, routeParam } from './router';
 import { useGardenStore } from './useGardenStore';
@@ -44,7 +44,7 @@ const seedGuilds = async (initialPath = '/guilds') => {
 
 it('shows the guild list beside the map when none is selected', async () => {
   const { router } = await seedGuilds();
-  render(TheGuilds, { global: { plugins: [router] } });
+  render(TheGarden, { global: { plugins: [router] } });
 
   await waitFor(() => {
     expect(screen.getByRole('article', { name: 'Alpha guild' })).toBeVisible();
@@ -58,7 +58,7 @@ it('shows the guild list beside the map when none is selected', async () => {
 it('scrolls to the selected guild when opening the guilds tab with a selection', async () => {
   const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView');
   const { router } = await seedGuilds('/guilds/b');
-  render(TheGuilds, { global: { plugins: [router] } });
+  render(TheGarden, { global: { plugins: [router] } });
   await flushPromises();
 
   expect(scrollIntoView).toHaveBeenCalledWith({
@@ -70,7 +70,7 @@ it('scrolls to the selected guild when opening the guilds tab with a selection',
 it('scrolls to another guild selected from the list', async () => {
   const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView');
   const { router } = await seedGuilds();
-  render(TheGuilds, { global: { plugins: [router] } });
+  render(TheGarden, { global: { plugins: [router] } });
   await flushPromises();
   scrollIntoView.mockClear();
 
@@ -85,7 +85,7 @@ it('scrolls to another guild selected from the list', async () => {
 
 it('selects a guild from the list and shows full details', async () => {
   const { router } = await seedGuilds();
-  render(TheGuilds, { global: { plugins: [router] } });
+  render(TheGarden, { global: { plugins: [router] } });
 
   await fireEvent.click(await screen.findByRole('article', { name: 'Beta guild' }));
   await flushPromises();
@@ -104,7 +104,7 @@ it('selects a guild from the list and shows full details', async () => {
 it('deselects when the page title is clicked', async () => {
   const { router } = await seedGuilds('/guilds/a');
   const { hoveredId } = useGuildHover();
-  render(TheGuilds, { global: { plugins: [router] } });
+  render(TheGarden, { global: { plugins: [router] } });
 
   await fireEvent.click(
     await screen.findByRole('button', { name: 'Deselect guild, Guilds' }),
@@ -122,7 +122,7 @@ it('deselects when the page title is clicked', async () => {
 
 it('filters guilds by search query', async () => {
   const { router } = await seedGuilds();
-  render(TheGuilds, { global: { plugins: [router] } });
+  render(TheGarden, { global: { plugins: [router] } });
 
   await fireEvent.update(
     screen.getByRole('searchbox', { name: 'Search guilds' }),
@@ -139,7 +139,7 @@ it('filters guilds by search query', async () => {
 
 it('shows a message when search matches no guilds', async () => {
   const { router } = await seedGuilds();
-  render(TheGuilds, { global: { plugins: [router] } });
+  render(TheGarden, { global: { plugins: [router] } });
 
   await fireEvent.update(
     screen.getByRole('searchbox', { name: 'Search guilds' }),
@@ -156,7 +156,7 @@ it('shows a message when search matches no guilds', async () => {
 
 it('focuses search on Cmd+F and /', async () => {
   const { router } = await seedGuilds();
-  render(TheGuilds, { global: { plugins: [router] } });
+  render(TheGarden, { global: { plugins: [router] } });
   const search = screen.getByRole('searchbox', { name: 'Search guilds' });
 
   document.dispatchEvent(
@@ -171,7 +171,7 @@ it('focuses search on Cmd+F and /', async () => {
 
 it('focuses search on Ctrl+F', async () => {
   const { router } = await seedGuilds();
-  render(TheGuilds, { global: { plugins: [router] } });
+  render(TheGarden, { global: { plugins: [router] } });
   const search = screen.getByRole('searchbox', { name: 'Search guilds' });
 
   document.dispatchEvent(
@@ -182,7 +182,7 @@ it('focuses search on Ctrl+F', async () => {
 
 it('does not steal focus for / when typing in another input', async () => {
   const { router } = await seedGuilds('/guilds/a');
-  render(TheGuilds, { global: { plugins: [router] } });
+  render(TheGarden, { global: { plugins: [router] } });
   const nameInput = screen.getByDisplayValue('Alpha guild');
   nameInput.focus();
 
@@ -193,7 +193,7 @@ it('does not steal focus for / when typing in another input', async () => {
 
 it('highlights matched text in guild list results', async () => {
   const { router } = await seedGuilds();
-  const { container } = render(TheGuilds, { global: { plugins: [router] } });
+  const { container } = render(TheGarden, { global: { plugins: [router] } });
 
   await fireEvent.update(
     screen.getByRole('searchbox', { name: 'Search guilds' }),
@@ -205,7 +205,7 @@ it('highlights matched text in guild list results', async () => {
 
 it('add guild navigates with the new guild in the route', async () => {
   const router = await createAuthedTestRouter('/guilds');
-  render(TheGuilds, { global: { plugins: [router] } });
+  render(TheGarden, { global: { plugins: [router] } });
 
   await fireEvent.click(await screen.findByRole('button', { name: 'Add guild' }));
   await flushPromises();
@@ -224,7 +224,7 @@ it('add guild navigates with the new guild in the route', async () => {
 it('selects a merge source, confirms the target, and opens the merged guild', async () => {
   const { router, store } = await seedGuilds();
   const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
-  render(TheGuilds, { global: { plugins: [router] } });
+  render(TheGarden, { global: { plugins: [router] } });
   await fireEvent.click(
     within(screen.getByRole('article', { name: 'Alpha guild' })).getByRole('button', {
       name: 'Merge with',
@@ -268,7 +268,7 @@ it('selects a merge source, confirms the target, and opens the merged guild', as
 
 it('cancels merge selection without modifying either guild', async () => {
   const { router, store } = await seedGuilds();
-  render(TheGuilds, { global: { plugins: [router] } });
+  render(TheGarden, { global: { plugins: [router] } });
   const source = screen.getByRole('article', { name: 'Alpha guild' });
   await fireEvent.click(within(source).getByRole('button', { name: 'Merge with' }));
   await fireEvent.click(screen.getByRole('button', { name: 'Cancel merge' }));

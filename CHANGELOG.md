@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.25.11
+
+- [CHANGE] Remove obsolete guild-view wrappers, unused navigation styles, and the duplicate plant icon list; keep existing coverage on the underlying components.
+- [CHANGE] Simplify shared header search bindings, map-tool permissions, selection logic, and event listener lifecycles.
 
 - [FEATURE] Combine guild details and the aerial map in one Guilds view, retaining the guild sidebar and animating the details panel between hidden and one third of the main area.
 - [FEATURE] Consolidate navigation, breadcrumbs, search, and actions into one header with labeled navigation icons.

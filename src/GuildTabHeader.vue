@@ -11,14 +11,7 @@
   import { useGardenSessionStore } from './stores/useGardenSessionStore';
   import { useSearchFocusHotkeys } from './useSearchFocusHotkeys';
 
-  const props = defineProps<{
-    title: string;
-    searchQuery?: string;
-  }>();
-
-  const emit = defineEmits<{
-    'update:searchQuery': [value: string];
-  }>();
+  const searchQuery = defineModel<string>('searchQuery', { default: '' });
 
   const garden = useGardenStore();
   const gardenSession = useGardenSessionStore();
@@ -36,7 +29,7 @@
     return garden.guilds.find((g) => g.id === id)?.name;
   });
 
-  useSearchFocusHotkeys(searchInputRef, () => props.searchQuery !== undefined);
+  useSearchFocusHotkeys(searchInputRef);
 </script>
 
 <template>
@@ -50,10 +43,10 @@
         <button
           type="button"
           class="link-soft text-ink-800 hover:underline shrink-0"
-          :aria-label="`Deselect guild, ${title}`"
+          aria-label="Deselect guild, Guilds"
           @click="clearSelection"
         >
-          {{ title }}
+          Guilds
         </button>
         <span
           class="text-ink-400 shrink-0"
@@ -67,7 +60,7 @@
         >
           <HighlightText
             :text="selectedGuildName"
-            :query="searchQuery ?? ''"
+            :query="searchQuery"
           />
         </span>
       </nav>
@@ -75,21 +68,17 @@
         v-else
         class="text-lg font-medium text-ink-800"
       >
-        {{ title }}
+        Guilds
       </h1>
     </template>
-    <label
-      v-if="searchQuery !== undefined"
-      class="w-56 min-w-0 shrink"
-    >
+    <label class="w-56 min-w-0 shrink">
       <span class="sr-only">Search guilds</span>
       <input
         ref="searchInputRef"
         type="search"
         class="w-full input-soft py-1.5 px-2 text-sm text-ink-800"
         :placeholder="searchPlaceholder"
-        :value="searchQuery"
-        @input="emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
+        v-model="searchQuery"
       />
     </label>
     <div class="flex flex-row items-center gap-1 shrink-0">
