@@ -2,6 +2,7 @@
   import { computed, ref } from 'vue';
   import { storeToRefs } from 'pinia';
 
+  import UiIcon from './uiIcons/UiIcon.vue';
   import AppPageHeader from './AppPageHeader.vue';
   import HighlightText from './HighlightText.vue';
   import { searchInputPlaceholder } from './searchContext';
@@ -84,36 +85,52 @@
     <div class="flex flex-row items-center gap-1 shrink-0">
       <button
         type="button"
-        class="btn-soft-muted btn-soft-sm px-2 py-1.5 text-sm disabled:opacity-50"
+        class="btn-soft-muted btn-soft-sm flex h-9 min-w-9 items-center justify-center gap-1.5 px-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         :disabled="!canUndo"
         aria-label="Undo"
+        title="Undo"
         @click="commandHistory.undo()"
       >
-        Undo
+        <UiIcon
+          name="undo"
+          class="size-5"
+        />
       </button>
       <button
         type="button"
-        class="btn-soft-muted btn-soft-sm px-2 py-1.5 text-sm disabled:opacity-50"
+        class="btn-soft-muted btn-soft-sm flex h-9 min-w-9 items-center justify-center gap-1.5 px-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         :disabled="!canRedo"
         aria-label="Redo"
+        title="Redo"
         @click="commandHistory.redo()"
       >
-        Redo
+        <UiIcon
+          name="redo"
+          class="size-5"
+        />
       </button>
       <button
         type="button"
-        class="btn-soft-primary px-3 py-1.5 text-sm"
+        class="btn-soft-muted btn-soft-sm flex h-9 min-w-9 items-center justify-center gap-1.5 px-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         @click="addGuild"
       >
-        Add guild
+        <UiIcon
+          name="add"
+          class="size-5"
+        />
+        <span>Add guild</span>
       </button>
       <button
         type="button"
-        class="btn-soft-primary px-3 py-1.5 text-sm disabled:opacity-50"
+        class="btn-soft-muted btn-soft-sm flex h-9 min-w-9 items-center justify-center gap-1.5 px-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         :disabled="!gardenSession.canSave"
         @click="gardenSession.save()"
       >
-        {{ gardenSession.status === 'saving' ? 'Saving…' : 'Save' }}
+        <UiIcon
+          name="save"
+          class="size-5"
+        />
+        <span>{{ gardenSession.status === 'saving' ? 'Saving…' : 'Save' }}</span>
       </button>
     </div>
   </AppPageHeader>

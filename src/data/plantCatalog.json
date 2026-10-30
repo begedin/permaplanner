@@ -9,6 +9,32 @@
       "defaultIconId": "seedling"
     },
     {
+      "id": "florists_cyclamen",
+      "name": "Florist's cyclamen",
+      "name_latin": "Cyclamen persicum",
+      "functions": [],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "sierra_fuchsia",
+          "name": "Sierra Fuchsia"
+        },
+        {
+          "id": "metis_victoria",
+          "name": "Metis Victoria"
+        },
+        {
+          "id": "ashwood_silver_leaf",
+          "name": "Ashwood Silver Leaf"
+        }
+      ],
+      "blooming": {
+        "start": 12,
+        "end": 5
+      },
+      "defaultIconId": "flower-rosette"
+    },
+    {
       "id": "lawsons_cypress",
       "name": "Lawson's cypress",
       "name_latin": "Chamaecyparis lawsoniana",

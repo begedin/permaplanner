@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.25.12
+
+- [CHANGE] Add matching icons and consistent styling to Undo, Redo, Add guild, and Save; use compact icon-only Undo and Redo controls with accessible labels.
+
+- [DB] Added florist's cyclamen (Cyclamen persicum) with Sierra Fuchsia, Metis Victoria, and Ashwood Silver Leaf cultivars and winter–spring flowering.
+
 ## 0.25.11
 
 - [CHANGE] Remove obsolete guild-view wrappers, unused navigation styles, and the duplicate plant icon list; keep existing coverage on the underlying components.

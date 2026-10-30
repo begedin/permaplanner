@@ -27,6 +27,16 @@ export const UI_ICON_SYMBOL_INNER: Record<UiIconId, string> = {
     <path d="M26 14 L34 22" />
     <path d="M8 40 L14 34" />
   `,
+  undo: `
+    <path d="M18 12 L10 20 L18 28 M10 20 L27 20 C39 20 39 36 27 36 L22 36" />
+  `,
+  redo: `
+    <path d="M30 12 L38 20 L30 28 M38 20 L21 20 C9 20 9 36 21 36 L26 36" />
+  `,
+  save: `
+    <path d="M12 10 L32 10 L38 16 L38 38 L10 38 L10 12 Z" stroke="currentColor" />
+    <path d="M17 10 L17 21 L31 21 L31 10 M17 38 L17 28 L31 28 L31 38 M27 14 L27 18" stroke="currentColor" />
+  `,
   add: `
     <path d="M24 12 Q23 24 24 36" />
     <path d="M12 24 Q24 23 36 24" />
