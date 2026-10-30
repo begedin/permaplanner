@@ -120,9 +120,9 @@ export const PLANT_ICON_SYMBOL_INNER: Record<PlantIconId, string> = {
   `,
   evergreen: `
     <path d="M24 40 L24 34" />
-    <path fill="#5a8a6a" d="M24 34 L36 34 L24 22 Z" />
-    <path fill="#6a9a7a" d="M24 28 L34 28 L24 16 Z" />
-    <path fill="#7aaa8a" d="M24 22 L32 22 L24 10 Z" />
+    <path fill="#5a8a6a" d="M12 34 L36 34 L24 22 Z" />
+    <path fill="#6a9a7a" d="M14 28 L34 28 L24 16 Z" />
+    <path fill="#7aaa8a" d="M16 22 L32 22 L24 10 Z" />
   `,
   pea: `
     <path fill="#8ab86a" d="M14 20 Q12 28 16 34 Q22 38 28 34 Q34 28 32 20 Q30 14 22 12 Q16 12 14 20" />

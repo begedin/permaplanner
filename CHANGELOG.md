@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.25.10
+
+- [DB] Added Lawson's cypress (Chamaecyparis lawsoniana) to the catalog with Ellwoodii, Ellwood's Gold, and Columnaris cultivars
+- [FIX] Restore the missing left halves of the evergreen icon's foliage tiers
+
 ## 0.25.9
 
 - [DB] Added spring crocus (Crocus vernus) to the catalog with Pickwick, Flower Record, and Jeanne d’Arc cultivars and March–April flowering periods

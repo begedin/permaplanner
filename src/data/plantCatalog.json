@@ -9,6 +9,30 @@
       "defaultIconId": "seedling"
     },
     {
+      "id": "lawsons_cypress",
+      "name": "Lawson's cypress",
+      "name_latin": "Chamaecyparis lawsoniana",
+      "functions": [],
+      "layers": ["overstory"],
+      "cultivars": [
+        {
+          "id": "ellwoodii",
+          "name": "Ellwoodii (Ellwood cypress)",
+          "layers": ["shrub", "understory"]
+        },
+        {
+          "id": "ellwoods_gold",
+          "name": "Ellwood's Gold",
+          "layers": ["shrub"]
+        },
+        {
+          "id": "columnaris",
+          "name": "Columnaris"
+        }
+      ],
+      "defaultIconId": "evergreen"
+    },
+    {
       "id": "crocus",
       "name": "Spring crocus",
       "name_latin": "Crocus vernus",
