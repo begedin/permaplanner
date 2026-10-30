@@ -1,5 +1,5 @@
 import { within } from '@testing-library/dom';
-import { cleanup, fireEvent } from '@testing-library/vue';
+import { cleanup, fireEvent, waitFor } from '@testing-library/vue';
 import { flushPromises, mount } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -648,5 +648,121 @@ it('orders all layer groups from canopy to roots using the highest layer of each
       .map((heading) => heading.textContent?.trim()),
   ).toEqual(['Overstory', 'Understory', 'Vine', 'Shrub', 'Herb', 'Ground Cover', 'Root']);
   expect(card(wrapper).getByText('Overstory, Root')).toBeVisible();
+  wrapper.unmount();
+});
+
+it('keeps notes separate for individual plants and shows them beneath collapsed groups', async () => {
+  const store = useGardenStore();
+  store.plants = [{ id: 'apple', speciesId: 'apple', cultivarId: null }];
+  store.guilds[0]!.plants = [
+    baseThing({ id: 'a', plantId: 'apple' }),
+    baseThing({ id: 'b', plantId: 'apple', note: 'Second tree' }),
+  ];
+  const wrapper = await renderGuildEditor();
+  expect(card(wrapper).getByText('Plant 2: Second tree')).toBeVisible();
+  expect(
+    card(wrapper).queryByRole('button', { name: /note for .* instance/ }),
+  ).not.toBeInTheDocument();
+  await fireEvent.click(card(wrapper).getByRole('button', { name: /Expand Apple/ }));
+  expect(
+    card(wrapper).getByRole('button', { name: /Edit note for .* instance 2/ }),
+  ).toHaveAttribute('title', 'Edit note for Apple (Malus domestica) instance 2');
+  await fireEvent.click(
+    card(wrapper).getByRole('button', { name: /Add note for .* instance 1/ }),
+  );
+  const editor = card(wrapper).getByRole('textbox', { name: /Note for .* instance 1/ });
+  await fireEvent.update(editor, 'First tree');
+  await fireEvent.blur(editor);
+  expect(store.guilds).toMatchObject([
+    {
+      plants: [
+        { id: 'a', note: 'First tree' },
+        { id: 'b', note: 'Second tree' },
+      ],
+    },
+  ]);
+  await fireEvent.click(card(wrapper).getByRole('button', { name: /Collapse Apple/ }));
+  expect(card(wrapper).getByText('Plant 1: First tree')).toBeVisible();
+  expect(card(wrapper).getByText('Plant 2: Second tree')).toBeVisible();
+  expect(
+    card(wrapper).queryByRole('button', { name: /note for .* instance/ }),
+  ).not.toBeInTheDocument();
+  await fireEvent.click(
+    card(wrapper).getByRole('button', { name: 'Plant 2: Second tree' }),
+  );
+  await waitFor(() => {
+    expect(
+      card(wrapper).getByRole('textbox', { name: /Note for .* instance 2/ }),
+    ).toHaveFocus();
+  });
+  expect(card(wrapper).getByRole('button', { name: /Collapse Apple/ })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
+  const secondEditor = card(wrapper).getByRole('textbox', {
+    name: /Note for .* instance 2/,
+  });
+  expect(secondEditor).toHaveValue('Second tree');
+  await fireEvent.update(secondEditor, 'Updated second tree');
+  await fireEvent.blur(secondEditor);
+  expect(store.guilds).toMatchObject([
+    {
+      plants: [
+        { id: 'a', note: 'First tree' },
+        { id: 'b', note: 'Updated second tree' },
+      ],
+    },
+  ]);
+  wrapper.unmount();
+});
+
+it('shows an icon-only note action alongside plant actions with tooltips', async () => {
+  const store = useGardenStore();
+  store.plants = [{ id: 'apple', speciesId: 'apple', cultivarId: null }];
+  store.guilds[0]!.plants = [baseThing({ id: 'a', plantId: 'apple' })];
+  const wrapper = await renderGuildEditor();
+  const actions = within(card(wrapper).getByRole('group', { name: /Actions for/ }));
+  const buttons = actions.getAllByRole('button');
+  expect(
+    buttons.map((button) => ({
+      label: button.getAttribute('aria-label'),
+      title: button.getAttribute('title'),
+    })),
+  ).toEqual([
+    {
+      label: 'Add note for Apple (Malus domestica)',
+      title: 'Add note for Apple (Malus domestica)',
+    },
+    { label: 'Edit plant in bed', title: 'Edit plant in bed' },
+    { label: 'Add one plant to bed', title: 'Add one plant to bed' },
+    { label: 'Remove plant from bed', title: 'Remove plant from bed' },
+  ]);
+  expect(
+    actions.getByRole('button', { name: 'Add note for Apple (Malus domestica)' }),
+  ).toHaveTextContent('');
+  await fireEvent.click(
+    actions.getByRole('button', { name: 'Add note for Apple (Malus domestica)' }),
+  );
+  const editor = card(wrapper).getByRole('textbox', {
+    name: 'Note for Apple (Malus domestica)',
+  });
+  await fireEvent.update(editor, 'Water weekly');
+  await fireEvent.blur(editor);
+  expect(
+    actions.queryByRole('button', { name: 'Add note for Apple (Malus domestica)' }),
+  ).not.toBeInTheDocument();
+  await fireEvent.click(
+    card(wrapper).getByRole('button', { name: 'Edit note for Apple (Malus domestica)' }),
+  );
+  await fireEvent.update(
+    card(wrapper).getByRole('textbox', { name: 'Note for Apple (Malus domestica)' }),
+    '',
+  );
+  await fireEvent.blur(
+    card(wrapper).getByRole('textbox', { name: 'Note for Apple (Malus domestica)' }),
+  );
+  expect(
+    actions.getByRole('button', { name: 'Add note for Apple (Malus domestica)' }),
+  ).toBeVisible();
   wrapper.unmount();
 });

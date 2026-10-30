@@ -41,6 +41,7 @@ const document: GardenDocument = {
           y: 6,
           width: 7,
           height: 8,
+          note: 'Prune after harvest\nCheck new growth',
           growthPhase: 'young',
           vigor: 4,
         },
@@ -177,5 +178,19 @@ it('surfaces a rejected import from the backend', async () => {
   await expect(importJsonText('{"version":999}')).rejects.toMatchObject({
     status: 422,
     body: { error: 'invalid_version' },
+  });
+});
+
+it('imports older documents without plant notes unchanged', async () => {
+  const olderDocument = structuredClone(document);
+  for (const guild of olderDocument.guilds) {
+    for (const plant of guild.plants) delete plant.note;
+  }
+  fetchMock.mockResolvedValueOnce(
+    new Response(JSON.stringify({ garden: { id: 'garden1', document: olderDocument } })),
+  );
+  await importJsonText(buildLocalPlanJsonText(olderDocument));
+  expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+    document: olderDocument,
   });
 });

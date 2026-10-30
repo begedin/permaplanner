@@ -319,3 +319,40 @@ it.each([
   store.mergeGuilds('a', 'b');
   expect(store.guilds).toMatchObject([{ name: 'A + B', note: expected }]);
 });
+
+it('updates individual plant notes with undo and removes empty notes', () => {
+  const store = useGardenStore();
+  const thing = {
+    id: 'a',
+    plantId: 'apple',
+    nameOrCultivar: 'Apple',
+    x: 0,
+    y: 0,
+    width: 10,
+    height: 10,
+  };
+  store.guilds = [
+    {
+      id: 'g',
+      name: 'Trees',
+      path: [],
+      mulchLevel: 1,
+      plants: [thing, { ...thing, id: 'b', note: 'Keep' }],
+    },
+  ];
+  store.updateGuildThingNote('g', 'a', 'Prune');
+  expect(store.guilds).toMatchObject([
+    {
+      plants: [
+        { id: 'a', note: 'Prune' },
+        { id: 'b', note: 'Keep' },
+      ],
+    },
+  ]);
+  usePlanCommandHistory().undo();
+  expect(store.guilds[0]?.plants[0]).not.toHaveProperty('note');
+  usePlanCommandHistory().redo();
+  expect(store.guilds[0]?.plants[0]).toMatchObject({ note: 'Prune' });
+  store.updateGuildThingNote('g', 'a', '  ');
+  expect(store.guilds[0]?.plants[0]).not.toHaveProperty('note');
+});

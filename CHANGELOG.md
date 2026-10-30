@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+- [FIX] Use distinct raspberry, Yamlina, goji, currant, and elderflower icons instead of blueberry placeholders.
+
+- [FIX] Give mulberry its own elongated clustered fruit icon.
+
+- [FIX] Give blackberry a dedicated dark purple clustered berry icon.
+
+- [FIX] Give haskap its own elongated blue berry icon while retaining the round blueberry icon.
+
+- [FIX] Correct the strawberry silhouette to taper downward beneath a green leafy cap.
+
+- [FIX] Redraw the apple icon with a red, notched silhouette, stem, and green leaf.
+
+- [FIX] Replace the small berry cluster used by haskap and other berries with one large blue berry.
+
+- [FIX] Give the shared herb icon a broader green leaf silhouette that stays legible at small sizes.
+
+- [FEATURE] Add optional notes to individual guild plants, with inline editing and undo support.
+
 ## 0.25.10
 
 - [DB] Added Lawson's cypress (Chamaecyparis lawsoniana) to the catalog with Ellwoodii, Ellwood's Gold, and Columnaris cultivars

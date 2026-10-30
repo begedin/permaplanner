@@ -72,6 +72,8 @@ export type GardenThing = {
   y: number;
   width: number;
   height: number;
+  /** Optional note for this individual plant. */
+  note?: string;
   /** Development phase (Option C: sown → germinated|transplanted → …). */
   growthPhase?: GrowthPhase;
   /** Health / vigor (1 = struggling … 5 = thriving). */

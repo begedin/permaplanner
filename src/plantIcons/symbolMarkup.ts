@@ -8,13 +8,15 @@ export const PLANT_ICON_SYMBOL_INNER: Record<PlantIconId, string> = {
     <path d="M24 26 Q34 22 36 14 Q30 20 24 26" />
   `,
   'leaf-herb': `
-    <path d="M24 40 Q20 28 22 16 Q24 8 24 6 Q26 10 26 18 Q28 30 24 40" />
-    <path d="M24 12 Q24 24 24 36" />
+    <path fill="#a8b88a" d="M13 34 C5 22 15 8 36 7 C40 25 30 39 13 34 Z" />
+    <path d="M9 41 Q19 25 32 12" />
+    <path d="M17 30 L14 21 M23 23 L22 15 M23 23 L32 24 M17 30 L27 31" />
   `,
   apple: `
-    <path fill="#d4a574" d="M24 14 Q32 14 34 22 Q36 32 28 36 Q20 38 16 30 Q14 20 20 15 Q22 13 24 14" />
-    <path d="M24 14 Q24 8 26 6" />
-    <path d="M26 6 Q30 4 32 8" />
+    <path fill="#cf6559" d="M24 15 C17 9 8 13 8 23 C8 32 14 40 20 40 Q24 38 28 40 C34 40 40 32 40 23 C40 13 31 9 24 15 Z" />
+    <path d="M24 15 Q23 10 25 7" />
+    <path fill="#94aa70" d="M25 11 Q28 5 35 7 Q33 13 25 11 Z" />
+    <path stroke="#efaaa0" stroke-width="3" d="M14 20 Q11 25 15 30" />
   `,
   pear: `
     <path fill="#c9b87a" d="M24 10 Q28 8 28 14 Q30 22 28 30 Q26 38 22 38 Q16 36 16 28 Q14 18 20 12 Q22 10 24 10" />
@@ -31,17 +33,109 @@ export const PLANT_ICON_SYMBOL_INNER: Record<PlantIconId, string> = {
     <path fill="#8b2942" d="M28 20 Q32 18 34 24 Q34 32 28 34 Q22 32 24 24 Q26 20 28 20" />
   `,
   strawberry: `
-    <path fill="#c44d4d" d="M24 12 L34 28 Q32 38 24 40 Q14 38 14 28 Z" />
-    <path d="M24 12 Q20 8 16 10 Q20 10 24 12 Q28 10 32 10 Q28 8 24 12" />
-    <circle cx="20" cy="26" r="1" fill="#3d2f24" />
-    <circle cx="26" cy="30" r="1" fill="#3d2f24" />
-    <circle cx="22" cy="34" r="1" fill="#3d2f24" />
+    <path fill="#cf5958" d="M24 15 C15 10 7 15 9 24 C11 32 19 39 24 41 C29 39 37 32 39 24 C41 15 33 10 24 15 Z" />
+    <path fill="#8fa968" d="M24 15 L17 10 L18 16 L11 18 L20 21 L24 17 L28 21 L37 18 L30 16 L31 10 Z" />
+    <path d="M24 15 Q22 10 25 7" />
+    <path stroke="#f4d59b" stroke-width="2.5" d="M16 24 L17 26 M24 24 L24 26 M32 24 L31 26 M20 31 L21 33 M28 31 L27 33" />
   `,
   blueberry: `
-    <path d="M24 10 Q20 6 18 10" />
-    <circle cx="18" cy="22" r="6" fill="#4a5a9c" />
-    <circle cx="28" cy="20" r="6" fill="#5a6aac" />
-    <circle cx="24" cy="30" r="6" fill="#3a4a8c" />
+    <path fill="#687eb4" d="M24 10 C34 9 40 16 39 26 C39 36 32 40 24 40 C14 40 8 33 9 24 C9 15 15 10 24 10 Z" />
+    <path fill="#3f507d" d="M24 14 L27 18 L32 17 L29 22 L30 26 L24 24 L19 26 L20 21 L17 17 L22 18 Z" />
+    <path stroke="#a9bce0" stroke-width="3" d="M14 26 Q14 32 19 34" />
+  `,
+  blackberry: `
+    <path d="M24 13 Q23 9 26 7" />
+    <path fill="#8fa968" d="M24 14 L16 10 L18 17 L30 17 L33 10 Z" />
+    <g stroke="#352b3d" stroke-width="1.5">
+      <circle cx="19" cy="18" r="5.5" fill="#66546f" />
+      <circle cx="29" cy="18" r="5.5" fill="#54445f" />
+      <circle cx="14" cy="26" r="5.5" fill="#66546f" />
+      <circle cx="24" cy="26" r="6" fill="#51405e" />
+      <circle cx="34" cy="26" r="5.5" fill="#43364f" />
+      <circle cx="18" cy="34" r="5.5" fill="#51405e" />
+      <circle cx="29" cy="34" r="5.5" fill="#43364f" />
+      <circle cx="24" cy="36" r="4.5" fill="#3c3049" />
+    </g>
+  `,
+  mulberry: `
+    <path stroke="#6c7950" d="M25 15 Q28 10 32 7" />
+    <g stroke="#432a3c" stroke-width="1.5">
+      <circle cx="23" cy="16" r="4.5" fill="#87516c" />
+      <circle cx="29" cy="19" r="4.5" fill="#693c59" />
+      <circle cx="19" cy="22" r="4.5" fill="#87516c" />
+      <circle cx="25" cy="25" r="5" fill="#693c59" />
+      <circle cx="16" cy="28" r="4.5" fill="#77425f" />
+      <circle cx="22" cy="31" r="5" fill="#59334f" />
+      <circle cx="15" cy="34" r="4.5" fill="#693c59" />
+      <circle cx="19" cy="37" r="4" fill="#4f2e48" />
+    </g>
+  `,
+  haskap: `
+    <path fill="#687eac" d="M23 8 C30 6 34 11 34 18 C34 24 31 27 30 33 C29 38 26 41 22 40 C17 39 14 34 14 28 C14 22 13 17 15 13 C17 9 20 8 23 8 Z" />
+    <path stroke="#a5b7d5" stroke-width="2.5" d="M20 13 Q16 18 18 25" />
+    <path stroke="#465779" stroke-width="1.5" d="M21 36 Q23 38 25 36" />
+  `,
+  raspberry: `
+    <path fill="#8fa968" d="M24 16 L15 9 L18 16 L11 18 L24 21 L37 18 L30 16 L33 9 Z" />
+    <g stroke="#773943" stroke-width="1.5">
+      <circle cx="16" cy="22" r="6" fill="#df7880" />
+      <circle cx="25" cy="21" r="6" fill="#d76573" />
+      <circle cx="33" cy="23" r="5.5" fill="#c95265" />
+      <circle cx="18" cy="30" r="5.5" fill="#d76573" />
+      <circle cx="28" cy="30" r="5.5" fill="#c95265" />
+      <circle cx="24" cy="36" r="5" fill="#b9455d" />
+    </g>
+  `,
+  goji: `
+    <path stroke="#6f7950" d="M24 8 Q20 12 19 17 M24 8 Q29 13 30 20" />
+    <path fill="#df6948" d="M19 15 C26 15 25 25 21 32 Q18 37 14 40 C10 35 10 29 12 23 Q14 16 19 15 Z" />
+    <path fill="#c94e3d" d="M30 18 C36 16 39 23 38 29 Q37 36 32 40 C28 36 26 31 26 26 Q26 20 30 18 Z" />
+    <path stroke="#f3ac76" stroke-width="2.5" d="M17 21 Q14 26 15 31 M31 23 L31 29" />
+  `,
+  'red-currant': `
+    <path stroke="#738254" d="M25 8 Q28 22 23 39 M26 16 L16 18 M26 23 L34 25 M25 30 L16 32" />
+    <g fill="#c95159">
+      <circle cx="16" cy="19" r="6" />
+      <circle cx="34" cy="25" r="6" />
+      <circle cx="16" cy="32" r="6" />
+      <circle cx="25" cy="37" r="4.5" />
+    </g>
+    <path stroke="#ed9b98" stroke-width="2.5" d="M14 17 L14 19 M32 23 L32 25 M14 30 L14 32" />
+  `,
+  'black-currant': `
+    <path stroke="#738254" d="M25 8 Q28 22 23 39 M26 16 L16 18 M26 23 L34 25 M25 30 L16 32" />
+    <g fill="#4e405d">
+      <circle cx="16" cy="19" r="6" />
+      <circle cx="34" cy="25" r="6" />
+      <circle cx="16" cy="32" r="6" />
+      <circle cx="25" cy="37" r="4.5" />
+    </g>
+    <path stroke="#9b89a8" stroke-width="2.5" d="M14 17 L14 19 M32 23 L32 25 M14 30 L14 32" />
+  `,
+  'white-currant': `
+    <path stroke="#738254" d="M25 8 Q28 22 23 39 M26 16 L16 18 M26 23 L34 25 M25 30 L16 32" />
+    <g fill="#e6d7a8">
+      <circle cx="16" cy="19" r="6" />
+      <circle cx="34" cy="25" r="6" />
+      <circle cx="16" cy="32" r="6" />
+      <circle cx="25" cy="37" r="4.5" />
+    </g>
+    <path stroke="#fff3d3" stroke-width="2.5" d="M14 17 L14 19 M32 23 L32 25 M14 30 L14 32" />
+  `,
+  elderflower: `
+    <path stroke="#738254" d="M24 40 L24 26 M24 33 L11 22 M24 33 L37 22 M24 30 L17 15 M24 30 L31 15" />
+    <g fill="#f4eaca" stroke="#93866b" stroke-width="1.2">
+      <circle cx="12" cy="21" r="4.5" />
+      <circle cx="18" cy="24" r="4.5" />
+      <circle cx="25" cy="23" r="4.5" />
+      <circle cx="33" cy="24" r="4.5" />
+      <circle cx="37" cy="19" r="4" />
+      <circle cx="11" cy="14" r="4" />
+      <circle cx="17" cy="14" r="4.5" />
+      <circle cx="24" cy="12" r="4.5" />
+      <circle cx="31" cy="14" r="4.5" />
+    </g>
+    <path stroke="#c5a459" stroke-width="2" d="M12 21 h0 M18 24 h0 M25 23 h0 M33 24 h0 M37 19 h0 M11 14 h0 M17 14 h0 M24 12 h0 M31 14 h0" />
   `,
   lemon: `
     <path fill="#e8d86a" d="M14 24 Q12 16 18 12 Q28 8 36 16 Q40 26 34 34 Q24 40 14 32 Q10 28 14 24" />

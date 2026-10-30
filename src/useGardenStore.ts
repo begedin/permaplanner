@@ -199,6 +199,17 @@ export const useGardenStore = defineStore('garden', () => {
     });
   };
 
+  const updateGuildThingNote = (guildId: string, thingId: string, note: string) => {
+    commandHistory.runMutation(() => {
+      const thing = guilds.value
+        .find((g) => g.id === guildId)
+        ?.plants.find((p) => p.id === thingId);
+      if (!thing) return;
+      if (note.trim() === '') delete thing.note;
+      else thing.note = note;
+    });
+  };
+
   const setGuildMulchLevel = (guildId: string, level: MulchLevel) => {
     commandHistory.runMutation(() => {
       const guild = guilds.value.find((g) => g.id === guildId);
@@ -316,6 +327,7 @@ export const useGardenStore = defineStore('garden', () => {
     replaceGuildThingsWithCatalogPlant,
     updateGuildName,
     updateGuildNote,
+    updateGuildThingNote,
     setGuildMulchLevel,
     removeGuildThings,
     setGuildThingGrowthPhase,

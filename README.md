@@ -119,6 +119,9 @@ Runtime resolution and labels are implemented in [`src/resolvePlant.ts`](src/res
 
 Stored documents, API responses, frontend state, and downloadable JSON use the
 existing merged guild format (version 5). `syncRevision` tracks save conflicts.
+Each plant instance in a guild can have an optional `note`, displayed beneath the
+plant. Notes are preserved in saves and JSON imports/exports; older documents
+without plant notes remain valid without a backfill.
 
 Before sending JSON to `/api/legacy-import/local`, the frontend file importer checks
 for `guildLocations`, joins geometry to guilds and plant instances by ID, and
