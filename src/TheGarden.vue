@@ -499,11 +499,11 @@
   @media (min-width: 768px) {
     .guild-workspace {
       grid-template-rows: minmax(0, 1fr);
-      grid-template-columns: minmax(0, 0fr) minmax(0, 3fr);
+      grid-template-columns: minmax(0, 0fr) minmax(0, 5fr);
     }
 
     .guild-workspace--selected {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
     }
   }
 

@@ -1,4 +1,11 @@
-import { render, screen, fireEvent, cleanup, within } from '@testing-library/vue';
+import {
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+  within,
+  waitFor,
+} from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createTestingPinia } from '@pinia/testing';
 
@@ -81,5 +88,27 @@ it('offers every plant icon and saves a newly added icon choice', async () => {
   await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
   expect(useGardenStore().plants).toMatchObject([
     { speciesOverride: { iconId: 'bouquet' } },
+  ]);
+});
+
+it('focuses and selects the current catalog value when editing an existing plant', async () => {
+  useGardenStore().plants = [{ id: 'basil', speciesId: 'basil', cultivarId: 'genovese' }];
+  const router = await createAuthedTestRouter('/plants');
+  render(ThePlants, { global: { plugins: [router] } });
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Basil' }));
+
+  const input = screen.getByRole('combobox', {
+    name: 'Catalog species and cultivar',
+  }) as HTMLInputElement;
+  await waitFor(() => {
+    expect(input).toHaveFocus();
+    expect(input.value).toContain('Genovese');
+    expect(input).toMatchObject({ selectionStart: 0, selectionEnd: input.value.length });
+  });
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  expect(useGardenStore().plants).toMatchObject([
+    { id: 'basil', speciesId: 'basil', cultivarId: 'genovese' },
   ]);
 });

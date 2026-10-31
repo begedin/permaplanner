@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.25.13
+
+- [FIX] Focus the species and cultivar field and select its current text when editing an existing plant in guild details or the Plants page.
+- [CHANGE] Adjust the selected guild workspace to 40% details and 60% aerial map, preserving the animated transition and full-width map when no guild is selected.
+
 ## 0.25.12
 
 - [CHANGE] Add matching icons and consistent styling to Undo, Redo, Add guild, and Save; use compact icon-only Undo and Redo controls with accessible labels.

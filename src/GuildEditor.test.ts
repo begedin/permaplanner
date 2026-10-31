@@ -386,6 +386,15 @@ it('opens the editor for an existing plant and updates it on confirm', async () 
     card(wrapper).queryByRole('button', { name: 'Add plant to guild' }),
   ).not.toBeInTheDocument();
   expect(card(wrapper).queryByLabelText('Comfrey')).not.toBeInTheDocument();
+  const input = card(wrapper).getByRole('combobox') as HTMLInputElement;
+  await waitFor(() => {
+    expect(input).toHaveFocus();
+    expect(input).toHaveValue(comfreyPick().inputLabel);
+    expect(input).toMatchObject({
+      selectionStart: 0,
+      selectionEnd: comfreyPick().inputLabel.length,
+    });
+  });
 
   await setEditorPick(wrapper, basilGenovesePick());
   await fireEvent.click(

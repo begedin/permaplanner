@@ -49,6 +49,8 @@
     };
   };
 
+  const catalogInput = ref<InstanceType<typeof PlantCatalogCombobox> | null>(null);
+
   const plantInEditing = ref<UserPlant>(makeNewUserPlant());
 
   const resolvedPreview = computed(() =>
@@ -163,6 +165,7 @@
         : undefined,
     };
     syncGuildFieldsFromResolved();
+    void catalogInput.value?.focusAndSelect();
   };
 
   const newPlant = () => {
@@ -270,6 +273,7 @@
       <div class="flex flex-col gap-3 min-w-[200px]">
         <h2 class="text-ink-800 font-medium">Catalog</h2>
         <PlantCatalogCombobox
+          ref="catalogInput"
           v-model="editingCatalogPick"
           label="Catalog species and cultivar"
         />

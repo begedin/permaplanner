@@ -1,6 +1,6 @@
 <script lang="ts" setup>
   import { ComboboxButton, ComboboxInput, ComboboxOption } from '@headlessui/vue';
-  import { computed, inject, ref, watch } from 'vue';
+  import { computed, inject, nextTick, onMounted, ref, watch } from 'vue';
 
   import { comboboxPanelOpenKey } from './comboboxPanelOpen';
 
@@ -20,8 +20,10 @@
       /** Visually hidden; for screen readers */
       label?: string;
       placeholder?: string;
+      autofocus?: boolean;
     }>(),
     {
+      autofocus: false,
       label: 'Species and cultivar',
       placeholder: 'Search plants…',
     },
@@ -31,6 +33,22 @@
     'update:modelValue': [value: CatalogPlantPick | null];
     submit: [];
   }>();
+
+  const inputRef = ref<{ $el: HTMLInputElement } | null>(null);
+
+  const focusAndSelect = async () => {
+    await nextTick();
+    inputRef.value?.$el.focus();
+    inputRef.value?.$el.select();
+  };
+
+  defineExpose({ focusAndSelect });
+
+  onMounted(() => {
+    if (props.autofocus) {
+      void focusAndSelect();
+    }
+  });
 
   const comboboxPanelOpen = inject(comboboxPanelOpenKey, null);
 
@@ -103,6 +121,7 @@
     </template>
     <template #anchor>
       <ComboboxInput
+        ref="inputRef"
         class="w-full input-soft py-1 pl-2 pr-9 text-sm text-ink-800"
         :placeholder="placeholder"
         :display-value="displayPickLabel"
