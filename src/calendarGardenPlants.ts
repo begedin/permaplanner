@@ -20,7 +20,7 @@ export type GardenSpeciesSidebarRow = {
   iconId: PlantIconId;
   cultivarCount: number;
   plantCount: number;
-  producesFruit: boolean;
+  hasHarvest: boolean;
   cultivarLabels: string;
   cultivarLatinLabels: string;
 };
@@ -93,7 +93,7 @@ export const listGardenSpecies = (
       iconId: PlantIconId;
       cultivarLabels: Set<string>;
       cultivarLatinLabels: Set<string>;
-      producesFruit: boolean;
+      hasHarvest: boolean;
     }
   >();
 
@@ -112,7 +112,7 @@ export const listGardenSpecies = (
         iconId: species?.defaultIconId ?? rp.iconId,
         cultivarLabels: new Set(),
         cultivarLatinLabels: new Set(),
-        producesFruit: false,
+        hasHarvest: false,
       };
       bySpecies.set(rp.speciesId, bucket);
     }
@@ -121,8 +121,8 @@ export const listGardenSpecies = (
     if (rp.cultivarLatin) {
       bucket.cultivarLatinLabels.add(rp.cultivarLatin);
     }
-    if (resolvePhenology(rp.speciesId, rp.cultivarId).fruiting !== undefined) {
-      bucket.producesFruit = true;
+    if (resolvePhenology(rp.speciesId, rp.cultivarId).harvest !== undefined) {
+      bucket.hasHarvest = true;
     }
   }
 
@@ -140,7 +140,7 @@ export const listGardenSpecies = (
         iconId: bucket.iconId,
         cultivarCount,
         plantCount,
-        producesFruit: bucket.producesFruit,
+        hasHarvest: bucket.hasHarvest,
         cultivarLabels: [...bucket.cultivarLabels].sort().join(' '),
         cultivarLatinLabels: [...bucket.cultivarLatinLabels].sort().join(' '),
       };

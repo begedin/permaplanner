@@ -64,7 +64,7 @@ export const layerLabelTooltip = (
     rows.filter((r) => r.layers.includes(layer)),
   );
 
-type PhenologyAspect = 'fruiting' | 'blooming';
+type PhenologyAspect = 'harvest' | 'blooming';
 
 export const monthAspectTooltip = (
   rows: GuildPlantTooltipRow[],
@@ -73,7 +73,7 @@ export const monthAspectTooltip = (
   monthName: string,
 ): string => {
   const month = monthIndex + 1;
-  const aspectLabel = aspect === 'fruiting' ? 'fruit' : 'bloom';
+  const aspectLabel = aspect === 'harvest' ? 'harvest' : 'bloom';
   return formatRows(
     `${monthName} ${aspectLabel}`,
     rows.filter((r) => {
@@ -90,9 +90,9 @@ export const monthHeaderTooltip = (
 ): string => {
   const month = monthIndex + 1;
   const matching = rows.filter((r) => {
-    const { fruiting, blooming } = r.phenology;
+    const { harvest, blooming } = r.phenology;
     return (
-      (fruiting !== undefined && isMonthInCatalogPeriod(month, fruiting)) ||
+      (harvest !== undefined && isMonthInCatalogPeriod(month, harvest)) ||
       (blooming !== undefined && isMonthInCatalogPeriod(month, blooming))
     );
   });

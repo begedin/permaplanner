@@ -50,7 +50,7 @@ test.describe('calendar tab', () => {
       calendarDetails.getByText('1 cultivar · 2 plants in your garden'),
     ).toBeVisible();
     await expect(
-      calendarDetails.getByLabel('Aggregated fruit and bloom by month'),
+      calendarDetails.getByLabel('Aggregated harvest and bloom by month'),
     ).toBeVisible();
     await expect(
       calendarDetails.getByRole('heading', { name: 'Cultivars' }),

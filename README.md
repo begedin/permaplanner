@@ -104,12 +104,23 @@ The editable plant list lives in [`src/data/plantCatalog.json`](src/data/plantCa
    - **`defaultIconId`**: hand-drawn icon id for the species default (see `PLANT_ICON_IDS` in [`src/plantIcons/iconIds.ts`](src/plantIcons/iconIds.ts)).
    - **`functions`**: array of guild roles. Allowed values are exactly those in [`GuildFunction`](src/gardenTypes.ts) (`nitrogen_fixer`, `dynamic_accumulator`, `pollinator_attractor`, `pest_repellent`, `ground_cover`, `wildfire_suppressor`, `mulcher`, `edible`, `medicinal`).
    - **`layers`**: vertical niche tags. Allowed values are in [`GuildLayer`](src/gardenTypes.ts) (`overstory`, `understory`, `shrub`, `ground_cover`, `vine`, `herb`, `root`).
-   - **`cultivars`**: array of `{ "id", "name" }` (and optionally `name_latin`, `defaultIconId`, `functions`, `layers`, `blooming`, `fruiting` to override species defaults). Cultivar **`id`** must be unique within that species.
-   - **`blooming`** / **`fruiting`** (optional on species or cultivar): `{ "start": 1–12, "end": 1–12 }` for calendar months; if `start` > `end`, the range wraps across the year (see `formatMonthPeriod` in `plantCatalog.ts`). On a **cultivar** only: omit the field to inherit the species value; set **`null`** to clear that aspect (e.g. species fruits but this cultivar does not).
+   - **`cultivars`**: array of `{ "id", "name" }` (and optionally `name_latin`, `defaultIconId`, `functions`, `layers`, `blooming`, `harvest` to override species defaults). Cultivar **`id`** must be unique within that species.
+   - **`blooming`** / **`harvest`** (optional on species or cultivar): `{ "start": 1–12, "end": 1–12 }` for calendar months; if `start` > `end`, the range wraps across the year (see `formatMonthPeriod` in `plantCatalog.ts`). On a **cultivar** only: omit the field to inherit the species value; set **`null`** to clear that aspect (e.g. species has a harvest period but this cultivar does not).
 3. **Validate**: ensure the file parses as JSON (your editor usually does this). Run `npx vitest run src/plantCatalog.test.ts` if you changed phenology or want a quick sanity check.
 4. **Types**: `plantCatalog.ts` types should match the JSON shape; if you add new top-level fields, update the TypeScript types there as well.
 
 Runtime resolution and labels are implemented in [`src/resolvePlant.ts`](src/resolvePlant.ts) and [`src/plantCatalog.ts`](src/plantCatalog.ts).
+
+### Catalog correction sources (0.25.14)
+
+- Snowball viburnum: [Illinois Extension](https://web.extension.illinois.edu/hortanswers/plantdetail.cfm?PlantID=463&PlantTypeID=8) identifies 'Roseum' as sterile and fruitless.
+- Raspberry harvest overrides: [Heritage](https://www.provendernurseries.co.uk/product/rubus-idaeus-heritage-raspberry-b5) and [Fallgold](https://larchcottage.co.uk/product/rubus-idaeus-fallgold-3-canes/) nursery descriptions give August–October. These are approximate UK outdoor autumn-crop windows; local climate and double-cropping can change timing.
+- Comfrey: RHS identifies [Bocking 14](https://www.rhs.org.uk/plants/108577/symphytum-%C3%97-uplandicum-bocking-14/details) and [Bocking 4](https://www.rhs.org.uk/plants/373279/symphytum-%C3%97-uplandicum-bocking-4/details) as _Symphytum × uplandicum_.
+- White Lisbon onion: [RHS](https://www.rhs.org.uk/plants/112442/allium-cepa-white-lisbon/details) identifies _Allium cepa_.
+- Birch: [RHS](https://www.rhs.org.uk/plants/birch/how-to-grow-birch) identifies river and paper birch; [University of Connecticut](https://plantdatabase.uconn.edu/detail.php?pid=64) identifies sweet birch.
+- Lord Baltimore hibiscus: [Wisconsin Extension](https://hort.extension.wisc.edu/articles/hibiscus-lord-baltimore/) describes its hybrid ancestry and herbaceous growth.
+- Miss Kim lilac: [RHS](https://www.rhs.org.uk/plants/119023/syringa-pubescens-subsp-patula-miss-kim/details) identifies _Syringa pubescens subsp. patula_.
+- Paperwhite narcissus: [RHS](https://www.rhs.org.uk/plants/74758/narcissus-papyraceus/details) identifies _Narcissus papyraceus_.
 
 ## Badges
 

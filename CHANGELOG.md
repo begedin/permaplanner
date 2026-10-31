@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.25.14
+
+- [DB] Added herbaceous peony (Paeonia lactiflora) with Sarah Bernhardt, Duchesse de Nemours, and Bowl of Beauty cultivars and May–June flowering.
+
+- [DB] Correct cultivar taxonomy for comfrey, White Lisbon onion, birches, hibiscus, Miss Kim lilac, and paperwhite narcissus; remove misleading shared species names from mixed groups.
+- [DB] Give Heritage and Fall Gold raspberries autumn harvest periods, classify hardy hibiscus as herbaceous, and clear harvest and edible/pollinator roles for sterile snowball viburnum.
+
+- [CHANGE] Rename fruiting to harvest across the plant catalog, calendars, summaries, and tooltips to cover all crop types.
+
 ## 0.25.13
 
 - [FIX] Focus the species and cultivar field and select its current text when editing an existing plant in guild details or the Plants page.

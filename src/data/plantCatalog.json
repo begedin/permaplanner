@@ -237,6 +237,32 @@
       }
     },
     {
+      "id": "herbaceous_peony",
+      "name": "Herbaceous peony",
+      "name_latin": "Paeonia lactiflora",
+      "functions": [],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "sarah_bernhardt",
+          "name": "Sarah Bernhardt"
+        },
+        {
+          "id": "duchesse_de_nemours",
+          "name": "Duchesse de Nemours"
+        },
+        {
+          "id": "bowl_of_beauty",
+          "name": "Bowl of Beauty"
+        }
+      ],
+      "blooming": {
+        "start": 5,
+        "end": 6
+      },
+      "defaultIconId": "flower-rose"
+    },
+    {
       "id": "tree_peony",
       "name": "Tree peony",
       "name_latin": "Paeonia suffruticosa",
@@ -325,7 +351,7 @@
         "start": 5,
         "end": 6
       },
-      "fruiting": {
+      "harvest": {
         "start": 10,
         "end": 2
       }
@@ -655,7 +681,7 @@
         "end": 7
       },
       "defaultIconId": "tree",
-      "fruiting": {
+      "harvest": {
         "start": 9,
         "end": 10
       }
@@ -687,7 +713,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 8,
         "end": 10
       },
@@ -717,7 +743,7 @@
         "start": 4,
         "end": 4
       },
-      "fruiting": {
+      "harvest": {
         "start": 6,
         "end": 7
       },
@@ -757,7 +783,7 @@
             "start": 4,
             "end": 5
           },
-          "fruiting": {
+          "harvest": {
             "start": 11,
             "end": 12
           }
@@ -769,7 +795,7 @@
             "start": 4,
             "end": 5
           },
-          "fruiting": {
+          "harvest": {
             "start": 9,
             "end": 9
           }
@@ -781,7 +807,7 @@
             "start": 4,
             "end": 5
           },
-          "fruiting": {
+          "harvest": {
             "start": 9,
             "end": 10
           }
@@ -793,7 +819,7 @@
             "start": 4,
             "end": 5
           },
-          "fruiting": {
+          "harvest": {
             "start": 10,
             "end": 11
           }
@@ -803,7 +829,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 8,
         "end": 10
       },
@@ -841,7 +867,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 8,
         "end": 9
       },
@@ -872,15 +898,15 @@
         },
         {
           "id": "paperwhite",
-          "name": "Paperwhite"
+          "name": "Paperwhite",
+          "name_latin": "Narcissus papyraceus"
         }
       ],
       "blooming": {
         "start": 3,
         "end": 5
       },
-      "defaultIconId": "flower",
-      "name_latin": "Narcissus pseudonarcissus"
+      "defaultIconId": "flower"
     },
     {
       "id": "nasturtium",
@@ -921,7 +947,7 @@
             "start": 5,
             "end": 6
           },
-          "fruiting": {
+          "harvest": {
             "start": 6,
             "end": 7
           }
@@ -933,7 +959,7 @@
             "start": 5,
             "end": 6
           },
-          "fruiting": {
+          "harvest": {
             "start": 6,
             "end": 7
           }
@@ -945,7 +971,7 @@
             "start": 4,
             "end": 6
           },
-          "fruiting": {
+          "harvest": {
             "start": 6,
             "end": 6
           }
@@ -957,7 +983,7 @@
             "start": 4,
             "end": 6
           },
-          "fruiting": {
+          "harvest": {
             "start": 6,
             "end": 6
           }
@@ -969,7 +995,7 @@
             "start": 4,
             "end": 6
           },
-          "fruiting": {
+          "harvest": {
             "start": 6,
             "end": 7
           }
@@ -979,7 +1005,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 6,
         "end": 7
       },
@@ -1013,7 +1039,7 @@
         "start": 5,
         "end": 6
       },
-      "fruiting": {
+      "harvest": {
         "start": 6,
         "end": 8
       },
@@ -1088,7 +1114,8 @@
         },
         {
           "id": "white_lisbon",
-          "name": "White Lisbon"
+          "name": "White Lisbon",
+          "name_latin": "Allium cepa"
         }
       ],
       "blooming": {
@@ -1196,7 +1223,7 @@
         {
           "id": "josta",
           "name": "Josta",
-          "fruiting": {
+          "harvest": {
             "start": 6,
             "end": 7
           }
@@ -1218,7 +1245,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 8
       },
@@ -1268,7 +1295,7 @@
         "start": 5,
         "end": 7
       },
-      "fruiting": {
+      "harvest": {
         "start": 8,
         "end": 10
       },
@@ -1338,7 +1365,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 6,
         "end": 7
       },
@@ -1368,7 +1395,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 6,
         "end": 8
       },
@@ -1388,11 +1415,13 @@
       "cultivars": [
         {
           "id": "bocking_14",
-          "name": "Bocking 14"
+          "name": "Bocking 14",
+          "name_latin": "Symphytum × uplandicum"
         },
         {
           "id": "bocking_4",
-          "name": "Bocking 4"
+          "name": "Bocking 4",
+          "name_latin": "Symphytum × uplandicum"
         },
         {
           "id": "common",
@@ -1594,7 +1623,7 @@
         "start": 7,
         "end": 9
       },
-      "fruiting": {
+      "harvest": {
         "start": 8,
         "end": 10
       },
@@ -1683,7 +1712,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 6,
         "end": 8
       },
@@ -1739,7 +1768,7 @@
         "start": 7,
         "end": 8
       },
-      "fruiting": {
+      "harvest": {
         "start": 8,
         "end": 9
       },
@@ -1765,7 +1794,7 @@
         "start": 5,
         "end": 6
       },
-      "fruiting": {
+      "harvest": {
         "start": 9,
         "end": 10
       },
@@ -1795,7 +1824,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 8
       },
@@ -1821,7 +1850,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 8
       },
@@ -1851,7 +1880,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 8
       },
@@ -1885,7 +1914,7 @@
         "start": 3,
         "end": 4
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 9
       },
@@ -1919,7 +1948,7 @@
         "start": 3,
         "end": 4
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 8
       },
@@ -1939,7 +1968,7 @@
             "start": 3,
             "end": 3
           },
-          "fruiting": {
+          "harvest": {
             "start": 7,
             "end": 8
           }
@@ -1951,7 +1980,7 @@
             "start": 4,
             "end": 4
           },
-          "fruiting": {
+          "harvest": {
             "start": 7,
             "end": 7
           }
@@ -1963,7 +1992,7 @@
             "start": 4,
             "end": 4
           },
-          "fruiting": {
+          "harvest": {
             "start": 7,
             "end": 7
           }
@@ -1975,7 +2004,7 @@
             "start": 3,
             "end": 4
           },
-          "fruiting": {
+          "harvest": {
             "start": 7,
             "end": 7
           }
@@ -1987,7 +2016,7 @@
             "start": 3,
             "end": 3
           },
-          "fruiting": {
+          "harvest": {
             "start": 6,
             "end": 7
           }
@@ -1997,7 +2026,7 @@
         "start": 3,
         "end": 4
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 8
       },
@@ -2035,7 +2064,7 @@
         "start": 3,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 9
       },
@@ -2065,7 +2094,7 @@
         "start": 5,
         "end": 6
       },
-      "fruiting": {
+      "harvest": {
         "start": 9,
         "end": 11
       },
@@ -2093,7 +2122,7 @@
             "start": 5,
             "end": 5
           },
-          "fruiting": {
+          "harvest": {
             "start": 6,
             "end": 8
           }
@@ -2101,7 +2130,7 @@
         {
           "id": "stella",
           "name": "Stella",
-          "fruiting": {
+          "harvest": {
             "start": 7,
             "end": 7
           }
@@ -2109,7 +2138,7 @@
         {
           "id": "lapins",
           "name": "Lapins",
-          "fruiting": {
+          "harvest": {
             "start": 7,
             "end": 7
           }
@@ -2121,7 +2150,7 @@
             "start": 4,
             "end": 4
           },
-          "fruiting": {
+          "harvest": {
             "start": 6,
             "end": 6
           }
@@ -2135,7 +2164,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 6,
         "end": 7
       },
@@ -2159,7 +2188,7 @@
             "start": 5,
             "end": 5
           },
-          "fruiting": {
+          "harvest": {
             "start": 7,
             "end": 7
           }
@@ -2171,7 +2200,7 @@
             "start": 5,
             "end": 5
           },
-          "fruiting": {
+          "harvest": {
             "start": 6,
             "end": 6
           }
@@ -2183,7 +2212,7 @@
             "start": 5,
             "end": 5
           },
-          "fruiting": {
+          "harvest": {
             "start": 7,
             "end": 8
           }
@@ -2197,7 +2226,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 6,
         "end": 7
       },
@@ -2223,7 +2252,7 @@
         "start": 5,
         "end": 6
       },
-      "fruiting": {
+      "harvest": {
         "start": 9,
         "end": 11
       },
@@ -2265,7 +2294,7 @@
         "start": 6,
         "end": 8
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 10
       },
@@ -2307,14 +2336,14 @@
         {
           "id": "tomuri",
           "name": "Tomuri (male pollinizer)",
-          "fruiting": null
+          "harvest": null
         }
       ],
       "blooming": {
         "start": 6,
         "end": 6
       },
-      "fruiting": {
+      "harvest": {
         "start": 10,
         "end": 11
       },
@@ -2334,7 +2363,7 @@
         {
           "id": "issai",
           "name": "Issai",
-          "fruiting": {
+          "harvest": {
             "start": 9,
             "end": 9
           }
@@ -2348,7 +2377,7 @@
         "start": 6,
         "end": 6
       },
-      "fruiting": {
+      "harvest": {
         "start": 9,
         "end": 9
       },
@@ -2386,7 +2415,7 @@
         "start": 2,
         "end": 3
       },
-      "fruiting": {
+      "harvest": {
         "start": 9,
         "end": 9
       },
@@ -2416,7 +2445,7 @@
         "start": 5,
         "end": 6
       },
-      "fruiting": {
+      "harvest": {
         "start": 9,
         "end": 10
       },
@@ -2446,7 +2475,7 @@
         "start": 5,
         "end": 6
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 8
       },
@@ -2461,11 +2490,19 @@
       "cultivars": [
         {
           "id": "heritage",
-          "name": "Heritage"
+          "name": "Heritage",
+          "harvest": {
+            "start": 8,
+            "end": 10
+          }
         },
         {
           "id": "fall_gold",
-          "name": "Fall Gold"
+          "name": "Fall Gold",
+          "harvest": {
+            "start": 8,
+            "end": 10
+          }
         },
         {
           "id": "tulameen",
@@ -2476,7 +2513,7 @@
         "start": 6,
         "end": 7
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 8
       },
@@ -2510,7 +2547,7 @@
         "start": 6,
         "end": 8
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 9
       },
@@ -2536,7 +2573,7 @@
         "start": 6,
         "end": 7
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 8
       },
@@ -2641,7 +2678,7 @@
         "start": 6,
         "end": 7
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 8
       },
@@ -2670,7 +2707,7 @@
         "start": 3,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 10,
         "end": 4
       },
@@ -2700,7 +2737,7 @@
         "start": 4,
         "end": 6
       },
-      "fruiting": {
+      "harvest": {
         "start": 11,
         "end": 4
       },
@@ -2726,7 +2763,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 9,
         "end": 11
       },
@@ -2756,7 +2793,7 @@
         "start": 6,
         "end": 8
       },
-      "fruiting": {
+      "harvest": {
         "start": 8,
         "end": 10
       },
@@ -2812,7 +2849,7 @@
         "start": 2,
         "end": 3
       },
-      "fruiting": {
+      "harvest": {
         "start": 8,
         "end": 9
       },
@@ -2836,14 +2873,14 @@
         {
           "id": "rotundiloba",
           "name": "Rotundiloba",
-          "fruiting": null
+          "harvest": null
         }
       ],
       "blooming": {
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 9,
         "end": 10
       },
@@ -2873,7 +2910,7 @@
         "start": 6,
         "end": 7
       },
-      "fruiting": {
+      "harvest": {
         "start": 10,
         "end": 10
       },
@@ -2903,7 +2940,7 @@
         "start": 6,
         "end": 7
       },
-      "fruiting": {
+      "harvest": {
         "start": 9,
         "end": 10
       },
@@ -2929,7 +2966,7 @@
         "start": 5,
         "end": 6
       },
-      "fruiting": {
+      "harvest": {
         "start": 9,
         "end": 10
       },
@@ -2974,23 +3011,25 @@
       "cultivars": [
         {
           "id": "river",
-          "name": "River birch"
+          "name": "River birch",
+          "name_latin": "Betula nigra"
         },
         {
           "id": "paper",
-          "name": "Paper birch"
+          "name": "Paper birch",
+          "name_latin": "Betula papyrifera"
         },
         {
           "id": "sweet",
-          "name": "Sweet birch"
+          "name": "Sweet birch",
+          "name_latin": "Betula lenta"
         }
       ],
       "blooming": {
         "start": 3,
         "end": 5
       },
-      "defaultIconId": "tree",
-      "name_latin": "Betula pendula"
+      "defaultIconId": "tree"
     },
     {
       "id": "hibiscus",
@@ -3004,19 +3043,22 @@
         },
         {
           "id": "lord_baltimore",
-          "name": "Lord Baltimore"
+          "name": "Lord Baltimore",
+          "name_latin": "Hibiscus 'Lord Baltimore'",
+          "layers": ["herb"]
         },
         {
           "id": "moscheutos",
-          "name": "H. moscheutos mix"
+          "name": "H. moscheutos mix",
+          "name_latin": "Hibiscus moscheutos",
+          "layers": ["herb"]
         }
       ],
       "blooming": {
         "start": 7,
         "end": 9
       },
-      "defaultIconId": "flower-tropical",
-      "name_latin": "Hibiscus syriacus"
+      "defaultIconId": "flower-tropical"
     },
     {
       "id": "hyssop",
@@ -3131,7 +3173,8 @@
         },
         {
           "id": "miss_kim",
-          "name": "Miss Kim"
+          "name": "Miss Kim",
+          "name_latin": "Syringa pubescens subsp. patula"
         },
         {
           "id": "president_grevy",
@@ -3259,14 +3302,14 @@
             "start": 5,
             "end": 10
           },
-          "fruiting": null
+          "harvest": null
         }
       ],
       "blooming": {
         "start": 5,
         "end": 7
       },
-      "fruiting": {
+      "harvest": {
         "start": 9,
         "end": 11
       },
@@ -3324,7 +3367,9 @@
         },
         {
           "id": "snowball",
-          "name": "Snowball (V. opulus 'Roseum')"
+          "name": "Snowball (V. opulus 'Roseum')",
+          "harvest": null,
+          "functions": []
         },
         {
           "id": "arrowwood",
@@ -3339,7 +3384,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 8,
         "end": 10
       },
@@ -3394,7 +3439,7 @@
         "start": 5,
         "end": 6
       },
-      "fruiting": {
+      "harvest": {
         "start": 8,
         "end": 9
       },
@@ -3428,7 +3473,7 @@
         "start": 5,
         "end": 7
       },
-      "fruiting": {
+      "harvest": {
         "start": 8,
         "end": 9
       },
@@ -3462,7 +3507,7 @@
         "start": 6,
         "end": 7
       },
-      "fruiting": {
+      "harvest": {
         "start": 4,
         "end": 6
       },
@@ -3500,7 +3545,7 @@
         "start": 6,
         "end": 8
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 10
       },
@@ -3534,7 +3579,7 @@
         "start": 6,
         "end": 7
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 9
       },
@@ -3612,7 +3657,7 @@
         "start": 6,
         "end": 8
       },
-      "fruiting": {
+      "harvest": {
         "start": 4,
         "end": 6
       },
@@ -3634,7 +3679,7 @@
         "start": 6,
         "end": 8
       },
-      "fruiting": {
+      "harvest": {
         "start": 5,
         "end": 10
       },
@@ -3656,7 +3701,7 @@
         "start": 7,
         "end": 8
       },
-      "fruiting": {
+      "harvest": {
         "start": 5,
         "end": 11
       },
@@ -3701,7 +3746,7 @@
         "start": 4,
         "end": 5
       },
-      "fruiting": {
+      "harvest": {
         "start": 6,
         "end": 7
       },
@@ -3723,7 +3768,7 @@
         "start": 4,
         "end": 6
       },
-      "fruiting": {
+      "harvest": {
         "start": 10,
         "end": 4
       },
@@ -3761,7 +3806,7 @@
         "start": 6,
         "end": 8
       },
-      "fruiting": {
+      "harvest": {
         "start": 7,
         "end": 9
       },
@@ -3783,7 +3828,7 @@
         "start": 5,
         "end": 9
       },
-      "fruiting": {
+      "harvest": {
         "start": 4,
         "end": 10
       },

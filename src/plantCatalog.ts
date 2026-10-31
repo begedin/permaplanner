@@ -49,7 +49,7 @@ export const formatMonthPeriod = (p: CatalogMonthPeriod): string => {
 
 export type CatalogPhenology = {
   blooming?: CatalogMonthPeriod;
-  fruiting?: CatalogMonthPeriod;
+  harvest?: CatalogMonthPeriod;
 };
 
 /** Cultivar row: include optional fields only when they differ from the species defaults. */
@@ -64,7 +64,7 @@ export type CatalogCultivar = {
   /** Omit to inherit species. `null` clears inherited species phenology for this aspect. */
   blooming?: CatalogMonthPeriod | null;
   /** Omit to inherit species. `null` clears inherited species phenology for this aspect. */
-  fruiting?: CatalogMonthPeriod | null;
+  harvest?: CatalogMonthPeriod | null;
 };
 
 export type CatalogSpecies = {
@@ -76,7 +76,7 @@ export type CatalogSpecies = {
   functions: GuildFunction[];
   layers: GuildLayer[];
   blooming?: CatalogMonthPeriod;
-  fruiting?: CatalogMonthPeriod;
+  harvest?: CatalogMonthPeriod;
   cultivars: CatalogCultivar[];
 };
 
@@ -94,7 +94,7 @@ export const getCultivar = (
   cultivarId: string,
 ): CatalogCultivar | undefined => species.cultivars.find((c) => c.id === cultivarId);
 
-type PhenologyPeriodKey = 'blooming' | 'fruiting';
+type PhenologyPeriodKey = 'blooming' | 'harvest';
 
 const resolvePeriodFromSpeciesAndCultivar = (
   species: CatalogSpecies,
@@ -113,7 +113,7 @@ export const mergeSpeciesCultivarPhenology = (
   cultivar: CatalogCultivar | undefined,
 ): CatalogPhenology => ({
   blooming: resolvePeriodFromSpeciesAndCultivar(species, cultivar, 'blooming'),
-  fruiting: resolvePeriodFromSpeciesAndCultivar(species, cultivar, 'fruiting'),
+  harvest: resolvePeriodFromSpeciesAndCultivar(species, cultivar, 'harvest'),
 });
 
 export const resolvePhenology = (
@@ -133,8 +133,8 @@ export const formatPhenologySummary = (ph: CatalogPhenology): string | null => {
   if (ph.blooming) {
     parts.push(`Bloom ${formatMonthPeriod(ph.blooming)}`);
   }
-  if (ph.fruiting) {
-    parts.push(`Fruit ${formatMonthPeriod(ph.fruiting)}`);
+  if (ph.harvest) {
+    parts.push(`Harvest ${formatMonthPeriod(ph.harvest)}`);
   }
   return parts.length > 0 ? parts.join(' · ') : null;
 };
@@ -173,20 +173,20 @@ const addPeriodToMonthCounts = (
   }
 };
 
-/** Per calendar month, how many plant rows fall in fruiting / blooming windows (same counting as guild cards). */
-export const fruitBloomMonthCountsForPhenologies = (
+/** Per calendar month, how many plant rows fall in harvest / blooming windows (same counting as guild cards). */
+export const harvestBloomMonthCountsForPhenologies = (
   phenologies: CatalogPhenology[],
-): { fruiting: number[]; blooming: number[] } => {
-  const fruiting = Array.from({ length: 12 }, () => 0);
+): { harvest: number[]; blooming: number[] } => {
+  const harvest = Array.from({ length: 12 }, () => 0);
   const blooming = Array.from({ length: 12 }, () => 0);
   for (const ph of phenologies) {
-    addPeriodToMonthCounts(fruiting, ph.fruiting);
+    addPeriodToMonthCounts(harvest, ph.harvest);
     addPeriodToMonthCounts(blooming, ph.blooming);
   }
-  return { fruiting, blooming };
+  return { harvest, blooming };
 };
 
-/** Guild calendar: fruiting months if the species fruits; otherwise blooming months. */
+/** Guild calendar: harvest months when available; otherwise blooming months. */
 export const resolveGuildCalendarPeriod = (
   ph: CatalogPhenology,
-): CatalogMonthPeriod | null => ph.fruiting ?? ph.blooming ?? null;
+): CatalogMonthPeriod | null => ph.harvest ?? ph.blooming ?? null;

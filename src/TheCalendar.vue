@@ -229,7 +229,7 @@
 
               <PlantPhenologyCalendar
                 :tooltip-rows="detailAggregatedTooltipRows"
-                calendar-aria-label="Aggregated fruit and bloom by month"
+                calendar-aria-label="Aggregated harvest and bloom by month"
               />
 
               <div class="flex flex-col gap-3">
@@ -297,7 +297,7 @@
                   <PlantPhenologyCalendar
                     :tooltip-rows="row.tooltipRows"
                     :show-section-label="false"
-                    :calendar-aria-label="`${row.label} fruit and bloom by month`"
+                    :calendar-aria-label="`${row.label} harvest and bloom by month`"
                   />
                 </article>
               </div>

@@ -6,7 +6,7 @@ import {
   CATALOG_MONTH_LABELS_2,
   formatMonthPeriod,
   formatPhenologySummary,
-  fruitBloomMonthCountsForPhenologies,
+  harvestBloomMonthCountsForPhenologies,
   isMonthInCatalogPeriod,
   mergeSpeciesCultivarPhenology,
   phenologySummaryForPlant,
@@ -31,22 +31,22 @@ it('formats wrapped periods (harvest across year boundary)', () => {
 it('resolves phenology from catalog species', () => {
   expect(resolvePhenology('apple', null)).toMatchObject({
     blooming: { start: 4, end: 5 },
-    fruiting: { start: 8, end: 10 },
+    harvest: { start: 8, end: 10 },
   });
 });
 
-it('inherits species phenology when cultivar omits blooming and fruiting', () => {
+it('inherits species phenology when cultivar omits blooming and harvest', () => {
   expect(resolvePhenology('rosehip', 'dog_rose')).toMatchObject({
     blooming: { start: 5, end: 7 },
-    fruiting: { start: 9, end: 11 },
+    harvest: { start: 9, end: 11 },
   });
 });
 
-it('treats cultivar fruiting null as clearing inherited species fruiting', () => {
+it('treats cultivar harvest null as clearing inherited species harvest', () => {
   expect(resolvePhenology('rosehip', 'ornamental')).toMatchObject({
     blooming: { start: 5, end: 10 },
   });
-  expect(resolvePhenology('rosehip', 'ornamental').fruiting).toBeUndefined();
+  expect(resolvePhenology('rosehip', 'ornamental').harvest).toBeUndefined();
   expect(phenologySummaryForPlant('rosehip', 'ornamental')).toBe('Bloom May–Oct');
   expect(resolveGuildCalendarPeriod(resolvePhenology('rosehip', 'ornamental'))).toEqual({
     start: 5,
@@ -63,7 +63,7 @@ it('treats cultivar blooming null as clearing inherited species blooming', () =>
     layers: [],
     cultivars: [],
     blooming: { start: 1, end: 2 },
-    fruiting: { start: 6, end: 7 },
+    harvest: { start: 6, end: 7 },
   };
   const cultivar: CatalogCultivar = {
     id: 'c',
@@ -72,7 +72,7 @@ it('treats cultivar blooming null as clearing inherited species blooming', () =>
   };
   expect(mergeSpeciesCultivarPhenology(species, cultivar)).toEqual({
     blooming: undefined,
-    fruiting: { start: 6, end: 7 },
+    harvest: { start: 6, end: 7 },
   });
 });
 
@@ -84,9 +84,9 @@ it('summarizes phenology for guild display', () => {
   expect(
     formatPhenologySummary({
       blooming: { start: 5, end: 6 },
-      fruiting: { start: 7, end: 8 },
+      harvest: { start: 7, end: 8 },
     }),
-  ).toBe('Bloom May–Jun · Fruit Jul–Aug');
+  ).toBe('Bloom May–Jun · Harvest Jul–Aug');
   expect(phenologySummaryForPlant('basil', null)).toBe('Bloom Jul–Sep');
 });
 
@@ -101,11 +101,11 @@ it('detects months inside inclusive and wrapped periods', () => {
   expect(isMonthInCatalogPeriod(7, { start: 10, end: 4 })).toBe(false);
 });
 
-it('resolves guild calendar to fruiting when present else bloom', () => {
+it('resolves guild calendar to harvest when present else bloom', () => {
   expect(
     resolveGuildCalendarPeriod({
       blooming: { start: 4, end: 5 },
-      fruiting: { start: 8, end: 10 },
+      harvest: { start: 8, end: 10 },
     }),
   ).toEqual({ start: 8, end: 10 });
   expect(resolveGuildCalendarPeriod({ blooming: { start: 5, end: 6 } })).toEqual({
@@ -115,10 +115,32 @@ it('resolves guild calendar to fruiting when present else bloom', () => {
   expect(resolveGuildCalendarPeriod({})).toBeNull();
 });
 
-it('aggregates fruit and bloom month counts across phenology rows', () => {
+it('aggregates harvest and bloom month counts across phenology rows', () => {
   const apple = resolvePhenology('apple', null);
-  const { fruiting, blooming } = fruitBloomMonthCountsForPhenologies([apple, apple]);
-  expect(fruiting[7]).toBe(2);
-  expect(fruiting[6]).toBe(0);
+  const { harvest, blooming } = harvestBloomMonthCountsForPhenologies([apple, apple]);
+  expect(harvest[7]).toBe(2);
+  expect(harvest[6]).toBe(0);
   expect(blooming[3]).toBe(2);
+});
+
+it('uses the bloom calendar for sterile snowball viburnum', () => {
+  const phenology = resolvePhenology('viburnum', 'snowball');
+  expect(phenology).toEqual({
+    blooming: { start: 4, end: 5 },
+    harvest: undefined,
+  });
+  expect(resolveGuildCalendarPeriod(phenology)).toEqual({ start: 4, end: 5 });
+});
+
+it('includes autumn harvests for primocane raspberries without extending summer cultivars', () => {
+  expect(
+    ['heritage', 'fall_gold', 'tulameen'].map((cultivarId) => {
+      const phenology = resolvePhenology('raspberry', cultivarId);
+      return { cultivarId, period: resolveGuildCalendarPeriod(phenology) };
+    }),
+  ).toEqual([
+    { cultivarId: 'heritage', period: { start: 8, end: 10 } },
+    { cultivarId: 'fall_gold', period: { start: 8, end: 10 } },
+    { cultivarId: 'tulameen', period: { start: 7, end: 8 } },
+  ]);
 });

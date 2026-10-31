@@ -559,7 +559,7 @@
         </div>
       </div>
       <GuildSeasonStrip
-        :fruiting="guildMonthPhenologyCounts.fruiting"
+        :harvest="guildMonthPhenologyCounts.harvest"
         :blooming="guildMonthPhenologyCounts.blooming"
         :tooltip-rows="guildTooltipRows"
       />

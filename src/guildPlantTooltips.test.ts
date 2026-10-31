@@ -56,11 +56,11 @@ it('lists plants for a layer label tooltip', () => {
   expect(layerLabelTooltip(rows, 'herb', 'Herb')).toBe('Herb: Basil');
 });
 
-it('lists plants for month fruit, bloom, and header tooltips', () => {
+it('lists plants for month harvest, bloom, and header tooltips', () => {
   const rows = guildPlantTooltipRows(['p-apple', 'p-basil'], (id) =>
     id === 'p-apple' ? applePlant() : basilPlant(),
   );
-  expect(monthAspectTooltip(rows, 7, 'fruiting', 'Aug')).toBe('Aug fruit: Apple');
+  expect(monthAspectTooltip(rows, 7, 'harvest', 'Aug')).toBe('Aug harvest: Apple');
   expect(monthAspectTooltip(rows, 6, 'blooming', 'Jul')).toBe('Jul bloom: Basil');
   expect(monthHeaderTooltip(rows, 6, 'Jul')).toBe('Jul: Basil');
   expect(monthHeaderTooltip(rows, 7, 'Aug')).toBe('Aug: Apple, Basil');

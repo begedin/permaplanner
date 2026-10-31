@@ -136,7 +136,7 @@ it('lists only species placed in guilds with cultivar and plant counts', () => {
       iconId: 'apple',
       cultivarCount: 2,
       plantCount: 3,
-      producesFruit: true,
+      hasHarvest: true,
       cultivarLabels: 'Fuji Honeycrisp',
       cultivarLatinLabels: '',
     },
@@ -184,10 +184,9 @@ it('sorts species by plant count then cultivar count', () => {
     ...guilds,
   ];
 
-  expect(listGardenSpecies(mixedGuilds, resolvePlant).map((row) => row.speciesId)).toEqual([
-    'apple',
-    'basil',
-  ]);
+  expect(
+    listGardenSpecies(mixedGuilds, resolvePlant).map((row) => row.speciesId),
+  ).toEqual(['apple', 'basil']);
 });
 
 it('formats species counts for display', () => {
@@ -205,7 +204,7 @@ it('lists only cultivars placed in guilds for a species', () => {
       resolved: appleFuji(),
       phenology: expect.objectContaining({
         blooming: { start: 4, end: 5 },
-        fruiting: { start: 8, end: 10 },
+        harvest: { start: 8, end: 10 },
       }),
       guildInstanceCount: 2,
       headerPhaseSlots: [
@@ -222,7 +221,7 @@ it('lists only cultivars placed in guilds for a species', () => {
       resolved: appleHoneycrisp(),
       phenology: expect.objectContaining({
         blooming: { start: 4, end: 5 },
-        fruiting: { start: 8, end: 10 },
+        harvest: { start: 8, end: 10 },
       }),
       guildInstanceCount: 1,
       headerPhaseSlots: [],

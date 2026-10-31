@@ -56,7 +56,7 @@ it('shows guild name, compact plant tags, and season section', async () => {
     expect(wrapper.getByLabelText('Plants in this guild').textContent).toContain(
       'Comfrey',
     );
-    expect(wrapper.getByLabelText('Guild fruit and bloom by month')).toBeVisible();
+    expect(wrapper.getByLabelText('Guild harvest and bloom by month')).toBeVisible();
   });
 });
 

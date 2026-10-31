@@ -72,7 +72,7 @@
       compact
       :tooltip-rows="tooltipRows"
       :show-section-label="false"
-      :calendar-aria-label="`${speciesLabel(row)} fruit and bloom by month`"
+      :calendar-aria-label="`${speciesLabel(row)} harvest and bloom by month`"
     />
   </button>
 </template>

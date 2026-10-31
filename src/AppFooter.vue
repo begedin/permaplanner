@@ -4,7 +4,7 @@
   import {
     CATALOG_MONTH_LABELS,
     CATALOG_MONTH_LABELS_2,
-    fruitBloomMonthCountsForPhenologies,
+    harvestBloomMonthCountsForPhenologies,
     resolvePhenology,
   } from './plantCatalog';
   import {
@@ -30,7 +30,7 @@
         return resolvePhenology(rp.speciesId, rp.cultivarId);
       }),
     );
-    return fruitBloomMonthCountsForPhenologies(phenologies);
+    return harvestBloomMonthCountsForPhenologies(phenologies);
   });
 
   const monthBlockClass = (rawCount: number): string => {
@@ -54,14 +54,14 @@
   >
     <div
       class="flex flex-col gap-1 w-full max-w-3xl mx-auto"
-      aria-label="All plants: fruit and bloom by month"
+      aria-label="All plants: harvest and bloom by month"
     >
       <div
         class="flex flex-row items-end gap-1 w-full"
         aria-label="Months"
       >
         <span
-          class="w-9 shrink-0"
+          class="w-11 shrink-0"
           aria-hidden="true"
         />
         <div class="flex flex-row gap-0.5 flex-1 min-w-0">
@@ -78,26 +78,21 @@
       <div
         class="flex flex-row items-center gap-1 w-full"
         role="group"
-        aria-label="Fruiting by month"
+        aria-label="Harvest by month"
       >
-        <span class="text-[10px] text-ink-500 w-9 shrink-0">Fruit</span>
+        <span class="text-[10px] text-ink-500 w-11 shrink-0">Harvest</span>
         <div
           class="flex flex-row gap-0.5 flex-1 min-w-0"
           role="list"
         >
           <div
-            v-for="(count, i) in gardenMonthPhenologyCounts.fruiting"
+            v-for="(count, i) in gardenMonthPhenologyCounts.harvest"
             :key="`ff-${i}`"
             role="listitem"
             class="flex-1 min-w-0 rounded-md h-3 border border-parchment-400/50"
             :class="monthBlockClass(count)"
             :title="
-              monthAspectTooltip(
-                gardenTooltipRows,
-                i,
-                'fruiting',
-                CATALOG_MONTH_LABELS[i],
-              )
+              monthAspectTooltip(gardenTooltipRows, i, 'harvest', CATALOG_MONTH_LABELS[i])
             "
           />
         </div>
@@ -107,7 +102,7 @@
         role="group"
         aria-label="Blooming by month"
       >
-        <span class="text-[10px] text-ink-500 w-9 shrink-0">Bloom</span>
+        <span class="text-[10px] text-ink-500 w-11 shrink-0">Bloom</span>
         <div
           class="flex flex-row gap-0.5 flex-1 min-w-0"
           role="list"

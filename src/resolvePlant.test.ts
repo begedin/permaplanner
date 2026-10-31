@@ -104,3 +104,27 @@ it('uses English-only labels and separate Latin tooltip for guild list badges', 
     'Apple',
   );
 });
+
+it('resolves corrected catalog traits through existing saved plant references', () => {
+  const snowball = resolveUserPlant({
+    id: 'existing-snowball',
+    speciesId: 'viburnum',
+    cultivarId: 'snowball',
+  });
+  const hibiscus = resolveUserPlant({
+    id: 'existing-hibiscus',
+    speciesId: 'hibiscus',
+    cultivarId: 'lord_baltimore',
+  });
+  const onion = resolveUserPlant({
+    id: 'existing-onion',
+    speciesId: 'bunching_onion',
+    cultivarId: 'white_lisbon',
+  });
+  expect(snowball).toMatchObject({ id: 'existing-snowball', functions: [] });
+  expect(hibiscus).toMatchObject({ id: 'existing-hibiscus', layers: ['herb'] });
+  expect([plantLatinTooltip(hibiscus), plantLatinTooltip(onion)]).toEqual([
+    "Hibiscus 'Lord Baltimore'",
+    'Allium cepa',
+  ]);
+});

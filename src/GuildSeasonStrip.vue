@@ -8,7 +8,7 @@
   } from './guildPlantTooltips';
 
   defineProps<{
-    fruiting: number[];
+    harvest: number[];
     blooming: number[];
     tooltipRows: GuildPlantTooltipRow[];
   }>();
@@ -30,7 +30,7 @@
 <template>
   <div
     class="flex flex-col gap-1 w-full min-w-0 shrink-0"
-    aria-label="Guild fruit and bloom by month"
+    aria-label="Guild harvest and bloom by month"
   >
     <GuildCardSectionLabel>Season</GuildCardSectionLabel>
     <div
@@ -38,7 +38,7 @@
       aria-label="Months"
     >
       <span
-        class="w-9 shrink-0"
+        class="w-11 shrink-0"
         aria-hidden="true"
       />
       <div class="flex flex-row gap-0.5 flex-1 min-w-0">
@@ -55,20 +55,20 @@
     <div
       class="flex flex-row items-center gap-1 w-full"
       role="group"
-      aria-label="Fruiting by month"
+      aria-label="Harvest by month"
     >
-      <span class="text-[10px] text-ink-500 w-9 shrink-0">Fruit</span>
+      <span class="text-[10px] text-ink-500 w-11 shrink-0">Harvest</span>
       <div
         class="flex flex-row gap-0.5 flex-1 min-w-0"
         role="list"
       >
         <div
-          v-for="(count, i) in fruiting"
+          v-for="(count, i) in harvest"
           :key="`f-${i}`"
           role="listitem"
           class="flex-1 min-w-0 rounded-md h-3 border border-parchment-400/50"
           :class="monthBlockClass(count)"
-          :title="monthAspectTooltip(tooltipRows, i, 'fruiting', CATALOG_MONTH_LABELS[i])"
+          :title="monthAspectTooltip(tooltipRows, i, 'harvest', CATALOG_MONTH_LABELS[i])"
         />
       </div>
     </div>
@@ -77,7 +77,7 @@
       role="group"
       aria-label="Blooming by month"
     >
-      <span class="text-[10px] text-ink-500 w-9 shrink-0">Bloom</span>
+      <span class="text-[10px] text-ink-500 w-11 shrink-0">Bloom</span>
       <div
         class="flex flex-row gap-0.5 flex-1 min-w-0"
         role="list"

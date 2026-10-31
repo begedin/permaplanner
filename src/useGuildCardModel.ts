@@ -17,7 +17,7 @@ import { buildGroupedGuildPlants, type GuildPlantGroupRow } from './guildPlantGr
 import { formatGuildMapDimensions, pathBounds } from './guildPathBounds';
 import type { GrowthPhase, PlantVigor } from './guildPlantInstanceStatus';
 import {
-  fruitBloomMonthCountsForPhenologies,
+  harvestBloomMonthCountsForPhenologies,
   phenologySummaryForPlant,
   plantCatalog,
   resolvePhenology,
@@ -263,7 +263,7 @@ export const useGuildCardModel = (guildId: Ref<string>) => {
       const rp = garden.resolvedPlant(thing.plantId);
       return resolvePhenology(rp.speciesId, rp.cultivarId);
     });
-    return fruitBloomMonthCountsForPhenologies(phenologies);
+    return harvestBloomMonthCountsForPhenologies(phenologies);
   });
 
   const compactPlantTags = computed(() =>
