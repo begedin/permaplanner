@@ -1,0 +1,208 @@
+[
+  {
+    "name": "species defaults",
+    "plant": {
+      "id": "p1",
+      "speciesId": "lawsons_cypress",
+      "cultivarId": null
+    },
+    "expected": {
+      "id": "p1",
+      "speciesId": "lawsons_cypress",
+      "cultivarId": null,
+      "name": "Lawson's cypress",
+      "cultivar": null,
+      "nameLatin": "Chamaecyparis lawsoniana",
+      "cultivarLatin": null,
+      "iconId": "evergreen",
+      "functions": [],
+      "layers": ["overstory"],
+      "blooming": null,
+      "harvest": null
+    }
+  },
+  {
+    "name": "cultivar traits override species overrides",
+    "plant": {
+      "id": "p1",
+      "speciesId": "lawsons_cypress",
+      "cultivarId": "ellwoodii",
+      "speciesOverride": {
+        "name": "My tree",
+        "layers": ["herb"],
+        "functions": ["edible"],
+        "iconId": "seedling"
+      }
+    },
+    "expected": {
+      "id": "p1",
+      "speciesId": "lawsons_cypress",
+      "cultivarId": "ellwoodii",
+      "name": "My tree",
+      "cultivar": "Ellwoodii (Ellwood cypress)",
+      "nameLatin": "Chamaecyparis lawsoniana",
+      "cultivarLatin": null,
+      "iconId": "seedling",
+      "functions": ["edible"],
+      "layers": ["shrub", "understory"],
+      "blooming": null,
+      "harvest": null
+    }
+  },
+  {
+    "name": "final overrides preserve empty arrays and names",
+    "plant": {
+      "id": "p1",
+      "speciesId": "lawsons_cypress",
+      "cultivarId": "ellwoodii",
+      "speciesOverride": {
+        "functions": ["edible"]
+      },
+      "cultivarOverride": {
+        "name": "",
+        "functions": [],
+        "layers": [],
+        "iconId": "flower"
+      }
+    },
+    "expected": {
+      "id": "p1",
+      "speciesId": "lawsons_cypress",
+      "cultivarId": "ellwoodii",
+      "name": "Lawson's cypress",
+      "cultivar": "",
+      "nameLatin": "Chamaecyparis lawsoniana",
+      "cultivarLatin": null,
+      "iconId": "flower",
+      "functions": [],
+      "layers": [],
+      "blooming": null,
+      "harvest": null
+    }
+  },
+  {
+    "name": "unknown cultivar retains species traits and local cultivar name",
+    "plant": {
+      "id": "p1",
+      "speciesId": "lawsons_cypress",
+      "cultivarId": "missing",
+      "cultivarOverride": {
+        "name": "Local"
+      }
+    },
+    "expected": {
+      "id": "p1",
+      "speciesId": "lawsons_cypress",
+      "cultivarId": "missing",
+      "name": "Lawson's cypress",
+      "cultivar": "Local",
+      "nameLatin": "Chamaecyparis lawsoniana",
+      "cultivarLatin": null,
+      "iconId": "evergreen",
+      "functions": [],
+      "layers": ["overstory"],
+      "blooming": null,
+      "harvest": null
+    }
+  },
+  {
+    "name": "unknown species uses fallback while retaining IDs",
+    "plant": {
+      "id": "p1",
+      "speciesId": "missing",
+      "cultivarId": "missing"
+    },
+    "expected": {
+      "id": "p1",
+      "speciesId": "missing",
+      "cultivarId": "missing",
+      "name": "Plant",
+      "cultivar": null,
+      "nameLatin": null,
+      "cultivarLatin": null,
+      "iconId": "seedling",
+      "functions": [],
+      "layers": [],
+      "blooming": null,
+      "harvest": null
+    }
+  },
+  {
+    "name": "cultivar inherits seasonal periods",
+    "plant": {
+      "id": "p1",
+      "speciesId": "kiwi",
+      "cultivarId": "hayward"
+    },
+    "expected": {
+      "id": "p1",
+      "speciesId": "kiwi",
+      "cultivarId": "hayward",
+      "name": "Kiwi",
+      "cultivar": "Hayward",
+      "nameLatin": "Actinidia deliciosa",
+      "cultivarLatin": null,
+      "iconId": "kiwi",
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["vine"],
+      "blooming": {
+        "start": 6,
+        "end": 6
+      },
+      "harvest": {
+        "start": 10,
+        "end": 11
+      }
+    }
+  },
+  {
+    "name": "cultivar clears harvest without clearing bloom",
+    "plant": {
+      "id": "p1",
+      "speciesId": "kiwi",
+      "cultivarId": "tomuri"
+    },
+    "expected": {
+      "id": "p1",
+      "speciesId": "kiwi",
+      "cultivarId": "tomuri",
+      "name": "Kiwi",
+      "cultivar": "Tomuri (male pollinizer)",
+      "nameLatin": "Actinidia deliciosa",
+      "cultivarLatin": null,
+      "iconId": "kiwi",
+      "functions": ["edible", "pollinator_attractor"],
+      "layers": ["vine"],
+      "blooming": {
+        "start": 6,
+        "end": 6
+      },
+      "harvest": null
+    }
+  },
+  {
+    "name": "cultivar Latin names remain separate from species names",
+    "plant": {
+      "id": "p1",
+      "speciesId": "daisy",
+      "cultivarId": "oxeye"
+    },
+    "expected": {
+      "id": "p1",
+      "speciesId": "daisy",
+      "cultivarId": "oxeye",
+      "name": "Daisy",
+      "cultivar": "Oxeye daisy",
+      "nameLatin": null,
+      "cultivarLatin": "Leucanthemum vulgare",
+      "iconId": "flower",
+      "functions": ["pollinator_attractor", "medicinal"],
+      "layers": ["herb", "ground_cover"],
+      "blooming": {
+        "start": 5,
+        "end": 9
+      },
+      "harvest": null
+    }
+  }
+]

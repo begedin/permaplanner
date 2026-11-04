@@ -23,6 +23,32 @@ defmodule PermaplannerWeb.Router do
     plug PermaplannerWeb.Plugs.SpaStatic
   end
 
+  pipeline :oauth_browser do
+    plug :fetch_session
+    plug PermaplannerWeb.UserAuth, :fetch_current_user
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+  end
+
+  scope "/", PermaplannerWeb do
+    get "/.well-known/oauth-authorization-server", OAuthController, :metadata
+    get "/.well-known/oauth-protected-resource", OAuthController, :protected_resource
+    get "/.well-known/oauth-protected-resource/mcp", OAuthController, :protected_resource
+    post "/oauth/token", OAuthController, :token
+    post "/oauth/revoke", OAuthController, :revoke
+    post "/mcp", MCPController, :message
+    get "/mcp", MCPController, :unsupported
+    delete "/mcp", MCPController, :unsupported
+  end
+
+  scope "/oauth", PermaplannerWeb do
+    pipe_through :oauth_browser
+    get "/authorize", OAuthController, :authorize
+    post "/authorize", OAuthController, :approve
+    get "/connections", OAuthController, :connections
+    post "/connections/revoke", OAuthController, :disconnect
+  end
+
   scope "/api", PermaplannerWeb do
     pipe_through :api
 

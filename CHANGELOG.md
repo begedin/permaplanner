@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.26.0
+
+- [CHANGE] Add four read-only MCP tools for listing gardens, reading saved garden and guild details, and searching the plant catalog.
+- [CHANGE] Add self-hosted OAuth sign-in, consent, and connection revocation, with predefined registrations for ChatGPT, Claude, Cursor, VS Code, and Gemini CLI.
+- [DB] Store OAuth grants and hashed credentials with expiring access, refresh-token rotation, and replay revocation.
+
 ## 0.25.16
 
 - [FIX] Validate garden documents on every write and reject competing saves atomically, including background image changes.

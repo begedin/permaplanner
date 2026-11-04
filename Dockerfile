@@ -33,6 +33,7 @@ RUN mix deps.get --only prod
 
 COPY config ./config
 COPY lib ./lib
+COPY src/data/plantCatalog.json ./src/data/plantCatalog.json
 COPY priv ./priv
 COPY --from=frontend /app/dist ./priv/static
 

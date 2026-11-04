@@ -15,10 +15,38 @@ defmodule Permaplanner.Gardens do
     |> Repo.all()
   end
 
-  def get_garden!(%User{id: user_id}, id) do
-    Garden
-    |> Repo.get_by!(id: id, user_id: user_id)
-    |> Repo.preload(:background_image)
+  def fetch_garden(%User{id: user_id}, id) do
+    with {:ok, id} <- Ecto.UUID.cast(id),
+         %Garden{} = garden <- Repo.get_by(Garden, id: id, user_id: user_id) do
+      {:ok, garden}
+    else
+      _ -> {:error, :not_found}
+    end
+  end
+
+  def get_garden!(%User{} = user, id) do
+    case fetch_garden(user, id) do
+      {:ok, garden} -> Repo.preload(garden, :background_image)
+      {:error, :not_found} -> raise Ecto.NoResultsError, queryable: Garden
+    end
+  end
+
+  def garden_context(user, id) do
+    with {:ok, garden} <- fetch_garden(user, id) do
+      {:ok, Permaplanner.Gardens.Snapshot.build(garden)}
+    end
+  end
+
+  def guild_context(user, garden_id, guild_id) do
+    with {:ok, garden} <- fetch_garden(user, garden_id),
+         guild when not is_nil(guild) <-
+           Enum.find(garden.document["guilds"], &(&1["id"] == guild_id)) do
+      %{guilds: [resolved]} = snapshot = Permaplanner.Gardens.Snapshot.build(garden, [guild])
+      {:ok, snapshot |> Map.drop([:guilds, :plants]) |> Map.put(:guild, resolved)}
+    else
+      nil -> {:error, :not_found}
+      error -> error
+    end
   end
 
   def create_garden(%User{id: user_id}, attrs) do

@@ -1,5 +1,12 @@
 import Config
 
+config :permaplanner,
+       Permaplanner.MCP.Config.load!(
+         System.get_env("MCP_BASE_URL"),
+         Application.fetch_env!(:permaplanner, :mcp_clients),
+         config_env() == :prod
+       )
+
 if config_env() == :prod do
   port = String.to_integer(System.get_env("PORT") || "8080")
 

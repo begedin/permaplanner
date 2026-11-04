@@ -142,3 +142,102 @@ for `guildLocations`, joins geometry to guilds and plant instances by ID, and
 renames instance `name` to `nameOrCultivar`. The backend then imports the current
 format. Other historical field conversions are not
 supported. Existing database documents need no backfill.
+
+## MCP: connect an AI assistant
+
+The Phoenix app serves a read-only MCP endpoint at `/mcp`, using stateless
+Streamable HTTP with JSON responses. It supports protocol versions `2025-11-25`,
+`2025-06-18`, and `2025-03-26`. There is no separate service or paid OAuth provider.
+
+Available tools:
+
+- `list_gardens()` returns the signed-in user's garden IDs, names, revisions, and update times.
+- `get_garden_context({gardenId})` returns all saved guilds and resolved plants,
+  including notes, vigor, growth phases, mulch, geometry, and map scale.
+- `get_guild({gardenId, guildId})` returns one guild with resolved plants and map scale.
+- `search_plant_catalog({query, offset?, limit?})` searches species/cultivars and
+  catalog traits. Terms are case-insensitive and ANDed; an empty query browses.
+  `limit` defaults to 20 (maximum 50); use `nextOffset` until it is null.
+
+Tool responses include both JSON `structuredContent` and a JSON text block.
+Plants resolve in the same order as the frontend: catalog species, species overrides,
+catalog cultivar, cultivar overrides. Bloom/harvest periods inherit from species
+unless the cultivar overrides or clears them. A missing plant reference is `null`.
+Map coordinates use drawing units, calibrated by `mapScale`; the physical unit is
+user-chosen and is not stored. Background image bytes and UI preferences are omitted.
+Reads always use the latest server-saved document; unsynced browser edits are unavailable.
+The catalog is compiled from `src/data/plantCatalog.json` and included in releases.
+
+### Server configuration
+
+1. Apply the migration with `mix ecto.migrate` (Fly releases run migrations normally).
+2. Set `MCP_BASE_URL` to the app's public HTTPS origin, without a path, for example
+   `https://your-permaplanner.example`. Local development defaults to `http://localhost:4000`.
+3. The public OAuth client registrations live in `config/config.exs` and ship with
+   the app. The configured client IDs are:
+
+   | Application | Client ID |
+   | --- | --- |
+   | ChatGPT | `chatgpt` |
+   | Claude | `claude` |
+   | Cursor | `cursor` |
+   | VS Code / GitHub Copilot | `vscode` |
+   | Gemini CLI | `gemini-cli` |
+
+   These are public clients: leave the client secret blank. All clients must use
+   authorization-code flow with S256 PKCE. Gemini CLI must set `oauth.redirectUri`
+   to `http://localhost:7777/oauth/callback` to match its registered callback.
+   Register additional clients or update exact callback URLs in `config/config.exs`
+   and redeploy. Registration does not establish end-to-end client compatibility;
+   verify the connection in each client after deployment.
+
+   If a future client requires a secret, load it from deployment secrets in
+   `config/runtime.exs`; never commit it. Confidential clients may use
+   `client_secret_post` or `client_secret_basic`.
+
+4. Restart or redeploy the app after changing the public origin. On this deployment,
+   use `MCP_BASE_URL=https://permaplanner.bego.dev` and connect clients to
+   `https://permaplanner.bego.dev/mcp` consistently, even though the app also has a
+   Fly hostname.
+
+### Connecting and revoking access
+
+In the AI application's custom MCP connection settings, enter
+`https://your-permaplanner.example/mcp`, select OAuth, and configure your registered
+client ID and optional secret. In Claude, select **Use your own OAuth client**.
+This initial implementation uses explicit client registration; automatic registration
+and client ID metadata documents are not implemented.
+
+The assistant discovers authorization endpoints through `/.well-known/oauth-protected-resource`
+and `/.well-known/oauth-authorization-server`. It must request the resource
+`https://your-permaplanner.example/mcp` during authorization and token exchange,
+with scope `gardens:read`.
+
+The authorization page reuses your existing Permaplanner account. If not already
+signed in, open the sign-in link, complete login and two-factor authentication,
+then return to the authorization tab and select **I've signed in — continue**.
+Approve read access to finish connecting. Enable the connector in your conversation
+and ask the assistant to fetch current garden context before answering.
+
+Visit `/oauth/connections` while signed in to revoke a connection. Authorization
+codes expire after five minutes, access tokens after at most one hour, and connections
+require renewed consent after 30 days. Refresh tokens rotate; replaying an old
+refresh token revokes that connection. Credentials are hashed in Postgres and are
+separate from browser session tokens. OAuth consent and revocation forms enforce CSRF.
+
+Connections and credentials are stored separately. Token expiry never exceeds the
+connection's remaining lifetime. Expired connections and credentials are pruned
+when a new authorization starts; maintenance can also call
+`Permaplanner.MCP.Credentials.prune_expired/0` through a release RPC. Consumed refresh
+tokens remain indexed until expiry so replay still revokes the connection.
+
+The shared `test/fixtures/plant_resolution.json` contract is checked by both ExUnit
+and Vitest to keep backend and frontend plant resolution aligned. Catalog search
+indexes only names, IDs, roles, and layers, excluding JSON field names and icon metadata.
+
+MCP calls require bearer credentials, including catalog searches. Cross-origin
+browser requests are rejected by default; server-to-server clients normally omit
+`Origin`. If necessary, configure `:mcp_allowed_origins` with exact trusted origins.
+This implementation does not provide SSE subscriptions, legacy HTTP+SSE transport,
+or write tools. Hosted ChatGPT/Claude connections still need an end-to-end check
+after deploying and registering their actual callback URLs.
