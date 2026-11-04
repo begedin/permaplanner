@@ -13,20 +13,29 @@ defmodule Permaplanner.Gardens.BackgroundImageTest do
   test "split_from_document/1 returns unchanged when key is absent" do
     document = %{"plants" => []}
 
-    assert {^document, :unchanged} = BackgroundImage.split_from_document(document)
+    assert {:ok, ^document, :unchanged} = BackgroundImage.split_from_document(document)
   end
 
   test "split_from_document/1 clears when key is null" do
     document = %{"backgroundImage" => nil, "plants" => []}
 
-    assert {%{"plants" => []}, :clear} = BackgroundImage.split_from_document(document)
+    assert {:ok, %{"plants" => []}, :clear} = BackgroundImage.split_from_document(document)
   end
 
   test "split_from_document/1 sets bytes when key is a data url" do
     document = %{"backgroundImage" => @png_data_url}
 
-    assert {stored, {:set, "image/png", bytes}} = BackgroundImage.split_from_document(document)
+    assert {:ok, stored, {:set, "image/png", bytes}} =
+             BackgroundImage.split_from_document(document)
+
     refute Map.has_key?(stored, "backgroundImage")
     assert byte_size(bytes) > 0
+  end
+
+  test "rejects malformed images instead of silently keeping the previous image" do
+    for image <- ["invalid", "data:image/png;base64,?", 123, %{}] do
+      assert {:error, :invalid_document} =
+               BackgroundImage.split_from_document(%{"backgroundImage" => image})
+    end
   end
 end

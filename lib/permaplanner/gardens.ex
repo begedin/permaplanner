@@ -6,6 +6,7 @@ defmodule Permaplanner.Gardens do
   alias Permaplanner.Accounts.User
   alias Permaplanner.Gardens.BackgroundImage
   alias Permaplanner.Gardens.Garden
+  alias Permaplanner.Gardens.Document
   alias Permaplanner.Gardens.GardenBackgroundImage
   alias Permaplanner.Repo
 
@@ -22,67 +23,59 @@ defmodule Permaplanner.Gardens do
 
   def create_garden(%User{id: user_id}, attrs) do
     name = attrs["name"] || "My garden"
-    document = attrs["document"] || default_document()
-    {stored_document, background_action} = BackgroundImage.split_from_document(document)
+    document = Map.get(attrs, "document", default_document())
 
-    Repo.transaction(fn ->
-      with {:ok, garden} <-
-             %Garden{}
-             |> Ecto.Changeset.change(
-               user_id: user_id,
-               name: name,
-               document: stored_document,
-               sync_revision: stored_document["syncRevision"] || 0,
-               file_version: Garden.current_file_version()
-             )
-             |> Repo.insert(),
-           :ok <- apply_background_action(garden.id, background_action) do
-        Repo.preload(garden, :background_image)
-      else
-        {:error, reason} -> Repo.rollback(reason)
-      end
-    end)
+    with {:ok, stored_document, background_action} <- Document.prepare(document) do
+      Repo.transaction(fn ->
+        with {:ok, garden} <-
+               %Garden{}
+               |> Ecto.Changeset.change(
+                 user_id: user_id,
+                 name: name,
+                 document: stored_document,
+                 sync_revision: stored_document["syncRevision"],
+                 file_version: Garden.current_file_version()
+               )
+               |> Repo.insert(),
+             :ok <- apply_background_action(garden.id, background_action) do
+          Repo.preload(garden, :background_image)
+        else
+          {:error, reason} -> Repo.rollback(reason)
+        end
+      end)
+    end
   end
 
-  def update_garden(%User{} = user, id, attrs) do
-    garden = get_garden!(user, id)
+  def update_garden(%User{id: user_id}, id, attrs) do
     document = attrs["document"]
 
-    client_revision =
-      attrs["syncRevision"] ||
-        if(is_map(document), do: document["syncRevision"], else: nil)
+    with {:ok, stored_document, background_action} <- Document.prepare(document) do
+      client_revision = Map.get(attrs, "syncRevision", document["syncRevision"])
 
-    if client_revision != nil and client_revision < garden.sync_revision do
-      {:error, :stale}
-    else
-      if document do
-        {stored_document, background_action} = BackgroundImage.split_from_document(document)
+      Repo.transaction(fn ->
+        garden =
+          from(g in Garden, where: g.id == ^id and g.user_id == ^user_id, lock: "FOR UPDATE")
+          |> Repo.one!()
+
+        if client_revision != garden.sync_revision do
+          Repo.rollback(:stale)
+        end
+
         new_revision = garden.sync_revision + 1
 
-        stored_document =
-          stored_document
-          |> Map.put("syncRevision", new_revision)
-
         changes = %{
-          document: stored_document,
+          document: Map.put(stored_document, "syncRevision", new_revision),
           sync_revision: new_revision,
-          file_version: stored_document["version"] || Garden.current_file_version()
+          file_version: stored_document["version"]
         }
 
-        Repo.transaction(fn ->
-          with {:ok, garden} <-
-                 garden
-                 |> Ecto.Changeset.change(changes)
-                 |> Repo.update(),
-               :ok <- apply_background_action(garden.id, background_action) do
-            Repo.preload(garden, :background_image)
-          else
-            {:error, reason} -> Repo.rollback(reason)
-          end
-        end)
-      else
-        {:ok, garden}
-      end
+        with {:ok, garden} <- garden |> Ecto.Changeset.change(changes) |> Repo.update(),
+             :ok <- apply_background_action(garden.id, background_action) do
+          Repo.preload(garden, :background_image)
+        else
+          {:error, reason} -> Repo.rollback(reason)
+        end
+      end)
     end
   end
 

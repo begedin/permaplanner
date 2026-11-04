@@ -44,26 +44,28 @@ defmodule Permaplanner.Gardens.BackgroundImage do
   - `:clear` — explicit `null`
   - `{:set, content_type, bytes}` — new or updated image bytes
   """
-  @spec split_from_document(map()) :: {map(), :unchanged | :clear | {:set, String.t(), binary()}}
+  @spec split_from_document(map()) ::
+          {:ok, map(), :unchanged | :clear | {:set, String.t(), binary()}}
+          | {:error, :invalid_document}
   def split_from_document(document) when is_map(document) do
     case Map.fetch(document, "backgroundImage") do
       :error ->
-        {document, :unchanged}
+        {:ok, document, :unchanged}
 
       {:ok, nil} ->
-        {Map.delete(document, "backgroundImage"), :clear}
+        {:ok, Map.delete(document, "backgroundImage"), :clear}
 
       {:ok, data_url} when is_binary(data_url) ->
         case parse_data_url(data_url) do
           {:ok, content_type, bytes} ->
-            {Map.delete(document, "backgroundImage"), {:set, content_type, bytes}}
+            {:ok, Map.delete(document, "backgroundImage"), {:set, content_type, bytes}}
 
           :error ->
-            {Map.delete(document, "backgroundImage"), :unchanged}
+            {:error, :invalid_document}
         end
 
       _ ->
-        {Map.delete(document, "backgroundImage"), :unchanged}
+        {:error, :invalid_document}
     end
   end
 end

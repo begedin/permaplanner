@@ -4,7 +4,8 @@ import { beforeEach, expect, it, vi } from 'vitest';
 
 import * as gardensApi from '../api/gardens';
 import type { GardenRecord } from '../api/gardens';
-import { GARDEN_DOCUMENT_VERSION, type GardenDocument } from '../gardenDocument';
+import { GARDEN_DOCUMENT_VERSION } from '../gardenDocument';
+import { createEmptyPlanState } from '../planSavableState';
 import { usePermaplannerStore } from '../usePermaplannerStore';
 import { usePlanCommandHistory } from '../usePlanCommandHistory';
 import { useAuthStore } from './useAuthStore';
@@ -18,26 +19,24 @@ vi.mock('../api/gardens', async (importOriginal) => ({
   updateGarden: vi.fn(),
 }));
 
+const deferred = <T>() => {
+  let resolve!: (value: T) => void;
+  let reject!: (error: Error) => void;
+  const promise = new Promise<T>((yes, no) => {
+    resolve = yes;
+    reject = no;
+  });
+  return { promise, resolve, reject };
+};
+
 const gardenRecord = (id: string, revision = 0): GardenRecord => {
-  const document: GardenDocument = {
-    version: GARDEN_DOCUMENT_VERSION,
-    syncRevision: revision,
-    plants: [],
-    guilds: [],
-    mapScale: {
-      start: { x: 20, y: 20 },
-      end: { x: 150, y: 20 },
-      linePhysicalLength: 1,
-    },
-    backgroundOpacity: 0.4,
-    onboardingState: 'initial',
-  };
+  const { backgroundImageDataUrl: _image, ...data } = createEmptyPlanState();
   return {
     id,
     name: `Garden ${id}`,
     syncRevision: revision,
     fileVersion: GARDEN_DOCUMENT_VERSION,
-    document,
+    document: { ...data, version: GARDEN_DOCUMENT_VERSION, syncRevision: revision },
     updatedAt: '2026-09-24T08:00:00.000Z',
     insertedAt: '2026-09-24T08:00:00.000Z',
   };
@@ -72,18 +71,18 @@ it('preserves the active garden, history, and persisted selection when activatio
 });
 
 it('ignores an activation response superseded by a newer request', async () => {
-  let finishFirst!: (garden: GardenRecord) => void;
-  let finishSecond!: (garden: GardenRecord) => void;
+  const firstResponse = deferred<GardenRecord>();
+  const secondResponse = deferred<GardenRecord>();
   vi.mocked(gardensApi.fetchGarden)
-    .mockImplementationOnce(() => new Promise((resolve) => (finishFirst = resolve)))
-    .mockImplementationOnce(() => new Promise((resolve) => (finishSecond = resolve)));
+    .mockReturnValueOnce(firstResponse.promise)
+    .mockReturnValueOnce(secondResponse.promise);
   const session = useGardenSessionStore();
 
   const first = session.activateGarden('g1');
   const second = session.activateGarden('g2');
-  finishSecond(gardenRecord('g2', 2));
+  secondResponse.resolve(gardenRecord('g2', 2));
   await second;
-  finishFirst(gardenRecord('g1', 1));
+  firstResponse.resolve(gardenRecord('g1', 1));
   await first;
 
   expect(usePermaplannerStore()).toMatchObject({
@@ -98,15 +97,13 @@ it('ignores save completion after another garden becomes active', async () => {
   const session = useGardenSessionStore();
   await session.activateGardenRecord(gardenRecord('g1'));
   usePermaplannerStore().backgroundOpacity = 0.7;
-  let finishSave!: (revision: number) => void;
-  vi.mocked(gardensApi.updateGarden).mockImplementationOnce(
-    () => new Promise((resolve) => (finishSave = resolve)),
-  );
+  const response = deferred<number>();
+  vi.mocked(gardensApi.updateGarden).mockReturnValueOnce(response.promise);
 
   const pendingSave = session.save();
   await flushPromises();
   await session.activateGardenRecord(gardenRecord('g2', 4));
-  finishSave(99);
+  response.resolve(99);
   await pendingSave;
 
   expect(usePermaplannerStore()).toMatchObject({
@@ -121,15 +118,13 @@ it('ignores save completion after the session is reset', async () => {
   const session = useGardenSessionStore();
   await session.activateGardenRecord(gardenRecord('g1'));
   usePermaplannerStore().backgroundOpacity = 0.7;
-  let failSave!: (error: Error) => void;
-  vi.mocked(gardensApi.updateGarden).mockImplementationOnce(
-    () => new Promise((_resolve, reject) => (failSave = reject)),
-  );
+  const response = deferred<number>();
+  vi.mocked(gardensApi.updateGarden).mockReturnValueOnce(response.promise);
 
   const pendingSave = session.save();
   await flushPromises();
   await session.reset();
-  failSave(new Error('Late failure'));
+  response.reject(new Error('Late failure'));
   await pendingSave;
 
   expect(usePermaplannerStore()).toMatchObject({
@@ -145,15 +140,13 @@ it('ignores save completion after the session is reset', async () => {
 });
 
 it('deduplicates bootstrap work and can retry after a failure', async () => {
-  let failList!: (error: Error) => void;
-  vi.mocked(gardensApi.listGardens).mockImplementationOnce(
-    () => new Promise((_resolve, reject) => (failList = reject)),
-  );
+  const response = deferred<gardensApi.GardenSummary[]>();
+  vi.mocked(gardensApi.listGardens).mockReturnValueOnce(response.promise);
   const session = useGardenSessionStore();
 
   const first = session.bootstrap();
   const duplicate = session.bootstrap();
-  failList(new Error('Offline'));
+  response.reject(new Error('Offline'));
   await expect(first).rejects.toThrow('Offline');
   await expect(duplicate).rejects.toThrow('Offline');
   expect(gardensApi.listGardens).toHaveBeenCalledTimes(1);
@@ -175,4 +168,45 @@ it('keeps a created garden active when refreshing the list fails', async () => {
     gardenName: 'Garden created',
   });
   expect(localStorage.getItem('permaplanner.activeGardenId')).toBe('created');
+});
+
+it('finishes account list loading after the active garden changes', async () => {
+  const response = deferred<gardensApi.GardenSummary[]>();
+  vi.mocked(gardensApi.listGardens).mockReturnValueOnce(response.promise);
+  const session = useGardenSessionStore();
+  const refresh = session.refreshList();
+  await session.activateGardenRecord(gardenRecord('g2'));
+  response.resolve([]);
+  await refresh;
+  expect(session).toMatchObject({ loading: false, gardens: [] });
+});
+
+it('finishes bootstrap when activation supersedes its pending request', async () => {
+  const response = deferred<gardensApi.GardenSummary[]>();
+  vi.mocked(gardensApi.listGardens).mockReturnValueOnce(response.promise);
+  const session = useGardenSessionStore();
+  const bootstrap = session.bootstrap();
+  await session.activateGardenRecord(gardenRecord('imported'));
+  response.resolve([]);
+  await bootstrap;
+  expect(session.isBootstrapping).toBe(false);
+  expect(usePermaplannerStore().gardenId).toBe('imported');
+});
+
+it('does not let a previous account finish the new bootstrap', async () => {
+  const oldResponse = deferred<gardensApi.GardenSummary[]>();
+  const newResponse = deferred<gardensApi.GardenSummary[]>();
+  vi.mocked(gardensApi.listGardens)
+    .mockReturnValueOnce(oldResponse.promise)
+    .mockReturnValueOnce(newResponse.promise);
+  const session = useGardenSessionStore();
+  const oldBootstrap = session.bootstrap();
+  await session.reset();
+  const newBootstrap = session.bootstrap();
+  oldResponse.resolve([]);
+  await oldBootstrap;
+  expect(session.isBootstrapping).toBe(true);
+  newResponse.resolve([]);
+  await newBootstrap;
+  expect(session.isBootstrapping).toBe(false);
 });

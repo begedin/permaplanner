@@ -71,9 +71,7 @@ it('round-trips every editable field without retaining document or snapshot refe
   });
 
   const history = usePlanCommandHistory();
-  history.runMutation(() => {
-    scale.start = { x: 6, y: 8 };
-  });
+  scale.movePoint('start', { x: 6, y: 8 });
   store.setSyncRevision(9);
   history.undo();
   expect(scale.start).toEqual({ x: 3, y: 4 });
@@ -96,6 +94,6 @@ it('round-trips every editable field without retaining document or snapshot refe
     onboardingState: 'initial',
   });
   expect(history).toMatchObject({ canUndo: false, canRedo: false });
-  scale.linePhysicalLength = 10;
+  scale.setPhysicalLength(10);
   expect(store.snapshot().mapScale.linePhysicalLength).toBe(10);
 });

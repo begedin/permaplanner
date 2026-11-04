@@ -1,37 +1,32 @@
-import { computed } from 'vue';
+import { computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 
 import { usePlanStateStore } from './usePlanStateStore';
+import { usePlanCommandHistory } from './usePlanCommandHistory';
+import { onboardingAfterScaleDrag } from './onboardingTypes';
 
 export const useMapScaleStore = defineStore('mapScale', () => {
   const plan = usePlanStateStore();
-  const start = computed({
-    get: () => plan.state.mapScale.start,
-    set: (value) => {
-      plan.state.mapScale.start = value;
-    },
-  });
-  const end = computed({
-    get: () => plan.state.mapScale.end,
-    set: (value) => {
-      plan.state.mapScale.end = value;
-    },
-  });
-  const linePhysicalLength = computed({
-    get: () => plan.state.mapScale.linePhysicalLength,
-    set: (value) => {
-      plan.state.mapScale.linePhysicalLength = value;
-    },
-  });
+  const history = usePlanCommandHistory();
 
-  const line = computed(() => {
-    return {
-      x1: start.value.x,
-      y1: start.value.y,
-      x2: end.value.x,
-      y2: end.value.y,
-    };
-  });
+  const movePoint = (endpoint: 'start' | 'end', point: { x: number; y: number }) => {
+    const current = plan.state.mapScale[endpoint];
+    if (current.x === point.x && current.y === point.y) return;
+    history.runMutation(() => {
+      plan.state.mapScale[endpoint] = { ...point };
+      plan.state.onboardingState = onboardingAfterScaleDrag(plan.state.onboardingState);
+    });
+  };
+
+  const setPhysicalLength = (value: number, token?: symbol) => {
+    history.runMutation(() => {
+      plan.state.mapScale.linePhysicalLength = value;
+      if (value !== 1) plan.state.onboardingState = 'done';
+    }, token);
+  };
+  const start = computed(() => readonly(plan.state.mapScale.start));
+  const end = computed(() => readonly(plan.state.mapScale.end));
+  const linePhysicalLength = computed(() => plan.state.mapScale.linePhysicalLength);
 
   const unitLengthPx = computed(() => {
     const x1 = start.value.x;
@@ -44,9 +39,10 @@ export const useMapScaleStore = defineStore('mapScale', () => {
   });
 
   return {
+    movePoint,
+    setPhysicalLength,
     start,
     end,
-    line,
     linePhysicalLength,
     unitLengthPx,
   };

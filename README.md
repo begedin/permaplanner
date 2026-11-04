@@ -130,6 +130,9 @@ Runtime resolution and labels are implemented in [`src/resolvePlant.ts`](src/res
 
 Stored documents, API responses, frontend state, and downloadable JSON use the
 existing merged guild format (version 5). `syncRevision` tracks save conflicts.
+Create, update, and import prepare validated document fields and parsed image changes
+through `Permaplanner.Gardens.Document` before opening a transaction. Saves lock the garden row and require the expected
+revision before atomically updating the document and background image.
 Each plant instance in a guild can have an optional `note`, displayed beneath the
 plant. Notes are preserved in saves and JSON imports/exports; older documents
 without plant notes remain valid without a backfill.

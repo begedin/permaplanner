@@ -172,6 +172,44 @@ defmodule PermaplannerWeb.GardenControllerTest do
     refute Map.has_key?(response_document, "backgroundImage")
   end
 
+  test "rejects invalid documents on every write path without changing stored data", %{
+    conn: conn,
+    user: user
+  } do
+    {:ok, garden} = Gardens.create_garden(user, %{})
+    invalid = Map.put(garden.document, "mapScale", nil)
+
+    assert conn |> post("/api/gardens", %{"document" => invalid}) |> json_response(422)
+
+    assert conn
+           |> put("/api/gardens/#{garden.id}", %{"document" => invalid})
+           |> json_response(422)
+
+    assert %{"error" => "invalid_document"} =
+             conn
+             |> post("/api/legacy-import/local", %{"document" => invalid})
+             |> json_response(422)
+
+    assert Gardens.get_garden!(user, garden.id).document == garden.document
+    assert length(Gardens.list_gardens(user)) == 1
+  end
+
+  test "rejects future revisions and preserves the image on a rejected save", %{
+    conn: conn,
+    user: user
+  } do
+    document = Map.put(Gardens.default_document(), "backgroundImage", @png_data_url)
+    {:ok, garden} = Gardens.create_garden(user, %{"document" => document})
+    update = garden.document |> Map.put("backgroundImage", nil) |> Map.put("syncRevision", 10)
+
+    assert %{"error" => "stale_revision"} =
+             conn
+             |> put("/api/gardens/#{garden.id}", %{"document" => update})
+             |> json_response(409)
+
+    assert Gardens.garden_json(Gardens.get_garden!(user, garden.id)).document == document
+  end
+
   defp registered_user! do
     {:ok, user} =
       Accounts.register_user(%{email: "garden@example.com", password: "valid_password_12"})

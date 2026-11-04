@@ -15,6 +15,7 @@
   import { useScene } from './useScene';
 
   import { useBackgroundImage } from './useBackgroundImage';
+  import { useBackgroundImagePaste } from './useBackgroundImagePaste';
   import { useCamera } from './useCamera';
   import { useElementSize, useEventListener } from '@vueuse/core';
   import GuildTabHeader from './GuildTabHeader.vue';
@@ -25,7 +26,6 @@
   import { useGuildListScroll } from './useGuildListScroll';
   import { useGuildSelection } from './useGuildSelection';
   import ReferenceLine from './ReferenceLine.vue';
-  import { useOnboardingStore } from './useOnboardingStore';
   import { usePermaplannerStore } from './usePermaplannerStore';
   import AerialMapToolbar from './AerialMapToolbar.vue';
   import { useAerialTool, useAerialToolHotkeys } from './useAerialTool';
@@ -34,6 +34,7 @@
   const mapSettingsOpen = ref(false);
 
   const { imgWidth, imgHeight, imgDataUrl, ready } = useBackgroundImage();
+  useBackgroundImagePaste();
 
   const container = ref<SVGElement>();
 
@@ -120,18 +121,9 @@
 
   const worldStage = ref<SVGRectElement>();
 
-  const onboarding = useOnboardingStore();
-
   const mapScale = useMapScaleStore();
 
   const history = usePlanCommandHistory();
-
-  const updateMapScale = (value: number, token: symbol) => {
-    history.runMutation(() => {
-      mapScale.linePhysicalLength = value;
-      if (value !== 1) onboarding.onboardingState = 'done';
-    }, token);
-  };
 
   const updateBackgroundOpacity = (value: number, token: symbol) => {
     history.runMutation(() => {
@@ -386,14 +378,14 @@
               @cancel="clearSelection"
             />
 
-            <OnboardingText
-              v-if="imgDataUrl"
-              :x="center.x"
-              :y="center.y"
-              :onboarding-state="onboarding.onboardingState"
-            />
-
-            <ReferenceLine />
+            <ReferenceLine v-slot="{ onboardingState }">
+              <OnboardingText
+                v-if="imgDataUrl"
+                :x="center.x"
+                :y="center.y"
+                :onboarding-state="onboardingState"
+              />
+            </ReferenceLine>
           </svg>
           <div
             class="map-settings-panel absolute bottom-2 right-2 z-10 flex max-w-[calc(100%-1rem)] flex-col rounded-lg border border-parchment-400/60 bg-parchment-100/85 p-1 shadow-parchment text-sm"
@@ -415,7 +407,7 @@
                     :min="1"
                     :max="300"
                     :step="1"
-                    @update:value="updateMapScale"
+                    @update:value="mapScale.setPhysicalLength"
                   />
                   <ToolSlider
                     :value="permaplannerStore.backgroundOpacity"

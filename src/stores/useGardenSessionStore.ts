@@ -31,7 +31,6 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
   let sessionGeneration = 0;
   let activationRequest = 0;
   let listRequest = 0;
-  let saveRequest = 0;
   let bootstrapInFlight: Promise<void> | null = null;
 
   const isSaveAvailable = computed(() =>
@@ -90,7 +89,6 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
     if (request !== activationRequest) return false;
 
     sessionGeneration += 1;
-    saveRequest += 1;
     saving.value = false;
     markSaved();
     persistActiveId(garden.id);
@@ -98,16 +96,15 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
   };
 
   const refreshList = async () => {
-    const generation = sessionGeneration;
     const request = ++listRequest;
     loading.value = true;
     try {
       const nextGardens = await gardensApi.listGardens();
-      if (generation === sessionGeneration && request === listRequest) {
+      if (request === listRequest) {
         gardens.value = nextGardens;
       }
     } finally {
-      if (generation === sessionGeneration && request === listRequest) {
+      if (request === listRequest) {
         loading.value = false;
       }
     }
@@ -139,32 +136,25 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
     if (bootstrapInFlight) return bootstrapInFlight;
 
     isBootstrapping.value = true;
-    const generation = sessionGeneration;
     const request = ++activationRequest;
     const operation = (async () => {
-      try {
-        const nextGardens = await gardensApi.listGardens();
-        if (generation !== sessionGeneration || request !== activationRequest) return;
-        gardens.value = nextGardens;
+      const nextGardens = await gardensApi.listGardens();
+      if (request !== activationRequest) return;
+      gardens.value = nextGardens;
 
-        const stored =
-          typeof localStorage === 'undefined'
-            ? undefined
-            : localStorage.getItem(ACTIVE_GARDEN_KEY) || undefined;
-        const id =
-          stored && nextGardens.some((garden) => garden.id === stored)
-            ? stored
-            : nextGardens[0]?.id;
-        if (id) {
-          const garden = await gardensApi.fetchGarden(id);
-          await commitGarden(garden, request);
-        } else {
-          persistActiveId(undefined);
-        }
-      } finally {
-        if (request === activationRequest) {
-          isBootstrapping.value = false;
-        }
+      const stored =
+        typeof localStorage === 'undefined'
+          ? undefined
+          : localStorage.getItem(ACTIVE_GARDEN_KEY) || undefined;
+      const id =
+        stored && nextGardens.some((garden) => garden.id === stored)
+          ? stored
+          : nextGardens[0]?.id;
+      if (id) {
+        const garden = await gardensApi.fetchGarden(id);
+        await commitGarden(garden, request);
+      } else {
+        persistActiveId(undefined);
       }
     })();
     bootstrapInFlight = operation;
@@ -172,6 +162,7 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
       await operation;
     } finally {
       if (bootstrapInFlight === operation) {
+        isBootstrapping.value = false;
         bootstrapInFlight = null;
       }
     }
@@ -182,15 +173,12 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
     if (!canSave.value || !id) return;
 
     const generation = sessionGeneration;
-    const request = ++saveRequest;
     saving.value = true;
     errorMessage.value = undefined;
     const stateAtStart = plan.capture();
     const document = permaplanner.snapshotForServer();
     const isCurrentSave = () =>
-      generation === sessionGeneration &&
-      request === saveRequest &&
-      permaplanner.gardenId === id;
+      generation === sessionGeneration && permaplanner.gardenId === id;
     try {
       const syncRevision = await gardensApi.updateGarden(id, document);
       if (!isCurrentSave()) {
@@ -225,7 +213,6 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
   const reset = async () => {
     activationRequest += 1;
     listRequest += 1;
-    saveRequest += 1;
     sessionGeneration += 1;
     bootstrapInFlight = null;
     isBootstrapping.value = true;

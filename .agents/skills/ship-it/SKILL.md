@@ -1,0 +1,1 @@
+../../../.cursor/skills/ship-it/SKILL.md

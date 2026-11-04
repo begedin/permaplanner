@@ -25,6 +25,8 @@ To add or edit plants, follow [README — Adding plants to the catalog](README.m
 - [ecto-migrations](.cursor/skills/ecto-migrations/SKILL.md) — Postgres schema migrations; Claude symlink at [`.claude/skills/ecto-migrations/SKILL.md`](.claude/skills/ecto-migrations/SKILL.md). Cursor auto-attaches [`.cursor/rules/ecto-migrations.mdc`](.cursor/rules/ecto-migrations.mdc) when you edit those paths.
 - [writing-endpoints](.cursor/skills/writing-endpoints/SKILL.md) — Phoenix controllers, router, `*_html.ex` (inline `~H"""`, no `.heex` files), ErrorJSON, ConnCase tests. Claude stub at [`.claude/skills/writing-endpoints/SKILL.md`](.claude/skills/writing-endpoints/SKILL.md). Cursor auto-attaches [`.cursor/rules/writing-endpoints.mdc`](.cursor/rules/writing-endpoints.mdc) when you edit those paths.
 
+- [ship-it](.cursor/skills/ship-it/SKILL.md) — version, changelog, commit, push, and Fly deployment; Codex and Claude Code use symlinks to this canonical skill.
+
 ## Unit tests (Vitest)
 
 - **Agents / one-off runs (exit when done):** `npm run test:unit -- path/to/file.test.ts` — or the whole suite: `npm run test:unit`.

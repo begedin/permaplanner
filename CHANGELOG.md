@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.25.16
+
+- [FIX] Validate garden documents on every write and reject competing saves atomically, including background image changes.
+- [FIX] Keep map-scale drag previews outside saved state, discard cancelled gestures, and commit scale and onboarding changes together.
+- [FIX] Complete list and bootstrap loading independently of garden activation; discard obsolete image loads and clipboard reads.
+
+- [CHANGE] Add the repo-local ship-it skill for versioning, release commits, pushes, and Fly deployment.
+
 ## 0.25.15
 
 - [FIX] Group successive keyboard slider adjustments into one undoable change, with undo and redo available while a slider is focused.
