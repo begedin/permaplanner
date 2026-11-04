@@ -1,9 +1,10 @@
 <script setup lang="ts">
   import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
+  import { isEditableTarget } from './keyboardShortcuts';
   import UiIcon from './uiIcons/UiIcon.vue';
   import ToolSlider from './ToolSlider.vue';
-  import { usePlanEditSession } from './usePlanEditSession';
+  import { usePlanCommandHistory } from './usePlanCommandHistory';
   import GuildEditor from './GuildEditor.vue';
   import GardenGuild from './GardenGuild.vue';
   import type { PathPoint } from './guildPathClip';
@@ -123,29 +124,20 @@
 
   const mapScale = useMapScaleStore();
 
-  const mapScaleEditSession = usePlanEditSession();
-  const backgroundOpacityEditSession = usePlanEditSession();
+  const history = usePlanCommandHistory();
 
-  let mapScaleOnboardingTimer: ReturnType<typeof setTimeout> | undefined;
-
-  const finishMapScaleEdit = () => {
-    mapScaleEditSession.commit();
-    if (mapScale.linePhysicalLength === 1) {
-      return;
-    }
-    onboarding.onboardingState = 'settingLength';
-    if (mapScaleOnboardingTimer !== undefined) {
-      clearTimeout(mapScaleOnboardingTimer);
-    }
-    mapScaleOnboardingTimer = setTimeout(() => {
-      onboarding.onboardingState = 'done';
-      mapScaleOnboardingTimer = undefined;
-    }, 1000);
+  const updateMapScale = (value: number, token: symbol) => {
+    history.runMutation(() => {
+      mapScale.linePhysicalLength = value;
+      if (value !== 1) onboarding.onboardingState = 'done';
+    }, token);
   };
 
-  onBeforeUnmount(() => {
-    if (mapScaleOnboardingTimer !== undefined) clearTimeout(mapScaleOnboardingTimer);
-  });
+  const updateBackgroundOpacity = (value: number, token: symbol) => {
+    history.runMutation(() => {
+      permaplannerStore.backgroundOpacity = value;
+    }, token);
+  };
 
   useScene(container, worldStage);
 
@@ -200,8 +192,7 @@
     if (
       e.key !== 'Delete' ||
       selectedGuildId.value === undefined ||
-      (e.target instanceof HTMLElement &&
-        (e.target.closest('input, textarea, select') || e.target.isContentEditable))
+      isEditableTarget(e.target)
     ) {
       return;
     }
@@ -396,7 +387,7 @@
             />
 
             <OnboardingText
-              v-if="imgDataUrl && onboarding.onboardingState !== 'done'"
+              v-if="imgDataUrl"
               :x="center.x"
               :y="center.y"
               :onboarding-state="onboarding.onboardingState"
@@ -424,9 +415,7 @@
                     :min="1"
                     :max="300"
                     :step="1"
-                    @edit-start="mapScaleEditSession.begin"
-                    @update:value="mapScale.linePhysicalLength = $event"
-                    @commit:value="finishMapScaleEdit"
+                    @update:value="updateMapScale"
                   />
                   <ToolSlider
                     :value="permaplannerStore.backgroundOpacity"
@@ -434,9 +423,7 @@
                     :min="0"
                     :max="1"
                     :step="0.01"
-                    @edit-start="backgroundOpacityEditSession.begin"
-                    @update:value="permaplannerStore.backgroundOpacity = $event"
-                    @commit:value="backgroundOpacityEditSession.commit"
+                    @update:value="updateBackgroundOpacity"
                   />
                 </div>
               </div>

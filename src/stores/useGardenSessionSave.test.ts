@@ -205,3 +205,21 @@ it('keeps a successful save clean when refreshing the garden list fails', async 
     errorMessage: undefined,
   });
 });
+
+it('stays clean after saving optional plant overrides set to undefined', async () => {
+  const session = useGardenSessionStore();
+  session.markSaved();
+  usePermaplannerStore().plants = [
+    {
+      ...plant,
+      speciesOverride: { name: 'Custom plant', iconId: undefined },
+      cultivarOverride: undefined,
+    },
+  ];
+  await session.save();
+  expect(session).toMatchObject({
+    status: 'saved',
+    canSave: false,
+    hasUnsavedChanges: false,
+  });
+});

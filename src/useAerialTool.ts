@@ -1,17 +1,10 @@
 import { ref, type Ref } from 'vue';
 import { useEventListener } from '@vueuse/core';
+import { isEditableTarget } from './keyboardShortcuts';
 
 export type AerialTool = 'select' | 'edit' | 'move';
 
 const activeTool = ref<AerialTool>('select');
-
-const isEditableTarget = (target: EventTarget | null): boolean => {
-  if (!(target instanceof HTMLElement)) {
-    return false;
-  }
-  const tag = target.tagName;
-  return tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable;
-};
 
 export const useAerialTool = () => {
   const setTool = (tool: AerialTool) => {

@@ -4,11 +4,8 @@ import { computed, ref, shallowRef } from 'vue';
 import { ApiError } from '../api/client';
 import * as gardensApi from '../api/gardens';
 import type { GardenRecord, GardenSummary } from '../api/gardens';
-import {
-  capturePlanSavableState,
-  planSavableStatesEqual,
-  type PlanSavableState,
-} from '../planSavableState';
+import { planSavableStatesEqual, type PlanSavableState } from '../planSavableState';
+import { usePlanStateStore } from '../usePlanStateStore';
 import { usePermaplannerStore } from '../usePermaplannerStore';
 import { useAuthStore } from './useAuthStore';
 
@@ -20,6 +17,7 @@ const formatTimestamp = (iso: string | undefined): string =>
 export type PlanSaveStatus = 'inactive' | 'unsaved' | 'saving' | 'saved' | 'error';
 
 export const useGardenSessionStore = defineStore('gardenSession', () => {
+  const plan = usePlanStateStore();
   const permaplanner = usePermaplannerStore();
   const auth = useAuthStore();
 
@@ -43,8 +41,7 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
     () =>
       isSaveAvailable.value &&
       savedState.value !== undefined &&
-      (saving.value ||
-        !planSavableStatesEqual(savedState.value, capturePlanSavableState())),
+      (saving.value || !planSavableStatesEqual(savedState.value, plan.state)),
   );
   const canSave = computed(() => hasUnsavedChanges.value && !saving.value);
   const status = computed((): PlanSaveStatus => {
@@ -76,7 +73,7 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
   };
 
   const markSaved = () => {
-    savedState.value = capturePlanSavableState();
+    savedState.value = plan.capture();
     errorMessage.value = undefined;
   };
 
@@ -188,7 +185,7 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
     const request = ++saveRequest;
     saving.value = true;
     errorMessage.value = undefined;
-    const stateAtStart = capturePlanSavableState();
+    const stateAtStart = plan.capture();
     const document = permaplanner.snapshotForServer();
     const isCurrentSave = () =>
       generation === sessionGeneration &&

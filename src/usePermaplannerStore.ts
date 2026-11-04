@@ -1,59 +1,37 @@
-import { defineStore } from 'pinia';
-import { nextTick, ref } from 'vue';
+import { defineStore, storeToRefs } from 'pinia';
+import { nextTick, ref, toRefs } from 'vue';
 
 import {
   GARDEN_DOCUMENT_VERSION,
   type GardenDocument,
   type GardenDocumentPayload,
 } from './gardenDocument';
-import { type Guild, type UserPlant } from './gardenTypes';
-import { useMapScaleStore } from './useMapScaleStore';
-import { DEFAULT_ONBOARDING_STATE, type OnboardingState } from './onboardingTypes';
+import { createEmptyPlanState } from './planSavableState';
+import { usePlanStateStore } from './usePlanStateStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
-
-const defaultUserPlants = (): UserPlant[] => [];
-
-const applyToMapScale = (doc: GardenDocument) => {
-  const mapScale = useMapScaleStore();
-  Object.assign(mapScale.start, doc.mapScale.start);
-  Object.assign(mapScale.end, doc.mapScale.end);
-  mapScale.linePhysicalLength = doc.mapScale.linePhysicalLength;
-};
 
 export const usePermaplannerStore = defineStore('permaplanner', () => {
   const gardenId = ref<string | undefined>();
   const gardenName = ref<string | undefined>();
 
-  const backgroundImageDataUrl = ref<string | undefined>();
+  const plan = usePlanStateStore();
+  const { mapScale: _mapScale, ...editableFields } = toRefs(plan.state);
+  const { backgroundImageDataUrl } = editableFields;
+  const { isBulkPlanUpdate } = storeToRefs(plan);
   const backgroundImageSavedDataUrl = ref<string | undefined>();
-  const backgroundOpacity = ref(0.4);
-  const plants = ref<UserPlant[]>(defaultUserPlants());
-  const guilds = ref<Guild[]>([]);
   const syncRevision = ref(0);
-  const onboardingState = ref<OnboardingState>(DEFAULT_ONBOARDING_STATE);
-
-  const isBulkPlanUpdate = ref(false);
+  let replacementDepth = 0;
 
   const snapshot = (): GardenDocument => {
-    const mapScale = useMapScaleStore();
-    const bg = backgroundImageDataUrl.value;
-    const doc: GardenDocument = {
+    const { backgroundImageDataUrl, ...data } = plan.capture();
+    return {
+      ...data,
       version: GARDEN_DOCUMENT_VERSION,
       syncRevision: syncRevision.value,
-      plants: plants.value,
-      guilds: guilds.value,
-      mapScale: {
-        start: { ...mapScale.start },
-        end: { ...mapScale.end },
-        linePhysicalLength: mapScale.linePhysicalLength,
-      },
-      backgroundOpacity: backgroundOpacity.value,
-      onboardingState: onboardingState.value,
+      ...(backgroundImageDataUrl === undefined
+        ? {}
+        : { backgroundImage: backgroundImageDataUrl }),
     };
-    if (bg !== undefined) {
-      doc.backgroundImage = bg;
-    }
-    return doc;
   };
 
   /** API-update snapshot; omits the background image unless it changed. */
@@ -79,43 +57,30 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     doc: GardenDocument,
     meta?: { id?: string; name?: string },
   ) => {
+    replacementDepth += 1;
     isBulkPlanUpdate.value = true;
     try {
-      backgroundImageDataUrl.value = doc.backgroundImage;
-      backgroundImageSavedDataUrl.value = doc.backgroundImage;
-      backgroundOpacity.value = doc.backgroundOpacity;
-      plants.value = doc.plants;
-      guilds.value = doc.guilds;
-      syncRevision.value = doc.syncRevision;
-      onboardingState.value = doc.onboardingState;
-      applyToMapScale(doc);
+      const { version: _version, syncRevision: revision, backgroundImage, ...data } = doc;
+      plan.restore({ ...data, backgroundImageDataUrl: backgroundImage });
+      backgroundImageSavedDataUrl.value = backgroundImage;
+      syncRevision.value = revision;
       gardenId.value = meta?.id;
       gardenName.value = meta?.name;
       usePlanCommandHistory().clear();
     } finally {
       await nextTick();
-      isBulkPlanUpdate.value = false;
+      replacementDepth -= 1;
+      isBulkPlanUpdate.value = replacementDepth > 0;
     }
   };
 
-  const resetToNewPlan = async () => {
-    isBulkPlanUpdate.value = true;
-    try {
-      gardenId.value = undefined;
-      gardenName.value = undefined;
-      backgroundImageDataUrl.value = undefined;
-      backgroundImageSavedDataUrl.value = undefined;
-      backgroundOpacity.value = 0.4;
-      plants.value = defaultUserPlants();
-      guilds.value = [];
-      syncRevision.value = 0;
-      onboardingState.value = DEFAULT_ONBOARDING_STATE;
-      useMapScaleStore().resetToDefaults();
-      usePlanCommandHistory().clear();
-    } finally {
-      await nextTick();
-      isBulkPlanUpdate.value = false;
-    }
+  const resetToNewPlan = () => {
+    const { backgroundImageDataUrl: _image, ...data } = createEmptyPlanState();
+    return hydrateFromDocument({
+      ...data,
+      version: GARDEN_DOCUMENT_VERSION,
+      syncRevision: 0,
+    });
   };
 
   const setSyncRevision = (n: number) => {
@@ -132,13 +97,9 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
     hydrateFromDocument,
     resetToNewPlan,
     isBulkPlanUpdate,
-    backgroundImageDataUrl,
+    ...editableFields,
     backgroundImageSavedDataUrl,
-    backgroundOpacity,
-    plants,
-    guilds,
     syncRevision,
-    onboardingState,
     setSyncRevision,
   };
 });

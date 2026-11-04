@@ -8,7 +8,7 @@ import {
 } from '@testing-library/vue';
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
-import { setActivePinia } from 'pinia';
+import { createPinia, setActivePinia } from 'pinia';
 import { mount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 
@@ -19,6 +19,9 @@ import { useGardenStore } from './useGardenStore';
 import { useGuildHover } from './useGuildHover';
 import GardenGuild from './GardenGuild.vue';
 import { usePermaplannerStore } from './usePermaplannerStore';
+import { useMapScaleStore } from './useMapScaleStore';
+import { usePlanCommandHistory } from './usePlanCommandHistory';
+import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import { useSceneStore } from './useSceneStore';
 import { resetGuildSearch } from './useGuildSearch';
 
@@ -44,6 +47,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks();
   cleanup();
+  vi.useRealTimers();
 });
 
 const renderGarden = async (path = '/guilds') => {
@@ -454,4 +458,36 @@ it('edits background opacity from settings inside the aerial map and supports un
   await fireEvent.click(toggle);
   expect(toggle).toHaveAttribute('aria-expanded', 'false');
   expect(map.queryByRole('slider')).not.toBeInTheDocument();
+});
+
+it('records calibration and onboarding together without delayed document changes', async () => {
+  setActivePinia(createPinia());
+  const store = usePermaplannerStore();
+  store.gardenId = 'g1';
+  store.backgroundImageDataUrl =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWZkAAAAASUVORK5CYII=';
+  await renderGarden();
+  const scale = useMapScaleStore();
+  const history = usePlanCommandHistory();
+  const session = useGardenSessionStore();
+  session.markSaved();
+  await fireEvent.click(screen.getByRole('button', { name: 'Map settings' }));
+  const slider = screen.getByRole('slider', { name: /^Map scale/ });
+  vi.useFakeTimers();
+  await fireEvent.update(slider, '20');
+  expect(store.onboardingState).toBe('done');
+  expect(screen.getByText(/Map scale set/)).toBeInTheDocument();
+  history.undo();
+  await vi.advanceTimersByTimeAsync(1500);
+  expect(scale.linePhysicalLength).toBe(1);
+  expect(store.onboardingState).toBe('initial');
+  expect(session.hasUnsavedChanges).toBe(false);
+  expect(screen.queryByText(/Map scale set/)).not.toBeInTheDocument();
+  history.redo();
+  expect(scale.linePhysicalLength).toBe(20);
+  expect(store.onboardingState).toBe('done');
+  session.markSaved();
+  await vi.advanceTimersByTimeAsync(1500);
+  expect(session.hasUnsavedChanges).toBe(false);
+  expect(screen.queryByText(/Map scale set/)).not.toBeInTheDocument();
 });

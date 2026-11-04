@@ -2,6 +2,7 @@ import { computed, ref, watch, type Ref } from 'vue';
 import simplify from 'simplify-js';
 import { useMagicKeys } from '@vueuse/core';
 
+import { isEditableTarget } from './keyboardShortcuts';
 import { joinPaths, subtractPaths, type PathPoint } from './guildPathClip';
 import type { AerialTool } from './useAerialTool';
 import { useSceneStore } from './useSceneStore';
@@ -23,7 +24,6 @@ export const useGuildPathEdit = (options: {
 
   const brushSize = ref(12);
   const stroke = ref<PathPoint[]>([]);
-  let editModeController = new AbortController();
 
   const brush = computed(() => {
     if (!isEditing.value) {
@@ -74,21 +74,30 @@ export const useGuildPathEdit = (options: {
 
   watch(
     isEditing,
-    (editing) => {
+    (editing, _previous, onCleanup) => {
       if (!editing) {
-        editModeController.abort();
         stroke.value = [];
-        if (options.selected.value) {
-          options.resetPath();
-        }
+        options.resetPath();
         return;
       }
 
-      editModeController = new AbortController();
+      const editModeController = new AbortController();
+      onCleanup(() => editModeController.abort());
 
       document.addEventListener(
         'keydown',
         (e: KeyboardEvent) => {
+          if (
+            !isEditing.value ||
+            isEditableTarget(e.target) ||
+            e.isComposing ||
+            e.metaKey ||
+            e.ctrlKey ||
+            e.altKey
+          ) {
+            return;
+          }
+
           if (e.key === 'Enter') {
             e.preventDefault();
             editModeController.abort();
@@ -104,29 +113,18 @@ export const useGuildPathEdit = (options: {
 
           if (e.key === '+') {
             e.preventDefault();
-            Math.min((brushSize.value += 1), 50);
+            brushSize.value = Math.min(brushSize.value + 1, 50);
           }
 
           if (e.key === '-') {
             e.preventDefault();
-            Math.max((brushSize.value -= 1), 1);
+            brushSize.value = Math.max(brushSize.value - 1, 1);
           }
         },
         { signal: editModeController.signal },
       );
     },
     { immediate: true },
-  );
-
-  watch(
-    () => options.selected.value,
-    (selected) => {
-      if (!selected) {
-        editModeController.abort();
-        stroke.value = [];
-        options.resetPath();
-      }
-    },
   );
 
   const brushColor = computed(() =>

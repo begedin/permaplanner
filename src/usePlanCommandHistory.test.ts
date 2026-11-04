@@ -2,8 +2,8 @@ import { setActivePinia, createPinia } from 'pinia';
 import { beforeEach, expect, it } from 'vitest';
 
 import type { Guild } from './gardenTypes';
-import { capturePlanSavableState, planSavableStatesEqual } from './planSavableState';
 import { usePermaplannerStore } from './usePermaplannerStore';
+import { usePlanStateStore } from './usePlanStateStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 
 beforeEach(() => {
@@ -34,20 +34,6 @@ it('runMutation records undo and redo for guild edits', () => {
   expect(store.guilds).toEqual([testGuild()]);
 });
 
-it('does not record commands while bulk plan state is replacing', () => {
-  const store = usePermaplannerStore();
-  const history = usePlanCommandHistory();
-
-  store.isBulkPlanUpdate = true;
-  history.runMutation(() => {
-    store.guilds = [testGuild()];
-  });
-  store.isBulkPlanUpdate = false;
-
-  expect(store.guilds).toEqual([testGuild()]);
-  expect(history.canUndo).toBe(false);
-});
-
 it('clear drops undo and redo stacks', () => {
   const store = usePermaplannerStore();
   const history = usePlanCommandHistory();
@@ -55,33 +41,13 @@ it('clear drops undo and redo stacks', () => {
   history.runMutation(() => {
     store.guilds = [testGuild()];
   });
-  history.clear();
-
-  expect(history.canUndo).toBe(false);
-  expect(history.canRedo).toBe(false);
-});
-
-it('commitSnapshot records a single edit session', () => {
-  const store = usePermaplannerStore();
-  const history = usePlanCommandHistory();
-  const before = capturePlanSavableState();
-
-  store.guilds = [testGuild()];
-  history.commitSnapshot(before);
-
+  history.runMutation(() => {
+    store.backgroundOpacity = 0.8;
+  });
   history.undo();
-  expect(store.guilds).toEqual([]);
-});
-
-it('planSavableStatesEqual compares background image by reference', () => {
-  const withImage = capturePlanSavableState();
-  withImage.backgroundImageDataUrl = 'data:image/png;base64,abc';
-
-  const sameImage = { ...withImage };
-  const withoutImage = { ...withImage, backgroundImageDataUrl: undefined };
-
-  expect(planSavableStatesEqual(withImage, sameImage)).toBe(true);
-  expect(planSavableStatesEqual(withImage, withoutImage)).toBe(false);
+  expect(history).toMatchObject({ canUndo: true, canRedo: true });
+  history.clear();
+  expect(history).toMatchObject({ canUndo: false, canRedo: false });
 });
 
 it('keeps redo available after a no-op but clears it after a new edit', () => {
@@ -106,12 +72,46 @@ it('keeps redo available after a no-op but clears it after a new edit', () => {
 it('applies edits without recording during bulk plan updates', () => {
   const store = usePermaplannerStore();
   const history = usePlanCommandHistory();
-  const before = capturePlanSavableState();
+  const before = usePlanStateStore().capture();
   store.isBulkPlanUpdate = true;
   history.runMutation(() => {
     store.guilds = [testGuild()];
   });
   history.commitSnapshot(before);
   expect(store.guilds).toEqual([testGuild()]);
+  expect(history).toMatchObject({ canUndo: false, canRedo: false });
+});
+
+it('does not merge a gesture across another edit', () => {
+  const store = usePermaplannerStore();
+  const history = usePlanCommandHistory();
+  const token = Symbol('gesture');
+  history.runMutation(() => {
+    store.backgroundOpacity = 0.5;
+  }, token);
+  history.runMutation(() => {
+    store.guilds = [testGuild()];
+  });
+  history.runMutation(() => {
+    store.backgroundOpacity = 0.6;
+  }, token);
+  history.undo();
+  expect(store).toMatchObject({ backgroundOpacity: 0.5, guilds: [testGuild()] });
+  history.undo();
+  expect(store).toMatchObject({ backgroundOpacity: 0.5, guilds: [] });
+  history.undo();
+  expect(store.backgroundOpacity).toBe(0.4);
+});
+
+it('removes a merged gesture that returns to its starting value', () => {
+  const store = usePermaplannerStore();
+  const history = usePlanCommandHistory();
+  const token = Symbol('gesture');
+  history.runMutation(() => {
+    store.backgroundOpacity = 0.8;
+  }, token);
+  history.runMutation(() => {
+    store.backgroundOpacity = 0.4;
+  }, token);
   expect(history).toMatchObject({ canUndo: false, canRedo: false });
 });

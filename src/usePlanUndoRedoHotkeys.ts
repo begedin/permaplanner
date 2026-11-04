@@ -1,20 +1,14 @@
 import { useEventListener } from '@vueuse/core';
 
+import { isEditableTarget } from './keyboardShortcuts';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
-
-const isEditableTarget = (target: EventTarget | null): boolean => {
-  if (!(target instanceof HTMLElement)) {
-    return false;
-  }
-  const tag = target.tagName;
-  return tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable;
-};
 
 export const usePlanUndoRedoHotkeys = () => {
   const history = usePlanCommandHistory();
 
   useEventListener(document, 'keydown', (e) => {
-    if (isEditableTarget(e.target)) {
+    const isSlider = e.target instanceof HTMLInputElement && e.target.type === 'range';
+    if (isEditableTarget(e.target) && !isSlider) {
       return;
     }
     const mod = e.metaKey || e.ctrlKey;

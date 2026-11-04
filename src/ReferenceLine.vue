@@ -1,13 +1,15 @@
 <script lang="ts" setup>
   import { computed, onBeforeUnmount } from 'vue';
   import { storeToRefs } from 'pinia';
-  import { capturePlanSavableState } from './planSavableState';
+
   import { advanceOnboardingState } from './onboardingTypes';
   import { useMapScaleStore } from './useMapScaleStore';
   import { usePermaplannerStore } from './usePermaplannerStore';
   import { usePlanCommandHistory } from './usePlanCommandHistory';
+  import { usePlanStateStore } from './usePlanStateStore';
   import { useSceneStore } from './useSceneStore';
 
+  const plan = usePlanStateStore();
   const store = useMapScaleStore();
   const { onboardingState } = storeToRefs(usePermaplannerStore());
   const scene = useSceneStore();
@@ -25,7 +27,7 @@
     onMouseMove?: () => void,
   ) => {
     activeDragAbort?.abort();
-    const before = capturePlanSavableState();
+    const before = plan.capture();
     const controller = new AbortController();
     activeDragAbort = controller;
 

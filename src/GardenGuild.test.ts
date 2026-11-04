@@ -1,12 +1,14 @@
-import { mount } from '@vue/test-utils';
+import { enableAutoUnmount, mount } from '@vue/test-utils';
 import { reactive, nextTick } from 'vue';
 import { joinPaths } from './guildPathClip';
-import { beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import GardenGuild from './GardenGuild.vue';
 import { setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
 import { useSceneStore } from './useSceneStore';
 import * as svgClientToUser from './svgClientToUser';
+
+enableAutoUnmount(afterEach);
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));

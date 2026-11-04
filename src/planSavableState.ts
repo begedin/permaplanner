@@ -1,82 +1,54 @@
-import { storeToRefs } from 'pinia';
+import type { GardenDocument } from './gardenDocument';
+import { DEFAULT_ONBOARDING_STATE } from './onboardingTypes';
 
-import type { Guild, UserPlant } from './gardenTypes';
-import type { OnboardingState } from './onboardingTypes';
-import { useMapScaleStore } from './useMapScaleStore';
-import { usePermaplannerStore } from './usePermaplannerStore';
+export type PlanSavableState = Omit<
+  GardenDocument,
+  'version' | 'syncRevision' | 'backgroundImage'
+> & { backgroundImageDataUrl: string | undefined };
 
-export type PlanSavableState = {
-  plants: UserPlant[];
-  guilds: Guild[];
-  backgroundOpacity: number;
-  backgroundImageDataUrl: string | undefined;
-  onboardingState: OnboardingState;
+export const createEmptyPlanState = (): PlanSavableState => ({
+  plants: [],
+  guilds: [],
+  backgroundOpacity: 0.4,
+  backgroundImageDataUrl: undefined,
+  onboardingState: DEFAULT_ONBOARDING_STATE,
   mapScale: {
-    start: { x: number; y: number };
-    end: { x: number; y: number };
-    linePhysicalLength: number;
-  };
+    start: { x: 20, y: 20 },
+    end: { x: 150, y: 20 },
+    linePhysicalLength: 1,
+  },
+});
+
+/** Clone JSON plan data without serializing the potentially large image string. */
+export const clonePlanState = (state: PlanSavableState): PlanSavableState => {
+  const { backgroundImageDataUrl, ...data } = state;
+  return { ...JSON.parse(JSON.stringify(data)), backgroundImageDataUrl };
 };
 
-const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
-
-const mapScalePointsEqual = (
-  a: { x: number; y: number },
-  b: { x: number; y: number },
-): boolean => a.x === b.x && a.y === b.y;
-
-export const capturePlanSavableState = (): PlanSavableState => {
-  const permaplanner = usePermaplannerStore();
-  const mapScale = useMapScaleStore();
-  const { start, end, linePhysicalLength } = storeToRefs(mapScale);
-  return {
-    plants: clone(permaplanner.plants),
-    guilds: clone(permaplanner.guilds),
-    backgroundOpacity: permaplanner.backgroundOpacity,
-    backgroundImageDataUrl: permaplanner.backgroundImageDataUrl,
-    onboardingState: permaplanner.onboardingState,
-    mapScale: {
-      start: { x: start.value.x, y: start.value.y },
-      end: { x: end.value.x, y: end.value.y },
-      linePhysicalLength: linePhysicalLength.value,
-    },
-  };
-};
-
-export const applyPlanSavableState = (state: PlanSavableState): void => {
-  const permaplanner = usePermaplannerStore();
-  const mapScale = useMapScaleStore();
-  const { start, end, linePhysicalLength } = storeToRefs(mapScale);
-  permaplanner.plants = clone(state.plants);
-  permaplanner.guilds = clone(state.guilds);
-  permaplanner.backgroundOpacity = state.backgroundOpacity;
-  permaplanner.backgroundImageDataUrl = state.backgroundImageDataUrl;
-  permaplanner.onboardingState = state.onboardingState;
-  start.value.x = state.mapScale.start.x;
-  start.value.y = state.mapScale.start.y;
-  end.value.x = state.mapScale.end.x;
-  end.value.y = state.mapScale.end.y;
-  linePhysicalLength.value = state.mapScale.linePhysicalLength;
+const equalValues = (a: unknown, b: unknown): boolean => {
+  if (a === b) return true;
+  if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') {
+    return false;
+  }
+  if (Array.isArray(a) || Array.isArray(b)) {
+    return (
+      Array.isArray(a) &&
+      Array.isArray(b) &&
+      a.length === b.length &&
+      a.every((value, index) => equalValues(value, b[index]))
+    );
+  }
+  const left = a as Record<string, unknown>;
+  const right = b as Record<string, unknown>;
+  // Optional fields set to undefined are omitted by JSON persistence.
+  const keys = Object.keys(left).filter((key) => left[key] !== undefined);
+  return (
+    keys.length === Object.keys(right).filter((key) => right[key] !== undefined).length &&
+    keys.every((key) => Object.hasOwn(right, key) && equalValues(left[key], right[key]))
+  );
 };
 
 export const planSavableStatesEqual = (
   a: PlanSavableState,
   b: PlanSavableState,
-): boolean => {
-  if (a.backgroundImageDataUrl !== b.backgroundImageDataUrl) {
-    return false;
-  }
-  if (
-    a.backgroundOpacity !== b.backgroundOpacity ||
-    a.onboardingState !== b.onboardingState ||
-    a.mapScale.linePhysicalLength !== b.mapScale.linePhysicalLength ||
-    !mapScalePointsEqual(a.mapScale.start, b.mapScale.start) ||
-    !mapScalePointsEqual(a.mapScale.end, b.mapScale.end)
-  ) {
-    return false;
-  }
-  return (
-    JSON.stringify(a.plants) === JSON.stringify(b.plants) &&
-    JSON.stringify(a.guilds) === JSON.stringify(b.guilds)
-  );
-};
+): boolean => equalValues(a, b);

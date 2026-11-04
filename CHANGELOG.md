@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.25.15
+
+- [FIX] Group successive keyboard slider adjustments into one undoable change, with undo and redo available while a slider is focused.
+- [FIX] Keep the map calibration completion message timer independent of saved state and undo history.
+- [FIX] Cancel map interactions cleanly when switching tools, changing selection, or leaving the view; ignore map shortcuts while editing fields and enforce brush size limits.
+- [CHANGE] Centralize editable plan state so saving, dirty tracking, and undo share the same state owner.
+
 ## 0.25.14
 
 - [DB] Added herbaceous peony (Paeonia lactiflora) with Sarah Bernhardt, Duchesse de Nemours, and Bowl of Beauty cultivars and May–June flowering.

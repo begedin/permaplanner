@@ -1,39 +1,17 @@
 import { setActivePinia, createPinia } from 'pinia';
 import { beforeEach, expect, it } from 'vitest';
 
-import type { Guild, UserPlant } from './gardenTypes';
-import { DEFAULT_ONBOARDING_STATE } from './onboardingTypes';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
-import {
-  applyPlanSavableState,
-  capturePlanSavableState,
-  planSavableStatesEqual,
-  type PlanSavableState,
-} from './planSavableState';
+import { planSavableStatesEqual, type PlanSavableState } from './planSavableState';
 import { useMapScaleStore } from './useMapScaleStore';
 import { usePermaplannerStore } from './usePermaplannerStore';
+import { usePlanStateStore } from './usePlanStateStore';
 
-beforeEach(() => {
-  setActivePinia(createPinia());
-});
+beforeEach(() => setActivePinia(createPinia()));
 
-const testPlant = (): UserPlant => ({
-  id: 'p1',
-  speciesId: 'comfrey',
-  cultivarId: null,
-});
-
-const testGuild = (): Guild => ({
-  id: 'g1',
-  name: 'Bed',
-  path: [{ x: 1, y: 2 }],
-  plants: [],
-  mulchLevel: 1,
-});
-
-const populatedSavableState = (): PlanSavableState => ({
-  plants: [testPlant()],
-  guilds: [testGuild()],
+const populatedState: PlanSavableState = {
+  plants: [{ id: 'p1', speciesId: 'comfrey', cultivarId: null }],
+  guilds: [{ id: 'g1', name: 'Bed', path: [{ x: 1, y: 2 }], plants: [], mulchLevel: 1 }],
   backgroundOpacity: 0.55,
   backgroundImageDataUrl: 'data:image/png;base64,abc',
   onboardingState: 'movingFirst',
@@ -42,161 +20,114 @@ const populatedSavableState = (): PlanSavableState => ({
     end: { x: 110, y: 20 },
     linePhysicalLength: 25,
   },
-});
-
-const seedStoresFromState = (state: PlanSavableState): void => {
-  const permaplanner = usePermaplannerStore();
-  const mapScale = useMapScaleStore();
-  permaplanner.plants = structuredClone(state.plants);
-  permaplanner.guilds = structuredClone(state.guilds);
-  permaplanner.backgroundOpacity = state.backgroundOpacity;
-  permaplanner.backgroundImageDataUrl = state.backgroundImageDataUrl;
-  permaplanner.onboardingState = state.onboardingState;
-  Object.assign(mapScale.start, state.mapScale.start);
-  Object.assign(mapScale.end, state.mapScale.end);
-  mapScale.linePhysicalLength = state.mapScale.linePhysicalLength;
 };
 
-it('capturePlanSavableState deep-clones plants and guilds', () => {
-  seedStoresFromState(populatedSavableState());
-
-  const captured = capturePlanSavableState();
+it('captures all editable fields without retaining nested references', () => {
+  const plan = usePlanStateStore();
+  Object.assign(plan.state, structuredClone(populatedState));
+  const captured = plan.capture();
+  expect(captured).toEqual(populatedState);
   captured.plants[0]!.speciesId = 'apple';
   captured.guilds[0]!.name = 'Changed';
-
-  const permaplanner = usePermaplannerStore();
-  expect(permaplanner.plants).toEqual([testPlant()]);
-  expect(permaplanner.guilds).toEqual([testGuild()]);
+  captured.mapScale.start.x = 99;
+  expect(plan.state).toEqual(populatedState);
 });
 
-it('capturePlanSavableState includes map scale and onboarding fields', () => {
-  seedStoresFromState(populatedSavableState());
+it('restores populated and empty state through both store views, preserving server revision', () => {
+  const plan = usePlanStateStore();
+  const empty = plan.capture();
+  const permaplanner = usePermaplannerStore();
+  const scale = useMapScaleStore();
+  permaplanner.setSyncRevision(12);
+  plan.restore(populatedState);
+  const { mapScale, ...fields } = populatedState;
+  expect(permaplanner).toMatchObject({ ...fields, syncRevision: 12 });
+  expect(scale).toMatchObject(mapScale);
 
-  expect(capturePlanSavableState()).toEqual(populatedSavableState());
+  plan.restore(empty);
+  expect(plan.capture()).toEqual(empty);
+  expect(permaplanner.syncRevision).toBe(12);
 });
 
-it('applyPlanSavableState restores all savable fields', () => {
-  const state = populatedSavableState();
-  applyPlanSavableState(state);
-
-  const permaplanner = usePermaplannerStore();
-  const mapScale = useMapScaleStore();
-  expect(permaplanner.plants).toEqual(state.plants);
-  expect(permaplanner.guilds).toEqual(state.guilds);
-  expect(permaplanner.backgroundOpacity).toBe(state.backgroundOpacity);
-  expect(permaplanner.backgroundImageDataUrl).toBe(state.backgroundImageDataUrl);
-  expect(permaplanner.onboardingState).toBe(state.onboardingState);
-  expect(mapScale.start).toEqual(state.mapScale.start);
-  expect(mapScale.end).toEqual(state.mapScale.end);
-  expect(mapScale.linePhysicalLength).toBe(state.mapScale.linePhysicalLength);
-});
-
-it('capture and apply round-trip empty plan state', () => {
-  const before = capturePlanSavableState();
-  const permaplanner = usePermaplannerStore();
-  permaplanner.plants = [testPlant()];
-  permaplanner.guilds = [testGuild()];
-  applyPlanSavableState(before);
-
-  expect(capturePlanSavableState()).toEqual({
-    plants: [],
-    guilds: [],
-    backgroundOpacity: 0.4,
-    backgroundImageDataUrl: undefined,
-    onboardingState: DEFAULT_ONBOARDING_STATE,
-    mapScale: {
-      start: { x: 20, y: 20 },
-      end: { x: 150, y: 20 },
-      linePhysicalLength: 1,
+it.each<[string, (state: PlanSavableState) => void]>([
+  [
+    'plant',
+    (state) => {
+      state.plants[0]!.id = 'p2';
     },
-  });
+  ],
+  [
+    'guild',
+    (state) => {
+      state.guilds[0]!.name = 'Other';
+    },
+  ],
+  [
+    'opacity',
+    (state) => {
+      state.backgroundOpacity = 0.1;
+    },
+  ],
+  [
+    'onboarding',
+    (state) => {
+      state.onboardingState = 'done';
+    },
+  ],
+  [
+    'scale length',
+    (state) => {
+      state.mapScale.linePhysicalLength = 2;
+    },
+  ],
+  [
+    'scale point',
+    (state) => {
+      state.mapScale.start.x = 11;
+    },
+  ],
+  [
+    'removed image',
+    (state) => {
+      state.backgroundImageDataUrl = undefined;
+    },
+  ],
+  [
+    'replaced image',
+    (state) => {
+      state.backgroundImageDataUrl = 'data:image/png;base64,different';
+    },
+  ],
+])('detects a changed %s', (_name, change) => {
+  const changed = structuredClone(populatedState);
+  change(changed);
+  expect(planSavableStatesEqual(populatedState, changed)).toBe(false);
 });
 
-it('planSavableStatesEqual treats identical snapshots as equal', () => {
-  const state = populatedSavableState();
-  expect(planSavableStatesEqual(state, structuredClone(state))).toBe(true);
+it('compares identical values independently of object key order', () => {
+  const state = structuredClone(populatedState);
+  expect(planSavableStatesEqual(populatedState, state)).toBe(true);
+  state.mapScale = {
+    linePhysicalLength: state.mapScale.linePhysicalLength,
+    end: { y: state.mapScale.end.y, x: state.mapScale.end.x },
+    start: { y: state.mapScale.start.y, x: state.mapScale.start.x },
+  };
+  expect(planSavableStatesEqual(populatedState, state)).toBe(true);
 });
 
-it('planSavableStatesEqual detects plant and guild changes', () => {
-  const base = populatedSavableState();
-  expect(
-    planSavableStatesEqual(base, {
-      ...base,
-      plants: [{ ...testPlant(), id: 'p2' }],
-    }),
-  ).toBe(false);
-  expect(
-    planSavableStatesEqual(base, {
-      ...base,
-      guilds: [{ ...testGuild(), name: 'Other' }],
-    }),
-  ).toBe(false);
-});
-
-it('planSavableStatesEqual detects scalar and map scale changes', () => {
-  const base = populatedSavableState();
-  expect(planSavableStatesEqual(base, { ...base, backgroundOpacity: 0.1 })).toBe(false);
-  expect(planSavableStatesEqual(base, { ...base, onboardingState: 'done' })).toBe(false);
-  expect(
-    planSavableStatesEqual(base, {
-      ...base,
-      mapScale: { ...base.mapScale, linePhysicalLength: 2 },
-    }),
-  ).toBe(false);
-  expect(
-    planSavableStatesEqual(base, {
-      ...base,
-      mapScale: {
-        ...base.mapScale,
-        start: { x: 11, y: 20 },
-      },
-    }),
-  ).toBe(false);
-});
-
-it('planSavableStatesEqual compares background image by reference', () => {
-  const withImage = populatedSavableState();
-  expect(
-    planSavableStatesEqual(withImage, {
-      ...withImage,
-      backgroundImageDataUrl: undefined,
-    }),
-  ).toBe(false);
-  expect(
-    planSavableStatesEqual(withImage, {
-      ...withImage,
-      backgroundImageDataUrl: 'data:image/png;base64,different',
-    }),
-  ).toBe(false);
-});
-
-it('undo and redo restore captured plan state', () => {
-  seedStoresFromState(populatedSavableState());
-  const before = capturePlanSavableState();
-
-  const permaplanner = usePermaplannerStore();
-  permaplanner.plants = [];
-  permaplanner.guilds = [];
-  const after = capturePlanSavableState();
+it('commitSnapshot records an edit and undo/redo restores complete plan snapshots', () => {
+  const plan = usePlanStateStore();
+  Object.assign(plan.state, structuredClone(populatedState));
+  const before = plan.capture();
+  plan.state.plants = [];
+  plan.state.guilds = [];
+  const after = plan.capture();
 
   const history = usePlanCommandHistory();
   history.commitSnapshot(before);
-  expect(capturePlanSavableState()).toEqual(after);
-
+  expect(plan.capture()).toEqual(after);
   history.undo();
-  expect(capturePlanSavableState()).toEqual(before);
-
+  expect(plan.capture()).toEqual(before);
   history.redo();
-  expect(capturePlanSavableState()).toEqual(after);
-});
-
-it('applying an undo snapshot preserves the latest server revision', () => {
-  const state = capturePlanSavableState();
-  const store = usePermaplannerStore();
-  store.setSyncRevision(12);
-
-  applyPlanSavableState(state);
-
-  expect(store.syncRevision).toBe(12);
-  expect(planSavableStatesEqual(state, capturePlanSavableState())).toBe(true);
+  expect(plan.capture()).toEqual(after);
 });

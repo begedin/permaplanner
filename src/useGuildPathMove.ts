@@ -1,4 +1,4 @@
-import { computed, ref, watch, type Ref } from 'vue';
+import { computed, onScopeDispose, ref, watch, type Ref } from 'vue';
 
 import type { PathPoint } from './guildPathClip';
 import { clientToSvgUser } from './svgClientToUser';
@@ -24,30 +24,28 @@ export const useGuildPathMove = (options: {
     path: PathPoint[];
   } | null>(null);
 
-  watch(
-    () => options.selected.value,
-    (selected) => {
-      if (!selected) {
-        moveController.abort();
-        moveOrigin.value = null;
-      }
-    },
-  );
+  const cancelMove = () => {
+    moveController.abort();
+    if (moveOrigin.value) options.path.value = moveOrigin.value.path;
+    moveOrigin.value = null;
+  };
 
-  watch(isMoving, (moving) => {
-    if (!moving) {
-      moveController.abort();
-      moveOrigin.value = null;
-    }
-  });
+  watch(
+    isMoving,
+    (moving) => {
+      if (!moving) cancelMove();
+    },
+    { flush: 'sync' },
+  );
+  onScopeDispose(cancelMove);
 
   const onPathMouseDown = (e: MouseEvent) => {
-    if (!isMoving.value || options.path.value.length === 0) {
+    if (e.button !== 0 || !isMoving.value || options.path.value.length === 0) {
       return;
     }
 
     e.stopPropagation();
-    moveController.abort();
+    cancelMove();
     moveController = new AbortController();
     const svg = (e.currentTarget as SVGElement).closest('svg');
     const origin =
@@ -81,8 +79,8 @@ export const useGuildPathMove = (options: {
         return;
       }
       moveController.abort();
-      options.onCommit();
       moveOrigin.value = null;
+      options.onCommit();
     };
 
     document.addEventListener(
