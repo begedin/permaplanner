@@ -122,6 +122,22 @@ Runtime resolution and labels are implemented in [`src/resolvePlant.ts`](src/res
 - Miss Kim lilac: [RHS](https://www.rhs.org.uk/plants/119023/syringa-pubescens-subsp-patula-miss-kim/details) identifies _Syringa pubescens subsp. patula_.
 - Paperwhite narcissus: [RHS](https://www.rhs.org.uk/plants/74758/narcissus-papyraceus/details) identifies _Narcissus papyraceus_.
 
+### Catalog addition sources (0.26.1)
+
+- White spruce December: [licensed grower PT-Potcultures](https://www.pt-potcultures.nl/picea-glauca-december/).
+- Greater snowdrop: [RHS species profile](https://www.rhs.org.uk/plants/7556/galanthus-elwesii/details), with [January–February flowering](https://futureforests.ie/en-gb/products/galanthus-elwesii).
+- False spirea Crimson Feather: [Concept Plants](https://conceptplants.com/varieties/sorbaria-sorbifolia-crimson-feather-hyfaria) identifies the cultivar name as 'Hyfaria'.
+- Plums: [National Fruit Collection — Mirabelle de Nancy](https://www.nationalfruitcollection.org.uk/full2.php?fruit=plum&id=8223), [Van den Berk — Opal](https://www.vdberk.co.uk/trees/prunus-domestica-opal/), and [Artevos — Topend Plus](https://fruitattraction.german-pavilion.com/en/sites/products-services/235897). Topend Plus has a September–October harvest override.
+- Lilacs: [RHS — Madame Lemoine](https://www.rhs.org.uk/plants/lilac/large-flowered-lilacs) and [International Lilac Society cultivar register](https://www.internationallilacsociety.org/wp-content/uploads/2021/03/ILS-register-update-March-5-2021.pdf). The register places Lavender Lady under Syringa × hyacinthiflora.
+- Sea buckthorn: [Augustinka nursery listing](https://puskajapensas.fi/tuotteet/monivuotiset-taimet/marjakasvit/tyrnit/tyrni-augustinka) and [Oregon State University](https://landscapeplants.oregonstate.edu/plants/hippophae-rhamnoides) for nitrogen fixation.
+- Hybrid mahonia Winter Sun: [Provender Nurseries](https://www.provendernurseries.co.uk/factsheets/mahonia-x-media-winter-sun) gives November–March flowering.
+- Flowering quince Salmon Horizon: [RHS](https://www.rhs.org.uk/plants/154370/chaenomeles-%C3%97-superba-salmon-horizon/details).
+- Firethorn Sunny Star and related Star cultivars: [RHS breeder account](https://www.rhs.org.uk/plants/new-plants/pyracantha-orange-star) and [Sunny Star nursery listing](https://www.primaflora.hr/vatreni-trn--sunny-star/).
+- Dappled willow Hakuro-Nishiki: [RHS](https://www.rhs.org.uk/plants/66597/salix-integra-hakuro-nishiki-v/details).
+- Broom Luna: [Minier nursery](https://www.pepinieres-minier.fr/en/produit/cytisus-scoparius-luna). Broom groups several Cytisus cultivars, with botanical names attached to individual cultivars.
+
+Month ranges are approximate outdoor northern-hemisphere seasons and vary with climate.
+
 ## Badges
 
 [![codecov](https://codecov.io/gh/begedin/permaplanner/graph/badge.svg?token=EG2DRHVP86)](https://codecov.io/gh/begedin/permaplanner)

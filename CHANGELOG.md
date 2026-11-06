@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.26.1
+
+- [DB] Added greater snowdrop, false spirea, sea buckthorn, hybrid mahonia, flowering quince, firethorn, dappled willow, and broom to the catalog, with named cultivars.
+- [DB] Added December white spruce, Madame Lemoine and Lavender Lady lilacs, and Mirabelle de Nancy, Opal, and Topend Plus plums to the catalog.
+
 ## 0.26.0
 
 - [CHANGE] Add four read-only MCP tools for listing gardens, reading saved garden and guild details, and searching the plant catalog.

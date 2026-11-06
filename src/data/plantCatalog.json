@@ -195,6 +195,11 @@
           "id": "alberta_blue",
           "name": "Alberta Blue",
           "layers": ["shrub"]
+        },
+        {
+          "id": "december",
+          "name": "December",
+          "layers": ["shrub", "understory"]
         }
       ],
       "defaultIconId": "evergreen"
@@ -2058,6 +2063,23 @@
         {
           "id": "california_blue",
           "name": "California Blue"
+        },
+        {
+          "id": "mirabelle_de_nancy",
+          "name": "Mirabelle de Nancy",
+          "name_latin": "Prunus domestica subsp. syriaca"
+        },
+        {
+          "id": "opal",
+          "name": "Opal"
+        },
+        {
+          "id": "topend_plus",
+          "name": "Topend Plus",
+          "harvest": {
+            "start": 9,
+            "end": 10
+          }
         }
       ],
       "blooming": {
@@ -3179,6 +3201,16 @@
         {
           "id": "president_grevy",
           "name": "President Grevy"
+        },
+        {
+          "id": "madame_lemoine",
+          "name": "Madame Lemoine",
+          "name_latin": "Syringa vulgaris 'Mme Lemoine'"
+        },
+        {
+          "id": "lavender_lady",
+          "name": "Lavender Lady",
+          "name_latin": "Syringa × hyacinthiflora"
         }
       ],
       "blooming": {
@@ -3834,6 +3866,183 @@
       },
       "defaultIconId": "leaf-herb",
       "name_latin": "Diplotaxis tenuifolia"
+    },
+    {
+      "id": "greater_snowdrop",
+      "name": "Greater snowdrop",
+      "name_latin": "Galanthus elwesii",
+      "functions": ["pollinator_attractor"],
+      "layers": ["herb"],
+      "cultivars": [
+        {
+          "id": "comet",
+          "name": "Comet"
+        },
+        {
+          "id": "abington_green",
+          "name": "Abington Green"
+        }
+      ],
+      "defaultIconId": "flower",
+      "blooming": {
+        "start": 1,
+        "end": 2
+      }
+    },
+    {
+      "id": "false_spirea",
+      "name": "False spirea",
+      "name_latin": "Sorbaria sorbifolia",
+      "functions": ["pollinator_attractor"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "crimson_feather",
+          "name": "Crimson Feather",
+          "name_latin": "Sorbaria sorbifolia 'Hyfaria'"
+        },
+        {
+          "id": "sem",
+          "name": "Sem"
+        },
+        {
+          "id": "pink_hopi",
+          "name": "Pink Hopi",
+          "name_latin": "Sorbaria sorbifolia 'Cousorb05'"
+        }
+      ],
+      "defaultIconId": "flower-spike"
+    },
+    {
+      "id": "sea_buckthorn",
+      "name": "Sea buckthorn",
+      "name_latin": "Hippophae rhamnoides",
+      "functions": ["nitrogen_fixer", "edible"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "augustinka",
+          "name": "Augustinka"
+        },
+        {
+          "id": "hergo",
+          "name": "Hergo"
+        },
+        {
+          "id": "leikora",
+          "name": "Leikora"
+        }
+      ],
+      "defaultIconId": "tree"
+    },
+    {
+      "id": "hybrid_mahonia",
+      "name": "Hybrid mahonia",
+      "name_latin": "Mahonia × media",
+      "functions": ["pollinator_attractor"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "winter_sun",
+          "name": "Winter Sun",
+          "blooming": {
+            "start": 11,
+            "end": 3
+          }
+        },
+        {
+          "id": "charity",
+          "name": "Charity"
+        }
+      ],
+      "defaultIconId": "flower-spike"
+    },
+    {
+      "id": "flowering_quince",
+      "name": "Flowering quince",
+      "name_latin": "Chaenomeles × superba",
+      "functions": ["pollinator_attractor", "edible"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "salmon_horizon",
+          "name": "Salmon Horizon"
+        },
+        {
+          "id": "crimson_and_gold",
+          "name": "Crimson and Gold"
+        },
+        {
+          "id": "jet_trail",
+          "name": "Jet Trail"
+        }
+      ],
+      "defaultIconId": "flower-blossom"
+    },
+    {
+      "id": "firethorn",
+      "name": "Firethorn",
+      "name_latin": "Pyracantha",
+      "functions": ["pollinator_attractor"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "sunny_star",
+          "name": "Sunny Star",
+          "name_latin": "Pyracantha coccinea 'Sunny Star'"
+        },
+        {
+          "id": "red_star",
+          "name": "Red Star"
+        },
+        {
+          "id": "orange_star",
+          "name": "Orange Star"
+        }
+      ],
+      "defaultIconId": "tree"
+    },
+    {
+      "id": "dappled_willow",
+      "name": "Dappled willow",
+      "name_latin": "Salix integra",
+      "functions": ["pollinator_attractor"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "hakuro_nishiki",
+          "name": "Hakuro-Nishiki"
+        },
+        {
+          "id": "flamingo",
+          "name": "Flamingo"
+        }
+      ],
+      "defaultIconId": "tree"
+    },
+    {
+      "id": "broom",
+      "name": "Broom",
+      "functions": ["nitrogen_fixer", "pollinator_attractor"],
+      "layers": ["shrub"],
+      "cultivars": [
+        {
+          "id": "luna",
+          "name": "Luna",
+          "name_latin": "Cytisus scoparius 'Luna'"
+        },
+        {
+          "id": "burkwoodii",
+          "name": "Burkwoodii",
+          "name_latin": "Cytisus 'Burkwoodii'"
+        },
+        {
+          "id": "lena",
+          "name": "Lena",
+          "name_latin": "Cytisus 'Lena'"
+        }
+      ],
+      "defaultIconId": "flower"
     }
   ]
 }
