@@ -47,11 +47,17 @@ it('round-trips every editable field without retaining document or snapshot refe
   const document: GardenDocument = {
     version: GARDEN_DOCUMENT_VERSION,
     syncRevision: 8,
+    landmarks: [],
     plants: [{ id: 'p1', speciesId: 'apple', cultivarId: null }],
     guilds: [
       { id: 'g1', name: 'Bed', path: [{ x: 1, y: 2 }], plants: [], mulchLevel: 3 },
     ],
-    mapScale: { start: { x: 3, y: 4 }, end: { x: 9, y: 12 }, linePhysicalLength: 5 },
+    mapScale: {
+      unit: 'm',
+      start: { x: 3, y: 4 },
+      end: { x: 9, y: 12 },
+      linePhysicalLength: 5,
+    },
     backgroundOpacity: 0.7,
     backgroundImage: 'data:image/png;base64,abc',
     onboardingState: 'done',
@@ -65,9 +71,10 @@ it('round-trips every editable field without retaining document or snapshot refe
   document.plants.splice(0);
   document.mapScale.start.x = 100;
   expect(store.snapshot()).toMatchObject({
+    landmarks: [],
     plants: [{ id: 'p1' }],
     guilds: [{ id: 'g1' }],
-    mapScale: { start: { x: 3, y: 4 } },
+    mapScale: { unit: 'm', start: { x: 3, y: 4 } },
   });
 
   const history = usePlanCommandHistory();
@@ -87,9 +94,15 @@ it('round-trips every editable field without retaining document or snapshot refe
   expect(store.snapshot()).toEqual({
     version: GARDEN_DOCUMENT_VERSION,
     syncRevision: 0,
+    landmarks: [],
     plants: [],
     guilds: [],
-    mapScale: { start: { x: 20, y: 20 }, end: { x: 150, y: 20 }, linePhysicalLength: 1 },
+    mapScale: {
+      unit: 'm',
+      start: { x: 20, y: 20 },
+      end: { x: 150, y: 20 },
+      linePhysicalLength: 1,
+    },
     backgroundOpacity: 0.4,
     onboardingState: 'initial',
   });

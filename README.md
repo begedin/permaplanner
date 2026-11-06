@@ -145,7 +145,7 @@ Month ranges are approximate outdoor northern-hemisphere seasons and vary with c
 ## Garden document format
 
 Stored documents, API responses, frontend state, and downloadable JSON use the
-existing merged guild format (version 5). `syncRevision` tracks save conflicts.
+merged guild format (version 6). `syncRevision` tracks save conflicts.
 Create, update, and import prepare validated document fields and parsed image changes
 through `Permaplanner.Gardens.Document` before opening a transaction. Saves lock the garden row and require the expected
 revision before atomically updating the document and background image.
@@ -157,7 +157,10 @@ Before sending JSON to `/api/legacy-import/local`, the frontend file importer ch
 for `guildLocations`, joins geometry to guilds and plant instances by ID, and
 renames instance `name` to `nameOrCultivar`. The backend then imports the current
 format. Other historical field conversions are not
-supported. Existing database documents need no backfill.
+supported. Version 5 imports gain an empty landmark list and an unspecified scale unit.
+The version 6 data migration applies the same conversion atomically to saved gardens
+while preserving revisions and geometry. For this single-user app, save before deploying,
+avoid editing during deployment, and reload afterward before saving again.
 
 ## MCP: connect an AI assistant
 
@@ -192,13 +195,13 @@ The catalog is compiled from `src/data/plantCatalog.json` and included in releas
 3. The public OAuth client registrations live in `config/config.exs` and ship with
    the app. The configured client IDs are:
 
-   | Application | Client ID |
-   | --- | --- |
-   | ChatGPT | `chatgpt` |
-   | Claude | `claude` |
-   | Cursor | `cursor` |
-   | VS Code / GitHub Copilot | `vscode` |
-   | Gemini CLI | `gemini-cli` |
+   | Application              | Client ID    |
+   | ------------------------ | ------------ |
+   | ChatGPT                  | `chatgpt`    |
+   | Claude                   | `claude`     |
+   | Cursor                   | `cursor`     |
+   | VS Code / GitHub Copilot | `vscode`     |
+   | Gemini CLI               | `gemini-cli` |
 
    These are public clients: leave the client secret blank. All clients must use
    authorization-code flow with S256 PKCE. Gemini CLI must set `oauth.redirectUri`
@@ -257,3 +260,20 @@ browser requests are rejected by default; server-to-server clients normally omit
 This implementation does not provide SSE subscriptions, legacy HTTP+SSE transport,
 or write tools. Hosted ChatGPT/Claude connections still need an end-to-end check
 after deploying and registering their actual callback URLs.
+
+### Map units and landmarks
+
+Map settings lets you choose meters, feet, centimeters, inches, or yards for the
+reference line's entered length. Changing the unit labels that length; it does not
+convert the number or alter map geometry. New gardens use meters. Older gardens
+keep an unspecified unit until you choose the unit used to calibrate their scale.
+
+Choose **Draw landmark (R)** and drag a rectangle on the aerial map. Select it to
+name it, drag it to move, drag the round handle to rotate, or drag any edge or corner
+to resize while keeping the opposite side fixed. You can also enter a rotation in degrees.
+Escape cancels a gesture; landmark edits support undo/redo and JSON export/import.
+
+Landmarks store an ID, name, centre (`x`, `y`), width, height, and clockwise
+rotation in degrees. Dimensions use map coordinates. Both garden and guild MCP
+responses include all landmarks, the scale unit, and coordinate conventions.
+North is unknown; image up does not imply geographic north.

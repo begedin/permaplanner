@@ -5,6 +5,7 @@ import { beforeEach, expect, it } from 'vitest';
 import type { GardenDocument } from './gardenDocument';
 import { buildLocalPlanJsonText } from './permaplannerFileExport';
 import { usePermaplannerStore } from './usePermaplannerStore';
+import { useMapScaleStore } from './useMapScaleStore';
 import type { Guild } from './gardenTypes';
 
 beforeEach(() => {
@@ -21,6 +22,10 @@ it('hydrates from document snapshot round-trip', async () => {
     mulchLevel: 1,
   };
   store.guilds = [guild];
+  store.landmarks = [
+    { id: 'house', name: 'House', x: 100, y: 50, width: 80, height: 40, rotation: 35 },
+  ];
+  useMapScaleStore().setUnit('ft');
   store.gardenId = 'g1';
   store.gardenName = 'garden.json';
 
@@ -32,5 +37,5 @@ it('hydrates from document snapshot round-trip', async () => {
   await reloaded.hydrateFromDocument(parsed, { id: 'g1', name: 'garden.json' });
 
   expect(reloaded.gardenName).toBe('garden.json');
-  expect(reloaded.guilds).toEqual([guild]);
+  expect(reloaded.snapshot()).toEqual(snap);
 });

@@ -33,9 +33,9 @@ it('previews locally and commits only the scale edit as one undo step', async ()
   const history = usePlanCommandHistory();
   await wrapper
     .get('[data-ref-line-start]')
-    .trigger('mousedown', { button: 0, clientX: 20, clientY: 20 });
+    .trigger('pointerdown', { button: 0, clientX: 20, clientY: 20 });
   document.dispatchEvent(
-    new MouseEvent('mousemove', { buttons: 1, clientX: 45, clientY: 60 }),
+    new MouseEvent('pointermove', { buttons: 1, clientX: 45, clientY: 60 }),
   );
   await nextTick();
   expect(wrapper.get('[data-ref-line-start]').attributes()).toMatchObject({
@@ -46,7 +46,7 @@ it('previews locally and commits only the scale edit as one undo step', async ()
   history.runMutation(() => {
     plan.backgroundOpacity = 0.8;
   });
-  document.dispatchEvent(new MouseEvent('mouseup', { clientX: 50, clientY: 70 }));
+  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 50, clientY: 70 }));
   expect(plan.onboardingState).toBe('movedFirst');
   expect(scale.start).toEqual({ x: 50, y: 70 });
   history.undo();
@@ -64,12 +64,12 @@ it.each(['unmount', 'escape', 'replace'] as const)(
     const scale = useMapScaleStore();
     await wrapper
       .get('[data-ref-line-start]')
-      .trigger('mousedown', { button: 0, clientX: 50, clientY: 70 });
+      .trigger('pointerdown', { button: 0, clientX: 50, clientY: 70 });
     if (cancel === 'unmount') wrapper.unmount();
     else if (cancel === 'escape')
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     else await usePermaplannerStore().resetToNewPlan();
-    document.dispatchEvent(new MouseEvent('mouseup', { clientX: 100, clientY: 100 }));
+    document.dispatchEvent(new MouseEvent('pointerup', { clientX: 100, clientY: 100 }));
     expect(scale.start).toEqual({ x: 20, y: 20 });
     expect(usePlanCommandHistory().canUndo).toBe(false);
     if (cancel !== 'unmount') wrapper.unmount();
@@ -81,16 +81,16 @@ it('shows transient guidance for both drags and restores it on cancellation', as
   const plan = usePermaplannerStore();
   await wrapper
     .get('[data-ref-line-start]')
-    .trigger('mousedown', { button: 0, clientX: 30, clientY: 40 });
+    .trigger('pointerdown', { button: 0, clientX: 30, clientY: 40 });
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('Try to be as precise');
   expect(plan.onboardingState).toBe('initial');
-  document.dispatchEvent(new MouseEvent('mouseup', { clientX: 30, clientY: 40 }));
+  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 30, clientY: 40 }));
   await nextTick();
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('move the other point');
   expect(plan.onboardingState).toBe('movedFirst');
   await wrapper
     .get('[data-ref-line-end]')
-    .trigger('mousedown', { button: 0, clientX: 100, clientY: 40 });
+    .trigger('pointerdown', { button: 0, clientX: 100, clientY: 40 });
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('Getting there');
   expect(plan.onboardingState).toBe('movedFirst');
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
@@ -98,8 +98,8 @@ it('shows transient guidance for both drags and restores it on cancellation', as
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('move the other point');
   await wrapper
     .get('[data-ref-line-end]')
-    .trigger('mousedown', { button: 0, clientX: 100, clientY: 40 });
-  document.dispatchEvent(new MouseEvent('mouseup', { clientX: 100, clientY: 40 }));
+    .trigger('pointerdown', { button: 0, clientX: 100, clientY: 40 });
+  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 100, clientY: 40 }));
   await nextTick();
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('set the length');
   expect(plan.onboardingState).toBe('movedSecond');

@@ -42,7 +42,7 @@ const setup = (initialTool: AerialTool) => {
     move: useGuildPathMove({ path, selected, tool, onCommit }),
   }))!;
   const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-  polygon.addEventListener('mousedown', interactions.move.onPathMouseDown);
+  polygon.addEventListener('pointerdown', interactions.move.onPathPointerDown);
   document.body.append(polygon);
   return { ...interactions, path, tool, selected, onCommit, onCancel, polygon };
 };
@@ -113,18 +113,18 @@ it.each(['dispose', 'deselect', 'change tool'])(
   async (action) => {
     const { path, selected, tool, polygon, onCommit } = setup('move');
     const scene = useSceneStore();
-    polygon.dispatchEvent(new MouseEvent('mousedown', { button: 0 }));
+    polygon.dispatchEvent(new MouseEvent('pointerdown', { button: 0 }));
     scene.worldX = 5;
     scene.worldY = 7;
-    document.dispatchEvent(new MouseEvent('mousemove', { buttons: 1 }));
+    document.dispatchEvent(new MouseEvent('pointermove', { buttons: 1 }));
     expect(path.value).toEqual(initialPath.map(({ x, y }) => ({ x: x + 5, y: y + 7 })));
     if (action === 'dispose') scope.stop();
     else if (action === 'deselect') selected.value = false;
     else tool.value = 'select';
     await nextTick();
     scene.worldX = 20;
-    document.dispatchEvent(new MouseEvent('mousemove', { buttons: 1 }));
-    document.dispatchEvent(new MouseEvent('mouseup'));
+    document.dispatchEvent(new MouseEvent('pointermove', { buttons: 1 }));
+    document.dispatchEvent(new MouseEvent('pointerup'));
     expect(path.value).toEqual(initialPath);
     expect(onCommit).not.toHaveBeenCalled();
   },

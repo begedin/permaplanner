@@ -51,7 +51,7 @@
     </div>
     <nav
       aria-label="Main navigation"
-      class="flex items-center justify-center gap-1 text-lg"
+      class="flex items-center justify-center gap-1 font-serif text-lg"
     >
       <RouterLink
         class="nav-icon-btn compact-nav-button"

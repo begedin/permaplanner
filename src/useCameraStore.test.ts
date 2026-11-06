@@ -16,3 +16,18 @@ describe('cameraToWorld', () => {
     expect(camera.cameraToWorld(0)).toBe(0);
   });
 });
+
+it.each([
+  [0.25, 9],
+  [1, 10],
+  [1.44, 12],
+  [4, 13],
+  [10, 13],
+])('sizes map labels at zoom %s with a capped screen size', (zoom, expectedPixels) => {
+  const camera = useCameraStore();
+  camera.zoom = zoom;
+  for (const scale of [0.5, 1, 2]) {
+    camera.scale = scale;
+    expect(camera.mapLabelFontSize * scale * zoom).toBeCloseTo(expectedPixels);
+  }
+});

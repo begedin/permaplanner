@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 export const useCameraStore = defineStore('camera', () => {
   const scale = ref(1);
@@ -8,6 +8,11 @@ export const useCameraStore = defineStore('camera', () => {
   const y = ref(0);
   const width = ref(1000);
   const height = ref(1000);
+
+  const mapLabelFontSize = computed(() => {
+    const screenSize = Math.min(13, Math.max(9, 10 * Math.sqrt(zoom.value)));
+    return screenSize / (scale.value * zoom.value || 1);
+  });
 
   const cameraToWorld = (value: number) => value / scale.value / zoom.value;
 
@@ -40,5 +45,6 @@ export const useCameraStore = defineStore('camera', () => {
      */
     height,
     cameraToWorld,
+    mapLabelFontSize,
   };
 });

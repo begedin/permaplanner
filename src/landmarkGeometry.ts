@@ -1,0 +1,75 @@
+import type { Landmark } from './gardenDocument';
+import type { PathPoint } from './guildPathClip';
+
+type ResizeDirection = { x: -1 | 0 | 1; y: -1 | 0 | 1 };
+export type LandmarkGesture =
+  | { kind: 'draw'; id: string }
+  | { kind: 'move'; landmark: Landmark }
+  | { kind: 'rotate'; landmark: Landmark }
+  | { kind: 'resize'; landmark: Landmark; direction: ResizeDirection };
+
+export const LANDMARK_RESIZE_HANDLES = [
+  { name: 'top', x: 0, y: -1, angle: 90 },
+  { name: 'right', x: 1, y: 0, angle: 0 },
+  { name: 'bottom', x: 0, y: 1, angle: 90 },
+  { name: 'left', x: -1, y: 0, angle: 0 },
+  { name: 'top-left', x: -1, y: -1, angle: 45 },
+  { name: 'top-right', x: 1, y: -1, angle: 135 },
+  { name: 'bottom-right', x: 1, y: 1, angle: 45 },
+  { name: 'bottom-left', x: -1, y: 1, angle: 135 },
+] as const;
+
+export const landmarkAtPointer = (
+  gesture: LandmarkGesture,
+  origin: PathPoint,
+  point: PathPoint,
+  minimumSize: number,
+): Landmark => {
+  const dx = point.x - origin.x;
+  const dy = point.y - origin.y;
+  if (gesture.kind === 'draw') {
+    return {
+      id: gesture.id,
+      name: 'Landmark',
+      rotation: 0,
+      x: (origin.x + point.x) / 2,
+      y: (origin.y + point.y) / 2,
+      width: Math.abs(dx),
+      height: Math.abs(dy),
+    };
+  }
+  const original = gesture.landmark;
+  if (gesture.kind === 'move')
+    return { ...original, x: original.x + dx, y: original.y + dy };
+  if (gesture.kind === 'rotate') {
+    const delta =
+      Math.atan2(point.y - original.y, point.x - original.x) -
+      Math.atan2(origin.y - original.y, origin.x - original.x);
+    return {
+      ...original,
+      rotation: (((original.rotation + (delta * 180) / Math.PI) % 360) + 360) % 360,
+    };
+  }
+  const angle = (original.rotation * Math.PI) / 180;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const localX = cos * dx + sin * dy;
+  const localY = -sin * dx + cos * dy;
+  const width = Math.max(
+    Math.min(original.width, minimumSize),
+    original.width + gesture.direction.x * localX,
+  );
+  const height = Math.max(
+    Math.min(original.height, minimumSize),
+    original.height + gesture.direction.y * localY,
+  );
+  const shiftX = (gesture.direction.x * (width - original.width)) / 2;
+  const shiftY = (gesture.direction.y * (height - original.height)) / 2;
+  return {
+    ...original,
+    width,
+    height,
+    x: original.x + cos * shiftX - sin * shiftY,
+    y: original.y + sin * shiftX + cos * shiftY,
+  };
+};

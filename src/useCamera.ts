@@ -1,3 +1,4 @@
+import { isEditableTarget } from './keyboardShortcuts';
 import { ref, type Ref } from 'vue';
 import { clientToSvgUser } from './svgClientToUser';
 import { useCameraStore } from './useCameraStore';
@@ -167,6 +168,7 @@ export const useCamera = (
     document.addEventListener(
       'keypress',
       (e) => {
+        if (isEditableTarget(e.target)) return;
         if (e.key === 'ArrowLeft' || e.key === 'A') camera.x += 10;
         if (e.key === 'ArrowRight' || e.key === 'D') camera.x -= 10;
         if (e.key === 'ArrowUp' || e.key === 'W') camera.y += 10;

@@ -116,7 +116,7 @@ it('shows map size and icon remove when the guild is placed on the aerial map', 
   });
 
   expect(wrapper.getByLabelText('Guild size on aerial map').textContent).toBe(
-    '1.00×0.77',
+    '1.00×0.77 m',
   );
   expect(
     wrapper.getAllByRole('button').map((button) => button.getAttribute('aria-label')),

@@ -1,60 +1,38 @@
 <script lang="ts" setup>
-  import { computed, onBeforeUnmount, ref, watch } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import { useMapScaleStore } from './useMapScaleStore';
   import { usePermaplannerStore } from './usePermaplannerStore';
   import { onboardingDuringScaleDrag } from './onboardingTypes';
+  import { usePointerSession } from './usePointerSession';
   import { clientToSvgUser } from './svgClientToUser';
 
   const store = useMapScaleStore();
   const permaplanner = usePermaplannerStore();
   const draft = ref<{ endpoint: 'start' | 'end'; point: { x: number; y: number } }>();
-  let controller: AbortController | undefined;
-
-  const cancelDrag = () => {
-    controller?.abort();
-    controller = undefined;
-    draft.value = undefined;
-  };
-  onBeforeUnmount(cancelDrag);
-  watch(() => [store.start, store.end, permaplanner.gardenId], cancelDrag, {
+  const session = usePointerSession();
+  watch(() => [store.start, store.end, permaplanner.gardenId], session.cancel, {
     flush: 'sync',
   });
 
-  const startDrag = (event: MouseEvent, endpoint: 'start' | 'end') => {
-    if (event.button !== 0) return;
+  const startDrag = (event: PointerEvent, endpoint: 'start' | 'end') => {
     const svg = (event.currentTarget as SVGElement).closest('svg');
     if (!(svg instanceof SVGSVGElement)) return;
-    cancelDrag();
-    controller = new AbortController();
-    const update = (event: MouseEvent) => {
-      draft.value = {
-        endpoint,
-        point: clientToSvgUser(svg, event.clientX, event.clientY),
-      };
-    };
-    const finish = (event: MouseEvent) => {
-      const point = clientToSvgUser(svg, event.clientX, event.clientY);
-      cancelDrag();
-      store.movePoint(endpoint, point);
-    };
-    update(event);
-    document.addEventListener(
-      'mousemove',
-      (event) => {
-        if ((event.buttons & 1) === 0) finish(event);
-        else update(event);
+    session.start(event, {
+      update: (next) => {
+        draft.value = {
+          endpoint,
+          point: clientToSvgUser(svg, next.clientX, next.clientY),
+        };
       },
-      { signal: controller.signal },
-    );
-    document.addEventListener('mouseup', finish, { signal: controller.signal });
-    document.addEventListener(
-      'keydown',
-      (event) => {
-        if (event.key === 'Escape') cancelDrag();
+      cancel: () => {
+        draft.value = undefined;
       },
-      { signal: controller.signal },
-    );
-    window.addEventListener('blur', cancelDrag, { signal: controller.signal });
+      commit: () => {
+        const point = draft.value?.point;
+        draft.value = undefined;
+        if (point) store.movePoint(endpoint, point);
+      },
+    });
   };
 
   const displayedOnboarding = computed(() =>
@@ -89,7 +67,8 @@
     class="hover:[r:8]"
     fill="red"
     data-ref-line-start
-    @mousedown.stop="startDrag($event, 'start')"
+    @mousedown.stop
+    @pointerdown="startDrag($event, 'start')"
   />
 
   <circle
@@ -99,7 +78,8 @@
     class="hover:[r:8]"
     fill="red"
     data-ref-line-end
-    @mousedown.stop="startDrag($event, 'end')"
+    @mousedown.stop
+    @pointerdown="startDrag($event, 'end')"
   />
 
   <text
@@ -107,7 +87,7 @@
     :y="centroid.y"
     fill="red"
   >
-    {{ store.linePhysicalLength }}
+    {{ store.linePhysicalLength }} {{ store.unitLabel }}
   </text>
   <slot :onboarding-state="displayedOnboarding" />
 </template>

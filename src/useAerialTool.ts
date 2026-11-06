@@ -1,22 +1,8 @@
-import { ref, type Ref } from 'vue';
+import type { Ref } from 'vue';
 import { useEventListener } from '@vueuse/core';
 import { isEditableTarget } from './keyboardShortcuts';
 
-export type AerialTool = 'select' | 'edit' | 'move';
-
-const activeTool = ref<AerialTool>('select');
-
-export const useAerialTool = () => {
-  const setTool = (tool: AerialTool) => {
-    activeTool.value = tool;
-  };
-
-  const resetTool = () => {
-    activeTool.value = 'select';
-  };
-
-  return { activeTool, setTool, resetTool };
-};
+export type AerialTool = 'select' | 'edit' | 'move' | 'landmark';
 
 export const useAerialToolHotkeys = (options: {
   canUseGuildTools: Ref<boolean>;
@@ -31,6 +17,11 @@ export const useAerialToolHotkeys = (options: {
     }
 
     const key = e.key.toLowerCase();
+    if (key === 'r') {
+      e.preventDefault();
+      options.setTool('landmark');
+      return;
+    }
     if (key === 'v') {
       e.preventDefault();
       options.setTool('select');

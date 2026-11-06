@@ -15,6 +15,19 @@ defmodule Permaplanner.Gardens.Snapshot do
 
     garden
     |> Gardens.garden_summary()
-    |> Map.merge(%{mapScale: garden.document["mapScale"], plants: plants, guilds: guilds})
+    |> Map.merge(%{
+      mapScale: garden.document["mapScale"],
+      landmarks: garden.document["landmarks"],
+      coordinateSystem: %{
+        axes: "x right, y down",
+        landmarkPosition: "rectangle centre",
+        landmarkRotation: "clockwise degrees",
+        dimensions:
+          "map coordinates; divide by scale-line coordinate length and multiply by linePhysicalLength to get physical units",
+        north: "unknown"
+      },
+      plants: plants,
+      guilds: guilds
+    })
   end
 end

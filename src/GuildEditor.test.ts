@@ -278,7 +278,7 @@ it('shows map size and an icon remove control when the guild is on the aerial ma
     (wrapper.element as HTMLElement).querySelector(
       '[aria-label="Guild size on aerial map"]',
     )!.textContent,
-  ).toBe('1.00×0.77');
+  ).toBe('1.00×0.77 m');
   expect(
     card(wrapper)
       .getByRole('button', { name: 'Remove from aerial map' })

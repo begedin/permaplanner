@@ -10,12 +10,14 @@ import { usePlanStateStore } from './usePlanStateStore';
 beforeEach(() => setActivePinia(createPinia()));
 
 const populatedState: PlanSavableState = {
+  landmarks: [],
   plants: [{ id: 'p1', speciesId: 'comfrey', cultivarId: null }],
   guilds: [{ id: 'g1', name: 'Bed', path: [{ x: 1, y: 2 }], plants: [], mulchLevel: 1 }],
   backgroundOpacity: 0.55,
   backgroundImageDataUrl: 'data:image/png;base64,abc',
   onboardingState: 'movingFirst',
   mapScale: {
+    unit: 'm',
     start: { x: 10, y: 20 },
     end: { x: 110, y: 20 },
     linePhysicalLength: 25,
@@ -108,6 +110,7 @@ it('compares identical values independently of object key order', () => {
   const state = structuredClone(populatedState);
   expect(planSavableStatesEqual(populatedState, state)).toBe(true);
   state.mapScale = {
+    unit: state.mapScale.unit,
     linePhysicalLength: state.mapScale.linePhysicalLength,
     end: { y: state.mapScale.end.y, x: state.mapScale.end.x },
     start: { y: state.mapScale.start.y, x: state.mapScale.start.x },

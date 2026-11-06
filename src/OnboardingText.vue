@@ -45,7 +45,7 @@
       v-if="onboardingState === 'movedSecond' || onboardingState === 'settingLength'"
     >
       Awesome! Now, set the length of that line using the slider. The choice of unit is
-      yours. Feet, inches, meters, doesn't matter.
+      yours. Choose its unit in Map settings.
     </template>
     <template v-if="onboardingState === 'done'"
       >Map scale set. You're ready to plan.</template

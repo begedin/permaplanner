@@ -141,10 +141,12 @@ defmodule Permaplanner.Gardens do
       "syncRevision" => 0,
       "plants" => [],
       "guilds" => [],
+      "landmarks" => [],
       "mapScale" => %{
         "start" => %{"x" => 20, "y" => 20},
         "end" => %{"x" => 150, "y" => 20},
-        "linePhysicalLength" => 1
+        "linePhysicalLength" => 1,
+        "unit" => "m"
       },
       "backgroundOpacity" => 0.4,
       "onboardingState" => "initial"

@@ -33,6 +33,9 @@ defmodule Permaplanner.Gardens.DocumentTest do
     invalid_documents = [
       nil,
       Map.put(document, "mapScale", nil),
+      put_in(document, ["mapScale", "unit"], "cubits"),
+      Map.delete(document, "landmarks"),
+      Map.put(document, "landmarks", [%{"id" => "house"}]),
       put_in(document, ["mapScale", "start", "x"], "20"),
       put_in(document, ["mapScale", "linePhysicalLength"], 0),
       Map.put(document, "syncRevision", -1),

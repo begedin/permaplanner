@@ -9,6 +9,7 @@ export type PlanSavableState = Omit<
 export const createEmptyPlanState = (): PlanSavableState => ({
   plants: [],
   guilds: [],
+  landmarks: [],
   backgroundOpacity: 0.4,
   backgroundImageDataUrl: undefined,
   onboardingState: DEFAULT_ONBOARDING_STATE,
@@ -16,6 +17,7 @@ export const createEmptyPlanState = (): PlanSavableState => ({
     start: { x: 20, y: 20 },
     end: { x: 150, y: 20 },
     linePhysicalLength: 1,
+    unit: 'm',
   },
 });
 

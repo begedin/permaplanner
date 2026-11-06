@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.27.0
+
+- [FIX] Keep map selection and Delete targeting consistent across route changes; share captured pointer handling across landmark, guild, and scale drags.
+- [DB] Migrate stored documents atomically while preserving revisions and geometry.
+- [CHANGE] Add independent map-label toggles for guild and landmark names, remembered in the browser, with smaller labels that grow to a capped size when zooming.
+- [CHANGE] Refine parchment panels and map controls, with locally hosted Lora headings and Source Sans 3 text.
+- [CHANGE] Add selectable map scale units and named rectangle landmarks with movement, resizing, rotation, and undo/redo.
+- [CHANGE] Expose landmarks, scale units, and coordinate conventions through MCP garden and guild reads.
+- [DB] Upgrade garden documents to version 6, preserving existing scale values with an unspecified unit and supporting version 5 file imports.
+
 ## 0.26.2
 
 - [DB] Added the mulcher role to hazelnut for its coppiced wood and pruning material.

@@ -57,6 +57,20 @@ export const importGardenDocument = async (
       }),
     };
   }
+  if (
+    document &&
+    typeof document === 'object' &&
+    'version' in document &&
+    document.version === 5
+  ) {
+    const old = document as Record<string, unknown>;
+    document = {
+      ...old,
+      version: 6,
+      landmarks: [],
+      mapScale: { ...(old.mapScale as Record<string, unknown>), unit: 'unspecified' },
+    };
+  }
   return gardensApi.importGardenDocument({ document, name: opts?.name });
 };
 

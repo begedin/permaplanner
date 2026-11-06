@@ -35,9 +35,11 @@ const sampleGuild: Guild = {
 const sampleDoc: GardenDocument = {
   version: GARDEN_DOCUMENT_VERSION,
   syncRevision: 1,
+  landmarks: [],
   plants: [],
   guilds: [sampleGuild],
   mapScale: {
+    unit: 'm',
     start: { x: 1, y: 2 },
     end: { x: 3, y: 4 },
     linePhysicalLength: 5,

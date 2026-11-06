@@ -4,25 +4,25 @@ import { GARDEN_DOCUMENT_VERSION } from '../gardenDocument';
 import { DEFAULT_ONBOARDING_STATE } from '../onboardingTypes';
 
 vi.mock('../api/gardens', () => ({
-  listGardens: vi
-    .fn()
-    .mockResolvedValue([
-      {
-        id: 'g1',
-        name: 'Garden',
-        syncRevision: 0,
-        updatedAt: '2026-01-01T00:00:00.000Z',
-      },
-    ]),
+  listGardens: vi.fn().mockResolvedValue([
+    {
+      id: 'g1',
+      name: 'Garden',
+      syncRevision: 0,
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ]),
   fetchGarden: vi.fn().mockResolvedValue({
     id: 'g1',
     name: 'Garden',
     document: {
       version: GARDEN_DOCUMENT_VERSION,
       syncRevision: 0,
+      landmarks: [],
       plants: [],
       guilds: [],
       mapScale: {
+        unit: 'm',
         start: { x: 20, y: 20 },
         end: { x: 150, y: 20 },
         linePhysicalLength: 1,

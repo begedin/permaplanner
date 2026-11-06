@@ -1,3 +1,5 @@
+@import './fonts.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,12 +9,24 @@
     --paper-grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
   }
 
+  h1,
+  h2,
+  h3 {
+    @apply font-serif text-ink-800;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: theme('colors.sage.200');
+    color: theme('colors.ink.900');
+  }
+
   html {
     @apply h-full;
   }
 
   body {
-    @apply h-full w-full text-ink-700 antialiased;
+    @apply h-full w-full font-sans text-ink-700 antialiased;
     background-color: theme('colors.parchment.100');
     background-image: var(--paper-grain),
       radial-gradient(
@@ -55,6 +69,29 @@
       ),
       linear-gradient(168deg, rgba(255, 252, 245, 0.55) 0%, transparent 38%);
     box-shadow: inset 0 1px 0 rgba(255, 252, 240, 0.75);
+  }
+
+  .paper-floating {
+    @apply paper-surface rounded-xl border border-parchment-400/80;
+    box-shadow:
+      0 8px 24px -8px rgba(61, 47, 36, 0.24),
+      0 2px 4px rgba(61, 47, 36, 0.06),
+      inset 0 1px 0 rgba(255, 252, 240, 0.9);
+  }
+
+  .paper-field-label {
+    @apply flex flex-col gap-1.5 text-sm font-semibold text-ink-600;
+  }
+
+  .map-toolbar .nav-icon-btn {
+    @apply size-9 rounded-lg disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent;
+  }
+
+  .map-toolbar .nav-icon-btn-active {
+    @apply bg-sage-800 text-parchment-50 hover:bg-sage-900 hover:text-parchment-50;
+    box-shadow:
+      inset 0 1px 1px rgba(42, 32, 24, 0.2),
+      0 1px 0 rgba(255, 252, 240, 0.8);
   }
 
   /** Nested inset chips on paper cards. */
@@ -103,6 +140,7 @@
 
   .input-soft {
     @apply rounded-lg border border-parchment-300/55 bg-parchment-50/90 transition-[border-color,box-shadow,background-color] duration-150 ease-out focus:border-sage-400/60 focus:outline-none focus:ring-1 focus:ring-sage-400/40;
+    box-shadow: inset 0 1px 2px rgba(61, 47, 36, 0.05);
   }
 
   .btn-soft {

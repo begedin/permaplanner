@@ -56,7 +56,7 @@
     @keydown="onListKeydown"
   >
     <div class="flex flex-row items-start justify-between gap-2 w-full shrink-0">
-      <p class="font-medium text-ink-800 min-w-0 flex-1">
+      <p class="font-serif font-medium text-ink-800 min-w-0 flex-1">
         <HighlightText
           :text="guild.name"
           :query="searchQuery"

@@ -34,6 +34,8 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  localStorage.removeItem('permaplanner.showGuildLabels');
+  localStorage.removeItem('permaplanner.showLandmarkLabels');
   setActivePinia(createTestingPinia({ stubActions: false, createSpy: vi.fn }));
   resetGuildSearch();
   useGuildHover().clearHover();
@@ -490,4 +492,138 @@ it('records calibration and onboarding together without delayed document changes
   await vi.advanceTimersByTimeAsync(1500);
   expect(session.hasUnsavedChanges).toBe(false);
   expect(screen.queryByText(/Map scale set/)).not.toBeInTheDocument();
+});
+
+it('keeps the landmark tool active when it deselects a guild and saves the chosen scale unit', async () => {
+  useGardenStore().guilds = [
+    { id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 },
+  ];
+  const { router } = await renderGarden('/guilds/guild');
+  await fireEvent.keyDown(document, { key: 'r' });
+  await waitFor(() => {
+    expect(screen.getByRole('button', { name: 'Draw landmark (R)' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(router.currentRoute.value.name).toBe(routeNames.guilds);
+  });
+  await fireEvent.click(screen.getByRole('button', { name: 'Map settings' }));
+  await fireEvent.change(screen.getByLabelText('Scale unit'), {
+    target: { value: 'ft' },
+  });
+  expect(usePermaplannerStore().snapshot().mapScale).toMatchObject({
+    unit: 'ft',
+    linePhysicalLength: 1,
+  });
+  usePlanCommandHistory().undo();
+  expect(useMapScaleStore().unit).toBe('m');
+  await fireEvent.keyDown(document, { key: 'Escape' });
+});
+
+it('toggles guild and landmark names independently and remembers visibility without editing the plan', async () => {
+  useGardenStore().guilds = [
+    {
+      id: 'orchard',
+      name: 'Orchard',
+      path: [
+        { x: 10, y: 10 },
+        { x: 100, y: 10 },
+        { x: 100, y: 80 },
+        { x: 10, y: 80 },
+      ],
+      plants: [],
+      mulchLevel: 1,
+    },
+    { id: 'unplaced', name: 'Unplaced bed', path: [], plants: [], mulchLevel: 1 },
+  ];
+  const plan = usePermaplannerStore();
+  plan.landmarks = [
+    { id: 'shed', name: 'Shed', x: 200, y: 100, width: 80, height: 40, rotation: 0 },
+  ];
+  const before = plan.snapshot();
+  const { view } = await renderGarden();
+  const map = within(screen.getByRole('region', { name: 'Aerial map' }));
+  expect(map.getByText('Orchard')).toBeInTheDocument();
+  expect(map.getByText('Shed')).toBeInTheDocument();
+  expect(map.queryByText('Unplaced bed')).not.toBeInTheDocument();
+  await fireEvent.click(map.getByRole('button', { name: 'Map settings' }));
+  await fireEvent.click(map.getByRole('checkbox', { name: 'Guild names' }));
+  expect(map.queryByText('Orchard')).not.toBeInTheDocument();
+  expect(map.getByText('Shed')).toBeInTheDocument();
+  await fireEvent.click(map.getByRole('checkbox', { name: 'Landmark names' }));
+  expect(map.queryByText('Shed')).not.toBeInTheDocument();
+  await fireEvent.click(map.getByRole('checkbox', { name: 'Guild names' }));
+  expect(map.getByText('Orchard')).toBeInTheDocument();
+  expect(plan.snapshot()).toEqual(before);
+  view.unmount();
+
+  await renderGarden();
+  const restored = within(screen.getByRole('region', { name: 'Aerial map' }));
+  await fireEvent.click(restored.getByRole('button', { name: 'Map settings' }));
+  expect(restored.getByRole('checkbox', { name: 'Guild names' })).toBeChecked();
+  expect(restored.getByRole('checkbox', { name: 'Landmark names' })).not.toBeChecked();
+  expect(restored.queryByText('Shed')).not.toBeInTheDocument();
+});
+
+it('reconciles selection on route re-entry so Delete only removes the current guild', async () => {
+  const garden = useGardenStore();
+  garden.guilds = [{ id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 }];
+  const plan = usePermaplannerStore();
+  const house = {
+    id: 'house',
+    name: 'House',
+    x: 100,
+    y: 50,
+    width: 80,
+    height: 40,
+    rotation: 0,
+  };
+  plan.landmarks = [house];
+  const { view } = await renderGarden();
+  await fireEvent.keyDown(screen.getByRole('button', { name: 'Landmark: House' }), {
+    key: 'Enter',
+  });
+  await waitFor(() =>
+    expect(screen.getByRole('group', { name: 'Landmark details' })).toBeVisible(),
+  );
+  view.unmount();
+
+  await renderGarden('/guilds/guild');
+  expect(
+    screen.queryByRole('group', { name: 'Landmark details' }),
+  ).not.toBeInTheDocument();
+  await fireEvent.keyDown(document, { key: 'Delete' });
+  expect(garden.guilds).toEqual([]);
+  expect(plan.landmarks).toEqual([house]);
+});
+
+it('switches between guild and landmark selection and clears it when the garden changes', async () => {
+  const garden = useGardenStore();
+  garden.guilds = [{ id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 }];
+  const plan = usePermaplannerStore();
+  plan.landmarks = [
+    { id: 'house', name: 'House', x: 100, y: 50, width: 80, height: 40, rotation: 0 },
+  ];
+  const { router } = await renderGarden('/guilds/guild');
+  await fireEvent.keyDown(screen.getByRole('button', { name: 'Landmark: House' }), {
+    key: 'Enter',
+  });
+  await waitFor(() => {
+    expect(router.currentRoute.value.name).toBe(routeNames.guilds);
+    expect(screen.getByRole('group', { name: 'Landmark details' })).toBeVisible();
+  });
+  await router.push('/guilds/guild');
+  expect(
+    screen.queryByRole('group', { name: 'Landmark details' }),
+  ).not.toBeInTheDocument();
+  await fireEvent.keyDown(screen.getByRole('button', { name: 'Landmark: House' }), {
+    key: 'Enter',
+  });
+  await flushPromises();
+  plan.gardenId = 'other-garden';
+  await waitFor(() =>
+    expect(
+      screen.queryByRole('group', { name: 'Landmark details' }),
+    ).not.toBeInTheDocument(),
+  );
 });

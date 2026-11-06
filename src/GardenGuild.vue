@@ -2,6 +2,7 @@
   import { computed, ref, toRef, watch } from 'vue';
 
   import type { Guild } from './gardenTypes';
+  import { useCameraStore } from './useCameraStore';
   import GardenMeasure from './GardenMeasure.vue';
   import { pathBounds } from './guildPathBounds';
   import type { PathPoint } from './guildPathClip';
@@ -9,13 +10,19 @@
   import { useGuildPathEdit } from './useGuildPathEdit';
   import { useGuildPathMove } from './useGuildPathMove';
 
-  const props = defineProps<{
-    unitLengthPx: number;
-    guild: Guild;
-    hovered: boolean;
-    selected: boolean;
-    tool?: AerialTool;
-  }>();
+  const props = withDefaults(
+    defineProps<{
+      unitLengthPx: number;
+      guild: Guild;
+      hovered: boolean;
+      selected: boolean;
+      tool?: AerialTool;
+      showLabel?: boolean;
+    }>(),
+    { showLabel: true },
+  );
+  const camera = useCameraStore();
+  const labelScale = computed(() => 1 / (camera.scale * camera.zoom || 1));
 
   const emit = defineEmits<{
     (e: 'update' | 'move', path: PathPoint[]): void;
@@ -43,7 +50,7 @@
     onCancel: () => emit('cancel'),
   });
 
-  const { isMoving, onPathMouseDown } = useGuildPathMove({
+  const { isMoving, onPathPointerDown } = useGuildPathMove({
     path,
     selected,
     tool,
@@ -97,7 +104,7 @@
           : 'rgba(0, 100, 0, 0.2)'
     "
     :class="['pointer-events-fill', isMoving ? 'cursor-move' : undefined]"
-    @mousedown="onPathMouseDown"
+    @pointerdown="onPathPointerDown"
     @mouseenter="emit('mouseenter')"
     @mouseleave="emit('mouseleave')"
     @click="emit('click', $event)"
@@ -108,6 +115,21 @@
     fill="none"
     class="pointer-events-none"
   />
+  <text
+    v-if="box && showLabel"
+    :x="box.x + box.width / 2"
+    :y="box.y + box.height / 2"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    class="pointer-events-none font-serif"
+    :font-size="camera.mapLabelFontSize"
+    :stroke-width="2 * labelScale"
+    stroke="#faf6eb"
+    fill="#463c2c"
+    paint-order="stroke"
+    stroke-linejoin="round"
+    >{{ guild.name }}</text
+  >
   <GardenMeasure
     v-if="box && (hovered || selected)"
     :unit-length-px="unitLengthPx"

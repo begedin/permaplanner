@@ -3,6 +3,10 @@ export default {
   content: ['./index.html', './src/**/*.vue'],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"Source Sans 3"', 'system-ui', 'sans-serif'],
+        serif: ['Lora', 'Georgia', 'serif'],
+      },
       colors: {
         /** Warm brown ink — matches sketch icon strokes (#3d2f24). */
         ink: {

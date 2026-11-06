@@ -7,9 +7,11 @@ import type { GardenDocument } from './gardenDocument';
 const sampleDoc: GardenDocument = {
   version: GARDEN_DOCUMENT_VERSION,
   syncRevision: 1,
+  landmarks: [],
   plants: [],
   guilds: [],
   mapScale: {
+    unit: 'm',
     start: { x: 1, y: 2 },
     end: { x: 3, y: 4 },
     linePhysicalLength: 5,

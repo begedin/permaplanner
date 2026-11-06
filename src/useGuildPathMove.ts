@@ -1,9 +1,9 @@
-import { computed, onScopeDispose, ref, watch, type Ref } from 'vue';
-
+import { computed, watch, type Ref } from 'vue';
 import type { PathPoint } from './guildPathClip';
 import { clientToSvgUser } from './svgClientToUser';
 import type { AerialTool } from './useAerialTool';
 import { useSceneStore } from './useSceneStore';
+import { usePointerSession } from './usePointerSession';
 
 export const useGuildPathMove = (options: {
   path: Ref<PathPoint[]>;
@@ -12,105 +12,44 @@ export const useGuildPathMove = (options: {
   onCommit: () => void;
 }) => {
   const scene = useSceneStore();
-
+  const session = usePointerSession();
   const isMoving = computed(
     () => options.selected.value && options.tool.value === 'move',
   );
-
-  let moveController = new AbortController();
-  const moveOrigin = ref<{
-    worldX: number;
-    worldY: number;
-    path: PathPoint[];
-  } | null>(null);
-
-  const cancelMove = () => {
-    moveController.abort();
-    if (moveOrigin.value) options.path.value = moveOrigin.value.path;
-    moveOrigin.value = null;
-  };
-
   watch(
     isMoving,
     (moving) => {
-      if (!moving) cancelMove();
+      if (!moving) session.cancel();
     },
     { flush: 'sync' },
   );
-  onScopeDispose(cancelMove);
 
-  const onPathMouseDown = (e: MouseEvent) => {
-    if (e.button !== 0 || !isMoving.value || options.path.value.length === 0) {
-      return;
-    }
-
-    e.stopPropagation();
-    cancelMove();
-    moveController = new AbortController();
-    const svg = (e.currentTarget as SVGElement).closest('svg');
+  const onPathPointerDown = (event: PointerEvent) => {
+    if (event.button !== 0 || !isMoving.value || options.path.value.length === 0) return;
+    session.cancel();
+    const svg = (event.currentTarget as SVGElement).closest('svg');
     const origin =
       svg instanceof SVGSVGElement
-        ? clientToSvgUser(svg, e.clientX, e.clientY)
+        ? clientToSvgUser(svg, event.clientX, event.clientY)
         : { x: scene.worldX, y: scene.worldY };
-    moveOrigin.value = {
-      worldX: origin.x,
-      worldY: origin.y,
-      path: options.path.value.map((point) => ({ ...point })),
-    };
-
-    const applyMove = (clientX: number, clientY: number) => {
-      if (!moveOrigin.value) {
-        return;
-      }
-      const current =
-        svg instanceof SVGSVGElement
-          ? clientToSvgUser(svg, clientX, clientY)
-          : { x: scene.worldX, y: scene.worldY };
-      const dx = current.x - moveOrigin.value.worldX;
-      const dy = current.y - moveOrigin.value.worldY;
-      options.path.value = moveOrigin.value.path.map((point) => ({
-        x: point.x + dx,
-        y: point.y + dy,
-      }));
-    };
-
-    const finishMove = () => {
-      if (!moveOrigin.value) {
-        return;
-      }
-      moveController.abort();
-      moveOrigin.value = null;
-      options.onCommit();
-    };
-
-    document.addEventListener(
-      'mousemove',
-      (moveE) => {
-        if ((moveE.buttons & 1) === 0) {
-          applyMove(moveE.clientX, moveE.clientY);
-          finishMove();
-          return;
-        }
-        applyMove(moveE.clientX, moveE.clientY);
+    const path = options.path.value.map((point) => ({ ...point }));
+    session.start(event, {
+      update: (next) => {
+        const point =
+          svg instanceof SVGSVGElement
+            ? clientToSvgUser(svg, next.clientX, next.clientY)
+            : { x: scene.worldX, y: scene.worldY };
+        options.path.value = path.map(({ x, y }) => ({
+          x: x + point.x - origin.x,
+          y: y + point.y - origin.y,
+        }));
       },
-      { signal: moveController.signal },
-    );
-
-    document.addEventListener(
-      'mouseup',
-      (upE) => {
-        if (!moveOrigin.value) {
-          return;
-        }
-        applyMove(upE.clientX, upE.clientY);
-        finishMove();
+      cancel: () => {
+        options.path.value = path;
       },
-      { signal: moveController.signal },
-    );
+      commit: options.onCommit,
+    });
   };
 
-  return {
-    isMoving,
-    onPathMouseDown,
-  };
+  return { isMoving, onPathPointerDown };
 };

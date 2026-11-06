@@ -12,6 +12,7 @@ import { createGarden, fetchGarden, importGardenDocument, updateGarden } from '.
 vi.unmock('./gardens');
 
 const document: GardenDocument = {
+  landmarks: [],
   version: GARDEN_DOCUMENT_VERSION,
   syncRevision: 3,
   plants: [
@@ -48,7 +49,12 @@ const document: GardenDocument = {
       ],
     },
   ],
-  mapScale: { start: { x: 10, y: 20 }, end: { x: 110, y: 20 }, linePhysicalLength: 25 },
+  mapScale: {
+    unit: 'm',
+    start: { x: 10, y: 20 },
+    end: { x: 110, y: 20 },
+    linePhysicalLength: 25,
+  },
   backgroundOpacity: 0.55,
   backgroundImage: 'data:image/png;base64,abc',
   onboardingState: 'done',
@@ -194,3 +200,23 @@ it('imports older documents without plant notes unchanged', async () => {
     document: olderDocument,
   });
 });
+
+it.each([document, splitDocument])(
+  'upgrades version 5 local files without guessing their unit',
+  async (input) => {
+    const { landmarks: _landmarks, ...old } = input;
+    const { unit: _unit, ...mapScale } = old.mapScale;
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ garden: { id: 'garden1' } })),
+    );
+    await importJsonText(JSON.stringify({ ...old, version: 5, mapScale }));
+    const [, request] = fetchMock.mock.calls[0]!;
+    expect(JSON.parse(String(request?.body))).toEqual({
+      document: {
+        ...document,
+        landmarks: [],
+        mapScale: { ...mapScale, unit: 'unspecified' },
+      },
+    });
+  },
+);

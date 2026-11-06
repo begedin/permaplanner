@@ -229,7 +229,11 @@ export const useGuildCardModel = (guildId: Ref<string>) => {
     if (!placedOnMap.value) {
       return null;
     }
-    return formatGuildMapDimensions(pathBounds(guild.value.path), mapScale.unitLengthPx);
+    const size = formatGuildMapDimensions(
+      pathBounds(guild.value.path),
+      mapScale.unitLengthPx,
+    );
+    return size ? `${size} ${mapScale.unitLabel}` : null;
   });
 
   const mulchStars: MulchLevel[] = [1, 2, 3, 4, 5];

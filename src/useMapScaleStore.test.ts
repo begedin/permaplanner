@@ -37,3 +37,18 @@ it('commits physical length and completed onboarding as one undoable action', ()
   });
   expect(history.canUndo).toBe(false);
 });
+
+it('sets units without changing calibration and supports undo', () => {
+  const scale = useMapScaleStore();
+  const before = {
+    start: { ...scale.start },
+    end: { ...scale.end },
+    linePhysicalLength: scale.linePhysicalLength,
+  };
+  scale.setUnit('ft');
+  expect(scale).toMatchObject({ ...before, unit: 'ft', unitLabel: 'ft' });
+  scale.setUnit('invalid');
+  expect(scale.unit).toBe('ft');
+  usePlanCommandHistory().undo();
+  expect(scale.unit).toBe('m');
+});

@@ -1,7 +1,10 @@
 <script setup lang="ts">
+  import LandmarkLayer from './LandmarkLayer.vue';
+  import LandmarkEditor from './LandmarkEditor.vue';
+  import { useLandmarkStore } from './useLandmarkStore';
+  import { SCALE_UNITS } from './gardenDocument';
   import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
-  import { isEditableTarget } from './keyboardShortcuts';
   import UiIcon from './uiIcons/UiIcon.vue';
   import ToolSlider from './ToolSlider.vue';
   import { usePlanCommandHistory } from './usePlanCommandHistory';
@@ -17,21 +20,23 @@
   import { useBackgroundImage } from './useBackgroundImage';
   import { useBackgroundImagePaste } from './useBackgroundImagePaste';
   import { useCamera } from './useCamera';
-  import { useElementSize, useEventListener } from '@vueuse/core';
+  import { useElementSize, useLocalStorage } from '@vueuse/core';
   import GuildTabHeader from './GuildTabHeader.vue';
   import OnboardingText from './OnboardingText.vue';
   import GuildListRow from './GuildListRow.vue';
   import { useGuildHover } from './useGuildHover';
   import { useGuildSearch } from './useGuildSearch';
   import { useGuildListScroll } from './useGuildListScroll';
-  import { useGuildSelection } from './useGuildSelection';
+  import { useMapInteraction } from './useMapInteraction';
   import ReferenceLine from './ReferenceLine.vue';
   import { usePermaplannerStore } from './usePermaplannerStore';
   import AerialMapToolbar from './AerialMapToolbar.vue';
-  import { useAerialTool, useAerialToolHotkeys } from './useAerialTool';
 
+  const landmarks = useLandmarkStore();
   const permaplannerStore = usePermaplannerStore();
   const mapSettingsOpen = ref(false);
+  const showGuildLabels = useLocalStorage('permaplanner.showGuildLabels', true);
+  const showLandmarkLabels = useLocalStorage('permaplanner.showLandmarkLabels', true);
 
   const { imgWidth, imgHeight, imgDataUrl, ready } = useBackgroundImage();
   useBackgroundImagePaste();
@@ -136,8 +141,18 @@
   const garden = useGardenStore();
   const { isMerging } = useGuildMergeMode();
   const { hoveredId, clearHover } = useGuildHover();
-  const { selectedGuildId, selectGuild, clearSelection } = useGuildSelection();
-  const { activeTool, setTool, resetTool } = useAerialTool();
+  const {
+    selectedGuildId,
+    selectedLandmark,
+    selectGuild,
+    selectLandmark,
+    commitLandmark,
+    clearSelection,
+    removeSelection,
+    activeTool,
+    setTool,
+    canUseGuildTools,
+  } = useMapInteraction();
   const { searchQuery, filteredGuilds, hasSearchQuery } = useGuildSearch();
   const { guildListScroll } = useGuildListScroll();
 
@@ -165,36 +180,6 @@
       return undefined;
     }
     return g;
-  });
-
-  const canUseGuildTools = computed(() => selectedGuildId.value !== undefined);
-
-  watch(selectedGuildId, (id) => {
-    if (!id) {
-      resetTool();
-    }
-  });
-
-  useAerialToolHotkeys({
-    canUseGuildTools,
-    setTool,
-  });
-
-  useEventListener(document, 'keydown', (e) => {
-    if (
-      e.key !== 'Delete' ||
-      selectedGuildId.value === undefined ||
-      isEditableTarget(e.target)
-    ) {
-      return;
-    }
-    e.preventDefault();
-    e.stopPropagation();
-    const id = selectedGuildId.value;
-    garden.removeGuild(id);
-    if (!garden.guilds.some((g) => g.id === id)) {
-      void clearSelection();
-    }
   });
 
   const commitGuildPath = (guildId: string, path: PathPoint[], deselect = false) => {
@@ -274,6 +259,18 @@
               @update:active-tool="setTool"
             />
           </div>
+          <p
+            v-if="activeTool === 'landmark'"
+            class="paper-floating pointer-events-none absolute top-16 right-2 z-10 max-w-[calc(100%-1rem)] px-3 py-2 text-sm text-ink-700"
+          >
+            Drag to draw a landmark rectangle. Escape cancels.
+          </p>
+          <LandmarkEditor
+            :landmark="selectedLandmark"
+            @update="commitLandmark"
+            @remove="removeSelection"
+            @done="clearSelection"
+          />
           <svg
             ref="container"
             :viewBox="svgViewbox"
@@ -354,6 +351,7 @@
             <GardenGuild
               v-for="guild in placedGuildsRenderOrder"
               :key="guild.id"
+              :show-label="showGuildLabels"
               :selected="selectedGuildId === guild.id"
               :tool="selectedGuildId === guild.id ? activeTool : undefined"
               :hovered="hoveredId === guild.id"
@@ -369,6 +367,7 @@
 
             <GardenGuild
               v-if="placementGuildDraft"
+              :show-label="showGuildLabels"
               :guild="placementGuildDraft"
               :unit-length-px="mapScale.unitLengthPx"
               :tool="activeTool"
@@ -378,6 +377,16 @@
               @cancel="clearSelection"
             />
 
+            <LandmarkLayer
+              :landmarks="landmarks.landmarks"
+              :selected-id="selectedLandmark?.id"
+              :tool="activeTool"
+              @select="selectLandmark"
+              @commit="commitLandmark"
+              :show-labels="showLandmarkLabels"
+              :width="worldBounds.width"
+              :height="worldBounds.height"
+            />
             <ReferenceLine v-slot="{ onboardingState }">
               <OnboardingText
                 v-if="imgDataUrl"
@@ -388,7 +397,7 @@
             </ReferenceLine>
           </svg>
           <div
-            class="map-settings-panel absolute bottom-2 right-2 z-10 flex max-w-[calc(100%-1rem)] flex-col rounded-lg border border-parchment-400/60 bg-parchment-100/85 p-1 shadow-parchment text-sm"
+            class="map-settings-panel paper-floating absolute bottom-2 right-2 z-10 flex max-w-[calc(100%-1rem)] flex-col p-1.5 text-sm"
             :class="{ 'map-settings-panel--open': mapSettingsOpen }"
             role="group"
             aria-label="Map settings"
@@ -400,7 +409,51 @@
               :inert="!mapSettingsOpen"
             >
               <div class="min-h-0 overflow-hidden">
-                <div class="flex flex-col gap-2 p-2">
+                <div class="flex flex-col gap-3 p-3">
+                  <fieldset
+                    class="flex flex-col gap-2 border-b border-parchment-300 pb-3"
+                  >
+                    <legend class="mb-2 font-serif font-medium text-ink-800">
+                      Map labels
+                    </legend>
+                    <label class="flex cursor-pointer items-center gap-2 text-ink-700">
+                      <input
+                        v-model="showGuildLabels"
+                        type="checkbox"
+                        class="size-4 accent-sage-800"
+                      />
+                      Guild names
+                    </label>
+                    <label class="flex cursor-pointer items-center gap-2 text-ink-700">
+                      <input
+                        v-model="showLandmarkLabels"
+                        type="checkbox"
+                        class="size-4 accent-sage-800"
+                      />
+                      Landmark names
+                    </label>
+                  </fieldset>
+                  <label class="paper-field-label"
+                    >Scale unit
+                    <select
+                      class="input-soft w-full px-2 py-1.5 font-normal text-ink-800"
+                      :value="mapScale.unit"
+                      @change="
+                        mapScale.setUnit(($event.target as HTMLSelectElement).value)
+                      "
+                    >
+                      <option
+                        v-for="unit in SCALE_UNITS"
+                        :key="unit.value"
+                        :value="unit.value"
+                      >
+                        {{ unit.label }}
+                      </option>
+                    </select>
+                  </label>
+                  <p class="text-xs leading-relaxed text-ink-600">
+                    Choose the unit for the reference line’s length.
+                  </p>
                   <ToolSlider
                     :value="mapScale.linePhysicalLength"
                     label="Map scale"

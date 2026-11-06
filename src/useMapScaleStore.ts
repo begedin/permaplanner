@@ -1,6 +1,7 @@
 import { computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 
+import { SCALE_UNITS } from './gardenDocument';
 import { usePlanStateStore } from './usePlanStateStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { onboardingAfterScaleDrag } from './onboardingTypes';
@@ -24,6 +25,16 @@ export const useMapScaleStore = defineStore('mapScale', () => {
       if (value !== 1) plan.state.onboardingState = 'done';
     }, token);
   };
+  const unit = computed(() => plan.state.mapScale.unit);
+  const unitLabel = computed(() => (unit.value === 'unspecified' ? 'units' : unit.value));
+  const setUnit = (value: string) => {
+    const selected = SCALE_UNITS.find((unit) => unit.value === value);
+    if (!selected) return;
+    history.runMutation(() => {
+      plan.state.mapScale.unit = selected.value;
+    });
+  };
+
   const start = computed(() => readonly(plan.state.mapScale.start));
   const end = computed(() => readonly(plan.state.mapScale.end));
   const linePhysicalLength = computed(() => plan.state.mapScale.linePhysicalLength);
@@ -39,6 +50,9 @@ export const useMapScaleStore = defineStore('mapScale', () => {
   });
 
   return {
+    unit,
+    unitLabel,
+    setUnit,
     movePoint,
     setPhysicalLength,
     start,

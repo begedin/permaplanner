@@ -9,15 +9,15 @@ defmodule Permaplanner.Gardens.Garden do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
-  @current_file_version 5
+  @current_file_version 6
 
   schema "gardens" do
-    field :name, :string
-    field :document, :map
-    field :sync_revision, :integer, default: 0
-    field :file_version, :integer, default: @current_file_version
-    belongs_to :user, User
-    has_one :background_image, GardenBackgroundImage, foreign_key: :id, references: :id
+    field(:name, :string)
+    field(:document, :map)
+    field(:sync_revision, :integer, default: 0)
+    field(:file_version, :integer, default: @current_file_version)
+    belongs_to(:user, User)
+    has_one(:background_image, GardenBackgroundImage, foreign_key: :id, references: :id)
 
     timestamps(type: :utc_datetime_usec)
   end
