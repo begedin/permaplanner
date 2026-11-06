@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.26.2
+
+- [DB] Added the mulcher role to hazelnut for its coppiced wood and pruning material.
+
 ## 0.26.1
 
 - [DB] Added greater snowdrop, false spirea, sea buckthorn, hybrid mahonia, flowering quince, firethorn, dappled willow, and broom to the catalog, with named cultivars.

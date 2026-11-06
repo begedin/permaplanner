@@ -2409,7 +2409,7 @@
     {
       "id": "hazelnut",
       "name": "Hazelnut",
-      "functions": ["edible", "pollinator_attractor", "wildfire_suppressor"],
+      "functions": ["edible", "pollinator_attractor", "wildfire_suppressor", "mulcher"],
       "layers": ["shrub", "understory"],
       "cultivars": [
         {
