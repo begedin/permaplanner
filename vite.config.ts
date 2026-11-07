@@ -25,6 +25,8 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      '/admin': phoenixDevUrl,
+      '/live': { target: phoenixDevUrl, ws: true },
       '/api': phoenixDevUrl,
       '/share': phoenixDevUrl,
       '/sandbox': phoenixDevUrl,
@@ -32,6 +34,8 @@ export default defineConfig({
   },
   preview: {
     proxy: {
+      '/admin': phoenixDevUrl,
+      '/live': { target: phoenixDevUrl, ws: true },
       '/api': phoenixDevUrl,
       '/share': phoenixDevUrl,
       '/sandbox': phoenixDevUrl,

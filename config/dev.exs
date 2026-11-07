@@ -27,3 +27,7 @@ config :permaplanner,
   static_dir: Path.expand("../../dist", __DIR__)
 
 config :logger, :console, format: "[$level] $message\n"
+
+if File.exists?(Path.join(__DIR__, "dev.exs.local")) do
+  import_config "dev.exs.local"
+end

@@ -1,5 +1,6 @@
 defmodule PermaplannerWeb.Router do
   use PermaplannerWeb, :router
+  import Phoenix.LiveView.Router
 
   pipeline :api do
     plug :accepts, ["json"]
@@ -17,6 +18,23 @@ defmodule PermaplannerWeb.Router do
 
   pipeline :require_totp_confirmed do
     plug PermaplannerWeb.UserAuth, :require_totp_confirmed
+  end
+
+  pipeline :admin do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+    plug :put_root_layout, html: {PermaplannerWeb.AdminHTML, :root}
+    plug PermaplannerWeb.AdminAuth
+  end
+
+  scope "/admin", PermaplannerWeb do
+    pipe_through :admin
+
+    live_session :admin do
+      live "/", AdminLive
+    end
   end
 
   pipeline :spa do

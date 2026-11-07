@@ -4,7 +4,7 @@ defmodule Permaplanner.MixProject do
   def project do
     [
       app: :permaplanner,
-      version: "0.27.0",
+      version: "0.28.0",
       elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -48,6 +48,7 @@ defmodule Permaplanner.MixProject do
       {:nimble_totp, "~> 1.0"},
       {:eqrcode, "~> 0.2"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
+      {:lazy_html, "~> 0.1.0", only: :test},
       {:bypass, "~> 2.1", only: :test}
     ]
   end

@@ -8,6 +8,25 @@ defmodule PermaplannerWeb.Endpoint do
       header: "x-phoenix-ecto-sandbox"
   end
 
+  @session_options [
+    store: :cookie,
+    key: "_permaplanner_session",
+    signing_salt: "permaplanner_sess",
+    same_site: "Lax"
+  ]
+  socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
+  plug Plug.Static, at: "/admin-assets", from: {:permaplanner, "priv/admin"}
+
+  plug Plug.Static,
+    at: "/admin-assets/phoenix",
+    from: {:phoenix, "priv/static"},
+    only: ~w(phoenix.min.js)
+
+  plug Plug.Static,
+    at: "/admin-assets/live-view",
+    from: {:phoenix_live_view, "priv/static"},
+    only: ~w(phoenix_live_view.min.js)
+
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
@@ -18,11 +37,7 @@ defmodule PermaplannerWeb.Endpoint do
 
   plug Plug.MethodOverride
   plug Plug.Head
-  plug Plug.Session,
-    store: :cookie,
-    key: "_permaplanner_session",
-    signing_salt: "permaplanner_sess",
-    same_site: "Lax"
+  plug Plug.Session, @session_options
 
   if code_reloading? do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket

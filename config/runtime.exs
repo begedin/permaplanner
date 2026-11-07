@@ -1,5 +1,11 @@
 import Config
 
+if admin_user_ids = System.get_env("ADMIN_USER_IDS") do
+  config :permaplanner,
+         :admin_user_ids,
+         admin_user_ids |> String.split(",", trim: true) |> Enum.map(&String.trim/1)
+end
+
 config :permaplanner,
        Permaplanner.MCP.Config.load!(
          System.get_env("MCP_BASE_URL"),
@@ -8,6 +14,7 @@ config :permaplanner,
        )
 
 if config_env() == :prod do
+  public_uri = URI.parse(System.get_env("MCP_BASE_URL") || "https://permaplanner.fly.dev")
   port = String.to_integer(System.get_env("PORT") || "8080")
 
   secret_key_base =
@@ -26,6 +33,7 @@ if config_env() == :prod do
     socket_options: maybe_ipv6
 
   config :permaplanner, PermaplannerWeb.Endpoint,
+    url: [scheme: public_uri.scheme, host: public_uri.host, port: public_uri.port],
     http: [ip: {0, 0, 0, 0}, port: port],
     secret_key_base: secret_key_base,
     server: true,

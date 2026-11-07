@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.28.0
+
+- [CHANGE] Add a read-only Phoenix LiveView admin dashboard at `/admin` with user and garden totals, searchable paginated tables, and a persistent admin banner styled to match the app.
+- [CHANGE] Restrict admin access to configured existing accounts with completed TOTP; keep the dashboard out of app navigation and return 404 for unauthorized requests.
+- [CHANGE] Support ignored development-only admin configuration and proxy LiveView connections through the local frontend server.
+
 ## 0.27.0
 
 - [FIX] Keep map selection and Delete targeting consistent across route changes; share captured pointer handling across landmark, guild, and scale drags.

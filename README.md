@@ -277,3 +277,44 @@ Landmarks store an ID, name, centre (`x`, `y`), width, height, and clockwise
 rotation in degrees. Dimensions use map coordinates. Both garden and guild MCP
 responses include all landmarks, the scale unit, and coordinate conventions.
 North is unknown; image up does not imply geographic north.
+
+### Read-only admin dashboard
+
+Open `/admin` directly after signing in and completing TOTP. There is no admin
+link in the app. Unauthorized requests return a plain 404 without a login redirect. The Phoenix LiveView dashboard
+lists existing users and gardens, with totals, email/name search, and pagination.
+It does not change stored data or expose garden documents or authentication secrets.
+A persistent **Admin · Read only** banner distinguishes it from the planner.
+
+Set `ADMIN_USER_IDS` to a comma-separated list of existing user UUIDs in the server
+environment before starting the app. An empty value denies all access. With no
+environment value, access defaults to none; development can supply a local default
+in ignored `config/dev.exs.local`:
+
+```elixir
+import Config
+config :permaplanner, :admin_user_ids, ["your-local-user-uuid"]
+```
+
+This file is only loaded in development. `ADMIN_USER_IDS` overrides it, including
+an explicitly empty value. Restart the local Phoenix server after changing it.
+Find your UUID with an Ecto query in a trusted local or release console:
+
+```elixir
+import Ecto.Query
+Permaplanner.Repo.one(from u in Permaplanner.Accounts.User,
+  where: u.email == ^"your-email@example.com", select: u.id)
+```
+
+For example, start locally with `ADMIN_USER_IDS=your-user-uuid npm run dev:plain`,
+then sign in and open `/admin` on the Vite origin. Both Vite development and preview
+proxy admin HTTP requests and the LiveView WebSocket to Phoenix. Production uses
+`MCP_BASE_URL` as the canonical public origin for Phoenix's URL and WebSocket origin
+check; use that same origin to visit the dashboard.
+
+Authorization is checked on the HTTP request, connected LiveView mount, searches,
+and live navigation. Logging out or removing access prevents further data reads
+from an open dashboard; it cannot erase data already displayed in a browser.
+Totals and rows are refreshed on navigation/search or a page reload, not pushed
+when other users change their gardens. Environment changes require a server restart;
+production restarts and deployments require explicit approval.
