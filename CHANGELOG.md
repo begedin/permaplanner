@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.30.0
+
+- [CHANGE] Add two-finger touchpad panning and smooth pinch zoom to the aerial view, including Safari gesture support. Use Ctrl+wheel to zoom with a mouse.
+- [FIX] Keep touchpad panning accurate after resizing and allow panning immediately after a middle-button drag.
+
 ## 0.29.1
 
 - [CHANGE] Separate admin garden details from inventory with shared authorization and admin layout.

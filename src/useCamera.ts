@@ -8,12 +8,12 @@ const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 10;
 const ZOOM_SESSION_MS = 200;
 const PAN_ZOOM_GRACE_MS = 200;
-const MIN_WHEEL_ZOOM_DELTA = 2;
 
 type CameraInteraction =
   | { kind: 'idle' }
   | { kind: 'zoomSession'; anchor: { x: number; y: number } }
-  | { kind: 'panning'; controller: AbortController };
+  | { kind: 'panning'; controller: AbortController; pointerId: number }
+  | { kind: 'pinching'; zoom: number; anchor: { x: number; y: number } };
 
 export const useCamera = (
   element: Ref<SVGElement | undefined>,
@@ -60,6 +60,9 @@ export const useCamera = (
   const resetInteraction = () => {
     if (interaction.kind === 'panning') {
       interaction.controller.abort();
+      if (element.value?.hasPointerCapture(interaction.pointerId)) {
+        element.value.releasePointerCapture(interaction.pointerId);
+      }
     }
     clearInteractionTimer();
     clearWheelZoomCooldown();
@@ -81,24 +84,13 @@ export const useCamera = (
     interactionTimer = setTimeout(endZoomSession, ZOOM_SESSION_MS);
   };
 
-  const startPan = (controller: AbortController) => {
-    endZoomSession();
-    if (interaction.kind === 'panning') {
-      interaction.controller.abort();
-    }
-    interaction = { kind: 'panning', controller };
-  };
-
-  const zoomBy = (factor: number, anchor?: { x: number; y: number }) => {
+  const zoomTo = (value: number, anchor?: { x: number; y: number }) => {
     const { worldWidth, worldHeight } = dimensions.value;
     if (worldWidth <= 0 || worldHeight <= 0 || camera.width <= 0 || camera.height <= 0) {
       return;
     }
 
-    const newZoom =
-      factor > 0
-        ? Math.min(camera.zoom + factor, MAX_ZOOM)
-        : Math.max(camera.zoom + factor, MIN_ZOOM);
+    const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
 
     if (newZoom === camera.zoom) {
       return;
@@ -129,39 +121,91 @@ export const useCamera = (
     );
   };
 
-  const setupWheelZoom = () => {
-    element.value?.addEventListener(
+  const setupGestures = () => {
+    const svg = element.value;
+    if (!(svg instanceof SVGSVGElement)) return;
+
+    svg.addEventListener(
       'wheel',
       (e) => {
-        const wheelWouldZoom = Math.abs(e.deltaY) >= MIN_WHEEL_ZOOM_DELTA;
-
-        if (isWheelZoomBlocked()) {
-          e.preventDefault();
-          if (wheelWouldZoom) {
-            extendWheelZoomCooldown();
-          }
-          return;
-        }
-
-        if (!wheelWouldZoom) {
-          return;
-        }
-
         e.preventDefault();
+        if (interaction.kind === 'panning' || (e.ctrlKey && isWheelZoomBlocked())) {
+          if (e.deltaX !== 0 || e.deltaY !== 0) extendWheelZoomCooldown();
+          return;
+        }
+        if (interaction.kind === 'pinching') return;
 
-        const svg = element.value;
-        if (!(svg instanceof SVGSVGElement)) {
+        const unitX =
+          e.deltaMode === 1
+            ? 16
+            : e.deltaMode === 2
+              ? dimensions.value.containerWidth
+              : 1;
+        const unitY =
+          e.deltaMode === 1
+            ? 16
+            : e.deltaMode === 2
+              ? dimensions.value.containerHeight
+              : 1;
+        if (!e.ctrlKey) {
+          endZoomSession();
+          const from = clientToSvgUser(svg, e.clientX, e.clientY);
+          const to = clientToSvgUser(
+            svg,
+            e.clientX + e.deltaX * unitX,
+            e.clientY + e.deltaY * unitY,
+          );
+          camera.x += to.x - from.x;
+          camera.y += to.y - from.y;
           return;
         }
 
+        if (e.deltaY === 0) return;
         beginOrExtendZoomSession(clientToSvgUser(svg, e.clientX, e.clientY));
-        if (interaction.kind !== 'zoomSession') {
-          return;
-        }
-        zoomBy(e.deltaY < 0 ? 0.2 : -0.2, interaction.anchor);
+        if (interaction.kind !== 'zoomSession') return;
+        zoomTo(camera.zoom * Math.exp(-e.deltaY * unitY * 0.01), interaction.anchor);
       },
       { passive: false, signal: teardownController.signal },
     );
+
+    // Safari exposes native pinch gestures separately from wheel events.
+    svg.addEventListener(
+      'gesturestart',
+      (event) => {
+        event.preventDefault();
+        if (isWheelZoomBlocked()) return;
+        const e = event as Event & { clientX: number; clientY: number };
+        resetInteraction();
+        interaction = {
+          kind: 'pinching',
+          zoom: camera.zoom,
+          anchor: clientToSvgUser(svg, e.clientX, e.clientY),
+        };
+      },
+      { passive: false, signal: teardownController.signal },
+    );
+    svg.addEventListener(
+      'gesturechange',
+      (event) => {
+        event.preventDefault();
+        const e = event as Event & { scale: number };
+        if (interaction.kind !== 'pinching' || !Number.isFinite(e.scale) || e.scale <= 0)
+          return;
+        zoomTo(interaction.zoom * e.scale, interaction.anchor);
+      },
+      { passive: false, signal: teardownController.signal },
+    );
+    svg.addEventListener(
+      'gestureend',
+      (event) => {
+        event.preventDefault();
+        if (interaction.kind === 'pinching') resetInteraction();
+      },
+      { passive: false, signal: teardownController.signal },
+    );
+    window.addEventListener('blur', resetInteraction, {
+      signal: teardownController.signal,
+    });
   };
 
   const setupKeyBindings = () => {
@@ -174,8 +218,8 @@ export const useCamera = (
         if (e.key === 'ArrowUp' || e.key === 'W') camera.y += 10;
         if (e.key === 'ArrowDown' || e.key === 'S') camera.y -= 10;
 
-        if (e.key === '+') zoomBy(0.1);
-        if (e.key === '-') zoomBy(-0.1);
+        if (e.key === '+') zoomTo(camera.zoom + 0.1);
+        if (e.key === '-') zoomTo(camera.zoom - 0.1);
       },
       { signal: teardownController.signal },
     );
@@ -198,7 +242,12 @@ export const useCamera = (
 
         const panPointerId = e.pointerId;
         const panController = new AbortController();
-        startPan(panController);
+        resetInteraction();
+        interaction = {
+          kind: 'panning',
+          controller: panController,
+          pointerId: panPointerId,
+        };
 
         const panStart = {
           clientX: e.clientX,
@@ -223,11 +272,7 @@ export const useCamera = (
             return;
           }
           applyPan(clientX, clientY);
-          if (svg.hasPointerCapture(panPointerId)) {
-            svg.releasePointerCapture(panPointerId);
-          }
-          panController.abort();
-          interaction = { kind: 'idle' };
+          resetInteraction();
           extendWheelZoomCooldown();
         };
 
@@ -265,10 +310,6 @@ export const useCamera = (
           },
           { signal: panController.signal },
         );
-
-        window.addEventListener('blur', () => finishPan(e.clientX, e.clientY), {
-          signal: panController.signal,
-        });
       },
       { signal: teardownController.signal },
     );
@@ -285,7 +326,7 @@ export const useCamera = (
       return;
     }
 
-    endZoomSession();
+    resetInteraction();
 
     camera.zoom = 1;
 
@@ -305,7 +346,7 @@ export const useCamera = (
     resetInteraction();
     teardownController.abort();
     teardownController = new AbortController();
-    setupWheelZoom();
+    setupGestures();
     setupMousePositionTracking();
     setupKeyBindings();
     setupMiddleMousePan();

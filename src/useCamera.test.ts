@@ -1,4 +1,4 @@
-import { defineComponent, h, nextTick, onMounted, ref } from 'vue';
+import { defineComponent, h, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { mount } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
@@ -19,8 +19,9 @@ const mountCameraHost = async () => {
         worldWidth: 1000,
         worldHeight: 1000,
       });
-      const { setupCamera } = useCamera(svgRef, dimensions);
+      const { setupCamera, teardownCamera } = useCamera(svgRef, dimensions);
       onMounted(() => setupCamera());
+      onUnmounted(teardownCamera);
       return () => h('svg', { ref: svgRef, xmlns: 'http://www.w3.org/2000/svg' });
     },
   });
@@ -243,6 +244,7 @@ it('wheel zoom keeps the first wheel position as anchor for the zoom session', a
 
     svg.dispatchEvent(
       new WheelEvent('wheel', {
+        ctrlKey: true,
         deltaY: -100,
         clientX: first.x,
         clientY: first.y,
@@ -251,6 +253,7 @@ it('wheel zoom keeps the first wheel position as anchor for the zoom session', a
     );
     svg.dispatchEvent(
       new WheelEvent('wheel', {
+        ctrlKey: true,
         deltaY: -100,
         clientX: second.x,
         clientY: second.y,
@@ -283,7 +286,13 @@ it('mousemove after wheel zoom does not shift the camera', async () => {
   camera.y = 0;
 
   svg.dispatchEvent(
-    new WheelEvent('wheel', { deltaY: -100, clientX: 100, clientY: 100, bubbles: true }),
+    new WheelEvent('wheel', {
+      ctrlKey: true,
+      deltaY: -100,
+      clientX: 100,
+      clientY: 100,
+      bubbles: true,
+    }),
   );
   const afterZoom = { x: camera.x, y: camera.y, zoom: camera.zoom };
 
@@ -322,7 +331,13 @@ it('ignores wheel zoom while middle-button pan is active', async () => {
   );
 
   svg.dispatchEvent(
-    new WheelEvent('wheel', { deltaY: -100, clientX: 100, clientY: 100, bubbles: true }),
+    new WheelEvent('wheel', {
+      ctrlKey: true,
+      deltaY: -100,
+      clientX: 100,
+      clientY: 100,
+      bubbles: true,
+    }),
   );
   expect(camera.zoom).toBe(1);
 
@@ -355,13 +370,25 @@ it('ignores wheel zoom briefly after middle-button pan ends', async () => {
   );
 
   svg.dispatchEvent(
-    new WheelEvent('wheel', { deltaY: -100, clientX: 100, clientY: 100, bubbles: true }),
+    new WheelEvent('wheel', {
+      ctrlKey: true,
+      deltaY: -100,
+      clientX: 100,
+      clientY: 100,
+      bubbles: true,
+    }),
   );
   expect(camera.zoom).toBe(1);
 
   vi.advanceTimersByTime(200);
   svg.dispatchEvent(
-    new WheelEvent('wheel', { deltaY: -100, clientX: 100, clientY: 100, bubbles: true }),
+    new WheelEvent('wheel', {
+      ctrlKey: true,
+      deltaY: -100,
+      clientX: 100,
+      clientY: 100,
+      bubbles: true,
+    }),
   );
   expect(camera.zoom).toBeGreaterThan(1);
 
@@ -396,13 +423,25 @@ it('extends wheel zoom cooldown when momentum arrives during the cooldown', asyn
 
   vi.advanceTimersByTime(50);
   svg.dispatchEvent(
-    new WheelEvent('wheel', { deltaY: -100, clientX: 100, clientY: 100, bubbles: true }),
+    new WheelEvent('wheel', {
+      ctrlKey: true,
+      deltaY: -100,
+      clientX: 100,
+      clientY: 100,
+      bubbles: true,
+    }),
   );
   expect(camera.zoom).toBe(1);
 
   vi.advanceTimersByTime(201);
   svg.dispatchEvent(
-    new WheelEvent('wheel', { deltaY: -100, clientX: 100, clientY: 100, bubbles: true }),
+    new WheelEvent('wheel', {
+      ctrlKey: true,
+      deltaY: -100,
+      clientX: 100,
+      clientY: 100,
+      bubbles: true,
+    }),
   );
   expect(camera.zoom).toBeGreaterThan(1);
 
@@ -428,7 +467,13 @@ it('extends wheel zoom cooldown when scroll happens during an active pan', async
   );
   vi.advanceTimersByTime(10);
   svg.dispatchEvent(
-    new WheelEvent('wheel', { deltaY: -100, clientX: 100, clientY: 100, bubbles: true }),
+    new WheelEvent('wheel', {
+      ctrlKey: true,
+      deltaY: -100,
+      clientX: 100,
+      clientY: 100,
+      bubbles: true,
+    }),
   );
   svg.dispatchEvent(
     pointerEvent('pointerup', svg, {
@@ -441,7 +486,13 @@ it('extends wheel zoom cooldown when scroll happens during an active pan', async
 
   vi.advanceTimersByTime(201);
   svg.dispatchEvent(
-    new WheelEvent('wheel', { deltaY: -100, clientX: 100, clientY: 100, bubbles: true }),
+    new WheelEvent('wheel', {
+      ctrlKey: true,
+      deltaY: -100,
+      clientX: 100,
+      clientY: 100,
+      bubbles: true,
+    }),
   );
   expect(camera.zoom).toBeGreaterThan(1);
 
@@ -481,7 +532,13 @@ it('keeps wheel zoom blocked across rapid consecutive pans', async () => {
   pan(20);
 
   svg.dispatchEvent(
-    new WheelEvent('wheel', { deltaY: -100, clientX: 100, clientY: 100, bubbles: true }),
+    new WheelEvent('wheel', {
+      ctrlKey: true,
+      deltaY: -100,
+      clientX: 100,
+      clientY: 100,
+      bubbles: true,
+    }),
   );
   expect(camera.zoom).toBe(1);
 
@@ -489,16 +546,17 @@ it('keeps wheel zoom blocked across rapid consecutive pans', async () => {
   vi.useRealTimers();
 });
 
-it('ignores tiny wheel deltas from trackpad momentum', async () => {
+it('pans with tiny wheel deltas from trackpad momentum', async () => {
   const { wrapper, svg } = await mountCameraHost();
   const camera = useCameraStore();
   camera.zoom = 1;
+  camera.scale = 1;
 
   svg.dispatchEvent(
     new WheelEvent('wheel', { deltaY: 1, clientX: 100, clientY: 100, bubbles: true }),
   );
 
-  expect(camera.zoom).toBe(1);
+  expect(camera).toMatchObject({ zoom: 1, y: 1 });
 
   wrapper.unmount();
 });
@@ -535,5 +593,171 @@ it('ignores middle-button pan that starts outside the aerial svg', async () => {
 
   expect(camera).toMatchObject({ x: 12, y: 34 });
 
+  wrapper.unmount();
+});
+
+it.each([
+  { deltaMode: 0, x: 20, y: -30 },
+  { deltaMode: 1, x: 320, y: -480 },
+  { deltaMode: 2, x: 10000, y: -15000 },
+])(
+  'pans both axes in wheel delta mode $deltaMode without zooming',
+  async ({ deltaMode, x, y }) => {
+    const { wrapper, svg } = await mountCameraHost();
+    const camera = useCameraStore();
+    camera.scale = 0.5;
+    camera.zoom = 2;
+    const event = new WheelEvent('wheel', {
+      deltaX: 20,
+      deltaY: -30,
+      deltaMode,
+      cancelable: true,
+    });
+    svg.dispatchEvent(event);
+    expect(camera).toMatchObject({ x, y, zoom: 2 });
+    expect(event.defaultPrevented).toBe(true);
+    wrapper.unmount();
+    svg.dispatchEvent(event);
+    expect(camera).toMatchObject({ x, y, zoom: 2 });
+  },
+);
+
+it('pinches smoothly around the cursor, including small deltas and zoom limits', async () => {
+  const { wrapper, svg } = await mountCameraHost();
+  const camera = useCameraStore();
+  camera.width = 1000;
+  camera.height = 1000;
+
+  for (const deltaY of [-1, 2, -10000, 10000]) {
+    const event = new WheelEvent('wheel', {
+      ctrlKey: true,
+      deltaY,
+      clientX: 200,
+      clientY: 300,
+      cancelable: true,
+    });
+    svg.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    expect((200 - camera.x) / camera.width).toBeCloseTo(0.2);
+    expect((300 - camera.y) / camera.height).toBeCloseTo(0.3);
+    if (deltaY === -1) expect(camera.zoom).toBeCloseTo(Math.exp(0.01));
+    if (deltaY === 2) expect(camera.zoom).toBeCloseTo(Math.exp(-0.01));
+    if (deltaY === -10000) expect(camera.zoom).toBe(10);
+    if (deltaY === 10000) expect(camera.zoom).toBe(0.1);
+  }
+  wrapper.unmount();
+});
+
+it('uses Safari cumulative pinch scale and resumes scrolling when the gesture ends', async () => {
+  const { wrapper, svg } = await mountCameraHost();
+  const camera = useCameraStore();
+  camera.width = 1000;
+  camera.height = 1000;
+  camera.scale = 1;
+  const gesture = (type: string, scale: number) => {
+    const event = new Event(type, { cancelable: true });
+    Object.assign(event, { scale, clientX: 200, clientY: 300 });
+    svg.dispatchEvent(event);
+    return event;
+  };
+
+  expect(gesture('gesturestart', 1).defaultPrevented).toBe(true);
+  gesture('gesturechange', 2);
+  gesture('gesturechange', 3);
+  expect(camera).toMatchObject({ zoom: 3 });
+  expect((200 - camera.x) / camera.width).toBeCloseTo(0.2);
+  expect((300 - camera.y) / camera.height).toBeCloseTo(0.3);
+  svg.dispatchEvent(new WheelEvent('wheel', { ctrlKey: true, deltaY: -100 }));
+  expect(camera.zoom).toBe(3);
+  gesture('gestureend', 3);
+  const previousX = camera.x;
+  svg.dispatchEvent(new WheelEvent('wheel', { deltaX: 30 }));
+  expect(camera.x).toBeCloseTo(previousX + 30);
+
+  wrapper.unmount();
+  gesture('gesturestart', 1);
+  gesture('gesturechange', 2);
+  expect(camera.zoom).toBe(3);
+});
+
+it('allows touchpad pan immediately after a mouse drag without extending the zoom cooldown', async () => {
+  vi.useFakeTimers();
+  const { wrapper, svg } = await mountCameraHost();
+  const camera = useCameraStore();
+  svg.dispatchEvent(pointerEvent('pointerdown', svg, { button: 1 }));
+  svg.dispatchEvent(new WheelEvent('wheel', { deltaX: 20, deltaY: 30 }));
+  expect(camera).toMatchObject({ x: 0, y: 0, zoom: 1 });
+  svg.dispatchEvent(pointerEvent('pointerup', svg, { button: 1 }));
+
+  vi.advanceTimersByTime(100);
+  svg.dispatchEvent(new WheelEvent('wheel', { deltaX: 20, deltaY: 30 }));
+  expect(camera).toMatchObject({ x: 20, y: 30, zoom: 1 });
+  vi.advanceTimersByTime(100);
+  svg.dispatchEvent(new WheelEvent('wheel', { ctrlKey: true, deltaY: -1 }));
+  expect(camera.zoom).toBeGreaterThan(1);
+  wrapper.unmount();
+  vi.useRealTimers();
+});
+
+it.each(['blur', 'pan'])(
+  'cancels Safari pinch when interrupted by %s',
+  async (interruption) => {
+    const { wrapper, svg } = await mountCameraHost();
+    const camera = useCameraStore();
+    const gesture = (type: string, scale: number) => {
+      const event = new Event(type, { cancelable: true });
+      Object.assign(event, { scale, clientX: 200, clientY: 300 });
+      svg.dispatchEvent(event);
+    };
+    gesture('gesturestart', 1);
+    gesture('gesturechange', 2);
+    if (interruption === 'blur') {
+      window.dispatchEvent(new Event('blur'));
+    } else {
+      svg.dispatchEvent(pointerEvent('pointerdown', svg, { button: 1 }));
+    }
+    gesture('gesturechange', 3);
+    gesture('gestureend', 3);
+    expect(camera.zoom).toBe(2);
+    if (interruption === 'pan') {
+      const previousX = camera.x;
+      svg.dispatchEvent(pointerEvent('pointermove', svg, { clientX: 20 }));
+      expect(camera.x).toBeCloseTo(previousX - 10);
+    } else {
+      const previousX = camera.x;
+      svg.dispatchEvent(new WheelEvent('wheel', { deltaX: 20 }));
+      expect(camera.x).toBeCloseTo(previousX + 20);
+    }
+    wrapper.unmount();
+  },
+);
+
+it('uses the current SVG transform for touchpad pan after resizing', async () => {
+  const { wrapper, svg } = await mountCameraHost();
+  const camera = useCameraStore();
+  camera.scale = 0.5;
+  camera.zoom = 1;
+  let inverseScale = 2;
+  svg.getScreenCTM = vi.fn(
+    () =>
+      ({
+        inverse: () => ({ a: inverseScale, b: 0, c: 0, d: inverseScale, e: 100, f: -50 }),
+      }) as DOMMatrix,
+  );
+  const scroll = () =>
+    svg.dispatchEvent(
+      new WheelEvent('wheel', {
+        clientX: 200,
+        clientY: 300,
+        deltaX: 20,
+        deltaY: -30,
+      }),
+    );
+  scroll();
+  expect(camera).toMatchObject({ x: 40, y: -60, zoom: 1 });
+
+  inverseScale = 0.5;
+  scroll();
+  expect(camera).toMatchObject({ x: 50, y: -75, zoom: 1 });
   wrapper.unmount();
 });
