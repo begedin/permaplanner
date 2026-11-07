@@ -283,7 +283,9 @@ North is unknown; image up does not imply geographic north.
 Open `/admin` directly after signing in and completing TOTP. There is no admin
 link in the app. Unauthorized requests return a plain 404 without a login redirect. The Phoenix LiveView dashboard
 lists existing users and gardens, with totals, email/name search, and pagination.
-It does not change stored data or expose garden documents or authentication secrets.
+Click a garden name to view its guild names and distinct plant names. Garden
+details omit quantities, notes, growth stages, condition, and layout information.
+It does not change stored data or expose full garden documents or authentication secrets.
 A persistent **Admin · Read only** banner distinguishes it from the planner.
 
 Set `ADMIN_USER_IDS` to a comma-separated list of existing user UUIDs in the server

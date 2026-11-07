@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.29.0
+
+- [CHANGE] Let admins open gardens to view guild names and distinct plant names, without quantities, notes, growth stages, condition, or layout details.
+
 ## 0.28.0
 
 - [CHANGE] Add a read-only Phoenix LiveView admin dashboard at `/admin` with user and garden totals, searchable paginated tables, and a persistent admin banner styled to match the app.

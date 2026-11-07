@@ -3,7 +3,7 @@ defmodule Permaplanner.Admin do
   import Ecto.Query
   alias Permaplanner.Accounts.User
   alias Permaplanner.Gardens.Garden
-  alias Permaplanner.Repo
+  alias Permaplanner.{PlantCatalog, Repo}
 
   def overview do
     %{
@@ -19,6 +19,42 @@ defmodule Permaplanner.Admin do
           )
         )
     }
+  end
+
+  def garden_names!(id) do
+    with {:ok, uuid} <- Ecto.UUID.cast(id),
+         %Garden{} = garden <- Repo.get(Garden, uuid) do
+      names_by_id =
+        Map.new(garden.document["plants"], fn plant ->
+          resolved = PlantCatalog.resolve(plant)
+
+          name =
+            [resolved["name"], resolved["cultivar"]]
+            |> Enum.reject(&(&1 in [nil, ""]))
+            |> Enum.join(" — ")
+
+          {plant["id"], name}
+        end)
+
+      guilds =
+        Enum.map(garden.document["guilds"], fn guild ->
+          plants =
+            guild["plants"]
+            |> Enum.map(fn plant ->
+              case String.trim(plant["nameOrCultivar"]) do
+                "" -> Map.get(names_by_id, plant["plantId"], "Unknown plant")
+                name -> name
+              end
+            end)
+            |> Enum.uniq()
+
+          %{name: guild["name"], plants: plants}
+        end)
+
+      %{name: garden.name, guilds: guilds}
+    else
+      _ -> raise Ecto.NoResultsError, queryable: Garden
+    end
   end
 
   def list(tab, search, requested_page) do

@@ -230,3 +230,16 @@ footer {
     padding: 12px;
   }
 }
+
+.guild-names {
+  margin: 20px 0;
+  padding: 20px 24px;
+}
+.guild-names h2 {
+  margin-top: 0;
+  font-family: 'Lora', Georgia, serif;
+  color: #3d2f24;
+}
+.guild-names ul {
+  padding-left: 22px;
+}
