@@ -38,15 +38,18 @@ defmodule Permaplanner.Admin do
 
       guilds =
         Enum.map(garden.document["guilds"], fn guild ->
+          instances_by_id = Enum.group_by(guild["plants"], & &1["plantId"])
+
           plants =
             guild["plants"]
+            |> Enum.uniq_by(& &1["plantId"])
             |> Enum.map(fn plant ->
-              case String.trim(plant["nameOrCultivar"]) do
-                "" -> Map.get(names_by_id, plant["plantId"], "Unknown plant")
-                name -> name
-              end
+              Map.get_lazy(names_by_id, plant["plantId"], fn ->
+                instances_by_id[plant["plantId"]]
+                |> Enum.map(&String.trim(&1["nameOrCultivar"]))
+                |> Enum.find("Unknown plant", &(&1 != ""))
+              end)
             end)
-            |> Enum.uniq()
 
           %{name: guild["name"], plants: plants}
         end)

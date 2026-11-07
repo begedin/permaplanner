@@ -158,7 +158,10 @@ defmodule PermaplannerWeb.AdminLiveTest do
            }
 
     {:ok, view, _} = live(conn, "/admin?tab=gardens")
-    view |> element("td a", "Kitchen garden") |> render_click()
+
+    {:ok, view, _} =
+      view |> element("td a", "Kitchen garden") |> render_click() |> follow_redirect(conn)
+
     assert has_element?(view, "h1", "Kitchen garden")
     assert has_element?(view, "h2", "Kitchen herbs")
     assert has_element?(view, "li", "Thai basil")
@@ -166,36 +169,89 @@ defmodule PermaplannerWeb.AdminLiveTest do
     refute has_element?(view, ".stats")
     refute has_element?(view, "table")
 
-    initial_html = html_response(get(conn, "/admin?garden=#{garden.id}"), 200)
+    initial_html = html_response(get(conn, "/admin/gardens/#{garden.id}"), 200)
 
     for private <- ["PRIVATE-PLANT-NOTE", "PRIVATE-GUILD-NOTE", "9182", "producing", owner.email] do
       refute render(view) =~ private
       refute initial_html =~ private
     end
 
-    view |> element("a", "Back to gardens") |> render_click()
+    {:ok, view, _} =
+      view |> element("a", "Back to gardens") |> render_click() |> follow_redirect(conn)
+
     assert has_element?(view, "td a", "Kitchen garden")
   end
 
   test "garden detail handles empty gardens and rejects missing gardens and unauthorized access",
        %{conn: conn, user: user, token: token} do
     {:ok, garden} = Gardens.create_garden(user, %{"name" => "Empty garden"})
-    url = "/admin?garden=#{garden.id}"
+    url = "/admin/gardens/#{garden.id}"
     {:ok, view, _} = live(conn, url)
     assert has_element?(view, "p", "No guilds in this garden.")
 
     for id <- [Ecto.UUID.generate(), "invalid"] do
-      assert_error_sent 404, fn -> get(conn, "/admin?garden=#{id}") end
+      assert_error_sent 404, fn -> get(conn, "/admin/gardens/#{id}") end
     end
 
     assert response(get(build_conn(), url), 404) == "Not Found"
     Application.put_env(:permaplanner, :admin_user_ids, [])
     assert response(get(conn, url), 404) == "Not Found"
     Application.put_env(:permaplanner, :admin_user_ids, [user.id])
-    {:ok, inventory, _} = live(conn, "/admin?tab=gardens")
     Accounts.delete_user_session_token(token)
-    inventory |> element("td a", "Empty garden") |> render_click()
-    assert_redirect(inventory, "/admin")
+    render_hook(view, "search", %{"q" => "stale inventory event"})
+    assert_redirect(view, "/admin")
+  end
+
+  test "malformed inventory parameters and search values use safe defaults", %{conn: conn} do
+    for query <- [
+          "q[]=test&page[]=1&tab[]=gardens&garden[]=bad",
+          "q[nested]=test&page[nested]=1",
+          "page=invalid"
+        ] do
+      {:ok, view, _} = live(conn, "/admin?" <> query)
+      assert has_element?(view, "input[name=q][value='']")
+      assert has_element?(view, ".pagination", "Page 1 of 1")
+      assert has_element?(view, "nav a[aria-current=page]", "Users")
+      render_hook(view, "search", %{"q" => ["nested"]})
+      assert has_element?(view, "input[name=q][value='']")
+    end
+  end
+
+  test "detail bookmarks redirect and stale events do not depend on inventory state", %{
+    conn: conn,
+    user: user
+  } do
+    {:ok, garden} = Gardens.create_garden(user, %{"name" => "Direct garden"})
+    assert {:error, {:live_redirect, %{to: target}}} = live(conn, "/admin?garden=#{garden.id}")
+    assert target == "/admin/gardens/#{garden.id}"
+
+    for invalid <- ["", "bad"] do
+      assert_error_sent 404, fn -> get(conn, "/admin?garden=#{invalid}") end
+    end
+
+    {:ok, direct, _} = live(conn, target)
+    {:ok, inventory, _} = live(conn, "/admin?tab=gardens&q=Direct")
+
+    {:ok, navigated, _} =
+      inventory |> element("td a", "Direct garden") |> render_click() |> follow_redirect(conn)
+
+    for view <- [direct, navigated] do
+      render_hook(view, "search", %{"q" => "ignored"})
+      assert has_element?(view, "h1", "Direct garden")
+      refute has_element?(view, "#admin-search")
+      assert has_element?(view, ".admin-banner", "Admin · Read only")
+    end
+
+    Application.put_env(:permaplanner, :admin_user_ids, [])
+    render_patch(direct, target <> "?refresh=1")
+    assert_redirect(direct, "/admin")
+  end
+
+  test "detail connected mounts recheck authorization", %{conn: conn, user: user, token: token} do
+    {:ok, garden} = Gardens.create_garden(user, %{"name" => "Private"})
+    conn = get(conn, "/admin/gardens/#{garden.id}")
+    Accounts.delete_user_session_token(token)
+    assert {:error, {:redirect, %{to: "/admin"}}} = live(conn)
   end
 
   test "serves the LiveView client and dashboard assets", %{conn: conn} do

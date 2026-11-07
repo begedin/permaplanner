@@ -1,171 +1,103 @@
 defmodule PermaplannerWeb.AdminLive do
   use Phoenix.LiveView, layout: false
   alias Permaplanner.Admin
-  alias PermaplannerWeb.AdminAuth
+  alias PermaplannerWeb.AdminComponents
 
-  def mount(_params, session, socket) do
-    token = session["user_token"]
-
-    case AdminAuth.authenticate(token) do
-      nil -> {:ok, redirect(socket, to: "/admin")}
-      user -> {:ok, assign(socket, token: token, admin_email: user.email)}
+  # Preserve bookmarks from the original query-based detail view.
+  def handle_params(%{"garden" => id}, _uri, socket) when is_binary(id) do
+    case Ecto.UUID.cast(id) do
+      {:ok, uuid} -> {:noreply, push_navigate(socket, to: "/admin/gardens/#{uuid}")}
+      :error -> raise Ecto.NoResultsError, queryable: Permaplanner.Gardens.Garden
     end
   end
 
   def handle_params(params, _uri, socket) do
-    if AdminAuth.authenticate(socket.assigns.token) do
-      if params["garden"] do
-        {:noreply, assign(socket, garden: Admin.garden_names!(params["garden"]))}
-      else
-        tab = if params["tab"] == "gardens", do: "gardens", else: "users"
-        search = String.slice(params["q"] || "", 0, 160)
+    tab = if params["tab"] == "gardens", do: "gardens", else: "users"
+    search = search_text(params["q"])
 
-        page =
-          case Integer.parse(params["page"] || "1") do
-            {number, ""} -> number
+    page =
+      case params["page"] do
+        value when is_binary(value) ->
+          case Integer.parse(value) do
+            {number, ""} -> max(number, 1)
             _ -> 1
           end
 
-        {:noreply,
-         assign(socket,
-           garden: nil,
-           tab: tab,
-           search: search,
-           overview: Admin.overview(),
-           result: Admin.list(tab, search, page)
-         )}
+        _ ->
+          1
       end
-    else
-      {:noreply, redirect(socket, to: "/admin")}
-    end
+
+    {:noreply,
+     assign(socket,
+       tab: tab,
+       search: search,
+       overview: Admin.overview(),
+       result: Admin.list(tab, search, page)
+     )}
   end
 
-  def handle_event("search", %{"q" => search}, socket) do
-    if AdminAuth.authenticate(socket.assigns.token) do
-      {:noreply,
-       push_patch(socket, to: path(socket.assigns.tab, String.slice(search, 0, 160), 1))}
-    else
-      {:noreply, redirect(socket, to: "/admin")}
-    end
+  def handle_event("search", params, socket) do
+    {:noreply, push_patch(socket, to: path(socket.assigns.tab, search_text(params["q"]), 1))}
   end
+
+  defp search_text(value) when is_binary(value), do: String.slice(value, 0, 160)
+  defp search_text(_), do: ""
 
   defp path(tab, search, page),
     do: "/admin?" <> URI.encode_query(%{tab: tab, q: search, page: page})
 
-  defp date(value), do: Calendar.strftime(value, "%Y-%m-%d %H:%M UTC")
-
   def render(assigns) do
     ~H"""
-    <div>
-      <header class="admin-banner">
-        <div><strong>Permaplanner</strong><span class="admin-badge">Admin · Read only</span></div>
-        <a href="/">Back to app ↗</a>
-      </header>
-      <main>
-        <p class="eyebrow">ADMIN / APP INVENTORY</p>
-        <%= if @garden do %>
-          <p><.link patch={path("gardens", "", 1)}>← Back to gardens</.link></p>
-          <h1>{@garden.name}</h1>
-          <p>Guild and plant names only.</p>
-          <p :if={@garden.guilds == []}>No guilds in this garden.</p>
-          <section :for={guild <- @garden.guilds} class="inventory guild-names">
-            <h2>{if String.trim(guild.name) == "", do: "Unnamed guild", else: guild.name}</h2>
-            <p :if={guild.plants == []}>No plants in this guild.</p>
-            <ul>
-              <li :for={plant <- guild.plants}>{plant}</li>
-            </ul>
-          </section>
-        <% else %>
-          <h1>Users &amp; gardens</h1>
-          <p>Existing accounts and saved gardens. Signed in as <strong>{@admin_email}</strong>.</p>
-          <div class="connection-warning" role="status">
-            Connecting to admin… Data may be out of date while disconnected.
+    <AdminComponents.shell>
+      <h1>Users &amp; gardens</h1>
+      <p>Existing accounts and saved gardens. Signed in as <strong>{@admin_email}</strong>.</p>
+      <noscript>Enable JavaScript to use live search. You can still browse with the links below.</noscript>
+      <section class="stats" aria-label="App totals">
+        <article><span>Total users</span><strong>{@overview.users}</strong></article>
+        <article><span>Total gardens</span><strong>{@overview.gardens}</strong></article>
+        <article>
+          <span>Users without gardens</span><strong>{@overview.without_gardens}</strong>
+        </article>
+      </section>
+      <section class="inventory" aria-label="Inventory">
+        <nav class="tabs" aria-label="Admin tables">
+          <.link patch={path("users", "", 1)} aria-current={if @tab == "users", do: "page"}>Users</.link>
+          <.link patch={path("gardens", "", 1)} aria-current={if @tab == "gardens", do: "page"}>Gardens</.link>
+        </nav>
+        <form
+          id="admin-search"
+          phx-change="search"
+          phx-submit="search"
+          action="/admin"
+          method="get"
+        >
+          <input type="hidden" name="tab" value={@tab} />
+          <label for="search">{if @tab == "users",
+            do: "Search by email",
+            else: "Search by garden name or owner email"}</label>
+          <div class="search-controls">
+            <input
+              id="search"
+              type="search"
+              name="q"
+              value={@search}
+              maxlength="160"
+              phx-debounce="300"
+            /><button type="submit">Search</button>
           </div>
-          <noscript>Enable JavaScript to use live search. You can still browse with the links below.</noscript>
-          <section class="stats" aria-label="App totals">
-            <article><span>Total users</span><strong>{@overview.users}</strong></article>
-            <article><span>Total gardens</span><strong>{@overview.gardens}</strong></article>
-            <article>
-              <span>Users without gardens</span><strong>{@overview.without_gardens}</strong>
-            </article>
-          </section>
-          <section class="inventory" aria-label="Inventory">
-            <nav class="tabs" aria-label="Admin tables">
-              <.link patch={path("users", "", 1)} aria-current={if @tab == "users", do: "page"}>Users</.link>
-              <.link patch={path("gardens", "", 1)} aria-current={if @tab == "gardens", do: "page"}>Gardens</.link>
-            </nav>
-            <form
-              id="admin-search"
-              phx-change="search"
-              phx-submit="search"
-              action="/admin"
-              method="get"
-            >
-              <input type="hidden" name="tab" value={@tab} />
-              <label for="search">{if @tab == "users",
-                do: "Search by email",
-                else: "Search by garden name or owner email"}</label>
-              <div class="search-controls">
-                <input
-                  id="search"
-                  type="search"
-                  name="q"
-                  value={@search}
-                  maxlength="160"
-                  phx-debounce="300"
-                /><button type="submit">Search</button>
-              </div>
-            </form>
-            <div class="table-scroll" tabindex="0" role="region" aria-label={@tab <> " table"}>
-              <table>
-                <caption>{@result.total} matching {@tab} · Dates shown in UTC</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">
-                      {if @tab == "users", do: "Email / User ID", else: "Garden / Garden ID"}
-                    </th>
-                    <th scope="col">{if @tab == "users", do: "Gardens", else: "Owner"}</th>
-                    <th scope="col">Created</th>
-                    <th :if={@tab == "gardens"} scope="col">Last updated</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr :for={row <- @result.rows}>
-                    <td>
-                      <strong><%= if @tab == "users" do %>
-                        {row.email}
-                      <% else %>
-                        <.link patch={"/admin?" <> URI.encode_query(%{garden: row.id})}>{row.name}</.link>
-                      <% end %></strong><small>{row.id}</small>
-                    </td>
-                    <td>
-                      <%= if @tab == "users" do %>
-                        {row.garden_count}
-                      <% else %>
-                        {row.email}
-                      <% end %>
-                    </td>
-                    <td>{date(row.inserted_at)}</td>
-                    <td :if={@tab == "gardens"}>{date(row.updated_at)}</td>
-                  </tr>
-                  <tr :if={@result.rows == []}>
-                    <td colspan={if @tab == "users", do: 3, else: 4} class="empty">
-                      No {@tab} found.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <nav class="pagination" aria-label="Pagination">
-              <.link :if={@result.page > 1} patch={path(@tab, @search, @result.page - 1)}>← Previous</.link>
-              <span>Page {@result.page} of {@result.pages}</span>
-              <.link :if={@result.page < @result.pages} patch={path(@tab, @search, @result.page + 1)}>Next →</.link>
-            </nav>
-          </section>
+        </form>
+        <%= if @tab == "users" do %>
+          <AdminComponents.users_table result={@result} />
+        <% else %>
+          <AdminComponents.gardens_table result={@result} />
         <% end %>
-        <footer>Admin · Read-only inventory. Refresh the page for current totals.</footer>
-      </main>
-    </div>
+        <nav class="pagination" aria-label="Pagination">
+          <.link :if={@result.page > 1} patch={path(@tab, @search, @result.page - 1)}>← Previous</.link>
+          <span>Page {@result.page} of {@result.pages}</span>
+          <.link :if={@result.page < @result.pages} patch={path(@tab, @search, @result.page + 1)}>Next →</.link>
+        </nav>
+      </section>
+    </AdminComponents.shell>
     """
   end
 end

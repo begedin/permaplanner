@@ -21,6 +21,30 @@ defmodule PermaplannerWeb.AdminAuth do
     end
   end
 
+  def on_mount(:admin, _params, session, socket) do
+    case authenticate(session["user_token"]) do
+      nil ->
+        {:halt, Phoenix.LiveView.redirect(socket, to: "/admin")}
+
+      user ->
+        socket =
+          socket
+          |> Phoenix.Component.assign(token: session["user_token"], admin_email: user.email)
+          |> Phoenix.LiveView.attach_hook(:admin_params, :handle_params, &authorize_socket/3)
+          |> Phoenix.LiveView.attach_hook(:admin_events, :handle_event, &authorize_socket/3)
+
+        {:cont, socket}
+    end
+  end
+
+  defp authorize_socket(_event_or_params, _payload_or_uri, socket) do
+    if authenticate(socket.assigns.token) do
+      {:cont, socket}
+    else
+      {:halt, Phoenix.LiveView.redirect(socket, to: "/admin")}
+    end
+  end
+
   def authenticate(token) when is_binary(token) do
     case Accounts.get_user_by_session_token(token) do
       {%User{} = user, _} ->

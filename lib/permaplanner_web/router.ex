@@ -32,8 +32,9 @@ defmodule PermaplannerWeb.Router do
   scope "/admin", PermaplannerWeb do
     pipe_through :admin
 
-    live_session :admin do
+    live_session :admin, on_mount: [{PermaplannerWeb.AdminAuth, :admin}] do
       live "/", AdminLive
+      live "/gardens/:id", AdminGardenLive
     end
   end
 

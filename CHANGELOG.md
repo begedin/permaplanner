@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.29.1
+
+- [CHANGE] Separate admin garden details from inventory with shared authorization and admin layout.
+- [FIX] Deduplicate admin plant entries by reference before resolving catalog names and legacy fallbacks.
+- [FIX] Handle malformed admin query parameters and stale inventory events without crashing.
+
 ## 0.29.0
 
 - [CHANGE] Let admins open gardens to view guild names and distinct plant names, without quantities, notes, growth stages, condition, or layout details.
