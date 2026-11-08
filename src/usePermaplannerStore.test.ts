@@ -48,6 +48,7 @@ it('round-trips every editable field without retaining document or snapshot refe
     version: GARDEN_DOCUMENT_VERSION,
     syncRevision: 8,
     landmarks: [],
+    plotBorder: [],
     plants: [{ id: 'p1', speciesId: 'apple', cultivarId: null }],
     guilds: [
       { id: 'g1', name: 'Bed', path: [{ x: 1, y: 2 }], plants: [], mulchLevel: 3 },
@@ -72,6 +73,7 @@ it('round-trips every editable field without retaining document or snapshot refe
   document.mapScale.start.x = 100;
   expect(store.snapshot()).toMatchObject({
     landmarks: [],
+    plotBorder: [],
     plants: [{ id: 'p1' }],
     guilds: [{ id: 'g1' }],
     mapScale: { unit: 'm', start: { x: 3, y: 4 } },
@@ -95,6 +97,7 @@ it('round-trips every editable field without retaining document or snapshot refe
     version: GARDEN_DOCUMENT_VERSION,
     syncRevision: 0,
     landmarks: [],
+    plotBorder: [],
     plants: [],
     guilds: [],
     mapScale: {

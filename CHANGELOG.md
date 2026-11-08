@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.31.0
+
+- [CHANGE] Add an optional polygon plot border with corner editing, deletion, undo/redo, and JSON import/export. New gardens start without a border.
+- [DB] Upgrade garden documents to version 7, preserving existing data and adding an empty plot border.
+
 ## 0.30.1
 
 - [DB] Added common periwinkle (Vinca minor) to the catalog, with Bowles's Variety, Gertrude Jekyll, and Ralph Shugert cultivars.

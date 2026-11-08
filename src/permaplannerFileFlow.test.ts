@@ -22,6 +22,11 @@ it('hydrates from document snapshot round-trip', async () => {
     mulchLevel: 1,
   };
   store.guilds = [guild];
+  store.plotBorder = [
+    { x: 0, y: 0 },
+    { x: 200, y: 0 },
+    { x: 100, y: 150 },
+  ];
   store.landmarks = [
     { id: 'house', name: 'House', x: 100, y: 50, width: 80, height: 40, rotation: 35 },
   ];

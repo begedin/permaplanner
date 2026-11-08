@@ -60,4 +60,24 @@ defmodule Permaplanner.Gardens.DocumentTest do
     assert {:ok, ^document, {:set, "image/png", "image"}} = Document.prepare(with_image)
     assert {:ok, ^document, :clear} = Document.prepare(Map.put(document, "backgroundImage", nil))
   end
+
+  test "plot borders may be absent or have nonzero area in either winding direction" do
+    triangle = [%{"x" => 10, "y" => 10}, %{"x" => 110, "y" => 10}, %{"x" => 110, "y" => 110}]
+
+    for points <- [[], triangle, Enum.reverse(triangle)] do
+      document = Map.put(Gardens.default_document(), "plotBorder", points)
+      assert {:ok, ^document, :unchanged} = Document.prepare(document)
+    end
+
+    for points <- [
+          nil,
+          Enum.take(triangle, 2),
+          [%{"x" => 10, "y" => 10}, %{"x" => 110, "y" => 10}, %{"x" => 60, "y" => 10}],
+          List.duplicate(%{"x" => 10, "y" => 10}, 3),
+          [%{"x" => "10", "y" => 10} | triangle]
+        ] do
+      assert {:error, :invalid_document} =
+               Document.prepare(Map.put(Gardens.default_document(), "plotBorder", points))
+    end
+  end
 end

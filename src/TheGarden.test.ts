@@ -627,3 +627,63 @@ it('switches between guild and landmark selection and clears it when the garden 
     ).not.toBeInTheDocument(),
   );
 });
+
+it('keeps the plot border optional and cancels drawing with Escape', async () => {
+  const plan = usePermaplannerStore();
+  await renderGarden();
+  expect(plan.plotBorder).toEqual([]);
+  expect(
+    screen.queryByRole('button', { name: 'Edit plot border' }),
+  ).not.toBeInTheDocument();
+  await fireEvent.click(screen.getByRole('button', { name: 'Plot border (P)' }));
+  expect(screen.getByLabelText('Draw plot border')).toBeInTheDocument();
+  await fireEvent.keyDown(document, { key: 'Escape' });
+  expect(screen.queryByLabelText('Draw plot border')).not.toBeInTheDocument();
+  expect(plan.plotBorder).toEqual([]);
+});
+
+it.each(['Delete', 'Remove plot border'])(
+  'removes the selected border via %s without deleting another object',
+  async (action) => {
+    const plan = usePermaplannerStore();
+    const garden = useGardenStore();
+    const guild = {
+      id: 'guild',
+      name: 'Guild',
+      path: [],
+      plants: [],
+      mulchLevel: 1 as const,
+    };
+    garden.guilds = [guild];
+    const border = [
+      { x: 0, y: 0 },
+      { x: 200, y: 0 },
+      { x: 100, y: 150 },
+    ];
+    plan.plotBorder = border;
+    const { router } = await renderGarden('/guilds/guild');
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit plot border' }));
+    await waitFor(() => expect(router.currentRoute.value.name).toBe(routeNames.guilds));
+    if (action === 'Delete') await fireEvent.keyDown(document, { key: action });
+    else await fireEvent.click(screen.getByRole('button', { name: action }));
+    expect(plan.plotBorder).toEqual([]);
+    expect(garden.guilds).toEqual([guild]);
+    usePlanCommandHistory().undo();
+    await flushPromises();
+    await fireEvent.keyDown(document, { key: 'p' });
+    expect(
+      screen.getByRole('button', { name: 'Remove plot border' }),
+    ).toBeInTheDocument();
+    await fireEvent.keyDown(document, { key: 'Escape' });
+    await fireEvent.keyDown(document, { key: 'Delete' });
+    expect(plan.plotBorder).toEqual(border);
+    await fireEvent.keyDown(document, { key: 'p' });
+    plan.gardenId = 'other-garden';
+    await flushPromises();
+    await fireEvent.keyDown(document, { key: 'Delete' });
+    expect(plan.plotBorder).toEqual(border);
+    expect(
+      screen.queryByRole('button', { name: 'Remove plot border' }),
+    ).not.toBeInTheDocument();
+  },
+);

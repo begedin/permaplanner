@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import PlotBorderLayer from './PlotBorderLayer.vue';
+  import { usePlotBorderStore } from './usePlotBorderStore';
   import LandmarkLayer from './LandmarkLayer.vue';
   import LandmarkEditor from './LandmarkEditor.vue';
   import { useLandmarkStore } from './useLandmarkStore';
@@ -32,6 +34,7 @@
   import { usePermaplannerStore } from './usePermaplannerStore';
   import AerialMapToolbar from './AerialMapToolbar.vue';
 
+  const plotBorder = usePlotBorderStore();
   const landmarks = useLandmarkStore();
   const permaplannerStore = usePermaplannerStore();
   const mapSettingsOpen = ref(false);
@@ -144,6 +147,9 @@
   const {
     selectedGuildId,
     selectedLandmark,
+    isBorderSelected,
+    selectBorder,
+    commitBorder,
     selectGuild,
     selectLandmark,
     commitLandmark,
@@ -265,6 +271,26 @@
           >
             Drag to draw a landmark rectangle. Escape cancels.
           </p>
+          <div
+            v-if="activeTool === 'border' || isBorderSelected"
+            class="paper-floating absolute top-16 right-2 z-10 max-w-[calc(100%-1rem)] px-3 py-2 text-sm text-ink-700"
+          >
+            <p v-if="plotBorder.points.length">
+              Drag corners to adjust the plot border. Escape finishes editing.
+            </p>
+            <p v-else>
+              Click to add corners. Click the first corner or press Enter to close.
+              Backspace removes a corner; Escape cancels.
+            </p>
+            <button
+              v-if="plotBorder.points.length"
+              type="button"
+              class="btn-soft mt-2"
+              @click="removeSelection"
+            >
+              Remove plot border
+            </button>
+          </div>
           <LandmarkEditor
             :landmark="selectedLandmark"
             @update="commitLandmark"
@@ -386,6 +412,16 @@
               :show-labels="showLandmarkLabels"
               :width="worldBounds.width"
               :height="worldBounds.height"
+            />
+            <PlotBorderLayer
+              :key="permaplannerStore.gardenId"
+              :points="plotBorder.points"
+              :selected="isBorderSelected"
+              :tool="activeTool"
+              :width="worldBounds.width"
+              :height="worldBounds.height"
+              @select="selectBorder"
+              @commit="commitBorder"
             />
             <ReferenceLine v-slot="{ onboardingState }">
               <OnboardingText

@@ -71,6 +71,14 @@ export const importGardenDocument = async (
       mapScale: { ...(old.mapScale as Record<string, unknown>), unit: 'unspecified' },
     };
   }
+  if (
+    document &&
+    typeof document === 'object' &&
+    'version' in document &&
+    document.version === 6
+  ) {
+    document = { ...document, version: 7, plotBorder: [] };
+  }
   return gardensApi.importGardenDocument({ document, name: opts?.name });
 };
 

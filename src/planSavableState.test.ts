@@ -11,6 +11,7 @@ beforeEach(() => setActivePinia(createPinia()));
 
 const populatedState: PlanSavableState = {
   landmarks: [],
+  plotBorder: [],
   plants: [{ id: 'p1', speciesId: 'comfrey', cultivarId: null }],
   guilds: [{ id: 'g1', name: 'Bed', path: [{ x: 1, y: 2 }], plants: [], mulchLevel: 1 }],
   backgroundOpacity: 0.55,

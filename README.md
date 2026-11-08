@@ -149,7 +149,7 @@ Month ranges are approximate outdoor northern-hemisphere seasons and vary with c
 ## Garden document format
 
 Stored documents, API responses, frontend state, and downloadable JSON use the
-merged guild format (version 6). `syncRevision` tracks save conflicts.
+merged guild format (version 7). `syncRevision` tracks save conflicts.
 Create, update, and import prepare validated document fields and parsed image changes
 through `Permaplanner.Gardens.Document` before opening a transaction. Saves lock the garden row and require the expected
 revision before atomically updating the document and background image.
@@ -163,7 +163,9 @@ renames instance `name` to `nameOrCultivar`. The backend then imports the curren
 format. Other historical field conversions are not
 supported. Version 5 imports gain an empty landmark list and an unspecified scale unit.
 The version 6 data migration applies the same conversion atomically to saved gardens
-while preserving revisions and geometry. For this single-user app, save before deploying,
+while preserving revisions and geometry. Version 7 adds `plotBorder`, an empty array
+when no border is set. Version 5/6 imports and stored gardens receive an empty border.
+For this single-user app, save before deploying,
 avoid editing during deployment, and reload afterward before saving again.
 
 ## MCP: connect an AI assistant
@@ -281,6 +283,15 @@ Landmarks store an ID, name, centre (`x`, `y`), width, height, and clockwise
 rotation in degrees. Dimensions use map coordinates. Both garden and guild MCP
 responses include all landmarks, the scale unit, and coordinate conventions.
 North is unknown; image up does not imply geographic north.
+
+### Optional plot border
+
+Gardens start without a border. Choose **Plot border (P)** to draw a polygon: click
+to place corners, then click the first corner or press Enter to close it. Backspace
+removes the last unfinished corner; Escape cancels. Select the border or its tool
+to drag corners or remove it with Delete or the Remove plot border button. Invalid
+edits that collapse the border to a line leave the previous border intact. Border
+changes support undo/redo and JSON export/import.
 
 ### Read-only admin dashboard
 

@@ -17,9 +17,13 @@ defmodule Permaplanner.Gardens.LandmarksTest do
       "rotation" => 35
     }
 
+    border = [%{"x" => 0, "y" => 0}, %{"x" => 200, "y" => 0}, %{"x" => 100, "y" => 150}]
+    assert Gardens.default_document()["plotBorder"] == []
+
     document =
       Gardens.default_document()
       |> Map.put("landmarks", [landmark])
+      |> Map.put("plotBorder", border)
       |> Map.put("guilds", [
         %{"id" => "bed", "name" => "Bed", "path" => [], "plants" => [], "mulchLevel" => 1}
       ])
@@ -35,10 +39,35 @@ defmodule Permaplanner.Gardens.LandmarksTest do
       assert {:ok,
               %{
                 landmarks: [^landmark],
+                plotBorder: ^border,
                 mapScale: %{"unit" => "ft"},
                 coordinateSystem: %{landmarkPosition: "rectangle centre", north: "unknown"}
               }} =
                Tools.call(user, tool, args)
+    end
+
+    for invalid_border <- [
+          nil,
+          [%{"x" => 1, "y" => 2}],
+          [%{"x" => "bad", "y" => 2} | border],
+          [%{"x" => 0, "y" => 0}, %{"x" => 200, "y" => 0}, %{"x" => 100, "y" => 0}],
+          [
+            %{"x" => 0.0, "y" => 0.0},
+            %{"x" => 1.0e200, "y" => 0.0},
+            %{"x" => 0.0, "y" => 1.0e200}
+          ]
+        ] do
+      assert {:error, :invalid_document} =
+               Gardens.create_garden(user, %{
+                 "document" => Map.put(document, "plotBorder", invalid_border)
+               })
+
+      assert {:error, :invalid_document} =
+               Gardens.update_garden(user, garden.id, %{
+                 "document" => Map.put(document, "plotBorder", invalid_border)
+               })
+
+      assert Gardens.get_garden!(user, garden.id).document == document
     end
 
     for {key, value} <- [{"width", 0}, {"height", -1}, {"rotation", 360}, {"x", "100"}] do

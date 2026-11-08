@@ -2,7 +2,7 @@ import type { Ref } from 'vue';
 import { useEventListener } from '@vueuse/core';
 import { isEditableTarget } from './keyboardShortcuts';
 
-export type AerialTool = 'select' | 'edit' | 'move' | 'landmark';
+export type AerialTool = 'select' | 'edit' | 'move' | 'landmark' | 'border';
 
 export const useAerialToolHotkeys = (options: {
   canUseGuildTools: Ref<boolean>;
@@ -17,6 +17,11 @@ export const useAerialToolHotkeys = (options: {
     }
 
     const key = e.key.toLowerCase();
+    if (key === 'p') {
+      e.preventDefault();
+      options.setTool('border');
+      return;
+    }
     if (key === 'r') {
       e.preventDefault();
       options.setTool('landmark');

@@ -4,16 +4,21 @@ import { isEditableTarget } from './keyboardShortcuts';
 import { useGuildSelection } from './useGuildSelection';
 import { useGardenStore } from './useGardenStore';
 import { useLandmarkStore } from './useLandmarkStore';
+import { usePlotBorderStore } from './usePlotBorderStore';
+import type { PathPoint } from './guildPathClip';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { useAerialToolHotkeys, type AerialTool } from './useAerialTool';
 import type { Landmark } from './gardenDocument';
 
-type MapSelection = { kind: 'none' } | { kind: 'guild' | 'landmark'; id: string };
+type MapSelection =
+  | { kind: 'none' | 'border' }
+  | { kind: 'guild' | 'landmark'; id: string };
 
 export const useMapInteraction = () => {
   const guildSelection = useGuildSelection();
   const garden = useGardenStore();
   const landmarks = useLandmarkStore();
+  const border = usePlotBorderStore();
   const plan = usePermaplannerStore();
   const selection = ref<MapSelection>({ kind: 'none' });
   const activeTool = ref<AerialTool>('select');
@@ -45,6 +50,9 @@ export const useMapInteraction = () => {
       ? landmarks.landmarks.find((item) => item.id === selected.id)
       : undefined;
   });
+  const isBorderSelected = computed(
+    () => selection.value.kind === 'border' && border.points.length > 0,
+  );
   const canUseGuildTools = computed(() => selectedGuildId.value !== undefined);
 
   const clearSelection = () => {
@@ -61,9 +69,20 @@ export const useMapInteraction = () => {
     landmarks.save(landmark);
     selectLandmark(landmark.id);
   };
+  const selectBorder = () => {
+    selection.value = { kind: 'border' };
+    activeTool.value = 'select';
+    void guildSelection.clearSelection();
+  };
+  const commitBorder = (points: PathPoint[]) => {
+    if (border.save(points)) selectBorder();
+  };
   const removeSelection = () => {
     const selected = selection.value;
-    if (selected.kind === 'landmark') {
+    if (selected.kind === 'border') {
+      border.save([]);
+      clearSelection();
+    } else if (selected.kind === 'landmark') {
       landmarks.remove(selected.id);
       clearSelection();
     } else if (selected.kind === 'guild') {
@@ -73,7 +92,11 @@ export const useMapInteraction = () => {
   };
   const setTool = (tool: AerialTool) => {
     if ((tool === 'edit' || tool === 'move') && !canUseGuildTools.value) return;
-    if (tool === 'landmark') {
+    if (tool === 'border' && border.points.length) {
+      selectBorder();
+      return;
+    }
+    if (tool === 'landmark' || tool === 'border') {
       selection.value = { kind: 'none' };
       void guildSelection.clearSelection();
     }
@@ -103,6 +126,9 @@ export const useMapInteraction = () => {
     setTool,
     selectedGuildId,
     selectedLandmark,
+    isBorderSelected,
+    selectBorder,
+    commitBorder,
     canUseGuildTools,
     selectGuild: guildSelection.selectGuild,
     selectLandmark,

@@ -18,6 +18,7 @@ defmodule Permaplanner.Gardens.Snapshot do
     |> Map.merge(%{
       mapScale: garden.document["mapScale"],
       landmarks: garden.document["landmarks"],
+      plotBorder: garden.document["plotBorder"],
       coordinateSystem: %{
         axes: "x right, y down",
         landmarkPosition: "rectangle centre",

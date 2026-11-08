@@ -44,6 +44,13 @@
         disabled: false,
       },
       {
+        id: 'border',
+        label: 'Plot border',
+        hotkey: 'P',
+        icon: 'polygon',
+        disabled: false,
+      },
+      {
         id: 'move',
         label: 'Move guild',
         hotkey: 'M',

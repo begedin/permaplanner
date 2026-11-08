@@ -5,6 +5,7 @@ export const UI_ICON_IDS = [
   'calendar',
   'pointer',
   'rectangle',
+  'polygon',
   'move',
   'edit',
   'add',

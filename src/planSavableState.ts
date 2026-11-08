@@ -10,6 +10,7 @@ export const createEmptyPlanState = (): PlanSavableState => ({
   plants: [],
   guilds: [],
   landmarks: [],
+  plotBorder: [],
   backgroundOpacity: 0.4,
   backgroundImageDataUrl: undefined,
   onboardingState: DEFAULT_ONBOARDING_STATE,

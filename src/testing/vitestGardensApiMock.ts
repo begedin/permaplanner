@@ -19,6 +19,7 @@ vi.mock('../api/gardens', () => ({
       version: GARDEN_DOCUMENT_VERSION,
       syncRevision: 0,
       landmarks: [],
+      plotBorder: [],
       plants: [],
       guilds: [],
       mapScale: {

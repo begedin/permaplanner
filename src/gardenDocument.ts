@@ -1,7 +1,7 @@
 import type { Guild, UserPlant } from './gardenTypes';
 import type { OnboardingState } from './onboardingTypes';
 
-export const GARDEN_DOCUMENT_VERSION = 6 as const;
+export const GARDEN_DOCUMENT_VERSION = 7 as const;
 
 export type ScaleUnit = 'unspecified' | 'm' | 'ft' | 'cm' | 'in' | 'yd';
 export const SCALE_UNITS: { value: ScaleUnit; label: string }[] = [
@@ -31,6 +31,8 @@ export type GardenDocument = {
   plants: UserPlant[];
   guilds: Guild[];
   landmarks: Landmark[];
+  /** Empty when no optional plot border has been drawn. */
+  plotBorder: { x: number; y: number }[];
   mapScale: {
     start: { x: number; y: number };
     end: { x: number; y: number };

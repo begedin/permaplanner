@@ -10,6 +10,10 @@ defmodule Permaplanner.Gardens.DocumentMigrationTest do
     __DIR__
   )
 
+  @border_migration Permaplanner.Repo.Migrations.AddPlotBorder
+  @border_version 20_261_108_054_137
+  Code.require_file("../../../priv/repo/migrations/20261108054137_add_plot_border.exs", __DIR__)
+
   setup do
     # An isolated schema exercises the real migration with separate transactions,
     # without rolling back or rewriting any application test data.
@@ -64,6 +68,30 @@ defmodule Permaplanner.Gardens.DocumentMigrationTest do
       |> Map.put("version", 6)
       |> Map.put("landmarks", [])
       |> put_in(["mapScale", "unit"], "unspecified")
+
+    assert [[^expected, 6, 3, ^timestamp]] =
+             Repo.query!(
+               "SELECT document, file_version, sync_revision, updated_at FROM #{schema}.gardens"
+             ).rows
+
+    assert :ok =
+             Ecto.Migrator.up(Repo, @border_version, @border_migration,
+               prefix: schema,
+               log: false
+             )
+
+    bordered = expected |> Map.put("version", 7) |> Map.put("plotBorder", [])
+
+    assert [[^bordered, 7, 3, ^timestamp]] =
+             Repo.query!(
+               "SELECT document, file_version, sync_revision, updated_at FROM #{schema}.gardens"
+             ).rows
+
+    assert :ok =
+             Ecto.Migrator.down(Repo, @border_version, @border_migration,
+               prefix: schema,
+               log: false
+             )
 
     assert [[^expected, 6, 3, ^timestamp]] =
              Repo.query!(

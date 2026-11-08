@@ -13,6 +13,7 @@ vi.unmock('./gardens');
 
 const document: GardenDocument = {
   landmarks: [],
+  plotBorder: [],
   version: GARDEN_DOCUMENT_VERSION,
   syncRevision: 3,
   plants: [
@@ -215,8 +216,18 @@ it.each([document, splitDocument])(
       document: {
         ...document,
         landmarks: [],
+        plotBorder: [],
         mapScale: { ...mapScale, unit: 'unspecified' },
       },
     });
   },
 );
+
+it('adds an optional empty border to version 6 imports', async () => {
+  const { plotBorder: _border, ...old } = document;
+  fetchMock.mockResolvedValueOnce(
+    new Response(JSON.stringify({ garden: { id: 'garden1' } })),
+  );
+  await importJsonText(JSON.stringify({ ...old, version: 6 }));
+  expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({ document });
+});

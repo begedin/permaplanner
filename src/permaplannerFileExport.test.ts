@@ -8,6 +8,7 @@ const sampleDoc: GardenDocument = {
   version: GARDEN_DOCUMENT_VERSION,
   syncRevision: 1,
   landmarks: [],
+  plotBorder: [],
   plants: [],
   guilds: [],
   mapScale: {
