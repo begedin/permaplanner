@@ -29,6 +29,14 @@ defmodule PermaplannerWeb.LegacyImportControllerTest do
              json_response(conn, 201)
   end
 
+  test "rejects an imported background above the image size limit", %{conn: conn, user: user} do
+    image = "data:image/png;base64," <> Base.encode64(:binary.copy(<<0>>, 3_000_001))
+    document = Map.put(Gardens.default_document(), "backgroundImage", image)
+    conn = post(conn, "/api/legacy-import/local", %{"document" => document})
+    assert %{"error" => "image_too_large"} = json_response(conn, 413)
+    assert Gardens.list_gardens(user) == []
+  end
+
   test "rejects future document version", %{conn: conn} do
     document = Map.put(Gardens.default_document(), "version", 999)
 

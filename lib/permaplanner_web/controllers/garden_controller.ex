@@ -17,6 +17,9 @@ defmodule PermaplannerWeb.GardenController do
       {:ok, garden} ->
         conn |> put_status(:created) |> json(%{garden: Gardens.garden_json(garden)})
 
+      {:error, :image_too_large} ->
+        conn |> put_status(:request_entity_too_large) |> json(%{error: "image_too_large"})
+
       {:error, _} ->
         conn |> put_status(:unprocessable_entity) |> json(%{error: "create_failed"})
     end
@@ -29,12 +32,18 @@ defmodule PermaplannerWeb.GardenController do
 
   def update(
         conn,
-        %{"document" => document, "backgroundImage" => %Plug.Upload{} = upload} = params
+        %{"id" => id, "document" => document, "backgroundImage" => %Plug.Upload{} = upload} =
+          params
       )
       when is_binary(document) do
     case Jason.decode(document) do
       {:ok, document} when is_map(document) ->
-        update(conn, Map.put(params, "document", Map.put(document, "backgroundImage", upload)))
+        save(
+          conn,
+          id,
+          Map.put(params, "document", document),
+          {:file, upload.path, upload.content_type}
+        )
 
       _ ->
         conn |> put_status(:unprocessable_entity) |> json(%{error: "update_failed"})
@@ -42,12 +51,19 @@ defmodule PermaplannerWeb.GardenController do
   end
 
   def update(conn, %{"id" => id} = params) do
-    case Gardens.update_garden(conn.assigns.current_user, id, params) do
+    save(conn, id, params, nil)
+  end
+
+  defp save(conn, id, params, background_file) do
+    case Gardens.update_garden(conn.assigns.current_user, id, params, background_file) do
       {:ok, garden} ->
         json(conn, %{syncRevision: garden.sync_revision})
 
       {:error, :stale} ->
         conn |> put_status(:conflict) |> json(%{error: "stale_revision"})
+
+      {:error, :image_too_large} ->
+        conn |> put_status(:request_entity_too_large) |> json(%{error: "image_too_large"})
 
       {:error, _} ->
         conn |> put_status(:unprocessable_entity) |> json(%{error: "update_failed"})

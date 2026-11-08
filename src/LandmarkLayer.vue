@@ -2,6 +2,7 @@
   import { computed, ref, watch } from 'vue';
   import { v4 as uuid } from 'uuid';
   import { useCameraStore } from './useCameraStore';
+  import { transformClientPoint } from './svgClientToUser';
   import { usePointerSession } from './usePointerSession';
   import {
     LANDMARK_RESIZE_HANDLES,
@@ -53,10 +54,10 @@
     session.cancel();
     const matrix = svg.getScreenCTM()?.inverse();
     if (!matrix) return;
-    const origin = {
-      x: matrix.a * event.clientX + matrix.c * event.clientY + matrix.e,
-      y: matrix.b * event.clientX + matrix.d * event.clientY + matrix.f,
-    };
+    // Selection can toggle the sidebar; keep this gesture in its starting frame.
+    const toMapPoint = (event: PointerEvent) =>
+      transformClientPoint(matrix, event.clientX, event.clientY);
+    const origin = toMapPoint(event);
     // Snapshot the rectangle; the preview must never mutate the saved object.
     if (gesture.kind !== 'draw') {
       gesture = { ...gesture, landmark: { ...gesture.landmark } };
@@ -67,11 +68,7 @@
         draft.value = landmarkAtPointer(
           gesture,
           origin,
-          // Selection can toggle the sidebar; keep this gesture in its starting frame.
-          {
-            x: matrix.a * next.clientX + matrix.c * next.clientY + matrix.e,
-            y: matrix.b * next.clientX + matrix.d * next.clientY + matrix.f,
-          },
+          toMapPoint(next),
           handleSize.value,
         );
       },

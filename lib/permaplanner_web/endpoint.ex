@@ -31,7 +31,7 @@ defmodule PermaplannerWeb.Endpoint do
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
   plug Plug.Parsers,
-    parsers: [:urlencoded, {:multipart, length: 16_000_000}, {:json, length: 16_000_000}],
+    parsers: [:urlencoded, {:multipart, length: 8_000_000}, {:json, length: 8_000_000}],
     pass: ["*/*"],
     json_decoder: Jason
 

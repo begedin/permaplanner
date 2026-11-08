@@ -3,7 +3,10 @@ defmodule Permaplanner.Gardens.BackgroundImage do
 
   alias Permaplanner.Gardens.GardenBackgroundImage
 
-  @spec parse_data_url(String.t()) :: {:ok, String.t(), binary()} | :error
+  @max_image_bytes 3_000_000
+
+  @spec parse_data_url(String.t()) ::
+          {:ok, String.t(), binary()} | :error | {:error, :image_too_large}
   def parse_data_url(data_url) when is_binary(data_url) do
     case String.split(data_url, ",", parts: 2) do
       ["data:" <> header, b64] ->
@@ -13,9 +16,15 @@ defmodule Permaplanner.Gardens.BackgroundImage do
             _ -> "application/octet-stream"
           end
 
-        case Base.decode64(String.trim(b64)) do
-          {:ok, bytes} -> {:ok, content_type, bytes}
-          :error -> :error
+        b64 = String.trim(b64)
+
+        if byte_size(b64) > div(@max_image_bytes + 2, 3) * 4 do
+          {:error, :image_too_large}
+        else
+          case Base.decode64(b64) do
+            {:ok, bytes} -> {:ok, content_type, bytes}
+            :error -> :error
+          end
         end
 
       _ ->
@@ -24,6 +33,16 @@ defmodule Permaplanner.Gardens.BackgroundImage do
   end
 
   def parse_data_url(_), do: :error
+
+  def read_file(path) do
+    with {:ok, stat} <- File.stat(path) do
+      if stat.size > @max_image_bytes do
+        {:error, :image_too_large}
+      else
+        File.read(path)
+      end
+    end
+  end
 
   @spec to_data_url(GardenBackgroundImage.t()) :: String.t()
   def to_data_url(%GardenBackgroundImage{content_type: content_type, data: data}) do
@@ -43,12 +62,10 @@ defmodule Permaplanner.Gardens.BackgroundImage do
   - `:unchanged` — no `backgroundImage` key in the payload
   - `:clear` — explicit `null`
   - `{:set, content_type, bytes}` — new or updated image bytes
-  - `{:upload, upload}` — streamed upload, read only when the save transaction applies it
   """
   @spec split_from_document(map()) ::
-          {:ok, map(),
-           :unchanged | :clear | {:set, String.t(), binary()} | {:upload, Plug.Upload.t()}}
-          | {:error, :invalid_document}
+          {:ok, map(), :unchanged | :clear | {:set, String.t(), binary()}}
+          | {:error, :invalid_document | :image_too_large}
   def split_from_document(document) when is_map(document) do
     case Map.fetch(document, "backgroundImage") do
       :error ->
@@ -57,9 +74,6 @@ defmodule Permaplanner.Gardens.BackgroundImage do
       {:ok, nil} ->
         {:ok, Map.delete(document, "backgroundImage"), :clear}
 
-      {:ok, %Plug.Upload{} = upload} ->
-        {:ok, Map.delete(document, "backgroundImage"), {:upload, upload}}
-
       {:ok, data_url} when is_binary(data_url) ->
         case parse_data_url(data_url) do
           {:ok, content_type, bytes} ->
@@ -67,6 +81,9 @@ defmodule Permaplanner.Gardens.BackgroundImage do
 
           :error ->
             {:error, :invalid_document}
+
+          {:error, :image_too_large} = error ->
+            error
         end
 
       _ ->

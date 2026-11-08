@@ -12,6 +12,14 @@ export const clientToSvgUser = (
     return { x: 0, y: 0 };
   }
   const m = ctm.inverse();
+  return transformClientPoint(m, clientX, clientY);
+};
+
+export const transformClientPoint = (
+  m: Pick<DOMMatrixReadOnly, 'a' | 'b' | 'c' | 'd' | 'e' | 'f'>,
+  clientX: number,
+  clientY: number,
+): { x: number; y: number } => {
   return {
     x: m.a * clientX + m.c * clientY + m.e,
     y: m.b * clientX + m.d * clientY + m.f,

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.31.4
+
+- [FIX] Enforce a 3 MB background image limit on the server for saves and imports, and reduce the request limit to 8 MB.
+- [FIX] Preserve HTTP error statuses for non-JSON responses so save failures show the appropriate recovery message.
+
 ## 0.31.3
 
 - [FIX] Reduce background-save memory use with multipart image uploads and avoid reloading the image after saving.

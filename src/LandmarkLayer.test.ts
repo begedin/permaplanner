@@ -6,6 +6,16 @@ import LandmarkLayer from './LandmarkLayer.vue';
 import { useLandmarkStore } from './useLandmarkStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 
+const landmark = {
+  id: 'shed',
+  name: 'Shed',
+  x: 30,
+  y: 20,
+  width: 40,
+  height: 20,
+  rotation: 0,
+};
+
 beforeEach(() => {
   setActivePinia(createPinia());
   Object.defineProperty(SVGSVGElement.prototype, 'getScreenCTM', {
@@ -114,15 +124,6 @@ it('draws in map coordinates, then moves, rotates and resizes with one undo step
 
 it('does not move a landmark when selection changes the map layout during a click', async () => {
   const store = useLandmarkStore();
-  const landmark = {
-    id: 'shed',
-    name: 'Shed',
-    x: 30,
-    y: 20,
-    width: 40,
-    height: 20,
-    rotation: 0,
-  };
   store.save(landmark);
   const wrapper = renderLayer();
   let matrix = { a: 0.5, b: 0, c: 0, d: 0.5, e: -10, f: -20 };
@@ -149,23 +150,14 @@ it('does not move a landmark when selection changes the map layout during a clic
 
 it('rotates through the controls overlay when another landmark covers the handle', async () => {
   const store = useLandmarkStore();
-  const selected = {
-    id: 'shed',
-    name: 'Shed',
-    x: 100,
-    y: 100,
-    width: 40,
-    height: 20,
-    rotation: 0,
-  };
+  const selected = { ...landmark, x: 100, y: 100 };
   const overlapping = {
+    ...selected,
     id: 'house',
     name: 'House',
-    x: 100,
     y: 62,
     width: 60,
     height: 60,
-    rotation: 0,
   };
   store.save(selected);
   store.save(overlapping);
@@ -217,13 +209,13 @@ it.each(['Escape', 'pointercancel', 'unmount', 'tool change'])(
 it('clamps a dragged edge before it crosses the opposite edge and cancels a resize without saving', async () => {
   const store = useLandmarkStore();
   store.save({
+    ...landmark,
     id: 'house',
     name: 'House',
     x: 100,
     y: 50,
     width: 80,
     height: 60,
-    rotation: 0,
   });
   const wrapper = renderLayer();
   pointer(

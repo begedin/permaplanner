@@ -15,6 +15,9 @@ defmodule PermaplannerWeb.LegacyImportController do
       {:error, :invalid_document} ->
         conn |> put_status(:unprocessable_entity) |> json(%{error: "invalid_document"})
 
+      {:error, :image_too_large} ->
+        conn |> put_status(:request_entity_too_large) |> json(%{error: "image_too_large"})
+
       {:error, _} ->
         conn |> put_status(:unprocessable_entity) |> json(%{error: "import_failed"})
     end

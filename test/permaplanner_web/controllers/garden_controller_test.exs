@@ -117,13 +117,13 @@ defmodule PermaplannerWeb.GardenControllerTest do
     assert response_document["backgroundImage"] == @png_data_url
   end
 
-  test "saves a replacement background larger than the default request limit", %{
+  test "saves a replacement background at the image size limit", %{
     conn: conn,
     user: user
   } do
     document = Map.put(Gardens.default_document(), "backgroundImage", @png_data_url)
     {:ok, garden} = Gardens.create_garden(user, %{"document" => document})
-    bytes = :binary.copy(<<0>>, 6_000_000)
+    bytes = :binary.copy(<<0>>, 3_000_000)
     image = "data:image/png;base64," <> Base.encode64(bytes)
     document = Map.put(garden.document, "backgroundImage", image)
 
@@ -147,7 +147,7 @@ defmodule PermaplannerWeb.GardenControllerTest do
     user: user
   } do
     {:ok, garden} = Gardens.create_garden(user, %{})
-    bytes = :crypto.strong_rand_bytes(4_100_000)
+    bytes = :crypto.strong_rand_bytes(3_000_000)
     document = Map.put(garden.document, "backgroundOpacity", 0.7)
     boundary = "garden-upload-boundary"
 
@@ -199,9 +199,56 @@ defmodule PermaplannerWeb.GardenControllerTest do
     refute Repo.get(GardenBackgroundImage, garden.id)
   end
 
+  for transport <- [:json, :multipart] do
+    test "rejects an oversized #{transport} image without changing the garden", %{
+      conn: conn,
+      user: user
+    } do
+      document = Map.put(Gardens.default_document(), "backgroundImage", @png_data_url)
+      {:ok, garden} = Gardens.create_garden(user, %{"document" => document})
+      bytes = :binary.copy(<<0>>, 3_000_001)
+      document = Map.put(garden.document, "backgroundOpacity", 0.7)
+
+      params =
+        case unquote(transport) do
+          :json ->
+            %{
+              "document" =>
+                Map.put(
+                  document,
+                  "backgroundImage",
+                  "data:image/png;base64," <> Base.encode64(bytes)
+                )
+            }
+
+          :multipart ->
+            path = Path.join(System.tmp_dir!(), "garden-upload-#{Ecto.UUID.generate()}")
+            File.write!(path, bytes)
+            on_exit(fn -> File.rm(path) end)
+
+            %{
+              "document" => Jason.encode!(document),
+              "backgroundImage" => %Plug.Upload{
+                path: path,
+                content_type: "image/png",
+                filename: "map.png"
+              }
+            }
+        end
+
+      conn = put(conn, "/api/gardens/#{garden.id}", params)
+      assert %{"error" => "image_too_large"} = json_response(conn, 413)
+      assert Repo.get!(Garden, garden.id).document == garden.document
+      assert Repo.get!(Garden, garden.id).sync_revision == 0
+
+      assert Gardens.garden_json(Gardens.get_garden!(user, garden.id)).document["backgroundImage"] ==
+               @png_data_url
+    end
+  end
+
   test "returns a JSON error when a save exceeds the request limit", %{conn: conn, user: user} do
     {:ok, garden} = Gardens.create_garden(user, %{})
-    body = Jason.encode!(%{"document" => garden.document}) <> :binary.copy(" ", 16_000_000)
+    body = Jason.encode!(%{"document" => garden.document}) <> :binary.copy(" ", 8_000_000)
 
     {413, _headers, response} =
       assert_error_sent 413, fn ->

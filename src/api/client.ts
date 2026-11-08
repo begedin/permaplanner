@@ -32,9 +32,9 @@ export class ApiError extends Error {
 }
 
 export const expectJson = async <T>(res: Response): Promise<T> => {
-  const body = await readJson<T>(res);
   if (!res.ok) {
+    const body = await readJson<unknown>(res).catch(() => undefined);
     throw new ApiError(res.status, body);
   }
-  return body;
+  return readJson<T>(res);
 };

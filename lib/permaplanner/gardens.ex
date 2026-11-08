@@ -74,10 +74,11 @@ defmodule Permaplanner.Gardens do
     end
   end
 
-  def update_garden(%User{id: user_id}, id, attrs) do
+  def update_garden(%User{id: user_id}, id, attrs, background_file \\ nil) do
     document = attrs["document"]
 
     with {:ok, stored_document, background_action} <- Document.prepare(document) do
+      background_action = if background_file, do: background_file, else: background_action
       client_revision = Map.get(attrs, "syncRevision", document["syncRevision"])
 
       Repo.transaction(fn ->
@@ -156,9 +157,9 @@ defmodule Permaplanner.Gardens do
 
   defp apply_background_action(_garden_id, :unchanged), do: :ok
 
-  defp apply_background_action(garden_id, {:upload, upload}) do
-    with {:ok, bytes} <- File.read(upload.path) do
-      apply_background_action(garden_id, {:set, upload.content_type, bytes})
+  defp apply_background_action(garden_id, {:file, path, content_type}) do
+    with {:ok, bytes} <- BackgroundImage.read_file(path) do
+      apply_background_action(garden_id, {:set, content_type, bytes})
     end
   end
 
