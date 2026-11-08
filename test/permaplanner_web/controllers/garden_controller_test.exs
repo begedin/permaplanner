@@ -142,6 +142,63 @@ defmodule PermaplannerWeb.GardenControllerTest do
     assert saved["backgroundImage"] == image
   end
 
+  test "streams a background upload and saves it atomically with the document", %{
+    conn: conn,
+    user: user
+  } do
+    {:ok, garden} = Gardens.create_garden(user, %{})
+    bytes = :crypto.strong_rand_bytes(4_100_000)
+    document = Map.put(garden.document, "backgroundOpacity", 0.7)
+    boundary = "garden-upload-boundary"
+
+    body =
+      IO.iodata_to_binary([
+        "--#{boundary}\r\nContent-Disposition: form-data; name=\"document\"\r\n\r\n",
+        Jason.encode!(document),
+        "\r\n--#{boundary}\r\nContent-Disposition: form-data; name=\"backgroundImage\"; filename=\"map.png\"\r\nContent-Type: image/png\r\n\r\n",
+        bytes,
+        "\r\n--#{boundary}--\r\n"
+      ])
+
+    saved_conn =
+      conn
+      |> put_req_header("content-type", "multipart/form-data; boundary=#{boundary}")
+      |> put("/api/gardens/#{garden.id}", body)
+
+    assert %{"syncRevision" => 1} = json_response(saved_conn, 200)
+
+    assert %GardenBackgroundImage{content_type: "image/png", data: ^bytes} =
+             Repo.get!(GardenBackgroundImage, garden.id)
+
+    assert Repo.get!(Garden, garden.id).document == Map.put(document, "syncRevision", 1)
+
+    stale_conn =
+      conn
+      |> put_req_header("content-type", "multipart/form-data; boundary=#{boundary}")
+      |> put("/api/gardens/#{garden.id}", body)
+
+    assert %{"error" => "stale_revision"} = json_response(stale_conn, 409)
+    assert %GardenBackgroundImage{data: ^bytes} = Repo.get!(GardenBackgroundImage, garden.id)
+  end
+
+  test "rejects malformed multipart documents before reading the image", %{conn: conn, user: user} do
+    {:ok, garden} = Gardens.create_garden(user, %{})
+
+    conn =
+      put(conn, "/api/gardens/#{garden.id}", %{
+        "document" => "invalid JSON",
+        "backgroundImage" => %Plug.Upload{
+          path: "/missing-image",
+          content_type: "image/png",
+          filename: "map.png"
+        }
+      })
+
+    assert %{"error" => "update_failed"} = json_response(conn, 422)
+    assert Repo.get!(Garden, garden.id).sync_revision == 0
+    refute Repo.get(GardenBackgroundImage, garden.id)
+  end
+
   test "returns a JSON error when a save exceeds the request limit", %{conn: conn, user: user} do
     {:ok, garden} = Gardens.create_garden(user, %{})
     body = Jason.encode!(%{"document" => garden.document}) <> :binary.copy(" ", 16_000_000)

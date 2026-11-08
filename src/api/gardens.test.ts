@@ -57,7 +57,7 @@ const document: GardenDocument = {
     linePhysicalLength: 25,
   },
   backgroundOpacity: 0.55,
-  backgroundImage: 'data:image/png;base64,abc',
+  backgroundImage: 'data:image/png;base64,aW1hZ2U=',
   onboardingState: 'done',
 };
 
@@ -72,11 +72,22 @@ afterEach(() => {
   fetchMock.mockReset();
 });
 
-it('saves and exports the same current document without splitting geometry', async () => {
+it('uploads a changed background as a file while preserving the document and export', async () => {
   fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ syncRevision: 4 })));
   expect(await updateGarden('garden1', document)).toBe(4);
   const [, request] = fetchMock.mock.calls[0]!;
-  expect(JSON.parse(String(request?.body))).toEqual({ document, syncRevision: 3 });
+  const form = request?.body as FormData;
+  const { backgroundImage, ...data } = document;
+  expect(JSON.parse(String(form.get('document')))).toEqual(data);
+  expect(request?.headers).not.toHaveProperty('Content-Type');
+  const file = form.get('backgroundImage') as File;
+  expect(file).toMatchObject({ type: 'image/png', size: 5 });
+  const uploaded = await new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.readAsDataURL(file);
+  });
+  expect(uploaded).toBe(backgroundImage);
   expect(JSON.parse(buildLocalPlanJsonText(document))).toEqual(document);
 });
 
@@ -163,7 +174,7 @@ it.each([
   expect(fetchMock).not.toHaveBeenCalled();
 });
 
-it.each([undefined, null, 'data:image/png;base64,new'])(
+it.each([undefined, null])(
   'preserves background update semantics for %s',
   async (backgroundImage) => {
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ syncRevision: 4 })));

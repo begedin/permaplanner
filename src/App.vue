@@ -5,6 +5,7 @@
 
   import AppFooter from './AppFooter.vue';
   import AuthGate from './AuthGate.vue';
+  import GardenSaveErrorToast from './GardenSaveErrorToast.vue';
   import PlantIconSprite from './plantIcons/PlantIconSprite.vue';
   import UiIconSprite from './uiIcons/UiIconSprite.vue';
   import PlantParts from './PlantParts.vue';
@@ -63,5 +64,6 @@
     </div>
 
     <AppFooter />
+    <GardenSaveErrorToast />
   </div>
 </template>

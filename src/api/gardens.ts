@@ -46,13 +46,25 @@ export const updateGarden = async (
   id: string,
   document: GardenDocumentPayload,
 ): Promise<number> => {
+  const snapshot = withPersistedGuildPlantLabels(document);
+  let body: string | FormData;
+  if (typeof snapshot.backgroundImage === 'string') {
+    const { backgroundImage, ...data } = snapshot;
+    const comma = backgroundImage.indexOf(',');
+    const type = backgroundImage.slice(5, comma).split(';')[0];
+    const bytes = Uint8Array.from(atob(backgroundImage.slice(comma + 1)), (char) =>
+      char.charCodeAt(0),
+    );
+    body = new FormData();
+    body.append('document', JSON.stringify(data));
+    body.append('backgroundImage', new Blob([bytes], { type }), 'background');
+  } else {
+    body = JSON.stringify({ document: snapshot, syncRevision: document.syncRevision });
+  }
   const data = await expectJson<{ syncRevision: number }>(
     await apiFetch(`/api/gardens/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({
-        document: withPersistedGuildPlantLabels(document),
-        syncRevision: document.syncRevision,
-      }),
+      body,
     }),
   );
   return data.syncRevision;

@@ -6,12 +6,14 @@ import { createTestingPinia } from '@pinia/testing';
 import { createMemoryHistory } from 'vue-router';
 
 import * as gardensApi from './api/gardens';
+import { ApiError } from './api/client';
 import App from './App.vue';
 import { createAppRouter, routeNames } from './router';
 import { seedAuthedTestSession } from './testing/authedTestSession';
 import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { useGardenSessionStore } from './stores/useGardenSessionStore';
+import { useAuthStore } from './stores/useAuthStore';
 
 vi.mock('./useAuthGate', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./useAuthGate')>();
@@ -93,6 +95,44 @@ it('prompts on page unload only while the plan has unsaved changes', async () =>
   const unmounted = new Event('beforeunload', { cancelable: true });
   window.dispatchEvent(unmounted);
   expect(unmounted.defaultPrevented).toBe(false);
+});
+
+it('shows a dismissible save failure toast, shows it again on failure, and retries', async () => {
+  vi.mocked(useAuthStore().bootstrap).mockResolvedValue();
+  const store = usePermaplannerStore();
+  store.gardenId = 'g1';
+  const session = useGardenSessionStore();
+  session.markSaved();
+  store.backgroundOpacity = 0.7;
+  vi.mocked(gardensApi.updateGarden)
+    .mockRejectedValueOnce(new ApiError(502, {}))
+    .mockRejectedValueOnce(new ApiError(502, {}))
+    .mockResolvedValueOnce(1);
+  renderApp();
+
+  await fireEvent.click(await screen.findByRole('button', { name: 'Save' }));
+  await waitFor(() => {
+    expect(screen.getByRole('alert', { name: 'Garden save failed' })).toHaveTextContent(
+      'Your garden could not be saved. Your changes are still here. Please try again.',
+    );
+  });
+  await fireEvent.click(screen.getByRole('button', { name: 'Dismiss save error' }));
+  expect(
+    screen.queryByRole('alert', { name: 'Garden save failed' }),
+  ).not.toBeInTheDocument();
+  expect(session).toMatchObject({ canSave: true, hasUnsavedChanges: true });
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => {
+    expect(screen.getByRole('alert', { name: 'Garden save failed' })).toBeVisible();
+  });
+  await fireEvent.click(screen.getByRole('button', { name: 'Retry save' }));
+  await waitFor(() => {
+    expect(
+      screen.queryByRole('alert', { name: 'Garden save failed' }),
+    ).not.toBeInTheDocument();
+    expect(session.status).toBe('saved');
+  });
 });
 
 it('allows garden view changes but prompts before leaving for import', async () => {

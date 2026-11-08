@@ -57,6 +57,34 @@ const renderGarden = async (path = '/guilds') => {
   return { router, view: render(TheGarden, { global: { plugins: [router] } }) };
 };
 
+it('explains the paste image size limit and allows dismissing the error', async () => {
+  await renderGarden();
+  const event = new Event('paste');
+  Object.defineProperty(event, 'clipboardData', {
+    value: {
+      items: [
+        {
+          type: 'image/png',
+          getAsFile: () =>
+            new File([new Uint8Array(3_000_001)], 'large.png', { type: 'image/png' }),
+        },
+      ],
+    },
+  });
+  await fireEvent(document, event);
+  await waitFor(() => {
+    expect(
+      screen.getByRole('alert', { name: 'Background image not added' }),
+    ).toHaveTextContent('Paste an image of 3 MB or less.');
+  });
+  await fireEvent.click(
+    screen.getByRole('button', { name: 'Dismiss background image error' }),
+  );
+  expect(
+    screen.queryByRole('alert', { name: 'Background image not added' }),
+  ).not.toBeInTheDocument();
+});
+
 it('deselects when the guild page title is clicked', async () => {
   const store = useGardenStore();
   store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 }];

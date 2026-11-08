@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.31.3
+
+- [FIX] Reduce background-save memory use with multipart image uploads and avoid reloading the image after saving.
+- [FIX] Validate pasted backgrounds against a 3 MB limit and preserve the current background when a paste is rejected.
+- [FIX] Show a dismissible error toast with retry when a garden save fails.
+- [FIX] Prevent sidebar layout changes from moving landmarks during selection, and keep rotation and resize handles above other map objects.
+
 ## 0.31.2
 
 - [CHANGE] Upgrade the production runtime and CI to Elixir 1.20 and Erlang/OTP 29.

@@ -27,6 +27,20 @@ defmodule PermaplannerWeb.GardenController do
     json(conn, %{garden: Gardens.garden_json(garden)})
   end
 
+  def update(
+        conn,
+        %{"document" => document, "backgroundImage" => %Plug.Upload{} = upload} = params
+      )
+      when is_binary(document) do
+    case Jason.decode(document) do
+      {:ok, document} when is_map(document) ->
+        update(conn, Map.put(params, "document", Map.put(document, "backgroundImage", upload)))
+
+      _ ->
+        conn |> put_status(:unprocessable_entity) |> json(%{error: "update_failed"})
+    end
+  end
+
   def update(conn, %{"id" => id} = params) do
     case Gardens.update_garden(conn.assigns.current_user, id, params) do
       {:ok, garden} ->

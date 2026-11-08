@@ -42,9 +42,10 @@
   const showLandmarkLabels = useLocalStorage('permaplanner.showLandmarkLabels', true);
 
   const { imgWidth, imgHeight, imgDataUrl, ready } = useBackgroundImage();
-  useBackgroundImagePaste();
+  const { errorMessage: backgroundPasteError } = useBackgroundImagePaste();
 
   const container = ref<SVGElement>();
+  const landmarkControls = ref<SVGGElement>();
 
   const { width: containerWidth, height: containerHeight } = useElementSize(container);
 
@@ -258,6 +259,22 @@
           class="relative flex flex-1 min-h-0 min-w-0 flex-col"
           aria-label="Aerial map"
         >
+          <div
+            v-if="backgroundPasteError"
+            role="alert"
+            aria-label="Background image not added"
+            class="absolute bottom-16 left-4 right-4 z-20 mx-auto flex max-w-md items-start gap-3 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-900 shadow-lg"
+          >
+            <p class="flex-1">{{ backgroundPasteError }}</p>
+            <button
+              type="button"
+              class="btn-icon flex size-7 shrink-0 items-center justify-center hover:bg-red-100"
+              aria-label="Dismiss background image error"
+              @click="backgroundPasteError = undefined"
+            >
+              ×
+            </button>
+          </div>
           <div class="pointer-events-none absolute top-2 right-2 z-10">
             <AerialMapToolbar
               :active-tool="activeTool"
@@ -405,6 +422,7 @@
 
             <LandmarkLayer
               :landmarks="landmarks.landmarks"
+              :controls-target="landmarkControls"
               :selected-id="selectedLandmark?.id"
               :tool="activeTool"
               @select="selectLandmark"
@@ -431,6 +449,11 @@
                 :onboarding-state="onboardingState"
               />
             </ReferenceLine>
+            <g
+              ref="landmarkControls"
+              role="group"
+              aria-label="Landmark controls"
+            />
           </svg>
           <div
             class="map-settings-panel paper-floating absolute bottom-2 right-2 z-10 flex max-w-[calc(100%-1rem)] flex-col p-1.5 text-sm"

@@ -22,16 +22,17 @@ const renderLayer = () =>
       setup() {
         const store = useLandmarkStore();
         const selectedId = ref(store.landmarks[0]?.id);
+        const controlsTarget = ref<SVGGElement>();
         const tool = ref(store.landmarks.length ? 'select' : 'landmark');
         const commit = (landmark: import('./gardenDocument').Landmark) => {
           store.save(landmark);
           selectedId.value = landmark.id;
           tool.value = 'select';
         };
-        return { store, selectedId, tool, commit };
+        return { store, selectedId, tool, commit, controlsTarget };
       },
       template:
-        '<svg><LandmarkLayer :width="1000" :height="800" :landmarks="store.landmarks" :selected-id="selectedId" :tool="tool" @select="selectedId = $event" @commit="commit" /></svg>',
+        '<svg><LandmarkLayer :width="1000" :height="800" :landmarks="store.landmarks" :selected-id="selectedId" :tool="tool" :controls-target="controlsTarget" @select="selectedId = $event" @commit="commit" /><g ref="controlsTarget" role="group" aria-label="Landmark controls" /></svg>',
     }),
   );
 const pointer = (target: EventTarget, type: string, x: number, y: number) => {
@@ -108,6 +109,82 @@ it('draws in map coordinates, then moves, rotates and resizes with one undo step
   expect(store.landmarks).toEqual([]);
   history.redo();
   expect(store.landmarks).toEqual([original]);
+  wrapper.unmount();
+});
+
+it('does not move a landmark when selection changes the map layout during a click', async () => {
+  const store = useLandmarkStore();
+  const landmark = {
+    id: 'shed',
+    name: 'Shed',
+    x: 30,
+    y: 20,
+    width: 40,
+    height: 20,
+    rotation: 0,
+  };
+  store.save(landmark);
+  const wrapper = renderLayer();
+  let matrix = { a: 0.5, b: 0, c: 0, d: 0.5, e: -10, f: -20 };
+  Object.defineProperty(wrapper.get('svg').element, 'getScreenCTM', {
+    value: () => ({ inverse: () => matrix }),
+  });
+
+  pointer(wrapper.get('[aria-label="Landmark: Shed"]').element, 'pointerdown', 80, 80);
+  // Opening or closing the sidebar changes both the SVG scale and its screen offset.
+  matrix = { a: 0.25, b: 0, c: 0, d: 0.25, e: -30, f: -10 };
+  pointer(document, 'pointerup', 80, 80);
+  await nextTick();
+  expect(store.landmarks).toEqual([landmark]);
+
+  pointer(wrapper.get('[aria-label="Landmark: Shed"]').element, 'pointerdown', 80, 80);
+  matrix = { a: 0.5, b: 0, c: 0, d: 0.5, e: -10, f: -20 };
+  pointer(document, 'pointerup', 120, 100);
+  await nextTick();
+  expect(store.landmarks).toEqual([{ ...landmark, x: 40, y: 25 }]);
+  usePlanCommandHistory().undo();
+  expect(store.landmarks).toEqual([landmark]);
+  wrapper.unmount();
+});
+
+it('rotates through the controls overlay when another landmark covers the handle', async () => {
+  const store = useLandmarkStore();
+  const selected = {
+    id: 'shed',
+    name: 'Shed',
+    x: 100,
+    y: 100,
+    width: 40,
+    height: 20,
+    rotation: 0,
+  };
+  const overlapping = {
+    id: 'house',
+    name: 'House',
+    x: 100,
+    y: 62,
+    width: 60,
+    height: 60,
+    rotation: 0,
+  };
+  store.save(selected);
+  store.save(overlapping);
+  const wrapper = renderLayer();
+  await nextTick();
+  const handle = wrapper
+    .get('[aria-label="Landmark controls"]')
+    .get('[aria-label="Rotate landmark"]');
+
+  pointer(handle.element, 'pointerdown', 220, 164);
+  pointer(document, 'pointerup', 296, 240);
+  await nextTick();
+
+  expect(store.landmarks).toEqual([
+    { ...selected, rotation: expect.closeTo(90) },
+    overlapping,
+  ]);
+  usePlanCommandHistory().undo();
+  expect(store.landmarks).toEqual([selected, overlapping]);
   wrapper.unmount();
 });
 

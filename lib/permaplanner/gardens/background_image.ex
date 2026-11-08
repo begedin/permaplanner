@@ -43,9 +43,11 @@ defmodule Permaplanner.Gardens.BackgroundImage do
   - `:unchanged` — no `backgroundImage` key in the payload
   - `:clear` — explicit `null`
   - `{:set, content_type, bytes}` — new or updated image bytes
+  - `{:upload, upload}` — streamed upload, read only when the save transaction applies it
   """
   @spec split_from_document(map()) ::
-          {:ok, map(), :unchanged | :clear | {:set, String.t(), binary()}}
+          {:ok, map(),
+           :unchanged | :clear | {:set, String.t(), binary()} | {:upload, Plug.Upload.t()}}
           | {:error, :invalid_document}
   def split_from_document(document) when is_map(document) do
     case Map.fetch(document, "backgroundImage") do
@@ -54,6 +56,9 @@ defmodule Permaplanner.Gardens.BackgroundImage do
 
       {:ok, nil} ->
         {:ok, Map.delete(document, "backgroundImage"), :clear}
+
+      {:ok, %Plug.Upload{} = upload} ->
+        {:ok, Map.delete(document, "backgroundImage"), {:upload, upload}}
 
       {:ok, data_url} when is_binary(data_url) ->
         case parse_data_url(data_url) do

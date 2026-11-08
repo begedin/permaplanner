@@ -193,10 +193,15 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
         if (error instanceof ApiError && error.status === 409) {
           errorMessage.value =
             'Your garden was updated elsewhere. Your changes are still here but have not been saved. Download your plan before reloading the latest copy.';
-        } else if (error instanceof Error) {
-          errorMessage.value = error.message;
+        } else if (error instanceof ApiError && error.status === 503) {
+          errorMessage.value =
+            'The server is busy. Your changes are still here. Please retry saving in a moment.';
+        } else if (error instanceof ApiError && error.status === 413) {
+          errorMessage.value =
+            'Your garden is too large to save. Try a smaller background image. Your changes are still here but have not been saved.';
         } else {
-          errorMessage.value = String(error);
+          errorMessage.value =
+            'Your garden could not be saved. Your changes are still here. Please try again.';
         }
       }
     } finally {

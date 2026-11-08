@@ -30,6 +30,44 @@ afterEach(() => {
 
 const plant = { id: 'p1', speciesId: 'comfrey', cultivarId: null };
 
+it.each([
+  new ApiError(502, {}),
+  new SyntaxError('Unexpected token <'),
+  new TypeError('Failed to fetch'),
+])('keeps failed saves retryable with a readable error for %s', async (error) => {
+  const session = useGardenSessionStore();
+  session.markSaved();
+  usePermaplannerStore().plants = [plant];
+  vi.mocked(gardensApi.updateGarden).mockRejectedValueOnce(error);
+
+  await session.save();
+
+  expect(session).toMatchObject({
+    status: 'error',
+    canSave: true,
+    hasUnsavedChanges: true,
+    errorMessage:
+      'Your garden could not be saved. Your changes are still here. Please try again.',
+  });
+});
+
+it.each([
+  [413, 'Try a smaller background image.'],
+  [503, 'Please retry saving in a moment.'],
+])('explains how to recover from HTTP %s', async (status, message) => {
+  const session = useGardenSessionStore();
+  session.markSaved();
+  usePermaplannerStore().plants = [plant];
+  vi.mocked(gardensApi.updateGarden).mockRejectedValueOnce(new ApiError(status, {}));
+
+  await session.save();
+
+  expect(session).toMatchObject({
+    canSave: true,
+    errorMessage: expect.stringContaining(message),
+  });
+});
+
 it('only saves after an explicit request, with no automatic saves after edits or undo', async () => {
   vi.useFakeTimers();
   const store = usePermaplannerStore();

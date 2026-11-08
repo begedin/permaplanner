@@ -3,7 +3,6 @@
   import { v4 as uuid } from 'uuid';
   import { useCameraStore } from './useCameraStore';
   import { usePointerSession } from './usePointerSession';
-  import { clientToSvgUser } from './svgClientToUser';
   import {
     LANDMARK_RESIZE_HANDLES,
     landmarkAtPointer,
@@ -19,6 +18,7 @@
       showLabels?: boolean;
       landmarks: Landmark[];
       selectedId?: string;
+      controlsTarget?: SVGGElement;
       tool: AerialTool;
     }>(),
     { showLabels: true },
@@ -34,6 +34,9 @@
       rows.push(draft.value);
     return rows;
   });
+  const selectedLandmark = computed(() =>
+    displayed.value.find((item) => item.id === props.selectedId),
+  );
   const handleSize = computed(() => 7 / (camera.scale * camera.zoom || 1));
   const resizeEdges = LANDMARK_RESIZE_HANDLES.filter(
     (handle) => handle.x === 0 || handle.y === 0,
@@ -48,7 +51,12 @@
     const svg = (event.currentTarget as SVGElement).closest('svg');
     if (!(svg instanceof SVGSVGElement)) return;
     session.cancel();
-    const origin = clientToSvgUser(svg, event.clientX, event.clientY);
+    const matrix = svg.getScreenCTM()?.inverse();
+    if (!matrix) return;
+    const origin = {
+      x: matrix.a * event.clientX + matrix.c * event.clientY + matrix.e,
+      y: matrix.b * event.clientX + matrix.d * event.clientY + matrix.f,
+    };
     // Snapshot the rectangle; the preview must never mutate the saved object.
     if (gesture.kind !== 'draw') {
       gesture = { ...gesture, landmark: { ...gesture.landmark } };
@@ -59,7 +67,11 @@
         draft.value = landmarkAtPointer(
           gesture,
           origin,
-          clientToSvgUser(svg, next.clientX, next.clientY),
+          // Selection can toggle the sidebar; keep this gesture in its starting frame.
+          {
+            x: matrix.a * next.clientX + matrix.c * next.clientY + matrix.e,
+            y: matrix.b * next.clientX + matrix.d * next.clientY + matrix.f,
+          },
           handleSize.value,
         );
       },
@@ -118,61 +130,6 @@
         stroke-linejoin="round"
         >{{ item.name }}</text
       >
-      <g v-if="selectedId === item.id">
-        <line
-          x1="0"
-          :y1="-item.height / 2"
-          x2="0"
-          :y2="-item.height / 2 - handleSize * 4"
-          stroke="#315b45"
-        />
-        <circle
-          cx="0"
-          :cy="-item.height / 2 - handleSize * 4"
-          :r="handleSize"
-          fill="#315b45"
-          aria-label="Rotate landmark"
-          class="cursor-grab"
-          @pointerdown="start($event, { kind: 'rotate', landmark: item })"
-          @mousedown.stop
-        />
-        <line
-          v-for="edge in resizeEdges"
-          :key="edge.name"
-          :x1="edge.x === 0 ? -item.width / 2 : (edge.x * item.width) / 2"
-          :x2="edge.x === 0 ? item.width / 2 : (edge.x * item.width) / 2"
-          :y1="edge.y === 0 ? -item.height / 2 : (edge.y * item.height) / 2"
-          :y2="edge.y === 0 ? item.height / 2 : (edge.y * item.height) / 2"
-          stroke="transparent"
-          stroke-width="14"
-          vector-effect="non-scaling-stroke"
-          :aria-label="`Resize landmark ${edge.name} edge`"
-          :style="{
-            cursor: resizeCursors[Math.round((item.rotation + edge.angle) / 45) % 4],
-          }"
-          @pointerdown="
-            start($event, { kind: 'resize', landmark: item, direction: edge })
-          "
-          @mousedown.stop
-        />
-        <rect
-          v-for="handle in LANDMARK_RESIZE_HANDLES"
-          :key="handle.name"
-          :x="(handle.x * item.width) / 2 - handleSize / 2"
-          :y="(handle.y * item.height) / 2 - handleSize / 2"
-          :width="handleSize"
-          :height="handleSize"
-          fill="#315b45"
-          :aria-label="`Resize landmark ${handle.name} handle`"
-          :style="{
-            cursor: resizeCursors[Math.round((item.rotation + handle.angle) / 45) % 4],
-          }"
-          @pointerdown="
-            start($event, { kind: 'resize', landmark: item, direction: handle })
-          "
-          @mousedown.stop
-        />
-      </g>
     </g>
     <rect
       v-if="tool === 'landmark'"
@@ -187,5 +144,96 @@
       @pointerdown="start($event, { kind: 'draw', id: uuid() })"
       @mousedown.stop
     />
+    <Teleport
+      v-if="selectedLandmark"
+      :to="controlsTarget ?? 'body'"
+      :disabled="!controlsTarget"
+    >
+      <g
+        :transform="`translate(${selectedLandmark.x} ${selectedLandmark.y}) rotate(${selectedLandmark.rotation})`"
+        :style="{ pointerEvents: tool === 'select' ? 'auto' : 'none' }"
+        style="touch-action: none"
+      >
+        <line
+          x1="0"
+          :y1="-selectedLandmark.height / 2"
+          x2="0"
+          :y2="-selectedLandmark.height / 2 - handleSize * 4"
+          stroke="#315b45"
+        />
+        <circle
+          cx="0"
+          :cy="-selectedLandmark.height / 2 - handleSize * 4"
+          :r="handleSize"
+          fill="#315b45"
+          aria-label="Rotate landmark"
+          class="cursor-grab"
+          @pointerdown="start($event, { kind: 'rotate', landmark: selectedLandmark })"
+          @mousedown.stop
+        />
+        <line
+          v-for="edge in resizeEdges"
+          :key="edge.name"
+          :x1="
+            edge.x === 0
+              ? -selectedLandmark.width / 2
+              : (edge.x * selectedLandmark.width) / 2
+          "
+          :x2="
+            edge.x === 0
+              ? selectedLandmark.width / 2
+              : (edge.x * selectedLandmark.width) / 2
+          "
+          :y1="
+            edge.y === 0
+              ? -selectedLandmark.height / 2
+              : (edge.y * selectedLandmark.height) / 2
+          "
+          :y2="
+            edge.y === 0
+              ? selectedLandmark.height / 2
+              : (edge.y * selectedLandmark.height) / 2
+          "
+          stroke="transparent"
+          stroke-width="14"
+          vector-effect="non-scaling-stroke"
+          :aria-label="`Resize landmark ${edge.name} edge`"
+          :style="{
+            cursor:
+              resizeCursors[
+                Math.round((selectedLandmark.rotation + edge.angle) / 45) % 4
+              ],
+          }"
+          @pointerdown="
+            start($event, { kind: 'resize', landmark: selectedLandmark, direction: edge })
+          "
+          @mousedown.stop
+        />
+        <rect
+          v-for="handle in LANDMARK_RESIZE_HANDLES"
+          :key="handle.name"
+          :x="(handle.x * selectedLandmark.width) / 2 - handleSize / 2"
+          :y="(handle.y * selectedLandmark.height) / 2 - handleSize / 2"
+          :width="handleSize"
+          :height="handleSize"
+          fill="#315b45"
+          :aria-label="`Resize landmark ${handle.name} handle`"
+          :style="{
+            cursor:
+              resizeCursors[
+                Math.round((selectedLandmark.rotation + handle.angle) / 45) % 4
+              ],
+          }"
+          @pointerdown="
+            start($event, {
+              kind: 'resize',
+              landmark: selectedLandmark,
+              direction: handle,
+            })
+          "
+          @mousedown.stop
+        />
+      </g>
+    </Teleport>
   </g>
 </template>

@@ -99,7 +99,7 @@ defmodule Permaplanner.Gardens do
 
         with {:ok, garden} <- garden |> Ecto.Changeset.change(changes) |> Repo.update(),
              :ok <- apply_background_action(garden.id, background_action) do
-          Repo.preload(garden, :background_image)
+          garden
         else
           {:error, reason} -> Repo.rollback(reason)
         end
@@ -155,6 +155,12 @@ defmodule Permaplanner.Gardens do
   end
 
   defp apply_background_action(_garden_id, :unchanged), do: :ok
+
+  defp apply_background_action(garden_id, {:upload, upload}) do
+    with {:ok, bytes} <- File.read(upload.path) do
+      apply_background_action(garden_id, {:set, upload.content_type, bytes})
+    end
+  end
 
   defp apply_background_action(garden_id, :clear) do
     from(b in GardenBackgroundImage, where: b.id == ^garden_id)
