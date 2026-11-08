@@ -31,7 +31,8 @@ defmodule PermaplannerWeb.Endpoint do
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
   plug Plug.Parsers,
-    parsers: [:urlencoded, :multipart, :json],
+    # Garden JSON includes base64-encoded background images.
+    parsers: [:urlencoded, :multipart, {:json, length: 16_000_000}],
     pass: ["*/*"],
     json_decoder: Jason
 

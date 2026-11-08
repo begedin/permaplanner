@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.31.1
+
+- [FIX] Allow garden saves with larger background images by raising the JSON request limit to 16 MB, and return a proper error when that limit is exceeded.
+
 ## 0.31.0
 
 - [CHANGE] Add an optional polygon plot border with corner editing, deletion, undo/redo, and JSON import/export. New gardens start without a border.

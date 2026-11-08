@@ -117,6 +117,46 @@ defmodule PermaplannerWeb.GardenControllerTest do
     assert response_document["backgroundImage"] == @png_data_url
   end
 
+  test "saves a replacement background larger than the default request limit", %{
+    conn: conn,
+    user: user
+  } do
+    document = Map.put(Gardens.default_document(), "backgroundImage", @png_data_url)
+    {:ok, garden} = Gardens.create_garden(user, %{"document" => document})
+    bytes = :binary.copy(<<0>>, 6_000_000)
+    image = "data:image/png;base64," <> Base.encode64(bytes)
+    document = Map.put(garden.document, "backgroundImage", image)
+
+    conn =
+      conn
+      |> put_req_header("content-type", "application/json")
+      |> put("/api/gardens/#{garden.id}", Jason.encode!(%{"document" => document}))
+
+    assert %{"syncRevision" => 1} = json_response(conn, 200)
+
+    assert %GardenBackgroundImage{content_type: "image/png", data: ^bytes} =
+             Repo.get!(GardenBackgroundImage, garden.id)
+
+    conn = get(conn, "/api/gardens/#{garden.id}")
+    assert %{"garden" => %{"document" => saved}} = json_response(conn, 200)
+    assert saved["backgroundImage"] == image
+  end
+
+  test "returns a JSON error when a save exceeds the request limit", %{conn: conn, user: user} do
+    {:ok, garden} = Gardens.create_garden(user, %{})
+    body = Jason.encode!(%{"document" => garden.document}) <> :binary.copy(" ", 16_000_000)
+
+    {413, _headers, response} =
+      assert_error_sent 413, fn ->
+        conn
+        |> put_req_header("content-type", "application/json")
+        |> put("/api/gardens/#{garden.id}", body)
+      end
+
+    assert Jason.decode!(response) == %{"errors" => %{"detail" => "Request Too Large"}}
+    assert Gardens.get_garden!(user, garden.id).document == garden.document
+  end
+
   test "update without backgroundImage leaves stored background unchanged", %{
     conn: conn,
     user: user
