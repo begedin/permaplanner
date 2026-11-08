@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.31.2
+
+- [CHANGE] Upgrade the production runtime and CI to Elixir 1.20 and Erlang/OTP 29.
+
 ## 0.31.1
 
 - [FIX] Allow garden saves with larger background images by raising the JSON request limit to 16 MB, and return a proper error when that limit is exceeded.

@@ -1,7 +1,7 @@
 # syntax = docker/dockerfile:1
 
 ARG NODE_VERSION=22.2.0
-ARG ELIXIR_IMAGE=elixir:1.18-otp-27
+ARG ELIXIR_IMAGE=elixir:1.20-otp-29
 
 FROM node:${NODE_VERSION}-slim AS frontend
 
@@ -39,7 +39,7 @@ COPY --from=frontend /app/dist ./priv/static
 
 RUN mix release
 
-FROM debian:bookworm-slim AS final
+FROM debian:trixie-slim AS final
 
 WORKDIR /app
 
