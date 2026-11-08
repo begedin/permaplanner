@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.30.1
+
+- [DB] Added common periwinkle (Vinca minor) to the catalog, with Bowles's Variety, Gertrude Jekyll, and Ralph Shugert cultivars.
+
 ## 0.30.0
 
 - [CHANGE] Add two-finger touchpad panning and smooth pinch zoom to the aerial view, including Safari gesture support. Use Ctrl+wheel to zoom with a mouse.

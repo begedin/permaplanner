@@ -9,6 +9,33 @@
       "defaultIconId": "seedling"
     },
     {
+      "id": "periwinkle",
+      "name": "Common periwinkle",
+      "name_latin": "Vinca minor",
+      "functions": ["ground_cover"],
+      "layers": ["ground_cover"],
+      "cultivars": [
+        {
+          "id": "bowless_variety",
+          "name": "Bowles's Variety"
+        },
+        {
+          "id": "gertrude_jekyll",
+          "name": "Gertrude Jekyll",
+          "name_latin": "Vinca minor f. alba"
+        },
+        {
+          "id": "ralph_shugert",
+          "name": "Ralph Shugert"
+        }
+      ],
+      "blooming": {
+        "start": 4,
+        "end": 8
+      },
+      "defaultIconId": "flower"
+    },
+    {
       "id": "florists_cyclamen",
       "name": "Florist's cyclamen",
       "name_latin": "Cyclamen persicum",

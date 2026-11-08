@@ -136,6 +136,10 @@ Runtime resolution and labels are implemented in [`src/resolvePlant.ts`](src/res
 - Dappled willow Hakuro-Nishiki: [RHS](https://www.rhs.org.uk/plants/66597/salix-integra-hakuro-nishiki-v/details).
 - Broom Luna: [Minier nursery](https://www.pepinieres-minier.fr/en/produit/cytisus-scoparius-luna). Broom groups several Cytisus cultivars, with botanical names attached to individual cultivars.
 
+### Catalog addition sources (0.30.1)
+
+- Common periwinkle: [RHS species profile](https://www.rhs.org.uk/plants/18973/vinca-minor/details) describes its mat-forming habit and mid-spring to late-summer flowers (approximated as April–August). [Virginia Tech Extension](https://www.pubs.ext.vt.edu/content/pubs_ext_vt_edu/en/3010/3010-1471/3010-1471.html) lists Bowles's Variety and Gertrude Jekyll; [RHS](https://www.rhs.org.uk/plants/208929/vinca-minor-ralph-shugert-v/details) documents Ralph Shugert.
+
 Month ranges are approximate outdoor northern-hemisphere seasons and vary with climate.
 
 ## Badges
