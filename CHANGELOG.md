@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.31.5
+
+- [FIX] Make recovery-code consumption and TOTP setup atomic under concurrent requests.
+- [FIX] Give authentication bootstrap one owner and ignore stale authentication and garden-share responses.
+- [FIX] Reject duplicate document IDs and dangling plant references on save and import.
+- [CHANGE] Give the map a single pointer-based guild brush and remove obsolete scene coordinates and rectangle state.
+- [FIX] Prevent deletion of plants used by guilds, and allow different share links to be revoked concurrently.
+
 ## 0.31.4
 
 - [FIX] Enforce a 3 MB background image limit on the server for saves and imports, and reduce the request limit to 8 MB.

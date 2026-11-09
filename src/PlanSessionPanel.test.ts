@@ -174,3 +174,31 @@ it('cancels sign out before changing the session when unsaved changes are kept',
   expect(usePermaplannerStore().gardenId).toBe('g1');
   confirm.mockRestore();
 });
+
+it('allows revoking another link while the first request is pending', async () => {
+  const other = { ...existingShare, id: 'share-2', url: '/share/share-2' };
+  vi.mocked(gardenSharesApi.listGardenShares).mockResolvedValue([existingShare, other]);
+  let finish!: () => void;
+  vi.mocked(gardenSharesApi.revokeGardenShare).mockReturnValue(
+    new Promise((resolve) => {
+      finish = resolve;
+    }),
+  );
+  renderPanel();
+  const first = await screen.findByRole('button', {
+    name: `Revoke share link ${existingShareHref}`,
+  });
+  await fireEvent.click(first);
+  expect(first).toBeDisabled();
+  const second = screen.getByRole('button', {
+    name: `Revoke share link ${window.location.origin}${other.url}`,
+  });
+  expect(second).toBeEnabled();
+  await fireEvent.click(second);
+  expect(gardenSharesApi.revokeGardenShare).toHaveBeenCalledWith('g1', other.id);
+  expect(second).toBeDisabled();
+  finish();
+  await waitFor(() =>
+    expect(screen.queryByRole('list', { name: 'Share links' })).not.toBeInTheDocument(),
+  );
+});

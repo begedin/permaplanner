@@ -173,12 +173,6 @@
     syncGuildFieldsFromResolved();
   };
 
-  const remove = (plant: UserPlant) => {
-    commandHistory.runMutation(() => {
-      garden.plants = garden.plants.filter((p) => p.id !== plant.id);
-    });
-  };
-
   const isNew = computed(
     () => garden.plants.findIndex((p) => p.id === plantInEditing.value.id) === -1,
   );
@@ -250,7 +244,13 @@
             type="button"
             class="btn-danger p-1 rounded-lg text-xs flex items-center justify-center"
             aria-label="Delete plant"
-            @click.self="remove(plant)"
+            :disabled="garden.plantIsUsed(plant.id)"
+            :title="
+              garden.plantIsUsed(plant.id)
+                ? 'Remove this plant from its guilds before deleting it.'
+                : 'Delete plant'
+            "
+            @click="garden.removePlant(plant.id)"
           >
             <UiIcon name="trash" />
           </button>

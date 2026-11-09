@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { computed, onMounted, watch } from 'vue';
+  import { computed } from 'vue';
   import { useEventListener } from '@vueuse/core';
   import { useRoute } from 'vue-router';
 
@@ -12,24 +12,9 @@
   import { showMainApp } from './useAuthGate';
   import { usePlanUndoRedoHotkeys } from './usePlanUndoRedoHotkeys';
   import { routeNames } from './router';
-  import { useAuthStore } from './stores/useAuthStore';
   import { useGardenSessionStore } from './stores/useGardenSessionStore';
 
-  const auth = useAuthStore();
   const gardenSession = useGardenSessionStore();
-  onMounted(() => {
-    void auth.bootstrap();
-  });
-
-  watch(
-    () => auth.user?.totpConfirmed,
-    (confirmed) => {
-      if (confirmed && gardenSession.isBootstrapping) {
-        void gardenSession.bootstrap();
-      }
-    },
-    { immediate: true },
-  );
 
   usePlanUndoRedoHotkeys();
 

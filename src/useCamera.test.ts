@@ -5,7 +5,6 @@ import { createPinia, setActivePinia } from 'pinia';
 
 import { useCamera } from './useCamera';
 import { useCameraStore } from './useCameraStore';
-import { useSceneStore } from './useSceneStore';
 
 let pinia: ReturnType<typeof createPinia>;
 
@@ -278,7 +277,6 @@ it('mousemove after wheel zoom does not shift the camera', async () => {
   vi.useFakeTimers();
   const { wrapper, svg } = await mountCameraHost();
   const camera = useCameraStore();
-  const scene = useSceneStore();
   camera.zoom = 1;
   camera.width = 1000;
   camera.height = 1000;
@@ -296,8 +294,6 @@ it('mousemove after wheel zoom does not shift the camera', async () => {
   );
   const afterZoom = { x: camera.x, y: camera.y, zoom: camera.zoom };
 
-  scene.worldX = 900;
-  scene.worldY = 900;
   svg.dispatchEvent(
     new PointerEvent('pointermove', {
       clientX: 900,

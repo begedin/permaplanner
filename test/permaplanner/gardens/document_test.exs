@@ -5,8 +5,19 @@ defmodule Permaplanner.Gardens.DocumentTest do
   alias Permaplanner.Gardens.Document
 
   test "validates nested plan data and optional fields" do
+    landmark = %{
+      "id" => "landmark",
+      "name" => "Shed",
+      "x" => 0,
+      "y" => 0,
+      "width" => 10,
+      "height" => 10,
+      "rotation" => 0
+    }
+
     document =
       Gardens.default_document()
+      |> Map.put("landmarks", [landmark])
       |> Map.put("plants", [%{"id" => "p1", "speciesId" => "unknown", "cultivarId" => nil}])
       |> Map.put("guilds", [
         %{
@@ -30,8 +41,20 @@ defmodule Permaplanner.Gardens.DocumentTest do
 
     assert {:ok, ^document, :unchanged} = Document.prepare(document)
 
+    [guild] = document["guilds"]
+
     invalid_documents = [
       nil,
+      Map.put(document, "landmarks", [landmark, landmark]),
+      Map.put(document, "guilds", [guild, Map.put(guild, "id", "other")]),
+      Map.put(document, "plants", document["plants"] ++ document["plants"]),
+      Map.put(document, "guilds", document["guilds"] ++ document["guilds"]),
+      put_in(
+        document,
+        ["guilds", Access.at(0), "plants"],
+        List.duplicate(hd(hd(document["guilds"])["plants"]), 2)
+      ),
+      put_in(document, ["guilds", Access.at(0), "plants", Access.at(0), "plantId"], "missing"),
       Map.put(document, "mapScale", nil),
       put_in(document, ["mapScale", "unit"], "cubits"),
       Map.delete(document, "landmarks"),

@@ -141,6 +141,14 @@ defmodule PermaplannerWeb.AdminLiveTest do
 
     document =
       Gardens.default_document()
+      |> Map.put("plants", [
+        %{
+          "id" => "basil",
+          "speciesId" => "basil",
+          "cultivarId" => nil,
+          "speciesOverride" => %{"name" => "Thai basil"}
+        }
+      ])
       |> Map.put("guilds", [
         guild,
         %{guild | "id" => "empty", "name" => "New bed", "plants" => []}

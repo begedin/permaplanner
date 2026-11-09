@@ -2,7 +2,6 @@ import { isEditableTarget } from './keyboardShortcuts';
 import { ref, type Ref } from 'vue';
 import { clientToSvgUser } from './svgClientToUser';
 import { useCameraStore } from './useCameraStore';
-import { useSceneStore } from './useSceneStore';
 
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 10;
@@ -26,8 +25,6 @@ export const useCamera = (
 ) => {
   const camera = useCameraStore();
   const mouse = ref({ x: 0, y: 0 });
-
-  const scene = useSceneStore();
 
   let interaction: CameraInteraction = { kind: 'idle' };
   let interactionTimer: ReturnType<typeof setTimeout> | undefined;
@@ -99,8 +96,8 @@ export const useCamera = (
     const newWidth = worldWidth / newZoom;
     const newHeight = worldHeight / newZoom;
 
-    const atX = anchor?.x ?? scene.worldX;
-    const atY = anchor?.y ?? scene.worldY;
+    const atX = anchor?.x ?? mouse.value.x;
+    const atY = anchor?.y ?? mouse.value.y;
     const ratioX = (atX - camera.x) / camera.width;
     const ratioY = (atY - camera.y) / camera.height;
 
@@ -115,8 +112,11 @@ export const useCamera = (
 
   const setupMousePositionTracking = () => {
     element.value?.addEventListener(
-      'mousemove',
-      (event) => ((mouse.value.x = event.offsetX), (mouse.value.y = event.offsetY)),
+      'pointermove',
+      (event) => {
+        if (element.value instanceof SVGSVGElement)
+          mouse.value = clientToSvgUser(element.value, event.clientX, event.clientY);
+      },
       { signal: teardownController.signal },
     );
   };

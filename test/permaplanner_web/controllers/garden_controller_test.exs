@@ -68,7 +68,9 @@ defmodule PermaplannerWeb.GardenControllerTest do
     {:ok, garden} = Gardens.create_garden(user, %{"name" => "Plot"})
 
     document =
-      Map.put(Gardens.default_document(), "guilds", [
+      Gardens.default_document()
+      |> Map.put("plants", [%{"id" => "p1", "speciesId" => "unknown", "cultivarId" => nil}])
+      |> Map.put("guilds", [
         %{
           "id" => "g1",
           "name" => "Herbs",

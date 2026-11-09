@@ -36,48 +36,38 @@ const SelectionProbe = defineComponent({
     '<p :data-selected="selectedGuildId ?? \'none\'">{{ selectedGuildId ?? "none" }}</p>',
 });
 
-it('keeps the guild route while the plan session is restoring', async () => {
-  seedAuthedTestSession();
-  useGardenSessionStore().isBootstrapping = true;
-  const router = createAppRouter(createMemoryHistory());
-
-  await router.push({ name: routeNames.guildsDetail, params: { guildId: 'alpha' } });
-  await router.isReady();
-  render(SelectionProbe, { global: { plugins: [router] } });
-  await flushPromises();
-
-  expect(router.currentRoute.value.name).toBe(routeNames.guildsDetail);
-  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe('alpha');
-
-  const store = useGardenStore();
-  store.guilds = [{ id: 'alpha', name: 'Alpha', path: [], plants: [], mulchLevel: 1 }];
-  useGardenSessionStore().isBootstrapping = false;
-  await flushPromises();
-
-  await waitFor(() => {
-    expect(screen.getByText('alpha').getAttribute('data-selected')).toBe('alpha');
-  });
-});
-
-it('clears an unknown guild route after the plan session finishes restoring', async () => {
-  seedAuthedTestSession();
-  useGardenSessionStore().isBootstrapping = true;
-  const router = createAppRouter(createMemoryHistory());
-
-  await router.push({ name: routeNames.guildsDetail, params: { guildId: 'missing' } });
-  await router.isReady();
-  render(SelectionProbe, { global: { plugins: [router] } });
-  await flushPromises();
-
-  expect(router.currentRoute.value.name).toBe(routeNames.guildsDetail);
-
-  useGardenSessionStore().isBootstrapping = false;
-  await flushPromises();
-  await router.isReady();
-
-  expect(router.currentRoute.value.name).toBe(routeNames.guilds);
-  expect(routeParam(router.currentRoute.value.params, 'guildId')).toBeUndefined();
-});
+it.each([true, false])(
+  'waits for restoration before resolving a guild route (exists: %s)',
+  async (exists) => {
+    seedAuthedTestSession();
+    const session = useGardenSessionStore();
+    session.isBootstrapping = true;
+    let finish!: () => void;
+    vi.mocked(session.bootstrap).mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    const router = createAppRouter(createMemoryHistory());
+    const navigation = router.push({
+      name: routeNames.guildsDetail,
+      params: { guildId: 'alpha' },
+    });
+    await flushPromises();
+    expect(session.bootstrap).toHaveBeenCalledTimes(1);
+    if (exists)
+      useGardenStore().guilds = [
+        { id: 'alpha', name: 'Alpha', path: [], plants: [], mulchLevel: 1 },
+      ];
+    session.isBootstrapping = false;
+    finish();
+    await navigation;
+    expect(router.currentRoute.value).toMatchObject({
+      name: exists ? routeNames.guildsDetail : routeNames.guilds,
+      params: exists ? { guildId: 'alpha' } : {},
+    });
+  },
+);
 
 it('reads the guild route param on the guilds tab', async () => {
   const router = await createAuthedTestRouter();

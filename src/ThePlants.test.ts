@@ -1,3 +1,6 @@
+import * as gardensApi from './api/gardens';
+import { usePermaplannerStore } from './usePermaplannerStore';
+import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import {
   render,
   screen,
@@ -17,6 +20,8 @@ import { useGardenStore } from './useGardenStore';
 import { PLANT_ICON_IDS } from './plantIcons/iconIds';
 import { plantCatalog } from './plantCatalog';
 import { resolveUserPlant } from './resolvePlant';
+
+vi.mock('./api/gardens');
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
@@ -111,4 +116,58 @@ it('focuses and selects the current catalog value when editing an existing plant
   expect(useGardenStore().plants).toMatchObject([
     { id: 'basil', speciesId: 'basil', cultivarId: 'genovese' },
   ]);
+});
+
+it('explains why a placed plant cannot be deleted and keeps the plan savable', async () => {
+  const router = await createAuthedTestRouter('/plants');
+  const garden = useGardenStore();
+  const plant = { id: 'basil', speciesId: 'basil', cultivarId: null };
+  garden.plants = [plant];
+  garden.guilds = [
+    {
+      id: 'bed',
+      name: 'Bed',
+      path: [],
+      mulchLevel: 1,
+      plants: [
+        {
+          id: 'instance',
+          plantId: plant.id,
+          nameOrCultivar: 'Basil',
+          x: 0,
+          y: 0,
+          width: 16,
+          height: 16,
+        },
+      ],
+    },
+  ];
+  const plan = usePermaplannerStore();
+  plan.gardenId = 'garden';
+  const session = useGardenSessionStore();
+  session.markSaved();
+  render(ThePlants, { global: { plugins: [router] } });
+  const button = screen.getByRole('button', { name: 'Delete plant' });
+  expect(button).toBeDisabled();
+  expect(button).toHaveAttribute(
+    'title',
+    'Remove this plant from its guilds before deleting it.',
+  );
+  await fireEvent.click(button);
+  plan.backgroundOpacity = 0.7;
+  vi.mocked(gardensApi.updateGarden).mockResolvedValue(1);
+  vi.mocked(gardensApi.listGardens).mockResolvedValue([]);
+  await session.save();
+  expect(gardensApi.updateGarden).toHaveBeenCalledWith(
+    'garden',
+    expect.objectContaining({
+      plants: [plant],
+      guilds: [
+        expect.objectContaining({
+          plants: [expect.objectContaining({ plantId: plant.id })],
+        }),
+      ],
+    }),
+  );
+  expect(session.status).toBe('saved');
 });

@@ -18,6 +18,10 @@ defmodule PermaplannerWeb.GardenShareControllerTest do
         "name" => "Backyard",
         "document" =>
           Map.merge(Gardens.default_document(), %{
+            "plants" => [
+              %{"id" => "p1", "speciesId" => "basil", "cultivarId" => nil},
+              %{"id" => "p2", "speciesId" => "mint", "cultivarId" => nil}
+            ],
             "guilds" => [
               %{
                 "id" => "g1",

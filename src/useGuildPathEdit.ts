@@ -1,26 +1,25 @@
 import { computed, ref, watch, type Ref } from 'vue';
 import simplify from 'simplify-js';
-import { useMagicKeys } from '@vueuse/core';
+import { useEventListener, useMagicKeys } from '@vueuse/core';
 
 import { isEditableTarget } from './keyboardShortcuts';
 import { joinPaths, subtractPaths, type PathPoint } from './guildPathClip';
-import type { AerialTool } from './useAerialTool';
-import { useSceneStore } from './useSceneStore';
+import type { Guild } from './gardenTypes';
+import { usePointerSession } from './usePointerSession';
+import { clientToSvgUser } from './svgClientToUser';
 
 export const useGuildPathEdit = (options: {
-  path: Ref<PathPoint[]>;
-  selected: Ref<boolean>;
-  tool: Ref<AerialTool | undefined>;
-  resetPath: () => void;
-  onCommit: () => void;
+  svg: Ref<SVGSVGElement | undefined>;
+  guild: Ref<Guild | undefined>;
+  onCommit: (guildId: string, path: PathPoint[]) => void;
   onCancel: () => void;
 }) => {
-  const scene = useSceneStore();
+  const session = usePointerSession();
+  const pointer = ref({ x: 0, y: 0 });
   const { meta } = useMagicKeys();
 
-  const isEditing = computed(
-    () => options.selected.value && options.tool.value === 'edit',
-  );
+  const isEditing = computed(() => options.guild.value !== undefined);
+  const path = ref<PathPoint[]>([]);
 
   const brushSize = ref(12);
   const stroke = ref<PathPoint[]>([]);
@@ -30,8 +29,8 @@ export const useGuildPathEdit = (options: {
       return [];
     }
 
-    const x = Math.max(scene.worldX, 0);
-    const y = Math.max(scene.worldY, 0);
+    const x = Math.max(pointer.value.x, 0);
+    const y = Math.max(pointer.value.y, 0);
     const totalPoints = 20;
     const theta = (Math.PI * 2) / totalPoints;
     const points: PathPoint[] = [];
@@ -43,43 +42,37 @@ export const useGuildPathEdit = (options: {
     return points;
   });
 
-  watch(
-    () => scene.isDrawing,
-    (isDrawing) => {
-      if (!isEditing.value) {
-        return;
-      }
-
-      if (isDrawing) {
+  useEventListener(options.svg, 'pointermove', (event: PointerEvent) => {
+    if (isEditing.value && options.svg.value)
+      pointer.value = clientToSvgUser(options.svg.value, event.clientX, event.clientY);
+  });
+  useEventListener(options.svg, 'pointerdown', (event: PointerEvent) => {
+    const svg = options.svg.value;
+    if (!isEditing.value || !svg || event.button !== 0) return;
+    session.start(event, {
+      update: (next) => {
+        pointer.value = clientToSvgUser(svg, next.clientX, next.clientY);
         stroke.value = simplify(joinPaths(stroke.value, brush.value));
-        return;
-      }
-
-      options.path.value = meta.value
-        ? subtractPaths(options.path.value, stroke.value)
-        : simplify(joinPaths(options.path.value, stroke.value));
-      stroke.value = [];
-    },
-  );
-
-  watch(
-    () => [scene.worldX, scene.worldY],
-    () => {
-      if (!isEditing.value || !scene.isDrawing) {
-        return;
-      }
-      stroke.value = simplify(joinPaths(stroke.value, brush.value));
-    },
-  );
-
-  watch(
-    isEditing,
-    (editing, _previous, onCleanup) => {
-      if (!editing) {
+      },
+      cancel: () => {
         stroke.value = [];
-        options.resetPath();
-        return;
-      }
+      },
+      commit: () => {
+        path.value = meta.value
+          ? subtractPaths(path.value, stroke.value)
+          : simplify(joinPaths(path.value, stroke.value));
+        stroke.value = [];
+      },
+    });
+  });
+
+  watch(
+    () => [options.guild.value?.id, options.guild.value?.path] as const,
+    ([guildId, savedPath], _previous, onCleanup) => {
+      session.cancel();
+      stroke.value = [];
+      path.value = savedPath ? [...savedPath] : [];
+      if (guildId === undefined || !savedPath) return;
 
       const editModeController = new AbortController();
       onCleanup(() => editModeController.abort());
@@ -101,13 +94,15 @@ export const useGuildPathEdit = (options: {
           if (e.key === 'Enter') {
             e.preventDefault();
             editModeController.abort();
-            options.onCommit();
+            session.cancel();
+            options.onCommit(guildId, [...path.value]);
           }
 
           if (e.key === 'Escape') {
             e.preventDefault();
             editModeController.abort();
-            options.resetPath();
+            session.cancel();
+            path.value = [...savedPath];
             options.onCancel();
           }
 
@@ -124,7 +119,7 @@ export const useGuildPathEdit = (options: {
         { signal: editModeController.signal },
       );
     },
-    { immediate: true },
+    { immediate: true, flush: 'sync' },
   );
 
   const brushColor = computed(() =>
@@ -136,7 +131,7 @@ export const useGuildPathEdit = (options: {
   );
 
   return {
-    isEditing,
+    path,
     brush,
     stroke,
     brushColor,

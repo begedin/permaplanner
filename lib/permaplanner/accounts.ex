@@ -52,10 +52,28 @@ defmodule Permaplanner.Accounts do
 
   def confirm_totp_registration(%User{} = user, code) when is_binary(code) do
     with {:ok, secret} <- decrypt_totp_secret(user),
-         true <- valid_totp?(secret, code),
-         {:ok, user} <- mark_totp_confirmed(user),
-         recovery_codes <- create_recovery_codes(user) do
-      {:ok, user, recovery_codes}
+         true <- valid_totp?(secret, code) do
+      prepared_codes = prepare_recovery_codes(user)
+
+      Repo.transaction(fn ->
+        now = DateTime.utc_now() |> DateTime.truncate(:microsecond)
+
+        query =
+          from(u in User, where: u.id == ^user.id and is_nil(u.totp_confirmed_at), select: u)
+
+        case Repo.update_all(query, set: [totp_confirmed_at: now, updated_at: now]) do
+          {1, [confirmed]} ->
+            Enum.each(prepared_codes, fn {_code, row} -> Repo.insert!(row) end)
+            {confirmed, Enum.map(prepared_codes, &elem(&1, 0))}
+
+          {0, []} ->
+            Repo.rollback(:already_confirmed)
+        end
+      end)
+      |> case do
+        {:ok, {confirmed, codes}} -> {:ok, confirmed, codes}
+        error -> error
+      end
     else
       false -> {:error, :invalid_totp}
       {:error, _} = err -> err
@@ -86,9 +104,10 @@ defmodule Permaplanner.Accounts do
     normalized = String.upcase(String.trim(code))
 
     query =
-      from c in UserRecoveryCode,
+      from(c in UserRecoveryCode,
         where: c.user_id == ^user.id and is_nil(c.used_at),
         order_by: [asc: c.id]
+      )
 
     Repo.all(query)
     |> Enum.find(fn row -> Bcrypt.verify_pass(normalized, row.code_hash) end)
@@ -97,11 +116,13 @@ defmodule Permaplanner.Accounts do
         {:error, :invalid_recovery_code}
 
       row ->
-        row
-        |> Ecto.Changeset.change(used_at: DateTime.utc_now() |> DateTime.truncate(:microsecond))
-        |> Repo.update()
+        {count, _} =
+          from(c in UserRecoveryCode, where: c.id == ^row.id and is_nil(c.used_at))
+          |> Repo.update_all(
+            set: [used_at: DateTime.utc_now() |> DateTime.truncate(:microsecond)]
+          )
 
-        :ok
+        if count == 1, do: :ok, else: {:error, :invalid_recovery_code}
     end
   end
 
@@ -166,24 +187,11 @@ defmodule Permaplanner.Accounts do
     code |> String.trim() |> String.replace(" ", "")
   end
 
-  defp mark_totp_confirmed(user) do
-    user
-    |> Ecto.Changeset.change(
-      totp_confirmed_at: DateTime.utc_now() |> DateTime.truncate(:microsecond)
-    )
-    |> Repo.update()
-  end
-
-  defp create_recovery_codes(user) do
+  # Hashing is CPU intensive; prepare outside the transaction and user lock.
+  defp prepare_recovery_codes(user) do
     for _ <- 1..@recovery_code_count do
       code = random_recovery_code()
-      hashed = Bcrypt.hash_pwd_salt(code)
-
-      %UserRecoveryCode{}
-      |> Ecto.Changeset.change(user_id: user.id, code_hash: hashed)
-      |> Repo.insert!()
-
-      code
+      {code, %UserRecoveryCode{user_id: user.id, code_hash: Bcrypt.hash_pwd_salt(code)}}
     end
   end
 

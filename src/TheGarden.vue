@@ -12,12 +12,11 @@
   import { usePlanCommandHistory } from './usePlanCommandHistory';
   import GuildEditor from './GuildEditor.vue';
   import GardenGuild from './GardenGuild.vue';
-  import type { PathPoint } from './guildPathClip';
+  import { useGuildPathEdit } from './useGuildPathEdit';
   import { useGuildMergeMode } from './useGuildMergeMode';
   import { useGardenStore } from './useGardenStore';
   import { useCameraStore } from './useCameraStore';
   import { useMapScaleStore } from './useMapScaleStore';
-  import { useScene } from './useScene';
 
   import { useBackgroundImage } from './useBackgroundImage';
   import { useBackgroundImagePaste } from './useBackgroundImagePaste';
@@ -44,7 +43,7 @@
   const { imgWidth, imgHeight, imgDataUrl, ready } = useBackgroundImage();
   const { errorMessage: backgroundPasteError } = useBackgroundImagePaste();
 
-  const container = ref<SVGElement>();
+  const container = ref<SVGSVGElement>();
   const landmarkControls = ref<SVGGElement>();
 
   const { width: containerWidth, height: containerHeight } = useElementSize(container);
@@ -128,8 +127,6 @@
     return { x: x + width / 2, y: y + height / 2 };
   });
 
-  const worldStage = ref<SVGRectElement>();
-
   const mapScale = useMapScaleStore();
 
   const history = usePlanCommandHistory();
@@ -139,8 +136,6 @@
       permaplannerStore.backgroundOpacity = value;
     }, token);
   };
-
-  useScene(container, worldStage);
 
   const garden = useGardenStore();
   const { isMerging } = useGuildMergeMode();
@@ -189,12 +184,26 @@
     return g;
   });
 
-  const commitGuildPath = (guildId: string, path: PathPoint[], deselect = false) => {
-    garden.setGuildPath(guildId, path);
-    if (deselect) {
-      void clearSelection();
-    }
-  };
+  const editingGuild = computed(() =>
+    activeTool.value === 'edit'
+      ? garden.guilds.find((guild) => guild.id === selectedGuildId.value)
+      : undefined,
+  );
+  const {
+    path: brushPath,
+    brush,
+    stroke,
+    brushColor,
+    strokeColor,
+  } = useGuildPathEdit({
+    svg: container,
+    guild: editingGuild,
+    onCommit: (id, path) => {
+      garden.setGuildPath(id, path);
+      clearSelection();
+    },
+    onCancel: clearSelection,
+  });
 </script>
 
 <template>
@@ -353,7 +362,6 @@
               </radialGradient>
             </defs>
             <rect
-              ref="worldStage"
               x="0"
               y="0"
               :width="worldBounds.width"
@@ -391,6 +399,15 @@
               fill="url(#grid)"
               class="pointer-events-none"
             />
+            <polygon
+              v-if="editingGuild"
+              :points="
+                (stroke.length ? stroke : brush).map(({ x, y }) => `${x},${y}`).join(' ')
+              "
+              :fill="stroke.length ? strokeColor : brushColor"
+              class="pointer-events-none"
+              data-guild-brush
+            />
             <GardenGuild
               v-for="guild in placedGuildsRenderOrder"
               :key="guild.id"
@@ -400,12 +417,11 @@
               :hovered="hoveredId === guild.id"
               :guild="guild"
               :unit-length-px="mapScale.unitLengthPx"
-              @cancel="clearSelection"
               @click.exact="selectGuild(guild.id)"
               @mouseenter="hoveredId = guild.id"
               @mouseleave="clearHover()"
-              @move="commitGuildPath(guild.id, $event)"
-              @update="commitGuildPath(guild.id, $event, true)"
+              @move="garden.setGuildPath(guild.id, $event)"
+              :preview-path="editingGuild?.id === guild.id ? brushPath : undefined"
             ></GardenGuild>
 
             <GardenGuild
@@ -416,8 +432,7 @@
               :tool="activeTool"
               hovered
               selected
-              @update="commitGuildPath(placementGuildDraft.id, $event, true)"
-              @cancel="clearSelection"
+              :preview-path="editingGuild ? brushPath : undefined"
             />
 
             <LandmarkLayer

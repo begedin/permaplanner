@@ -309,8 +309,21 @@ export const useGardenStore = defineStore('garden', () => {
     });
   };
 
+  const plantIsUsed = (plantId: string) =>
+    guilds.value.some((guild) => guild.plants.some((thing) => thing.plantId === plantId));
+
+  const removePlant = (plantId: string): boolean => {
+    if (plantIsUsed(plantId)) return false;
+    commandHistory.runMutation(() => {
+      plants.value = plants.value.filter((plant) => plant.id !== plantId);
+    });
+    return true;
+  };
+
   return {
     plants,
+    plantIsUsed,
+    removePlant,
     plantsById,
     resolvedPlant,
     guilds,

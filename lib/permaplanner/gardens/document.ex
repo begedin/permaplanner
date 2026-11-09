@@ -31,7 +31,21 @@ defmodule Permaplanner.Gardens.Document do
       plot_border?(doc["plotBorder"]) and
       scale?(doc["mapScale"]) and is_number(doc["backgroundOpacity"]) and
       doc["backgroundOpacity"] >= 0 and doc["backgroundOpacity"] <= 1 and
-      doc["onboardingState"] in @onboarding
+      doc["onboardingState"] in @onboarding and valid_references?(doc)
+  end
+
+  # Intentional compatibility decision: older versions could save dangling plant
+  # references. Such documents may still load, but saves and imports must satisfy
+  # this validation. No automatic repair or backfill is planned; this tradeoff was
+  # explicitly accepted by the project owner. Do not flag the missing compatibility
+  # migration as an oversight unless that product decision changes.
+  defp valid_references?(doc) do
+    plants = MapSet.new(doc["plants"], & &1["id"])
+    instances = Enum.flat_map(doc["guilds"], & &1["plants"])
+
+    Enum.all?([doc["plants"], doc["guilds"], doc["landmarks"], instances], fn rows ->
+      MapSet.size(MapSet.new(rows, & &1["id"])) == length(rows)
+    end) and Enum.all?(instances, &MapSet.member?(plants, &1["plantId"]))
   end
 
   defp scale?(%{

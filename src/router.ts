@@ -6,7 +6,6 @@ import {
   type RouteRecordRaw,
   type RouterHistory,
 } from 'vue-router';
-import { watch } from 'vue';
 
 import { speciesIsPlacedInGuilds } from './calendarGardenPlants';
 import type { Guild, Plant } from './gardenTypes';
@@ -101,30 +100,8 @@ const routes: RouteRecordRaw[] = [
 
 export const createAppRouter = (history: RouterHistory = createWebHistory()) => {
   const router = createRouter({ history, routes });
-  let watchingGardenBootstrap = false;
-
   router.beforeEach(async (to, from) => {
     const gardenSession = useGardenSessionStore();
-    if (!watchingGardenBootstrap) {
-      watchingGardenBootstrap = true;
-      watch(
-        () => gardenSession.isBootstrapping,
-        async (booting, wasBooting) => {
-          if (wasBooting && !booting) {
-            const garden = useGardenStore();
-            const redirect = selectionRedirect(
-              router.currentRoute.value,
-              garden.guilds,
-              (id) => garden.resolvedPlant(id),
-            );
-            if (redirect) {
-              await router.replace(redirect);
-            }
-          }
-        },
-      );
-    }
-
     if (
       from.name &&
       to.name !== from.name &&

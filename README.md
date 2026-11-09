@@ -150,6 +150,9 @@ Month ranges are approximate outdoor northern-hemisphere seasons and vary with c
 
 Stored documents, API responses, frontend state, and downloadable JSON use the
 merged guild format (version 7). `syncRevision` tracks save conflicts.
+Document validation requires unique IDs within plants, guilds, landmarks, and
+plant instances (across all guilds). Every instance must reference a plant in
+the document; unknown catalog species remain supported.
 Create, update, and import prepare validated document fields and parsed image changes
 through `Permaplanner.Gardens.Document` before opening a transaction. Saves lock the garden row and require the expected
 revision before atomically updating the document and background image.

@@ -22,7 +22,6 @@ import { usePermaplannerStore } from './usePermaplannerStore';
 import { useMapScaleStore } from './useMapScaleStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { useGardenSessionStore } from './stores/useGardenSessionStore';
-import { useSceneStore } from './useSceneStore';
 import { resetGuildSearch } from './useGuildSearch';
 
 beforeAll(() => {
@@ -193,12 +192,10 @@ it('switches selection to another guild and discards the previous edit', async (
 
   await fireEvent.click(screen.getByRole('button', { name: 'Edit brush (B)' }));
 
-  const scene = useSceneStore();
-  scene.isDrawing = true;
-  scene.x = 50;
-  scene.y = 50;
-  await wrapper.vm.$nextTick();
-  scene.isDrawing = false;
+  await wrapper
+    .get('svg')
+    .trigger('pointerdown', { button: 0, clientX: 50, clientY: 50 });
+  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 50, clientY: 50 }));
   await wrapper.vm.$nextTick();
 
   const guildB = wrapper
@@ -283,9 +280,7 @@ it('deselects when placement is cancelled', async () => {
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   hoveredId.value = 'guild';
   await wrapper.vm.$nextTick();
-  const guildComponents = wrapper.findAllComponents(GardenGuild);
-  const placement = guildComponents.find((c) => c.props('guild')?.id === 'guild');
-  await placement?.vm.$emit('cancel');
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   await flushPromises();
   await router.isReady();
   expect(router.currentRoute.value.name).toBe(routeNames.guilds);
@@ -355,12 +350,10 @@ it('does not edit a bed while the select tool is active', async () => {
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   await wrapper.vm.$nextTick();
 
-  const scene = useSceneStore();
-  scene.isDrawing = true;
-  scene.x = 50;
-  scene.y = 50;
-  await wrapper.vm.$nextTick();
-  scene.isDrawing = false;
+  await wrapper
+    .get('svg')
+    .trigger('pointerdown', { button: 0, clientX: 50, clientY: 50 });
+  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 50, clientY: 50 }));
   await wrapper.vm.$nextTick();
 
   expect(store.guilds.find((g) => g.id === 'guild')?.path).toEqual(bed.path);
@@ -715,3 +708,35 @@ it.each(['Delete', 'Remove plot border'])(
     ).not.toBeInTheDocument();
   },
 );
+
+it('uses one map brush to preview and commit only the selected guild', async () => {
+  const garden = useGardenStore();
+  garden.guilds = [
+    { id: 'a', name: 'A', plants: [], path: [], mulchLevel: 1 },
+    { id: 'b', name: 'B', plants: [], path: [], mulchLevel: 1 },
+  ];
+  const { view } = await renderGarden('/guilds/a');
+  const svg = view.container.querySelector<SVGSVGElement>('[data-main-svg]')!;
+  svg.getScreenCTM = () =>
+    ({ inverse: () => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }) }) as DOMMatrix;
+  await fireEvent.click(screen.getByRole('button', { name: 'Edit brush (B)' }));
+  expect(view.container.querySelectorAll('[data-guild-brush]')).toHaveLength(1);
+  svg.dispatchEvent(
+    new MouseEvent('pointerdown', { button: 0, clientX: 50, clientY: 50 }),
+  );
+  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 50, clientY: 50 }));
+  expect(garden.guilds).toMatchObject([
+    { id: 'a', path: [] },
+    { id: 'b', path: [] },
+  ]);
+  await fireEvent.keyDown(document, { key: 'Enter' });
+  expect(garden.guilds).toMatchObject([
+    { id: 'a', path: expect.arrayContaining([{ x: 62, y: 50 }]) },
+    { id: 'b', path: [] },
+  ]);
+  usePlanCommandHistory().undo();
+  expect(garden.guilds).toMatchObject([
+    { id: 'a', path: [] },
+    { id: 'b', path: [] },
+  ]);
+});

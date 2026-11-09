@@ -356,3 +356,37 @@ it('updates individual plant notes with undo and removes empty notes', () => {
   store.updateGuildThingNote('g', 'a', '  ');
   expect(store.guilds[0]?.plants[0]).not.toHaveProperty('note');
 });
+
+it('keeps referenced plants and makes unused plant deletion undoable', () => {
+  const garden = useGardenStore();
+  const history = usePlanCommandHistory();
+  const used = { id: 'used', speciesId: 'basil', cultivarId: null };
+  const unused = { id: 'unused', speciesId: 'mint', cultivarId: null };
+  garden.plants = [used, unused];
+  garden.guilds = [
+    {
+      id: 'bed',
+      name: 'Bed',
+      path: [],
+      mulchLevel: 1,
+      plants: [
+        {
+          id: 'instance',
+          plantId: used.id,
+          nameOrCultivar: 'Basil',
+          x: 0,
+          y: 0,
+          width: 16,
+          height: 16,
+        },
+      ],
+    },
+  ];
+  expect(garden.removePlant(used.id)).toBe(false);
+  expect(history.canUndo).toBe(false);
+  expect(garden.plants).toEqual([used, unused]);
+  expect(garden.removePlant(unused.id)).toBe(true);
+  expect(garden.plants).toEqual([used]);
+  history.undo();
+  expect(garden.plants).toEqual([used, unused]);
+});

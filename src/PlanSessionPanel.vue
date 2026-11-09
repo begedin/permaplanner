@@ -1,13 +1,8 @@
 <script setup lang="ts">
-  import { ref, watch } from 'vue';
+  import { toRef } from 'vue';
   import { useRouter } from 'vue-router';
 
-  import {
-    createGardenShare,
-    listGardenShares,
-    revokeGardenShare,
-    type GardenShare,
-  } from './api/gardenShares';
+  import { useGardenShares } from './useGardenShares';
   import { exportActiveGardenJson } from './exportGardenJson';
   import { buildGardenShareJsonText } from './gardenShareExport';
   import PlanSaveStatus from './PlanSaveStatus.vue';
@@ -21,10 +16,9 @@
   const router = useRouter();
   const gardenSession = useGardenSessionStore();
 
-  const shares = ref<GardenShare[]>([]);
-  const shareError = ref<string | undefined>();
-  const sharing = ref(false);
-  const revokingShareId = ref<string | undefined>();
+  const { state, generateShareLink, revokeShare } = useGardenShares(
+    toRef(permaplannerStore, 'gardenId'),
+  );
 
   const formatShareDate = (iso: string): string => new Date(iso).toLocaleString();
 
@@ -34,74 +28,23 @@
   const shareJsonPath = (path: string): string => `${path}.json`;
 
   const copyShareLink = async (path: string, kind: 'HTML' | 'JSON') => {
-    shareError.value = undefined;
+    state.value.error = undefined;
     try {
       await navigator.clipboard.writeText(absoluteShareUrl(path));
     } catch (e) {
-      shareError.value =
+      state.value.error =
         e instanceof Error ? e.message : `Could not copy ${kind} share link`;
     }
   };
 
   const copyGuildJson = async () => {
-    shareError.value = undefined;
+    state.value.error = undefined;
     try {
       const gardenName = permaplannerStore.gardenName?.trim() || 'garden';
       const text = buildGardenShareJsonText(gardenName, permaplannerStore.snapshot());
       await navigator.clipboard.writeText(text);
     } catch (e) {
-      shareError.value = e instanceof Error ? e.message : 'Could not copy guild JSON';
-    }
-  };
-
-  const loadShares = async () => {
-    const gardenId = permaplannerStore.gardenId;
-    if (!gardenId) {
-      shares.value = [];
-      return;
-    }
-    shareError.value = undefined;
-    try {
-      shares.value = await listGardenShares(gardenId);
-    } catch (e) {
-      shareError.value = e instanceof Error ? e.message : String(e);
-      shares.value = [];
-    }
-  };
-
-  watch(() => permaplannerStore.gardenId, loadShares, { immediate: true });
-
-  const generateShareLink = async () => {
-    const gardenId = permaplannerStore.gardenId;
-    if (!gardenId) {
-      return;
-    }
-    sharing.value = true;
-    shareError.value = undefined;
-    try {
-      const share = await createGardenShare(gardenId);
-      shares.value = [share, ...shares.value.filter((row) => row.id !== share.id)];
-    } catch (e) {
-      shareError.value = e instanceof Error ? e.message : String(e);
-    } finally {
-      sharing.value = false;
-    }
-  };
-
-  const revokeShare = async (shareId: string) => {
-    const gardenId = permaplannerStore.gardenId;
-    if (!gardenId) {
-      return;
-    }
-    revokingShareId.value = shareId;
-    shareError.value = undefined;
-    try {
-      await revokeGardenShare(gardenId, shareId);
-      shares.value = shares.value.filter((share) => share.id !== shareId);
-    } catch (e) {
-      shareError.value = e instanceof Error ? e.message : String(e);
-    } finally {
-      revokingShareId.value = undefined;
+      state.value.error = e instanceof Error ? e.message : 'Could not copy guild JSON';
     }
   };
 
@@ -134,10 +77,10 @@
         <button
           type="button"
           class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
-          :disabled="sharing"
+          :disabled="state.sharing"
           @click="generateShareLink"
         >
-          {{ sharing ? 'Generating share link…' : 'Share Garden' }}
+          {{ state.sharing ? 'Generating share link…' : 'Share Garden' }}
         </button>
         <button
           type="button"
@@ -156,12 +99,12 @@
     </div>
     <template v-if="permaplannerStore.gardenName">
       <ul
-        v-if="shares.length > 0"
+        v-if="state.shares.length > 0"
         class="space-y-1"
         aria-label="Share links"
       >
         <li
-          v-for="share in shares"
+          v-for="share in state.shares"
           :key="share.id"
           class="paper-card p-2 text-xs text-ink-700"
         >
@@ -178,10 +121,10 @@
               type="button"
               class="btn-soft-muted btn-soft-sm shrink-0 px-1.5 py-0.5 text-ink-700"
               :aria-label="`Revoke share link ${absoluteShareUrl(share.url)}`"
-              :disabled="revokingShareId === share.id"
+              :disabled="state.revoking.has(share.id)"
               @click="revokeShare(share.id)"
             >
-              {{ revokingShareId === share.id ? 'Revoking…' : 'Revoke' }}
+              {{ state.revoking.has(share.id) ? 'Revoking…' : 'Revoke' }}
             </button>
           </div>
           <div class="mt-1 grid grid-cols-2 gap-1">
@@ -206,11 +149,11 @@
         </li>
       </ul>
       <p
-        v-if="shareError"
+        v-if="state.error"
         class="text-xs text-red-700"
         role="alert"
       >
-        {{ shareError }}
+        {{ state.error }}
       </p>
     </template>
 

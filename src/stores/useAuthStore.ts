@@ -8,26 +8,42 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<AuthUser | null>(null);
   const bootstrapping = ref(true);
 
+  let generation = 0;
+  let bootstrapInFlight: Promise<void> | undefined;
+
   const setUser = (next: AuthUser | null) => {
+    generation += 1;
+    bootstrapInFlight = undefined;
+    bootstrapping.value = false;
     user.value = next;
   };
 
-  const bootstrap = async () => {
-    bootstrapping.value = true;
-    try {
-      user.value = await authApi.fetchSession();
-    } catch {
-      user.value = null;
-    } finally {
-      bootstrapping.value = false;
-    }
+  const bootstrap = () => {
+    if (bootstrapInFlight) return bootstrapInFlight;
+    if (!bootstrapping.value) return Promise.resolve();
+    const request = generation;
+    const operation = (async () => {
+      try {
+        const session = await authApi.fetchSession();
+        if (request === generation) user.value = session;
+      } catch {
+        if (request === generation) user.value = null;
+      } finally {
+        if (request === generation) {
+          bootstrapping.value = false;
+          bootstrapInFlight = undefined;
+        }
+      }
+    })();
+    bootstrapInFlight = operation;
+    return operation;
   };
 
   const register = (email: string, password: string) => authApi.register(email, password);
 
   const confirmRegisterTotp = async (code: string) => {
     const { user: registered, recoveryCodes } = await authApi.confirmRegisterTotp(code);
-    user.value = registered;
+    setUser(registered);
     return recoveryCodes;
   };
 
@@ -35,13 +51,13 @@ export const useAuthStore = defineStore('auth', () => {
 
   const confirmLoginTotp = async (code: string) => {
     const { user: loggedIn, recoveryCodes } = await authApi.confirmLoginTotp(code);
-    user.value = loggedIn;
+    setUser(loggedIn);
     return recoveryCodes;
   };
 
   const logout = async () => {
     await authApi.logout();
-    user.value = null;
+    setUser(null);
   };
 
   return {

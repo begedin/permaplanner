@@ -53,7 +53,9 @@ defmodule Permaplanner.AdminTest do
         }
       ])
 
-    {:ok, garden} = Gardens.create_garden(owner, %{"name" => "Names", "document" => document})
+    {:ok, garden} = Gardens.create_garden(owner, %{"name" => "Names"})
+    # Existing documents may predate reference validation; keep their fallback coverage.
+    garden = garden |> Ecto.Changeset.change(document: document) |> Repo.update!()
 
     assert Admin.garden_names!(garden.id) == %{
              name: "Names",
