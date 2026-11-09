@@ -54,6 +54,8 @@ ENV LC_ALL=en_US.UTF-8
 ENV MIX_ENV=prod
 ENV PORT=8080
 
+# Historical v8 migration runs its frozen polygon-clipping bundle without npm.
+COPY --from=frontend /usr/local/bin/node /usr/local/bin/node
 COPY --from=build /app/_build/prod/rel/permaplanner ./
 
 RUN chown -R nobody:root /app && \

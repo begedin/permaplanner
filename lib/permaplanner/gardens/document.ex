@@ -112,11 +112,22 @@ defmodule Permaplanner.Gardens.Document do
 
   defp guild?(guild) when is_map(guild) do
     is_binary(guild["id"]) and is_binary(guild["name"]) and
-      rows?(guild["path"], &point?/1) and rows?(guild["plants"], &thing?/1) and
+      rows?(guild["path"], &polygon?/1) and rows?(guild["plants"], &thing?/1) and
       guild["mulchLevel"] in 1..5 and optional?(guild, "note", &is_binary/1)
   end
 
   defp guild?(_), do: false
+
+  # Geometry cleanup belongs to the browser. The API checks the serialized shape
+  # in linear time and stores it unchanged; it does not calculate area or topology.
+  defp polygon?([_ | _] = rings), do: Enum.all?(rings, &ring?/1)
+  defp polygon?(_), do: false
+
+  defp ring?(points) when is_list(points) and length(points) >= 4 do
+    rows?(points, &point?/1) and hd(points) == List.last(points)
+  end
+
+  defp ring?(_), do: false
 
   defp thing?(thing) when is_map(thing) do
     is_binary(thing["id"]) and is_binary(thing["plantId"]) and

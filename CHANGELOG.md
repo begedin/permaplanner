@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.31.6
+
+- [FIX] Preserve disconnected guild regions and intentional holes as separate saved boundaries, eliminating connecting-line artefacts.
+- [CHANGE] Smooth new guild brush strokes and simplify boundaries in the browser before saving.
+- [CHANGE] Migrate garden documents to version 8 using the same geometry conversion as legacy file imports.
+
 ## 0.31.5
 
 - [FIX] Make recovery-code consumption and TOTP setup atomic under concurrent requests.

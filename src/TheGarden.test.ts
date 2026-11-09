@@ -140,14 +140,14 @@ it('filters guilds in the sidebar by search query', async () => {
 it('deletes the selected guild on Delete only when confirmed', async () => {
   const store = useGardenStore();
   store.guilds = [
-    { id: 'guild', path: [{ x: 0, y: 0 }], name: 'Bed', plants: [], mulchLevel: 1 },
+    { id: 'guild', path: [[[{ x: 0, y: 0 }]]], name: 'Bed', plants: [], mulchLevel: 1 },
   ];
   const { router } = await renderGarden('/guilds/guild');
 
   const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false);
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }));
   expect(store.guilds).toEqual([
-    { id: 'guild', path: [{ x: 0, y: 0 }], name: 'Bed', plants: [], mulchLevel: 1 },
+    { id: 'guild', path: [[[{ x: 0, y: 0 }]]], name: 'Bed', plants: [], mulchLevel: 1 },
   ]);
 
   confirm.mockReturnValueOnce(true);
@@ -166,10 +166,14 @@ it('switches selection to another guild and discards the previous edit', async (
     name: 'A',
     mulchLevel: 1 as const,
     path: [
-      { x: 0, y: 0 },
-      { x: 100, y: 0 },
-      { x: 100, y: 100 },
-      { x: 0, y: 100 },
+      [
+        [
+          { x: 0, y: 0 },
+          { x: 100, y: 0 },
+          { x: 100, y: 100 },
+          { x: 0, y: 100 },
+        ],
+      ],
     ],
     plants: [],
   };
@@ -178,10 +182,14 @@ it('switches selection to another guild and discards the previous edit', async (
     name: 'B',
     mulchLevel: 1 as const,
     path: [
-      { x: 200, y: 0 },
-      { x: 300, y: 0 },
-      { x: 300, y: 100 },
-      { x: 200, y: 100 },
+      [
+        [
+          { x: 200, y: 0 },
+          { x: 300, y: 0 },
+          { x: 300, y: 100 },
+          { x: 200, y: 100 },
+        ],
+      ],
     ],
     plants: [],
   };
@@ -201,7 +209,7 @@ it('switches selection to another guild and discards the previous edit', async (
   const guildB = wrapper
     .findAllComponents(GardenGuild)
     .find((c) => c.props('guild')?.id === 'b');
-  await guildB?.find('polygon.pointer-events-fill').trigger('click');
+  await guildB?.find('path.pointer-events-fill').trigger('click');
   await flushPromises();
   await router.isReady();
 
@@ -234,10 +242,14 @@ it('scrolls the sidebar to a guild selected on the aerial map', async () => {
     name: 'A',
     mulchLevel: 1 as const,
     path: [
-      { x: 0, y: 0 },
-      { x: 100, y: 0 },
-      { x: 100, y: 100 },
-      { x: 0, y: 100 },
+      [
+        [
+          { x: 0, y: 0 },
+          { x: 100, y: 0 },
+          { x: 100, y: 100 },
+          { x: 0, y: 100 },
+        ],
+      ],
     ],
     plants: [],
   };
@@ -246,10 +258,14 @@ it('scrolls the sidebar to a guild selected on the aerial map', async () => {
     name: 'B',
     mulchLevel: 1 as const,
     path: [
-      { x: 200, y: 0 },
-      { x: 300, y: 0 },
-      { x: 300, y: 100 },
-      { x: 200, y: 100 },
+      [
+        [
+          { x: 200, y: 0 },
+          { x: 300, y: 0 },
+          { x: 300, y: 100 },
+          { x: 200, y: 100 },
+        ],
+      ],
     ],
     plants: [],
   };
@@ -261,7 +277,7 @@ it('scrolls the sidebar to a guild selected on the aerial map', async () => {
   const guildB = wrapper
     .findAllComponents(GardenGuild)
     .find((c) => c.props('guild')?.id === 'b');
-  await guildB?.find('polygon.pointer-events-fill').trigger('click');
+  await guildB?.find('path.pointer-events-fill').trigger('click');
   await flushPromises();
   await router.isReady();
 
@@ -338,10 +354,14 @@ it('does not edit a bed while the select tool is active', async () => {
     name: 'Bed',
     mulchLevel: 1 as const,
     path: [
-      { x: 0, y: 0 },
-      { x: 100, y: 0 },
-      { x: 100, y: 100 },
-      { x: 0, y: 100 },
+      [
+        [
+          { x: 0, y: 0 },
+          { x: 100, y: 0 },
+          { x: 100, y: 100 },
+          { x: 0, y: 100 },
+        ],
+      ],
     ],
     plants: [],
   };
@@ -368,13 +388,13 @@ it('uses an aerial guild click as the merge target, including cancellation', asy
     { x: 0, y: 100 },
   ];
   store.guilds = [
-    { id: 'a', name: 'A', mulchLevel: 1, plants: [], path },
+    { id: 'a', name: 'A', mulchLevel: 1, plants: [], path: [[path]] },
     {
       id: 'b',
       name: 'B',
       mulchLevel: 1,
       plants: [],
-      path: path.map(({ x, y }) => ({ x: x + 200, y })),
+      path: [[path.map(({ x, y }) => ({ x: x + 200, y }))]],
     },
   ];
   const router = await createAuthedTestRouter('/guilds');
@@ -386,7 +406,7 @@ it('uses an aerial guild click as the merge target, including cancellation', asy
     .find((c) => c.props('guild').id === 'b');
   if (!target) throw new Error('Expected aerial target guild');
   vi.mocked(window.confirm).mockReturnValue(false);
-  await target.get('polygon.pointer-events-fill').trigger('click');
+  await target.get('path.pointer-events-fill').trigger('click');
   await flushPromises();
   expect(window.confirm).toHaveBeenCalledWith(
     expect.stringContaining('Merge “A” with “B”?'),
@@ -396,7 +416,7 @@ it('uses an aerial guild click as the merge target, including cancellation', asy
   expect(router.currentRoute.value.name).toBe(routeNames.guilds);
 
   vi.mocked(window.confirm).mockReturnValue(true);
-  await target.get('polygon.pointer-events-fill').trigger('click');
+  await target.get('path.pointer-events-fill').trigger('click');
   await flushPromises();
   expect(store.guilds).toMatchObject([{ id: 'a', name: 'A + B' }]);
   expect(store.mergeSourceId).toBeUndefined();
@@ -432,9 +452,13 @@ it('shift-clicking a guild leaves its aerial outline intact', async () => {
     mulchLevel: 1 as const,
     plants: [],
     path: [
-      { x: 0, y: 0 },
-      { x: 100, y: 0 },
-      { x: 100, y: 100 },
+      [
+        [
+          { x: 0, y: 0 },
+          { x: 100, y: 0 },
+          { x: 100, y: 100 },
+        ],
+      ],
     ],
   };
   store.guilds = [guild];
@@ -443,7 +467,7 @@ it('shift-clicking a guild leaves its aerial outline intact', async () => {
 
   await wrapper
     .getComponent(GardenGuild)
-    .find('polygon.pointer-events-fill')
+    .find('path.pointer-events-fill')
     .trigger('click', { shiftKey: true });
 
   expect(store.guilds).toEqual([guild]);
@@ -547,10 +571,14 @@ it('toggles guild and landmark names independently and remembers visibility with
       id: 'orchard',
       name: 'Orchard',
       path: [
-        { x: 10, y: 10 },
-        { x: 100, y: 10 },
-        { x: 100, y: 80 },
-        { x: 10, y: 80 },
+        [
+          [
+            { x: 10, y: 10 },
+            { x: 100, y: 10 },
+            { x: 100, y: 80 },
+            { x: 10, y: 80 },
+          ],
+        ],
       ],
       plants: [],
       mulchLevel: 1,
@@ -731,7 +759,16 @@ it('uses one map brush to preview and commit only the selected guild', async () 
   ]);
   await fireEvent.keyDown(document, { key: 'Enter' });
   expect(garden.guilds).toMatchObject([
-    { id: 'a', path: expect.arrayContaining([{ x: 62, y: 50 }]) },
+    {
+      id: 'a',
+      path: [
+        [
+          expect.arrayContaining([
+            expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }),
+          ]),
+        ],
+      ],
+    },
     { id: 'b', path: [] },
   ]);
   usePlanCommandHistory().undo();

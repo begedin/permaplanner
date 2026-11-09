@@ -1,9 +1,15 @@
 import { computed, ref, watch, type Ref } from 'vue';
-import simplify from 'simplify-js';
 import { useEventListener, useMagicKeys } from '@vueuse/core';
 
 import { isEditableTarget } from './keyboardShortcuts';
-import { joinPaths, subtractPaths, type PathPoint } from './guildPathClip';
+import {
+  joinPaths,
+  subtractPaths,
+  smoothPath,
+  simplifyPath,
+  type GuildPath,
+  type PathPoint,
+} from './guildPathClip';
 import type { Guild } from './gardenTypes';
 import { usePointerSession } from './usePointerSession';
 import { clientToSvgUser } from './svgClientToUser';
@@ -11,7 +17,7 @@ import { clientToSvgUser } from './svgClientToUser';
 export const useGuildPathEdit = (options: {
   svg: Ref<SVGSVGElement | undefined>;
   guild: Ref<Guild | undefined>;
-  onCommit: (guildId: string, path: PathPoint[]) => void;
+  onCommit: (guildId: string, path: GuildPath) => void;
   onCancel: () => void;
 }) => {
   const session = usePointerSession();
@@ -19,10 +25,10 @@ export const useGuildPathEdit = (options: {
   const { meta } = useMagicKeys();
 
   const isEditing = computed(() => options.guild.value !== undefined);
-  const path = ref<PathPoint[]>([]);
+  const path = ref<GuildPath>([]);
 
   const brushSize = ref(12);
-  const stroke = ref<PathPoint[]>([]);
+  const stroke = ref<GuildPath>([]);
 
   const brush = computed(() => {
     if (!isEditing.value) {
@@ -52,15 +58,18 @@ export const useGuildPathEdit = (options: {
     session.start(event, {
       update: (next) => {
         pointer.value = clientToSvgUser(svg, next.clientX, next.clientY);
-        stroke.value = simplify(joinPaths(stroke.value, brush.value));
+        stroke.value = joinPaths(stroke.value, [[brush.value]]);
       },
       cancel: () => {
         stroke.value = [];
       },
       commit: () => {
-        path.value = meta.value
-          ? subtractPaths(path.value, stroke.value)
-          : simplify(joinPaths(path.value, stroke.value));
+        const finishedStroke = smoothPath(stroke.value);
+        path.value = simplifyPath(
+          meta.value
+            ? subtractPaths(path.value, finishedStroke)
+            : joinPaths(path.value, finishedStroke),
+        );
         stroke.value = [];
       },
     });

@@ -4,7 +4,7 @@ defmodule Permaplanner.MixProject do
   def project do
     [
       app: :permaplanner,
-      version: "0.31.5",
+      version: "0.31.6",
       elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,

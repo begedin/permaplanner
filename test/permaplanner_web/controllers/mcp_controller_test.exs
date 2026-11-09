@@ -55,7 +55,16 @@ defmodule PermaplannerWeb.MCPControllerTest do
           "name" => "North bed",
           "mulchLevel" => 4,
           "note" => "Needs water",
-          "path" => [%{"x" => 0, "y" => 0}],
+          "path" => [
+            [
+              [
+                %{"x" => 0, "y" => 0},
+                %{"x" => 30, "y" => 0},
+                %{"x" => 30, "y" => 30},
+                %{"x" => 0, "y" => 0}
+              ]
+            ]
+          ],
           "plants" => [
             %{
               "id" => "t1",

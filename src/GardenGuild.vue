@@ -5,13 +5,13 @@
   import { useCameraStore } from './useCameraStore';
   import GardenMeasure from './GardenMeasure.vue';
   import { pathBounds } from './guildPathBounds';
-  import type { PathPoint } from './guildPathClip';
+  import { guildPathData, type GuildPath } from './guildPathClip';
   import type { AerialTool } from './useAerialTool';
   import { useGuildPathMove } from './useGuildPathMove';
 
   const props = withDefaults(
     defineProps<{
-      previewPath?: PathPoint[];
+      previewPath?: GuildPath;
       unitLengthPx: number;
       guild: Guild;
       hovered: boolean;
@@ -25,12 +25,12 @@
   const labelScale = computed(() => 1 / (camera.scale * camera.zoom || 1));
 
   const emit = defineEmits<{
-    (e: 'move', path: PathPoint[]): void;
+    (e: 'move', path: GuildPath): void;
     (e: 'mouseenter' | 'mouseleave'): void;
     (e: 'click', evt: MouseEvent): void;
   }>();
 
-  const path = ref<PathPoint[]>([]);
+  const path = ref<GuildPath>([]);
 
   watch(
     () => props.previewPath ?? props.guild.path,
@@ -50,31 +50,20 @@
     onCommit: () => emit('move', [...path.value]),
   });
 
-  const outline = computed(() => {
-    const edges = path.value.map((start, i) => ({
-      start,
-      end: path.value[(i + 1) % path.value.length]!,
-    }));
-    const keys = new Set(
-      edges.map(({ start, end }) => `${start.x},${start.y}:${end.x},${end.y}`),
-    );
-    return edges
-      .filter(({ start, end }) => !keys.has(`${end.x},${end.y}:${start.x},${start.y}`))
-      .map(({ start, end }) => `M ${start.x},${start.y} L ${end.x},${end.y}`)
-      .join(' ');
-  });
+  const outline = computed(() => guildPathData(path.value));
 
   const box = computed(() => {
     if (path.value.length === 0) {
       return null;
     }
-    return pathBounds(path.value);
+    return pathBounds(path.value.flat(2));
   });
 </script>
 <template>
-  <polygon
+  <path
     v-if="path.length > 0"
-    :points="path.map(({ x, y }) => `${x},${y}`).join(' ')"
+    :d="outline"
+    fill-rule="evenodd"
     :fill="
       selected
         ? 'rgba(0, 100, 0, 0.6)'

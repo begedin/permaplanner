@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { guildPathData } from './guildPathClip';
   import PlotBorderLayer from './PlotBorderLayer.vue';
   import { usePlotBorderStore } from './usePlotBorderStore';
   import LandmarkLayer from './LandmarkLayer.vue';
@@ -399,11 +400,10 @@
               fill="url(#grid)"
               class="pointer-events-none"
             />
-            <polygon
+            <path
               v-if="editingGuild"
-              :points="
-                (stroke.length ? stroke : brush).map(({ x, y }) => `${x},${y}`).join(' ')
-              "
+              :d="guildPathData(stroke.length ? stroke : [[brush]])"
+              fill-rule="evenodd"
               :fill="stroke.length ? strokeColor : brushColor"
               class="pointer-events-none"
               data-guild-brush

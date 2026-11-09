@@ -17,9 +17,13 @@ afterEach(() => {
 });
 
 const initialPath = [
-  { x: 0, y: 0 },
-  { x: 10, y: 0 },
-  { x: 10, y: 10 },
+  [
+    [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 10 },
+    ],
+  ],
 ];
 const setup = (initialTool: AerialTool) => {
   const svg = createMapSvg();
@@ -122,7 +126,11 @@ it.each(['dispose', 'deselect', 'change tool'])(
     document.dispatchEvent(
       new MouseEvent('pointermove', { buttons: 1, clientX: 5, clientY: 7 }),
     );
-    expect(path.value).toEqual(initialPath.map(({ x, y }) => ({ x: x + 5, y: y + 7 })));
+    expect(path.value).toEqual(
+      initialPath.map((polygon) =>
+        polygon.map((ring) => ring.map(({ x, y }) => ({ x: x + 5, y: y + 7 }))),
+      ),
+    );
     if (action === 'dispose') scope.stop();
     else if (action === 'deselect') selected.value = false;
     else tool.value = 'select';

@@ -1,3 +1,4 @@
+import legacyBoundaryCases from '../../test/fixtures/guild-boundaries-v8.json';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
 import { type GardenDocument } from '../gardenDocument';
@@ -31,8 +32,15 @@ const document: GardenDocument = {
       note: 'North bed',
       mulchLevel: 3,
       path: [
-        { x: 10, y: 20 },
-        { x: 30, y: 40 },
+        [
+          [
+            { x: 10, y: 20 },
+            { x: 30, y: 20 },
+            { x: 30, y: 40 },
+            { x: 10, y: 40 },
+            { x: 10, y: 20 },
+          ],
+        ],
       ],
       plants: [
         {
@@ -105,8 +113,14 @@ it.each([
   },
 );
 
-const splitDocument = {
+const legacyDocument = {
   ...document,
+  version: 7,
+  guilds: document.guilds.map((guild) => ({ ...guild, path: guild.path.flat(2) })),
+};
+
+const splitDocument = {
+  ...legacyDocument,
   guilds: document.guilds.map(({ path: _path, plants, ...guild }) => ({
     ...guild,
     plants: plants.map(
@@ -116,7 +130,7 @@ const splitDocument = {
       }),
     ),
   })),
-  guildLocations: document.guilds.map(({ id, path, plants }) => ({
+  guildLocations: legacyDocument.guilds.map(({ id, path, plants }) => ({
     id,
     path,
     plants: plants.map(({ id, x, y, width, height }) => ({ id, x, y, width, height })),
@@ -213,7 +227,7 @@ it('imports older documents without plant notes unchanged', async () => {
   });
 });
 
-it.each([document, splitDocument])(
+it.each([legacyDocument, splitDocument])(
   'upgrades version 5 local files without guessing their unit',
   async (input) => {
     const { landmarks: _landmarks, ...old } = input;
@@ -235,10 +249,33 @@ it.each([document, splitDocument])(
 );
 
 it('adds an optional empty border to version 6 imports', async () => {
-  const { plotBorder: _border, ...old } = document;
+  const { plotBorder: _border, ...old } = legacyDocument;
   fetchMock.mockResolvedValueOnce(
     new Response(JSON.stringify({ garden: { id: 'garden1' } })),
   );
   await importJsonText(JSON.stringify({ ...old, version: 6 }));
   expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({ document });
 });
+
+it.each(legacyBoundaryCases)(
+  'converts $name using the migration geometry contract',
+  async ({ path, expected }) => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ garden: { id: 'garden1' } })),
+    );
+    await importJsonText(
+      JSON.stringify({
+        ...legacyDocument,
+        guilds: legacyDocument.guilds.map((guild) => ({ ...guild, path })),
+      }),
+    );
+    const converted = {
+      ...document,
+      guilds: document.guilds.map((guild) => ({ ...guild, path: expected })),
+    };
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      document: converted,
+    });
+    expect(JSON.parse(buildLocalPlanJsonText(converted))).toEqual(converted);
+  },
+);

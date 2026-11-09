@@ -3,8 +3,7 @@ import type { Page } from '@playwright/test';
 import { onboard } from './helpers';
 import { expect, test } from './test';
 
-const bedPolygons = (page: Page) =>
-  page.locator('[data-main-svg] polygon.pointer-events-fill');
+const bedPaths = (page: Page) => page.locator('[data-main-svg] path.pointer-events-fill');
 
 const drawBrushStroke = async (page: Page, points: { x: number; y: number }[]) => {
   const mapBounds = await page.getByRole('region', { name: 'Aerial map' }).boundingBox();
@@ -62,7 +61,7 @@ test.describe('drawing features', () => {
       { x: 420, y: 400 },
     ]);
 
-    await expect(bedPolygons(page)).toHaveCount(1);
+    await expect(bedPaths(page)).toHaveCount(1);
     await expect(page.getByRole('article', { name: 'New guild' }).first()).toBeVisible();
 
     await page.getByRole('link', { name: 'Guilds' }).click();
@@ -75,9 +74,9 @@ test.describe('drawing features', () => {
       { x: 400, y: 500 },
     ]);
 
-    await expect(bedPolygons(page)).toHaveCount(2);
+    await expect(bedPaths(page)).toHaveCount(2);
 
-    const currentPoints = await bedPolygons(page).last().getAttribute('points');
+    const currentPath = await bedPaths(page).last().getAttribute('d');
 
     await selectGuildAndEditBrush(page, 1);
     await drawBrushStroke(page, [
@@ -85,11 +84,8 @@ test.describe('drawing features', () => {
       { x: 520, y: 350 },
     ]);
 
-    await expect(bedPolygons(page)).toHaveCount(2);
-    await expect(bedPolygons(page).last()).not.toHaveAttribute(
-      'points',
-      currentPoints ?? '',
-    );
+    await expect(bedPaths(page)).toHaveCount(2);
+    await expect(bedPaths(page).last()).not.toHaveAttribute('d', currentPath ?? '');
   });
 
   test('moves a placed guild bed with the move tool', async ({ page }) => {
@@ -101,19 +97,12 @@ test.describe('drawing features', () => {
     await page.getByRole('link', { name: 'Guilds' }).click();
 
     await selectGuildAndEditBrush(page, 0);
-    await drawBrushStroke(page, [
-      { x: 400, y: 200 },
-      { x: 400, y: 400 },
-      { x: 410, y: 200 },
-      { x: 410, y: 400 },
-      { x: 420, y: 200 },
-      { x: 420, y: 400 },
-    ]);
+    await drawBrushStroke(page, [{ x: 500, y: 300 }]);
 
-    const bed = bedPolygons(page);
+    const bed = bedPaths(page);
     await expect(bed).toHaveCount(1);
-    const pointsBefore = await bed.first().getAttribute('points');
-    expect(pointsBefore).toBeTruthy();
+    const pathBefore = await bed.first().getAttribute('d');
+    expect(pathBefore).toBeTruthy();
 
     await page.getByRole('article', { name: 'New guild' }).first().click();
     await page.getByRole('button', { name: 'Move guild (M)' }).click();
@@ -122,9 +111,10 @@ test.describe('drawing features', () => {
       'true',
     );
 
+    await bed.first().hover();
     const box = await bed.first().boundingBox();
     if (!box) {
-      throw new Error('Bed polygon has no bounding box');
+      throw new Error('Bed path has no bounding box');
     }
     const startX = box.x + box.width / 2;
     const startY = box.y + box.height / 2;
@@ -134,6 +124,6 @@ test.describe('drawing features', () => {
     await page.mouse.up();
 
     await expect(bed).toHaveCount(1);
-    await expect(bed.first()).not.toHaveAttribute('points', pointsBefore ?? '');
+    await expect(bed.first()).not.toHaveAttribute('d', pathBefore ?? '');
   });
 });

@@ -86,7 +86,7 @@ it('removeGuildFromAerialMap clears path only', () => {
   store.guilds = [
     {
       id: 'g1',
-      path: [{ x: 1, y: 2 }],
+      path: [[[{ x: 1, y: 2 }]]],
       name: 'Bed',
       plants: [
         { id: 't', plantId: 'p', x: 0, y: 0, width: 1, height: 1, nameOrCultivar: 'x' },
@@ -108,28 +108,36 @@ it('removeGuildFromAerialMap clears path only', () => {
 it('removeGuildFromAerialMap does nothing if guild not found', () => {
   const store = useGardenStore();
   store.guilds = [
-    { id: 'guild', path: [{ x: 0, y: 0 }], name: 'Guild', plants: [], mulchLevel: 1 },
+    { id: 'guild', path: [[[{ x: 0, y: 0 }]]], name: 'Guild', plants: [], mulchLevel: 1 },
   ];
 
   store.removeGuildFromAerialMap('other');
 
-  expect(store.guilds[0]!.path).toEqual([{ x: 0, y: 0 }]);
+  expect(store.guilds[0]!.path).toEqual([[[{ x: 0, y: 0 }]]]);
 });
 
 it('setGuildPath replaces the guild path', () => {
   const store = useGardenStore();
   store.guilds = [
-    { id: 'g1', path: [{ x: 0, y: 0 }], name: 'Bed', plants: [], mulchLevel: 1 },
+    { id: 'g1', path: [[[{ x: 0, y: 0 }]]], name: 'Bed', plants: [], mulchLevel: 1 },
   ];
 
   store.setGuildPath('g1', [
-    { x: 1, y: 2 },
-    { x: 3, y: 4 },
+    [
+      [
+        { x: 1, y: 2 },
+        { x: 3, y: 4 },
+      ],
+    ],
   ]);
 
   expect(store.guilds[0]!.path).toEqual([
-    { x: 1, y: 2 },
-    { x: 3, y: 4 },
+    [
+      [
+        { x: 1, y: 2 },
+        { x: 3, y: 4 },
+      ],
+    ],
   ]);
 });
 

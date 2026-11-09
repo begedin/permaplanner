@@ -103,4 +103,62 @@ defmodule Permaplanner.Gardens.DocumentTest do
                Document.prepare(Map.put(Gardens.default_document(), "plotBorder", points))
     end
   end
+
+  test "accepts closed region and hole rings and rejects flat or incomplete geometry" do
+    outer =
+      Enum.map([{0, 0}, {30, 0}, {30, 30}, {0, 30}, {0, 0}], fn {x, y} ->
+        %{"x" => x, "y" => y}
+      end)
+
+    hole =
+      Enum.map([{10, 10}, {10, 20}, {20, 20}, {20, 10}, {10, 10}], fn {x, y} ->
+        %{"x" => x, "y" => y}
+      end)
+
+    second = Enum.map(outer, &Map.update!(&1, "x", fn x -> x + 50 end))
+
+    guild = %{
+      "id" => "bed",
+      "name" => "Bed",
+      "path" => [[outer, hole], [second]],
+      "plants" => [],
+      "mulchLevel" => 1
+    }
+
+    document = Map.put(Gardens.default_document(), "guilds", [guild])
+    assert {:ok, ^document, :unchanged} = Document.prepare(document)
+
+    for path <- [
+          outer,
+          [outer],
+          [[]],
+          [[[]]],
+          [[Enum.take(outer, 4)]]
+        ] do
+      invalid = put_in(document, ["guilds", Access.at(0), "path"], path)
+      assert {:error, :invalid_document} = Document.prepare(invalid)
+    end
+  end
+
+  test "stores large translated outlines unchanged without geometry processing" do
+    ring =
+      for i <- 0..10_000 do
+        angle = 2 * :math.pi() * rem(i, 10_000) / 10_000
+        %{"x" => 1.0e8 + :math.cos(angle), "y" => 1.0e8 + :math.sin(angle)}
+      end
+
+    unit_square =
+      Enum.map([{0, 0}, {1, 0}, {1, 1}, {0, 1}, {0, 0}], fn {x, y} ->
+        %{"x" => 1.0e8 + x, "y" => 1.0e8 + y}
+      end)
+
+    for path <- [[[ring]], [[unit_square]]] do
+      document =
+        Map.put(Gardens.default_document(), "guilds", [
+          %{"id" => "g", "name" => "G", "path" => path, "plants" => [], "mulchLevel" => 1}
+        ])
+
+      assert {:ok, ^document, :unchanged} = Document.prepare(document)
+    end
+  end
 end

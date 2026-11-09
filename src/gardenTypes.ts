@@ -1,3 +1,4 @@
+import type { GuildPath } from './guildPathClip';
 import type { GrowthPhase, PlantVigor } from './guildPlantInstanceStatus';
 import type { PlantIconId } from './plantIcons/iconIds';
 
@@ -96,7 +97,7 @@ export const coerceMulchLevel = (v: unknown): MulchLevel => {
 export type Guild = {
   id: string;
   name: string;
-  path: { x: number; y: number }[];
+  path: GuildPath;
   plants: GardenThing[];
   mulchLevel: MulchLevel;
   note?: string;

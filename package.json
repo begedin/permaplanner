@@ -1,6 +1,6 @@
 {
   "name": "permaplanner",
-  "version": "0.31.5",
+  "version": "0.31.6",
   "private": true,
   "type": "module",
   "scripts": {
@@ -28,11 +28,14 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --project tsconfig.app.json",
     "lint": "eslint . --fix",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "bundle:migration:v8": "esbuild scripts/migrate-guild-boundaries-v8.ts --banner:js='// Frozen v8 migration bundle; regenerate only before release with npm run bundle:migration:v8.' --bundle --platform=node --target=node22 --format=cjs --minify --legal-comments=eof --outfile=priv/repo/support/guild-boundaries-v8.cjs && prettier --write priv/repo/support/guild-boundaries-v8.cjs"
   },
   "dependencies": {
     "@headlessui/vue": "^1.7.23",
+    "@turf/polygon-smooth": "^7.4.0",
     "@vueuse/core": "^12.1.0",
+    "flatbush": "^4.7.0",
     "fuse.js": "^7.3.0",
     "motion-v": "^2.2.1",
     "pinia": "^2.1.7",
@@ -61,6 +64,7 @@
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.7.0",
     "autoprefixer": "^10.4.19",
+    "esbuild": "^0.24.0",
     "eslint": "^9.4.0",
     "eslint-plugin-vue": "^9.26.0",
     "jsdom": "^25.0.1",

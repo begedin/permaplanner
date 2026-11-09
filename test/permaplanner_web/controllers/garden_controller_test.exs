@@ -76,7 +76,16 @@ defmodule PermaplannerWeb.GardenControllerTest do
           "name" => "Herbs",
           "mulchLevel" => 3,
           "note" => "North bed",
-          "path" => [%{"x" => 10, "y" => 20}],
+          "path" => [
+            [
+              [
+                %{"x" => 0, "y" => 0},
+                %{"x" => 30, "y" => 0},
+                %{"x" => 30, "y" => 30},
+                %{"x" => 0, "y" => 0}
+              ]
+            ]
+          ],
           "plants" => [
             %{
               "id" => "t1",

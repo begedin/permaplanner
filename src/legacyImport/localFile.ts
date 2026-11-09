@@ -1,3 +1,4 @@
+import { convertLegacyGuildPath } from './guildPath';
 import * as gardensApi from '../api/gardens';
 
 const records = (value: unknown): Record<string, unknown>[] => {
@@ -78,6 +79,22 @@ export const importGardenDocument = async (
     document.version === 6
   ) {
     document = { ...document, version: 7, plotBorder: [] };
+  }
+  if (
+    document &&
+    typeof document === 'object' &&
+    'version' in document &&
+    document.version === 7
+  ) {
+    const old = document as Record<string, unknown>;
+    document = {
+      ...old,
+      version: 8,
+      guilds: records(old.guilds).map((guild) => ({
+        ...guild,
+        path: convertLegacyGuildPath(guild.path),
+      })),
+    };
   }
   return gardensApi.importGardenDocument({ document, name: opts?.name });
 };

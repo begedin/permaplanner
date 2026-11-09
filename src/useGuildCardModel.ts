@@ -230,7 +230,7 @@ export const useGuildCardModel = (guildId: Ref<string>) => {
       return null;
     }
     const size = formatGuildMapDimensions(
-      pathBounds(guild.value.path),
+      pathBounds(guild.value.path.flat(2)),
       mapScale.unitLengthPx,
     );
     return size ? `${size} ${mapScale.unitLabel}` : null;

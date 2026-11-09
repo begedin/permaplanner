@@ -246,8 +246,12 @@ it('uses the default card surface when the guild is on the aerial map', async ()
     {
       ...testGuild,
       path: [
-        { x: 0, y: 0 },
-        { x: 64, y: 64 },
+        [
+          [
+            { x: 0, y: 0 },
+            { x: 64, y: 64 },
+          ],
+        ],
       ],
     },
   ];
@@ -266,8 +270,12 @@ it('shows map size and an icon remove control when the guild is on the aerial ma
       ...testGuild,
       name: 'Bed',
       path: [
-        { x: 0, y: 0 },
-        { x: 130, y: 100 },
+        [
+          [
+            { x: 0, y: 0 },
+            { x: 130, y: 100 },
+          ],
+        ],
       ],
     },
   ];

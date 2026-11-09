@@ -1,6 +1,6 @@
 import { enableAutoUnmount, mount } from '@vue/test-utils';
 import { reactive, nextTick } from 'vue';
-import { joinPaths } from './guildPathClip';
+import { joinPaths, subtractPaths } from './guildPathClip';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import GardenGuild from './GardenGuild.vue';
 import { setActivePinia } from 'pinia';
@@ -54,9 +54,13 @@ it.each([
   const guild = {
     id: 'guild',
     path: [
-      { x: 0, y: 0 },
-      { x: 10, y: 0 },
-      { x: 10, y: 10 },
+      [
+        [
+          { x: 0, y: 0 },
+          { x: 10, y: 0 },
+          { x: 10, y: 10 },
+        ],
+      ],
     ],
     plants: [],
     name: 'Bed',
@@ -68,7 +72,7 @@ it.each([
   });
 
   await wrapper
-    .get('polygon[class*="pointer-events-fill"]')
+    .get('path[class*="pointer-events-fill"]')
     .trigger('pointerdown', { button: 0, ...start });
   if (move) {
     document.dispatchEvent(
@@ -79,7 +83,7 @@ it.each([
   document.dispatchEvent(new MouseEvent('pointerup', { ...release, bubbles: true }));
   await nextTick();
 
-  expect(wrapper.emitted('move')?.at(0)).toEqual([expected]);
+  expect(wrapper.emitted('move')?.at(0)).toEqual([[[expected]]]);
 });
 
 it('updates a merged area and outlines only its boundaries', async () => {
@@ -92,7 +96,7 @@ it('updates a merged area and outlines only its boundaries', async () => {
   const second = first.map(({ x, y }) => ({ x: x + 20, y }));
   const guild = reactive({
     id: 'guild',
-    path: first,
+    path: [[first]],
     plants: [],
     name: 'A',
     mulchLevel: 1 as const,
@@ -100,10 +104,13 @@ it('updates a merged area and outlines only its boundaries', async () => {
   const wrapper = mount(GardenGuild, {
     props: { guild, unitLengthPx: 5, hovered: false, selected: false },
   });
-  guild.path = joinPaths(first, second);
+  const hole = first.map(({ x, y }) => ({ x: x / 5 + 4, y: y / 5 + 4 }));
+  guild.path = joinPaths(subtractPaths([[first]], [[hole]]), [[second]]);
   await nextTick();
-  expect(wrapper.get('polygon').attributes('points')).toContain('30,10');
+  expect(wrapper.get('path.pointer-events-fill').attributes('d')).toContain('30,10');
   const outline = wrapper.get('path').attributes('d');
+  expect(wrapper.get('path.pointer-events-fill').attributes('fill-rule')).toBe('evenodd');
+  expect(outline?.match(/M /g)).toHaveLength(3);
   expect(outline).toContain('M 20,0 L 30,0');
   expect(outline).not.toContain('M 0,0 L 20,0');
   expect(outline).not.toContain('M 20,0 L 0,0');

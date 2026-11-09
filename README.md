@@ -149,7 +149,27 @@ Month ranges are approximate outdoor northern-hemisphere seasons and vary with c
 ## Garden document format
 
 Stored documents, API responses, frontend state, and downloadable JSON use the
-merged guild format (version 7). `syncRevision` tracks save conflicts.
+merged guild format (version 8). `syncRevision` tracks save conflicts.
+Guild `path` stores polygons → rings → `{x, y}` points. Each polygon has one
+closed exterior ring followed by closed hole rings; disconnected regions have
+separate polygons. Only boundaries are saved, with no connecting bridges or brush
+history. New brush strokes receive one Chaikin smoothing pass before union or
+subtraction. Existing regions are not repeatedly smoothed. The version 8 data
+migration and local imports use the same polygon-clipping conversion for version 7
+paths. Crossed outlines are split into their filled regions; only paths with no
+filled area become empty geometry (zero signed area alone does not mean empty).
+The database migration runs the frozen `priv/repo/support/guild-boundaries-v8.cjs`
+bundle with Node.js 22, which is included in the release image. It requires no npm
+installation at runtime. To rebuild this bundle before its first release, run
+`npm run bundle:migration:v8`; do not regenerate a shipped migration bundle.
+Conversion errors abort the transaction, preserving all original documents.
+Guild boundary cleanup runs in the browser when a brush edit is committed, before
+the result enters saved state. Douglas–Peucker simplification reduces boundary
+points while preserving disconnected regions and intentional holes. Smoothing and
+simplification fall back per region if a candidate loses a hole or conflicts with
+a neighbor. The API checks numeric points, closed rings, and the nested data shape
+in linear time; it stores the geometry unchanged without calculating area or
+validating topology on each autosave.
 Document validation requires unique IDs within plants, guilds, landmarks, and
 plant instances (across all guilds). Every instance must reference a plant in
 the document; unknown catalog species remain supported.

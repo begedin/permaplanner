@@ -1,11 +1,11 @@
 import { computed, watch, type Ref } from 'vue';
-import type { PathPoint } from './guildPathClip';
+import type { GuildPath } from './guildPathClip';
 import { clientToSvgUser } from './svgClientToUser';
 import type { AerialTool } from './useAerialTool';
 import { usePointerSession } from './usePointerSession';
 
 export const useGuildPathMove = (options: {
-  path: Ref<PathPoint[]>;
+  path: Ref<GuildPath>;
   selected: Ref<boolean>;
   tool: Ref<AerialTool | undefined>;
   onCommit: () => void;
@@ -28,14 +28,18 @@ export const useGuildPathMove = (options: {
     const svg = (event.currentTarget as SVGElement).closest('svg');
     if (!(svg instanceof SVGSVGElement)) return;
     const origin = clientToSvgUser(svg, event.clientX, event.clientY);
-    const path = options.path.value.map((point) => ({ ...point }));
+    const path = options.path.value;
     session.start(event, {
       update: (next) => {
         const point = clientToSvgUser(svg, next.clientX, next.clientY);
-        options.path.value = path.map(({ x, y }) => ({
-          x: x + point.x - origin.x,
-          y: y + point.y - origin.y,
-        }));
+        options.path.value = path.map((polygon) =>
+          polygon.map((ring) =>
+            ring.map(({ x, y }) => ({
+              x: x + point.x - origin.x,
+              y: y + point.y - origin.y,
+            })),
+          ),
+        );
       },
       cancel: () => {
         options.path.value = path;

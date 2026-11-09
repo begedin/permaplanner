@@ -1,5 +1,6 @@
 defmodule Permaplanner.Gardens.DocumentMigrationTest do
   use ExUnit.Case, async: false
+  import Ecto.Query
   alias Ecto.Adapters.SQL.Sandbox
   alias Permaplanner.Repo
 
@@ -13,6 +14,13 @@ defmodule Permaplanner.Gardens.DocumentMigrationTest do
   @border_migration Permaplanner.Repo.Migrations.AddPlotBorder
   @border_version 20_261_108_054_137
   Code.require_file("../../../priv/repo/migrations/20261108054137_add_plot_border.exs", __DIR__)
+
+  @guild_migration Permaplanner.Repo.Migrations.SeparateGuildBoundaries
+  @guild_version 20_261_109_080_243
+  Code.require_file(
+    "../../../priv/repo/migrations/20261109080243_separate_guild_boundaries.exs",
+    __DIR__
+  )
 
   setup do
     # An isolated schema exercises the real migration with separate transactions,
@@ -104,5 +112,136 @@ defmodule Permaplanner.Gardens.DocumentMigrationTest do
              Repo.query!(
                "SELECT document, file_version, sync_revision, updated_at FROM #{schema}.gardens"
              ).rows
+  end
+
+  test "separates retraced boundaries and holes without changing metadata", %{
+    schema: schema,
+    document: document,
+    timestamp: timestamp
+  } do
+    square = fn x, y, size ->
+      Enum.map([{x, y}, {x + size, y}, {x + size, y + size}, {x, y + size}, {x, y}], fn {x, y} ->
+        %{"x" => x, "y" => y}
+      end)
+    end
+
+    outer = square.(0, 0, 30)
+    hole = Enum.reverse(square.(10, 10, 10))
+
+    touching_hole =
+      Enum.map([{30, 30}, {26, 24}, {24, 26}, {30, 30}], fn {x, y} -> %{"x" => x, "y" => y} end)
+
+    island = square.(12, 12, 2)
+    separate = square.(50, 0, 10)
+    legacy = Enum.flat_map([outer, hole, touching_hole, island, separate], &(&1 ++ [hd(outer)]))
+
+    guilds = [
+      %{"id" => "bed", "path" => legacy},
+      %{"id" => "unplaced", "path" => []},
+      %{"id" => "clockwise", "path" => Enum.reverse(separate)},
+      %{"id" => "degenerate", "path" => [%{"x" => 1, "y" => 1}]}
+    ]
+
+    old = document |> Map.put("version", 7) |> Map.put("guilds", guilds)
+
+    from(g in "gardens", where: g.id == "garden")
+    |> Repo.update_all([set: [document: old, file_version: 7]], prefix: schema)
+
+    assert :ok =
+             Ecto.Migrator.up(Repo, @guild_version, @guild_migration, prefix: schema, log: false)
+
+    expected =
+      old
+      |> Map.put("version", 8)
+      |> Map.put("guilds", [
+        %{"id" => "bed", "path" => [[outer, touching_hole, hole], [island], [separate]]},
+        %{"id" => "unplaced", "path" => []},
+        %{"id" => "clockwise", "path" => [[separate]]},
+        %{"id" => "degenerate", "path" => []}
+      ])
+
+    assert [[^expected, 8, 3, ^timestamp]] =
+             Repo.query!(
+               "SELECT document, file_version, sync_revision, updated_at FROM #{schema}.gardens"
+             ).rows
+
+    assert :ok =
+             Ecto.Migrator.down(Repo, @guild_version, @guild_migration,
+               prefix: schema,
+               log: false
+             )
+
+    [[rolled_back]] = Repo.query!("SELECT document FROM #{schema}.gardens").rows
+
+    assert hd(rolled_back["guilds"])["path"] ==
+             Enum.flat_map([outer, touching_hole, hole, island, separate], &(&1 ++ [hd(outer)]))
+  end
+
+  test "matches file-import conversion for the shared legacy geometry corpus", %{
+    schema: schema,
+    document: document,
+    timestamp: timestamp
+  } do
+    cases =
+      File.read!(Path.expand("../../fixtures/guild-boundaries-v8.json", __DIR__))
+      |> Jason.decode!()
+
+    old =
+      document
+      |> Map.put("version", 7)
+      |> Map.put("guilds", Enum.map(cases, fn c -> %{"id" => c["name"], "path" => c["path"]} end))
+
+    from(g in "gardens", where: g.id == "garden")
+    |> Repo.update_all([set: [document: old, file_version: 7]], prefix: schema)
+
+    assert :ok =
+             Ecto.Migrator.up(Repo, @guild_version, @guild_migration, prefix: schema, log: false)
+
+    expected =
+      old
+      |> Map.put("version", 8)
+      |> Map.put(
+        "guilds",
+        Enum.map(cases, fn c -> %{"id" => c["name"], "path" => c["expected"]} end)
+      )
+
+    assert [[^expected, 8, 3, ^timestamp]] =
+             Repo.query!(
+               "SELECT document, file_version, sync_revision, updated_at FROM #{schema}.gardens"
+             ).rows
+  end
+
+  # Slow integration exception: real DDL/transactions and two Node invocations
+  # verify that a successful row is undone when the next real conversion fails.
+  # Mocking the converter or repository would lose this cross-process rollback check.
+  test "rolls back earlier rows when a legacy geometry cannot be converted", %{
+    schema: schema,
+    document: document
+  } do
+    old = Map.put(document, "version", 7)
+
+    from(g in "gardens", where: g.id == "garden")
+    |> Repo.update_all([set: [document: old, file_version: 7]], prefix: schema)
+
+    invalid = put_in(old, ["guilds", Access.at(0), "path"], [%{"x" => "invalid", "y" => 0}])
+
+    Repo.insert_all(
+      "gardens",
+      [%{id: "zz-invalid", file_version: 7, document: invalid, sync_revision: 3}],
+      prefix: schema
+    )
+
+    before =
+      Repo.query!(
+        "SELECT id, document, file_version, sync_revision, updated_at FROM #{schema}.gardens ORDER BY id"
+      ).rows
+
+    assert_raise RuntimeError, ~r/Guild geometry conversion failed/, fn ->
+      Ecto.Migrator.up(Repo, @guild_version, @guild_migration, prefix: schema, log: false)
+    end
+
+    assert Repo.query!(
+             "SELECT id, document, file_version, sync_revision, updated_at FROM #{schema}.gardens ORDER BY id"
+           ).rows == before
   end
 end

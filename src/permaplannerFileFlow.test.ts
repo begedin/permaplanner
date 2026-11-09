@@ -17,7 +17,7 @@ it('hydrates from document snapshot round-trip', async () => {
   const guild: Guild = {
     id: 'g-willow',
     name: 'Willow',
-    path: [{ x: 1, y: 2 }],
+    path: [[[{ x: 1, y: 2 }]]],
     plants: [],
     mulchLevel: 1,
   };

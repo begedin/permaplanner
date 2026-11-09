@@ -103,8 +103,12 @@ it('shows map size and icon remove when the guild is placed on the aerial map', 
       mulchLevel: 1,
       plants: [],
       path: [
-        { x: 0, y: 0 },
-        { x: 130, y: 100 },
+        [
+          [
+            { x: 0, y: 0 },
+            { x: 130, y: 100 },
+          ],
+        ],
       ],
     },
   ];

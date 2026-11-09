@@ -7,7 +7,7 @@ import type { GrowthPhase, PlantVigor } from './guildPlantInstanceStatus';
 import { plantCatalog } from './plantCatalog';
 import { confirmGuildDeletion } from './confirmGuildDeletion';
 import { pathBounds } from './guildPathBounds';
-import { joinPaths, type PathPoint } from './guildPathClip';
+import { joinPaths, type GuildPath } from './guildPathClip';
 import { plantDisplayLabel, resolveUserPlant } from './resolvePlant';
 import { useGuildHover } from './useGuildHover';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
@@ -84,7 +84,7 @@ export const useGardenStore = defineStore('garden', () => {
     Object.fromEntries(
       guilds.value
         .filter((g) => g.path.length > 0)
-        .map((guild) => [guild.id, pathBounds(guild.path)]),
+        .map((guild) => [guild.id, pathBounds(guild.path.flat(2))]),
     ),
   );
 
@@ -126,7 +126,7 @@ export const useGardenStore = defineStore('garden', () => {
     });
   };
 
-  const setGuildPath = (guildId: string, path: PathPoint[]) => {
+  const setGuildPath = (guildId: string, path: GuildPath) => {
     commandHistory.runMutation(() => {
       const guild = guilds.value.find((g) => g.id === guildId);
       if (!guild) {

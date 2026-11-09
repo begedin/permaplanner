@@ -51,7 +51,7 @@ it('round-trips every editable field without retaining document or snapshot refe
     plotBorder: [],
     plants: [{ id: 'p1', speciesId: 'apple', cultivarId: null }],
     guilds: [
-      { id: 'g1', name: 'Bed', path: [{ x: 1, y: 2 }], plants: [], mulchLevel: 3 },
+      { id: 'g1', name: 'Bed', path: [[[{ x: 1, y: 2 }]]], plants: [], mulchLevel: 3 },
     ],
     mapScale: {
       unit: 'm',

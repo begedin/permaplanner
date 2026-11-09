@@ -14,7 +14,7 @@ import { GARDEN_DOCUMENT_VERSION } from './gardenDocument';
 const sampleGuild: Guild = {
   id: 'g1',
   name: 'Edge guild',
-  path: [{ x: 10, y: 20 }],
+  path: [[[{ x: 10, y: 20 }]]],
   mulchLevel: 3,
   note: 'North bed',
   plants: [
