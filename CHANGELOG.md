@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.32.1
+
+- [DB] Added Bluebeard (Caryopteris × clandonensis) to the catalog, with Heavenly Blue, Dark Knight, and Worcester Gold cultivars.
+
 ## 0.32.0
 
 - [FIX] Keep plant labels consistent across editing, saving, exports, and reloads.

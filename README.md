@@ -111,6 +111,10 @@ The editable plant list lives in [`src/data/plantCatalog.json`](src/data/plantCa
 
 Runtime resolution and labels are implemented in [`src/resolvePlant.ts`](src/resolvePlant.ts) and [`src/plantCatalog.ts`](src/plantCatalog.ts).
 
+### Catalog addition sources (0.32.1)
+
+- Bluebeard (Caryopteris × clandonensis): [NC State Extension](https://plants.ces.ncsu.edu/plants/caryopteris-x-clandonensis/) identifies the shrub and its value for pollinators. [RHS growing guidance](https://www.rhs.org.uk/plants/caryopteris/growing-guide) and the [Heavenly Blue profile](https://www.rhs.org.uk/plants/97161/caryopteris-%C3%97-clandonensis-heavenly-blue/details) identify the cultivars. The approximate August–September flowering window follows the [RHS nursery listing](https://rhs.crocdn.co.uk/plants/_/caryopteris--clandonensis-heavenly-blue/classid.699/); local climate can change timing.
+
 ### Catalog correction sources (0.25.14)
 
 - Snowball viburnum: [Illinois Extension](https://web.extension.illinois.edu/hortanswers/plantdetail.cfm?PlantID=463&PlantTypeID=8) identifies 'Roseum' as sterile and fruitless.
