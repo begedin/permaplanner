@@ -1,3 +1,4 @@
+import { usePlanStateStore } from './usePlanStateStore';
 import {
   cleanup,
   fireEvent,
@@ -33,7 +34,7 @@ afterEach(() => {
 const seedGuilds = async (initialPath = '/guilds') => {
   const router = await createAuthedTestRouter(initialPath);
   const store = useGardenStore();
-  store.guilds = [
+  usePlanStateStore().state.guilds = [
     { id: 'a', name: 'Alpha guild', plants: [], path: [], mulchLevel: 1 },
     { id: 'b', name: 'Beta guild', plants: [], path: [], mulchLevel: 1 },
   ];
@@ -211,10 +212,9 @@ it('add guild navigates with the new guild in the route', async () => {
   await flushPromises();
   await router.isReady();
 
-  const store = useGardenStore();
   expect(router.currentRoute.value.name).toBe(routeNames.guildsDetail);
   expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe(
-    store.guilds[0]!.id,
+    usePlanStateStore().state.guilds[0]!.id,
   );
   await waitFor(() => {
     expect(screen.getByRole('button', { name: 'Delete' })).toBeVisible();
@@ -222,7 +222,7 @@ it('add guild navigates with the new guild in the route', async () => {
 });
 
 it('selects a merge source, confirms the target, and opens the merged guild', async () => {
-  const { router, store } = await seedGuilds();
+  const { router } = await seedGuilds();
   const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
   render(TheGarden, { global: { plugins: [router] } });
   await fireEvent.click(
@@ -245,7 +245,7 @@ it('selects a merge source, confirms the target, and opens the merged guild', as
   expect(confirm).toHaveBeenCalledWith(
     expect.stringContaining('Merge “Alpha guild” with “Beta guild”?'),
   );
-  expect(store.guilds).toMatchObject([{ id: 'a' }, { id: 'b' }]);
+  expect(usePlanStateStore().state.guilds).toMatchObject([{ id: 'a' }, { id: 'b' }]);
   confirm.mockReturnValue(true);
   await fireEvent.keyDown(screen.getByRole('article', { name: 'Beta guild' }), {
     key: 'Enter',
@@ -267,7 +267,7 @@ it('selects a merge source, confirms the target, and opens the merged guild', as
 });
 
 it('cancels merge selection without modifying either guild', async () => {
-  const { router, store } = await seedGuilds();
+  const { router } = await seedGuilds();
   render(TheGarden, { global: { plugins: [router] } });
   const source = screen.getByRole('article', { name: 'Alpha guild' });
   await fireEvent.click(within(source).getByRole('button', { name: 'Merge with' }));
@@ -279,5 +279,5 @@ it('cancels merge selection without modifying either guild', async () => {
       screen.queryByRole('button', { name: 'Cancel merge' }),
     ).not.toBeInTheDocument(),
   );
-  expect(store.guilds).toMatchObject([{ id: 'a' }, { id: 'b' }]);
+  expect(usePlanStateStore().state.guilds).toMatchObject([{ id: 'a' }, { id: 'b' }]);
 });

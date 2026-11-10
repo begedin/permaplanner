@@ -1,4 +1,4 @@
-import { computed } from 'vue';
+import { computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { usePlanStateStore } from './usePlanStateStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
@@ -7,7 +7,7 @@ import type { PathPoint } from './guildPathClip';
 export const usePlotBorderStore = defineStore('plotBorder', () => {
   const plan = usePlanStateStore();
   const history = usePlanCommandHistory();
-  const points = computed(() => plan.state.plotBorder);
+  const points = computed(() => readonly(plan.state.plotBorder));
   const save = (points: PathPoint[]): boolean => {
     if (points.length > 0) {
       if (

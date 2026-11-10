@@ -1,105 +1,33 @@
-import { defineStore, storeToRefs } from 'pinia';
-import { nextTick, ref, toRefs } from 'vue';
-
-import {
-  GARDEN_DOCUMENT_VERSION,
-  type GardenDocument,
-  type GardenDocumentPayload,
-} from './gardenDocument';
-import { createEmptyPlanState } from './planSavableState';
+import { defineStore } from 'pinia';
+import { computed, readonly } from 'vue';
 import { usePlanStateStore } from './usePlanStateStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 
+/** Read-only plan views and background-image editing actions. */
 export const usePermaplannerStore = defineStore('permaplanner', () => {
-  const gardenId = ref<string | undefined>();
-  const gardenName = ref<string | undefined>();
-
   const plan = usePlanStateStore();
-  const { mapScale: _mapScale, ...editableFields } = toRefs(plan.state);
-  const { backgroundImageDataUrl } = editableFields;
-  const { isBulkPlanUpdate } = storeToRefs(plan);
-  const backgroundImageSavedDataUrl = ref<string | undefined>();
-  const syncRevision = ref(0);
-  let replacementDepth = 0;
+  const history = usePlanCommandHistory();
 
-  const snapshot = (): GardenDocument => {
-    const { backgroundImageDataUrl, ...data } = plan.capture();
-    return {
-      ...data,
-      version: GARDEN_DOCUMENT_VERSION,
-      syncRevision: syncRevision.value,
-      ...(backgroundImageDataUrl === undefined
-        ? {}
-        : { backgroundImage: backgroundImageDataUrl }),
-    };
-  };
-
-  /** API-update snapshot; omits the background image unless it changed. */
-  const snapshotForServer = (): GardenDocumentPayload => {
-    const doc = snapshot();
-    const current = backgroundImageDataUrl.value;
-    const saved = backgroundImageSavedDataUrl.value;
-
-    if (current === saved) {
-      const { backgroundImage: _removed, ...rest } = doc;
-      return rest;
-    }
-
-    if (current === undefined) {
-      const { backgroundImage: _removed, ...rest } = doc;
-      return { ...rest, backgroundImage: null };
-    }
-
-    return doc;
-  };
-
-  const hydrateFromDocument = async (
-    doc: GardenDocument,
-    meta?: { id?: string; name?: string },
-  ) => {
-    replacementDepth += 1;
-    isBulkPlanUpdate.value = true;
-    try {
-      const { version: _version, syncRevision: revision, backgroundImage, ...data } = doc;
-      plan.restore({ ...data, backgroundImageDataUrl: backgroundImage });
-      backgroundImageSavedDataUrl.value = backgroundImage;
-      syncRevision.value = revision;
-      gardenId.value = meta?.id;
-      gardenName.value = meta?.name;
-      usePlanCommandHistory().clear();
-    } finally {
-      await nextTick();
-      replacementDepth -= 1;
-      isBulkPlanUpdate.value = replacementDepth > 0;
-    }
-  };
-
-  const resetToNewPlan = () => {
-    const { backgroundImageDataUrl: _image, ...data } = createEmptyPlanState();
-    return hydrateFromDocument({
-      ...data,
-      version: GARDEN_DOCUMENT_VERSION,
-      syncRevision: 0,
+  const setBackgroundImage = (value: string | undefined) => {
+    history.runMutation(() => {
+      plan.state.backgroundImageDataUrl = value;
     });
   };
-
-  const setSyncRevision = (n: number) => {
-    if (Number.isFinite(n) && n >= 0) {
-      syncRevision.value = Math.floor(n);
-    }
+  const setBackgroundOpacity = (value: number, token?: symbol) => {
+    history.runMutation(() => {
+      plan.state.backgroundOpacity = value;
+    }, token);
   };
 
   return {
-    gardenId,
-    gardenName,
-    snapshot,
-    snapshotForServer,
-    hydrateFromDocument,
-    resetToNewPlan,
-    isBulkPlanUpdate,
-    ...editableFields,
-    backgroundImageSavedDataUrl,
-    syncRevision,
-    setSyncRevision,
+    plants: computed(() => readonly(plan.state.plants)),
+    guilds: computed(() => readonly(plan.state.guilds)),
+    landmarks: computed(() => readonly(plan.state.landmarks)),
+    plotBorder: computed(() => readonly(plan.state.plotBorder)),
+    backgroundOpacity: computed(() => plan.state.backgroundOpacity),
+    backgroundImageDataUrl: computed(() => plan.state.backgroundImageDataUrl),
+    onboardingState: computed(() => plan.state.onboardingState),
+    setBackgroundImage,
+    setBackgroundOpacity,
   };
 });

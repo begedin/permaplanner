@@ -9,7 +9,7 @@
   import type { PathPoint } from './guildPathClip';
 
   const props = defineProps<{
-    points: PathPoint[];
+    points: readonly PathPoint[];
     selected: boolean;
     tool: AerialTool;
     width: number;

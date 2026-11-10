@@ -1,5 +1,5 @@
+import { usePlanStateStore } from './usePlanStateStore';
 import * as gardensApi from './api/gardens';
-import { usePermaplannerStore } from './usePermaplannerStore';
 import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import {
   render,
@@ -16,7 +16,6 @@ import { defaultCatalogPick } from './catalogPlantPick';
 import { createAuthedTestRouter } from './testing/authedTestSession';
 import ThePlants from './ThePlants.vue';
 import { setActivePinia } from 'pinia';
-import { useGardenStore } from './useGardenStore';
 import { PLANT_ICON_IDS } from './plantIcons/iconIds';
 import { plantCatalog } from './plantCatalog';
 import { resolveUserPlant } from './resolvePlant';
@@ -25,7 +24,7 @@ vi.mock('./api/gardens');
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
-  useGardenStore().plants = [];
+  usePlanStateStore().state.plants = [];
 });
 
 afterEach(() => {
@@ -38,8 +37,8 @@ it('creates a plant from catalog defaults', async () => {
 
   await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
-  expect(useGardenStore().plants).toHaveLength(1);
-  const up = useGardenStore().plants[0];
+  expect(usePlanStateStore().state.plants).toHaveLength(1);
+  const up = usePlanStateStore().state.plants[0];
   const expected = defaultCatalogPick(
     plantCatalog.species.filter((s) => s.id !== 'unknown'),
   );
@@ -56,8 +55,8 @@ it('can override guild functions and save', async () => {
   await fireEvent.click(screen.getByRole('checkbox', { name: 'Wildfire Suppressor' }));
   await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
-  expect(useGardenStore().plants).toHaveLength(1);
-  const r = resolveUserPlant(useGardenStore().plants[0], plantCatalog);
+  expect(usePlanStateStore().state.plants).toHaveLength(1);
+  const r = resolveUserPlant(usePlanStateStore().state.plants[0], plantCatalog);
   expect(r.functions).toContain('wildfire_suppressor');
 });
 
@@ -71,7 +70,7 @@ it('can set custom species name', async () => {
   );
   await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
-  expect(resolveUserPlant(useGardenStore().plants[0], plantCatalog).name).toBe(
+  expect(resolveUserPlant(usePlanStateStore().state.plants[0], plantCatalog).name).toBe(
     'Herb patch',
   );
 });
@@ -91,13 +90,15 @@ it('offers every plant icon and saves a newly added icon choice', async () => {
     'true',
   );
   await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
-  expect(useGardenStore().plants).toMatchObject([
+  expect(usePlanStateStore().state.plants).toMatchObject([
     { speciesOverride: { iconId: 'bouquet' } },
   ]);
 });
 
 it('focuses and selects the current catalog value when editing an existing plant', async () => {
-  useGardenStore().plants = [{ id: 'basil', speciesId: 'basil', cultivarId: 'genovese' }];
+  usePlanStateStore().state.plants = [
+    { id: 'basil', speciesId: 'basil', cultivarId: 'genovese' },
+  ];
   const router = await createAuthedTestRouter('/plants');
   render(ThePlants, { global: { plugins: [router] } });
 
@@ -113,17 +114,16 @@ it('focuses and selects the current catalog value when editing an existing plant
   });
 
   await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-  expect(useGardenStore().plants).toMatchObject([
+  expect(usePlanStateStore().state.plants).toMatchObject([
     { id: 'basil', speciesId: 'basil', cultivarId: 'genovese' },
   ]);
 });
 
 it('explains why a placed plant cannot be deleted and keeps the plan savable', async () => {
   const router = await createAuthedTestRouter('/plants');
-  const garden = useGardenStore();
   const plant = { id: 'basil', speciesId: 'basil', cultivarId: null };
-  garden.plants = [plant];
-  garden.guilds = [
+  usePlanStateStore().state.plants = [plant];
+  usePlanStateStore().state.guilds = [
     {
       id: 'bed',
       name: 'Bed',
@@ -142,8 +142,7 @@ it('explains why a placed plant cannot be deleted and keeps the plan savable', a
       ],
     },
   ];
-  const plan = usePermaplannerStore();
-  plan.gardenId = 'garden';
+  useGardenSessionStore().gardenId = 'garden';
   const session = useGardenSessionStore();
   session.markSaved();
   render(ThePlants, { global: { plugins: [router] } });
@@ -154,7 +153,7 @@ it('explains why a placed plant cannot be deleted and keeps the plan savable', a
     'Remove this plant from its guilds before deleting it.',
   );
   await fireEvent.click(button);
-  plan.backgroundOpacity = 0.7;
+  usePlanStateStore().state.backgroundOpacity = 0.7;
   vi.mocked(gardensApi.updateGarden).mockResolvedValue(1);
   vi.mocked(gardensApi.listGardens).mockResolvedValue([]);
   await session.save();

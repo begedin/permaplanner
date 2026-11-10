@@ -1,3 +1,5 @@
+import { useMapInteractionStore } from './useMapInteractionStore';
+import { usePlanStateStore } from './usePlanStateStore';
 import {
   cleanup,
   fireEvent,
@@ -18,7 +20,6 @@ import { routeNames, routeParam } from './router';
 import { useGardenStore } from './useGardenStore';
 import { useGuildHover } from './useGuildHover';
 import GardenGuild from './GardenGuild.vue';
-import { usePermaplannerStore } from './usePermaplannerStore';
 import { useMapScaleStore } from './useMapScaleStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { useGardenSessionStore } from './stores/useGardenSessionStore';
@@ -40,9 +41,8 @@ beforeEach(() => {
   useGuildHover().clearHover();
   vi.spyOn(window, 'confirm').mockReturnValue(true);
   Element.prototype.scrollIntoView = vi.fn();
-  const store = usePermaplannerStore();
-  store.gardenId = 'g1';
-  store.gardenName = 'test';
+  useGardenSessionStore().gardenId = 'g1';
+  useGardenSessionStore().gardenName = 'test';
 });
 
 afterEach(() => {
@@ -85,8 +85,9 @@ it('explains the paste image size limit and allows dismissing the error', async 
 });
 
 it('deselects when the guild page title is clicked', async () => {
-  const store = useGardenStore();
-  store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 }];
+  usePlanStateStore().state.guilds = [
+    { id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 },
+  ];
   const { router } = await renderGarden('/guilds/guild');
 
   expect(screen.getByRole('navigation', { name: 'Breadcrumb' }).textContent).toContain(
@@ -103,8 +104,7 @@ it('deselects when the guild page title is clicked', async () => {
 });
 
 it('shows the guild header and guild list in the left sidebar', async () => {
-  const store = useGardenStore();
-  store.guilds = [
+  usePlanStateStore().state.guilds = [
     { id: 'guild', name: 'A guild', mulchLevel: 1, plants: [], path: [] },
     { id: 'guild-2', name: 'Another guild', mulchLevel: 1, plants: [], path: [] },
   ];
@@ -119,8 +119,7 @@ it('shows the guild header and guild list in the left sidebar', async () => {
 });
 
 it('filters guilds in the sidebar by search query', async () => {
-  const store = useGardenStore();
-  store.guilds = [
+  usePlanStateStore().state.guilds = [
     { id: 'guild', name: 'A guild', mulchLevel: 1, plants: [], path: [] },
     { id: 'guild-2', name: 'Another guild', mulchLevel: 1, plants: [], path: [] },
   ];
@@ -138,21 +137,20 @@ it('filters guilds in the sidebar by search query', async () => {
 });
 
 it('deletes the selected guild on Delete only when confirmed', async () => {
-  const store = useGardenStore();
-  store.guilds = [
+  usePlanStateStore().state.guilds = [
     { id: 'guild', path: [[[{ x: 0, y: 0 }]]], name: 'Bed', plants: [], mulchLevel: 1 },
   ];
   const { router } = await renderGarden('/guilds/guild');
 
   const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false);
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }));
-  expect(store.guilds).toEqual([
+  expect(usePlanStateStore().state.guilds).toEqual([
     { id: 'guild', path: [[[{ x: 0, y: 0 }]]], name: 'Bed', plants: [], mulchLevel: 1 },
   ]);
 
   confirm.mockReturnValueOnce(true);
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }));
-  expect(store.guilds).toEqual([]);
+  expect(usePlanStateStore().state.guilds).toEqual([]);
   await flushPromises();
   await router.isReady();
   expect(router.currentRoute.value.name).toBe(routeNames.guilds);
@@ -160,7 +158,6 @@ it('deletes the selected guild on Delete only when confirmed', async () => {
 });
 
 it('switches selection to another guild and discards the previous edit', async () => {
-  const store = useGardenStore();
   const bedA = {
     id: 'a',
     name: 'A',
@@ -193,7 +190,7 @@ it('switches selection to another guild and discards the previous edit', async (
     ],
     plants: [],
   };
-  store.guilds = [bedA, bedB];
+  usePlanStateStore().state.guilds = [bedA, bedB];
   const { router } = await renderGarden('/guilds/a');
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   await wrapper.vm.$nextTick();
@@ -214,13 +211,14 @@ it('switches selection to another guild and discards the previous edit', async (
   await router.isReady();
 
   expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe('b');
-  expect(store.guilds.find((g) => g.id === 'a')?.path).toEqual(bedA.path);
+  expect(usePlanStateStore().state.guilds.find((g) => g.id === 'a')?.path).toEqual(
+    bedA.path,
+  );
 });
 
 it('scrolls to the selected guild when opening the guild view with a selection', async () => {
   const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView');
-  const store = useGardenStore();
-  store.guilds = [
+  usePlanStateStore().state.guilds = [
     { id: 'a', name: 'A', mulchLevel: 1, plants: [], path: [] },
     { id: 'b', name: 'B', mulchLevel: 1, plants: [], path: [] },
   ];
@@ -236,7 +234,6 @@ it('scrolls to the selected guild when opening the guild view with a selection',
 it('scrolls the sidebar to a guild selected on the aerial map', async () => {
   const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView');
 
-  const store = useGardenStore();
   const bedA = {
     id: 'a',
     name: 'A',
@@ -269,7 +266,7 @@ it('scrolls the sidebar to a guild selected on the aerial map', async () => {
     ],
     plants: [],
   };
-  store.guilds = [bedA, bedB];
+  usePlanStateStore().state.guilds = [bedA, bedB];
   const { router } = await renderGarden('/guilds');
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   await wrapper.vm.$nextTick();
@@ -289,9 +286,10 @@ it('scrolls the sidebar to a guild selected on the aerial map', async () => {
 });
 
 it('deselects when placement is cancelled', async () => {
-  const store = useGardenStore();
   const { hoveredId } = useGuildHover();
-  store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 }];
+  usePlanStateStore().state.guilds = [
+    { id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 },
+  ];
   const { router } = await renderGarden('/guilds/guild');
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   hoveredId.value = 'guild';
@@ -323,8 +321,9 @@ it('disables edit and move tools when no guild is selected', async () => {
 });
 
 it('activates tools with V, B, and M hotkeys', async () => {
-  const store = useGardenStore();
-  store.guilds = [{ id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 }];
+  usePlanStateStore().state.guilds = [
+    { id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 },
+  ];
   await renderGarden('/guilds/guild');
 
   const selectBtn = screen.getByRole('button', { name: 'Select (V)' });
@@ -348,7 +347,6 @@ it('activates tools with V, B, and M hotkeys', async () => {
 });
 
 it('does not edit a bed while the select tool is active', async () => {
-  const store = useGardenStore();
   const bed = {
     id: 'guild',
     name: 'Bed',
@@ -365,7 +363,7 @@ it('does not edit a bed while the select tool is active', async () => {
     ],
     plants: [],
   };
-  store.guilds = [bed];
+  usePlanStateStore().state.guilds = [bed];
   const { router } = await renderGarden('/guilds/guild');
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   await wrapper.vm.$nextTick();
@@ -376,18 +374,19 @@ it('does not edit a bed while the select tool is active', async () => {
   document.dispatchEvent(new MouseEvent('pointerup', { clientX: 50, clientY: 50 }));
   await wrapper.vm.$nextTick();
 
-  expect(store.guilds.find((g) => g.id === 'guild')?.path).toEqual(bed.path);
+  expect(usePlanStateStore().state.guilds.find((g) => g.id === 'guild')?.path).toEqual(
+    bed.path,
+  );
 });
 
 it('uses an aerial guild click as the merge target, including cancellation', async () => {
-  const store = useGardenStore();
   const path = [
     { x: 0, y: 0 },
     { x: 100, y: 0 },
     { x: 100, y: 100 },
     { x: 0, y: 100 },
   ];
-  store.guilds = [
+  usePlanStateStore().state.guilds = [
     { id: 'a', name: 'A', mulchLevel: 1, plants: [], path: [[path]] },
     {
       id: 'b',
@@ -411,15 +410,15 @@ it('uses an aerial guild click as the merge target, including cancellation', asy
   expect(window.confirm).toHaveBeenCalledWith(
     expect.stringContaining('Merge “A” with “B”?'),
   );
-  expect(store.guilds).toMatchObject([{ id: 'a' }, { id: 'b' }]);
-  expect(store.mergeSourceId).toBe('a');
+  expect(usePlanStateStore().state.guilds).toMatchObject([{ id: 'a' }, { id: 'b' }]);
+  expect(useMapInteractionStore().mergeSourceId).toBe('a');
   expect(router.currentRoute.value.name).toBe(routeNames.guilds);
 
   vi.mocked(window.confirm).mockReturnValue(true);
   await target.get('path.pointer-events-fill').trigger('click');
   await flushPromises();
-  expect(store.guilds).toMatchObject([{ id: 'a', name: 'A + B' }]);
-  expect(store.mergeSourceId).toBeUndefined();
+  expect(usePlanStateStore().state.guilds).toMatchObject([{ id: 'a', name: 'A + B' }]);
+  expect(useMapInteractionStore().mergeSourceId).toBeUndefined();
   expect(router.currentRoute.value).toMatchObject({
     name: routeNames.guildsDetail,
     params: { guildId: 'a' },
@@ -428,8 +427,9 @@ it('uses an aerial guild click as the merge target, including cancellation', asy
 });
 
 it('shows the merge cursor and cancels with Escape while focus is outside a guild', async () => {
-  const store = useGardenStore();
-  store.guilds = [{ id: 'a', name: 'A', mulchLevel: 1, plants: [], path: [] }];
+  usePlanStateStore().state.guilds = [
+    { id: 'a', name: 'A', mulchLevel: 1, plants: [], path: [] },
+  ];
   const { view } = await renderGarden();
   await fireEvent.click(screen.getByRole('button', { name: 'Merge with' }));
   expect(view.container.querySelector('.guild-merge-mode')).toBeInTheDocument();
@@ -440,7 +440,7 @@ it('shows the merge cursor and cancels with Escape while focus is outside a guil
       screen.queryByRole('button', { name: 'Cancel merge' }),
     ).not.toBeInTheDocument();
   });
-  expect(store.guilds).toMatchObject([{ id: 'a', name: 'A' }]);
+  expect(usePlanStateStore().state.guilds).toMatchObject([{ id: 'a', name: 'A' }]);
   expect(window.confirm).not.toHaveBeenCalled();
 });
 
@@ -461,7 +461,7 @@ it('shift-clicking a guild leaves its aerial outline intact', async () => {
       ],
     ],
   };
-  store.guilds = [guild];
+  usePlanStateStore().state.guilds = [guild];
   const router = await createAuthedTestRouter('/guilds');
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
 
@@ -470,18 +470,20 @@ it('shift-clicking a guild leaves its aerial outline intact', async () => {
     .find('path.pointer-events-fill')
     .trigger('click', { shiftKey: true });
 
-  expect(store.guilds).toEqual([guild]);
+  expect(usePlanStateStore().state.guilds).toEqual([guild]);
   expect(store.removeGuildFromAerialMap).not.toHaveBeenCalled();
   wrapper.unmount();
 });
 
 it('keeps the guild when Delete is pressed while editing its name', async () => {
   const store = useGardenStore();
-  store.guilds = [{ id: 'guild', path: [], name: 'Bed', plants: [], mulchLevel: 1 }];
+  usePlanStateStore().state.guilds = [
+    { id: 'guild', path: [], name: 'Bed', plants: [], mulchLevel: 1 },
+  ];
   await renderGarden('/guilds/guild');
   await fireEvent.keyDown(screen.getByDisplayValue('Bed'), { key: 'Delete' });
   expect(store.removeGuild).not.toHaveBeenCalled();
-  expect(store.guilds).toMatchObject([{ id: 'guild' }]);
+  expect(usePlanStateStore().state.guilds).toMatchObject([{ id: 'guild' }]);
 });
 
 it('edits background opacity from settings inside the aerial map and supports undo', async () => {
@@ -494,14 +496,13 @@ it('edits background opacity from settings inside the aerial map and supports un
   expect(toggle).toHaveAttribute('aria-expanded', 'true');
   expect(map.getByRole('slider', { name: /^Map scale/ })).toBeVisible();
   const opacity = map.getByRole('slider', { name: /^BG opacity/ });
-  const store = usePermaplannerStore();
-  const previousOpacity = store.backgroundOpacity;
+  const previousOpacity = usePlanStateStore().state.backgroundOpacity;
   await fireEvent.pointerDown(opacity);
   await fireEvent.update(opacity, '0.8');
   await fireEvent(opacity, new Event('change', { bubbles: true }));
-  expect(store.backgroundOpacity).toBe(0.8);
+  expect(usePlanStateStore().state.backgroundOpacity).toBe(0.8);
   await fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
-  expect(store.backgroundOpacity).toBe(previousOpacity);
+  expect(usePlanStateStore().state.backgroundOpacity).toBe(previousOpacity);
   await fireEvent.click(toggle);
   expect(toggle).toHaveAttribute('aria-expanded', 'false');
   expect(map.queryByRole('slider')).not.toBeInTheDocument();
@@ -509,9 +510,8 @@ it('edits background opacity from settings inside the aerial map and supports un
 
 it('records calibration and onboarding together without delayed document changes', async () => {
   setActivePinia(createPinia());
-  const store = usePermaplannerStore();
-  store.gardenId = 'g1';
-  store.backgroundImageDataUrl =
+  useGardenSessionStore().gardenId = 'g1';
+  usePlanStateStore().state.backgroundImageDataUrl =
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWZkAAAAASUVORK5CYII=';
   await renderGarden();
   const scale = useMapScaleStore();
@@ -522,17 +522,17 @@ it('records calibration and onboarding together without delayed document changes
   const slider = screen.getByRole('slider', { name: /^Map scale/ });
   vi.useFakeTimers();
   await fireEvent.update(slider, '20');
-  expect(store.onboardingState).toBe('done');
+  expect(usePlanStateStore().state.onboardingState).toBe('done');
   expect(screen.getByText(/Map scale set/)).toBeInTheDocument();
   history.undo();
   await vi.advanceTimersByTimeAsync(1500);
   expect(scale.linePhysicalLength).toBe(1);
-  expect(store.onboardingState).toBe('initial');
+  expect(usePlanStateStore().state.onboardingState).toBe('initial');
   expect(session.hasUnsavedChanges).toBe(false);
   expect(screen.queryByText(/Map scale set/)).not.toBeInTheDocument();
   history.redo();
   expect(scale.linePhysicalLength).toBe(20);
-  expect(store.onboardingState).toBe('done');
+  expect(usePlanStateStore().state.onboardingState).toBe('done');
   session.markSaved();
   await vi.advanceTimersByTimeAsync(1500);
   expect(session.hasUnsavedChanges).toBe(false);
@@ -540,7 +540,7 @@ it('records calibration and onboarding together without delayed document changes
 });
 
 it('keeps the landmark tool active when it deselects a guild and saves the chosen scale unit', async () => {
-  useGardenStore().guilds = [
+  usePlanStateStore().state.guilds = [
     { id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 },
   ];
   const { router } = await renderGarden('/guilds/guild');
@@ -556,7 +556,7 @@ it('keeps the landmark tool active when it deselects a guild and saves the chose
   await fireEvent.change(screen.getByLabelText('Scale unit'), {
     target: { value: 'ft' },
   });
-  expect(usePermaplannerStore().snapshot().mapScale).toMatchObject({
+  expect(useGardenSessionStore().snapshot().mapScale).toMatchObject({
     unit: 'ft',
     linePhysicalLength: 1,
   });
@@ -566,7 +566,7 @@ it('keeps the landmark tool active when it deselects a guild and saves the chose
 });
 
 it('toggles guild and landmark names independently and remembers visibility without editing the plan', async () => {
-  useGardenStore().guilds = [
+  usePlanStateStore().state.guilds = [
     {
       id: 'orchard',
       name: 'Orchard',
@@ -585,11 +585,10 @@ it('toggles guild and landmark names independently and remembers visibility with
     },
     { id: 'unplaced', name: 'Unplaced bed', path: [], plants: [], mulchLevel: 1 },
   ];
-  const plan = usePermaplannerStore();
-  plan.landmarks = [
+  usePlanStateStore().state.landmarks = [
     { id: 'shed', name: 'Shed', x: 200, y: 100, width: 80, height: 40, rotation: 0 },
   ];
-  const before = plan.snapshot();
+  const before = useGardenSessionStore().snapshot();
   const { view } = await renderGarden();
   const map = within(screen.getByRole('region', { name: 'Aerial map' }));
   expect(map.getByText('Orchard')).toBeInTheDocument();
@@ -603,7 +602,7 @@ it('toggles guild and landmark names independently and remembers visibility with
   expect(map.queryByText('Shed')).not.toBeInTheDocument();
   await fireEvent.click(map.getByRole('checkbox', { name: 'Guild names' }));
   expect(map.getByText('Orchard')).toBeInTheDocument();
-  expect(plan.snapshot()).toEqual(before);
+  expect(useGardenSessionStore().snapshot()).toEqual(before);
   view.unmount();
 
   await renderGarden();
@@ -615,9 +614,9 @@ it('toggles guild and landmark names independently and remembers visibility with
 });
 
 it('reconciles selection on route re-entry so Delete only removes the current guild', async () => {
-  const garden = useGardenStore();
-  garden.guilds = [{ id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 }];
-  const plan = usePermaplannerStore();
+  usePlanStateStore().state.guilds = [
+    { id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 },
+  ];
   const house = {
     id: 'house',
     name: 'House',
@@ -627,8 +626,8 @@ it('reconciles selection on route re-entry so Delete only removes the current gu
     height: 40,
     rotation: 0,
   };
-  plan.landmarks = [house];
-  const { view } = await renderGarden();
+  usePlanStateStore().state.landmarks = [house];
+  const { router, view } = await renderGarden();
   await fireEvent.keyDown(screen.getByRole('button', { name: 'Landmark: House' }), {
     key: 'Enter',
   });
@@ -637,20 +636,21 @@ it('reconciles selection on route re-entry so Delete only removes the current gu
   );
   view.unmount();
 
-  await renderGarden('/guilds/guild');
+  await router.push('/guilds/guild');
+  render(TheGarden, { global: { plugins: [router] } });
   expect(
     screen.queryByRole('group', { name: 'Landmark details' }),
   ).not.toBeInTheDocument();
   await fireEvent.keyDown(document, { key: 'Delete' });
-  expect(garden.guilds).toEqual([]);
-  expect(plan.landmarks).toEqual([house]);
+  expect(usePlanStateStore().state.guilds).toEqual([]);
+  expect(usePlanStateStore().state.landmarks).toEqual([house]);
 });
 
 it('switches between guild and landmark selection and clears it when the garden changes', async () => {
-  const garden = useGardenStore();
-  garden.guilds = [{ id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 }];
-  const plan = usePermaplannerStore();
-  plan.landmarks = [
+  usePlanStateStore().state.guilds = [
+    { id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 },
+  ];
+  usePlanStateStore().state.landmarks = [
     { id: 'house', name: 'House', x: 100, y: 50, width: 80, height: 40, rotation: 0 },
   ];
   const { router } = await renderGarden('/guilds/guild');
@@ -669,7 +669,7 @@ it('switches between guild and landmark selection and clears it when the garden 
     key: 'Enter',
   });
   await flushPromises();
-  plan.gardenId = 'other-garden';
+  useGardenSessionStore().gardenId = 'other-garden';
   await waitFor(() =>
     expect(
       screen.queryByRole('group', { name: 'Landmark details' }),
@@ -678,9 +678,8 @@ it('switches between guild and landmark selection and clears it when the garden 
 });
 
 it('keeps the plot border optional and cancels drawing with Escape', async () => {
-  const plan = usePermaplannerStore();
   await renderGarden();
-  expect(plan.plotBorder).toEqual([]);
+  expect(usePlanStateStore().state.plotBorder).toEqual([]);
   expect(
     screen.queryByRole('button', { name: 'Edit plot border' }),
   ).not.toBeInTheDocument();
@@ -688,14 +687,12 @@ it('keeps the plot border optional and cancels drawing with Escape', async () =>
   expect(screen.getByLabelText('Draw plot border')).toBeInTheDocument();
   await fireEvent.keyDown(document, { key: 'Escape' });
   expect(screen.queryByLabelText('Draw plot border')).not.toBeInTheDocument();
-  expect(plan.plotBorder).toEqual([]);
+  expect(usePlanStateStore().state.plotBorder).toEqual([]);
 });
 
 it.each(['Delete', 'Remove plot border'])(
   'removes the selected border via %s without deleting another object',
   async (action) => {
-    const plan = usePermaplannerStore();
-    const garden = useGardenStore();
     const guild = {
       id: 'guild',
       name: 'Guild',
@@ -703,20 +700,20 @@ it.each(['Delete', 'Remove plot border'])(
       plants: [],
       mulchLevel: 1 as const,
     };
-    garden.guilds = [guild];
+    usePlanStateStore().state.guilds = [guild];
     const border = [
       { x: 0, y: 0 },
       { x: 200, y: 0 },
       { x: 100, y: 150 },
     ];
-    plan.plotBorder = border;
+    usePlanStateStore().state.plotBorder = border;
     const { router } = await renderGarden('/guilds/guild');
     await fireEvent.click(screen.getByRole('button', { name: 'Edit plot border' }));
     await waitFor(() => expect(router.currentRoute.value.name).toBe(routeNames.guilds));
     if (action === 'Delete') await fireEvent.keyDown(document, { key: action });
     else await fireEvent.click(screen.getByRole('button', { name: action }));
-    expect(plan.plotBorder).toEqual([]);
-    expect(garden.guilds).toEqual([guild]);
+    expect(usePlanStateStore().state.plotBorder).toEqual([]);
+    expect(usePlanStateStore().state.guilds).toEqual([guild]);
     usePlanCommandHistory().undo();
     await flushPromises();
     await fireEvent.keyDown(document, { key: 'p' });
@@ -725,12 +722,12 @@ it.each(['Delete', 'Remove plot border'])(
     ).toBeInTheDocument();
     await fireEvent.keyDown(document, { key: 'Escape' });
     await fireEvent.keyDown(document, { key: 'Delete' });
-    expect(plan.plotBorder).toEqual(border);
+    expect(usePlanStateStore().state.plotBorder).toEqual(border);
     await fireEvent.keyDown(document, { key: 'p' });
-    plan.gardenId = 'other-garden';
+    useGardenSessionStore().gardenId = 'other-garden';
     await flushPromises();
     await fireEvent.keyDown(document, { key: 'Delete' });
-    expect(plan.plotBorder).toEqual(border);
+    expect(usePlanStateStore().state.plotBorder).toEqual(border);
     expect(
       screen.queryByRole('button', { name: 'Remove plot border' }),
     ).not.toBeInTheDocument();
@@ -738,8 +735,7 @@ it.each(['Delete', 'Remove plot border'])(
 );
 
 it('uses one map brush to preview and commit only the selected guild', async () => {
-  const garden = useGardenStore();
-  garden.guilds = [
+  usePlanStateStore().state.guilds = [
     { id: 'a', name: 'A', plants: [], path: [], mulchLevel: 1 },
     { id: 'b', name: 'B', plants: [], path: [], mulchLevel: 1 },
   ];
@@ -753,12 +749,12 @@ it('uses one map brush to preview and commit only the selected guild', async () 
     new MouseEvent('pointerdown', { button: 0, clientX: 50, clientY: 50 }),
   );
   document.dispatchEvent(new MouseEvent('pointerup', { clientX: 50, clientY: 50 }));
-  expect(garden.guilds).toMatchObject([
+  expect(usePlanStateStore().state.guilds).toMatchObject([
     { id: 'a', path: [] },
     { id: 'b', path: [] },
   ]);
   await fireEvent.keyDown(document, { key: 'Enter' });
-  expect(garden.guilds).toMatchObject([
+  expect(usePlanStateStore().state.guilds).toMatchObject([
     {
       id: 'a',
       path: [
@@ -772,8 +768,29 @@ it('uses one map brush to preview and commit only the selected guild', async () 
     { id: 'b', path: [] },
   ]);
   usePlanCommandHistory().undo();
-  expect(garden.guilds).toMatchObject([
+  expect(usePlanStateStore().state.guilds).toMatchObject([
     { id: 'a', path: [] },
     { id: 'b', path: [] },
   ]);
+});
+
+it('makes merge and drawing modes exclusive, including keyboard transitions', async () => {
+  usePlanStateStore().state.guilds = [
+    { id: 'bed', name: 'Bed', path: [], plants: [], mulchLevel: 1 },
+  ];
+  await renderGarden('/guilds/bed');
+  const interaction = useMapInteractionStore();
+  await fireEvent.click(screen.getByRole('button', { name: 'Merge with' }));
+  expect(interaction).toMatchObject({ isMerging: true, activeTool: 'select' });
+  await fireEvent.keyDown(document, { key: 'r' });
+  expect(interaction).toMatchObject({
+    isMerging: false,
+    activeTool: 'landmark',
+    selectedGuildId: undefined,
+  });
+  await flushPromises();
+  await fireEvent.click(screen.getByRole('button', { name: 'Merge with' }));
+  expect(interaction).toMatchObject({ isMerging: true, activeTool: 'select' });
+  await fireEvent.keyDown(window, { key: 'Escape' });
+  expect(interaction).toMatchObject({ isMerging: false, activeTool: 'select' });
 });

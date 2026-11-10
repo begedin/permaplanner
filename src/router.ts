@@ -1,3 +1,4 @@
+import type { DeepReadonly } from 'vue';
 import {
   createRouter,
   createWebHistory,
@@ -48,7 +49,7 @@ const publicRouteNames = new Set([
 
 const selectionRedirect = (
   to: RouteLocationNormalized,
-  guilds: readonly Guild[],
+  guilds: DeepReadonly<Guild[]>,
   resolvePlant: (id: string) => Plant,
 ): RouteLocationRaw | undefined => {
   if (useGardenSessionStore().isBootstrapping) {

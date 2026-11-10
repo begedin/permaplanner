@@ -7,9 +7,11 @@ const hasMeaningfulPlantLabel = (label: string | undefined): boolean =>
   label.trim() !== '' &&
   label.trim().toLowerCase() !== 'plant';
 
-export const withPersistedGuildPlantLabels = (
-  snapshot: GardenDocumentPayload,
-): GardenDocumentPayload => {
+export const withPersistedGuildPlantLabels = <
+  T extends Pick<GardenDocumentPayload, 'plants' | 'guilds'>,
+>(
+  snapshot: T,
+): T => {
   const labelByPlantId = new Map(
     snapshot.plants.map((userPlant) => [
       userPlant.id,

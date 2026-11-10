@@ -1,13 +1,13 @@
 import { onScopeDispose, ref, watch } from 'vue';
 import { useEventListener } from '@vueuse/core';
+import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import { usePermaplannerStore } from './usePermaplannerStore';
-import { usePlanCommandHistory } from './usePlanCommandHistory';
 
 export const MAX_BACKGROUND_IMAGE_BYTES = 3_000_000;
 
 export const useBackgroundImagePaste = () => {
+  const session = useGardenSessionStore();
   const permaplanner = usePermaplannerStore();
-  const history = usePlanCommandHistory();
   const errorMessage = ref<string>();
   let reader: FileReader | undefined;
 
@@ -19,7 +19,7 @@ export const useBackgroundImagePaste = () => {
     reader = undefined;
   };
   onScopeDispose(cancel);
-  watch(() => [permaplanner.gardenId, permaplanner.isBulkPlanUpdate], cancel, {
+  watch(() => session.documentGeneration, cancel, {
     flush: 'sync',
   });
 
@@ -40,9 +40,7 @@ export const useBackgroundImagePaste = () => {
       if (reader !== pending || typeof pending.result !== 'string') return;
       const dataUrl = pending.result;
       reader = undefined;
-      history.runMutation(() => {
-        permaplanner.backgroundImageDataUrl = dataUrl;
-      });
+      permaplanner.setBackgroundImage(dataUrl);
     };
     pending.readAsDataURL(file);
   });

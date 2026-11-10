@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import type { DeepReadonly } from 'vue';
   import { computed, ref, watch } from 'vue';
   import { v4 as uuidV4 } from 'uuid';
   import {
@@ -23,12 +24,10 @@
   import UiIcon from './uiIcons/UiIcon.vue';
   import PlantFunctions from './PlantFunctions.vue';
   import PlantLayers from './PlantLayers.vue';
-  import { usePlanCommandHistory } from './usePlanCommandHistory';
 
   const garden = useGardenStore();
-  const commandHistory = usePlanCommandHistory();
 
-  const plantRowLabel = (plant: UserPlant): string => {
+  const plantRowLabel = (plant: DeepReadonly<UserPlant>): string => {
     const resolved = resolveUserPlant(plant, plantCatalog);
     return resolved.cultivar || resolved.name;
   };
@@ -145,25 +144,11 @@
       ? speciesOverride
       : undefined;
 
-    const index = garden.plants.findIndex((p) => p.id === plantInEditing.value.id);
-    const toSave = { ...plantInEditing.value };
-    commandHistory.runMutation(() => {
-      if (index === -1) {
-        garden.plants.push(toSave);
-      } else {
-        garden.plants.splice(index, 1, toSave);
-      }
-    });
+    garden.savePlant(plantInEditing.value);
   };
 
-  const edit = (plant: UserPlant) => {
-    plantInEditing.value = {
-      ...plant,
-      speciesOverride: plant.speciesOverride ? { ...plant.speciesOverride } : undefined,
-      cultivarOverride: plant.cultivarOverride
-        ? { ...plant.cultivarOverride }
-        : undefined,
-    };
+  const edit = (plant: DeepReadonly<UserPlant>) => {
+    plantInEditing.value = JSON.parse(JSON.stringify(plant));
     syncGuildFieldsFromResolved();
     void catalogInput.value?.focusAndSelect();
   };

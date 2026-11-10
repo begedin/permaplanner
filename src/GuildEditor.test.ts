@@ -1,3 +1,4 @@
+import { usePlanStateStore } from './usePlanStateStore';
 import { within } from '@testing-library/dom';
 import { cleanup, fireEvent, waitFor } from '@testing-library/vue';
 import { flushPromises, mount } from '@vue/test-utils';
@@ -17,7 +18,6 @@ import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
 import type { GardenThing, Guild, GuildLayer } from './gardenTypes';
 import { plantCatalog } from './plantCatalog';
 import { createAuthedTestRouter } from './testing/authedTestSession';
-import { useGardenStore } from './useGardenStore';
 
 const popoverShim = {
   showPopover: vi.fn(),
@@ -56,9 +56,8 @@ const testGuild = {
 beforeEach(() => {
   Object.assign(HTMLElement.prototype, popoverShim);
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
-  const store = useGardenStore();
-  store.guilds = [{ ...testGuild, plants: [] }];
-  store.plants = [];
+  usePlanStateStore().state.guilds = [{ ...testGuild, plants: [] }];
+  usePlanStateStore().state.plants = [];
   vi.spyOn(window, 'confirm').mockReturnValue(true);
 });
 
@@ -95,40 +94,38 @@ const baseThing = (
 });
 
 it('updates guild note from the note textarea', async () => {
-  const store = useGardenStore();
   const wrapper = await renderGuildEditor();
   const note = card(wrapper).getByRole('textbox', { name: 'Guild note' });
   fireEvent.update(note, 'Bed notes');
   fireEvent.blur(note);
-  expect(store.guilds[0]).toMatchObject({ note: 'Bed notes' });
+  expect(usePlanStateStore().state.guilds[0]).toMatchObject({ note: 'Bed notes' });
 });
 
 it('clears guild note when the textarea is emptied', async () => {
-  const store = useGardenStore();
-  store.guilds[0] = { ...testGuild, note: 'Old note' };
+  usePlanStateStore().state.guilds[0] = { ...testGuild, note: 'Old note' };
   const wrapper = await renderGuildEditor();
   const note = card(wrapper).getByRole('textbox', { name: 'Guild note' });
   fireEvent.update(note, '');
   fireEvent.blur(note);
-  expect(store.guilds[0]).not.toHaveProperty('note');
+  expect(usePlanStateStore().state.guilds[0]).not.toHaveProperty('note');
 });
 
 it('updates guild name from the name input', async () => {
-  const store = useGardenStore();
-  store.guilds[0]!.name = 'Old';
+  usePlanStateStore().state.guilds[0]!.name = 'Old';
   const wrapper = await renderGuildEditor();
   const name = card(wrapper).getByDisplayValue('Old');
   fireEvent.update(name, 'New');
   fireEvent.blur(name);
-  expect(store.guilds[0]).toMatchObject({ name: 'New' });
+  expect(usePlanStateStore().state.guilds[0]).toMatchObject({ name: 'New' });
 });
 
 it('removes the last duplicate guild plant when remove-one is used', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
+  usePlanStateStore().state.plants = [
+    { id: 'plant', speciesId: 'comfrey', cultivarId: null },
+  ];
   const first = baseThing({ id: 'thing-a', plantId: 'plant' });
   const second = baseThing({ id: 'thing-b', plantId: 'plant' });
-  store.guilds = [
+  usePlanStateStore().state.guilds = [
     {
       ...testGuild,
       name: 'Bed',
@@ -141,11 +138,10 @@ it('removes the last duplicate guild plant when remove-one is used', async () =>
     card(wrapper).getByRole('button', { name: 'Remove one plant from bed' }),
   );
 
-  expect(store.guilds[0].plants).toEqual([first]);
+  expect(usePlanStateStore().state.guilds[0].plants).toEqual([first]);
 });
 
 it('deletes the guild when confirmed', async () => {
-  const store = useGardenStore();
   const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
   const wrapper = await renderGuildEditor();
@@ -154,25 +150,25 @@ it('deletes the guild when confirmed', async () => {
   expect(confirm).toHaveBeenCalledWith(
     'Delete guild “Berry guild”? This cannot be undone.',
   );
-  expect(store.guilds).toEqual([]);
+  expect(usePlanStateStore().state.guilds).toEqual([]);
   wrapper.unmount();
   await nextTick();
 });
 
 it('keeps the guild when deletion is cancelled', async () => {
   vi.spyOn(window, 'confirm').mockReturnValue(false);
-  const store = useGardenStore();
 
   const wrapper = await renderGuildEditor();
   await fireEvent.click(card(wrapper).getByRole('button', { name: 'Delete' }));
 
-  expect(store.guilds).toEqual([{ ...testGuild, plants: [] }]);
+  expect(usePlanStateStore().state.guilds).toEqual([{ ...testGuild, plants: [] }]);
 });
 
 it('shows remove-all control when there is only one instance', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
-  store.guilds = [
+  usePlanStateStore().state.plants = [
+    { id: 'plant', speciesId: 'comfrey', cultivarId: null },
+  ];
+  usePlanStateStore().state.guilds = [
     {
       ...testGuild,
       name: 'Bed',
@@ -193,9 +189,10 @@ it('shows remove-all control when there is only one instance', async () => {
 });
 
 it('removes the only instance when remove-all is used', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
-  store.guilds = [
+  usePlanStateStore().state.plants = [
+    { id: 'plant', speciesId: 'comfrey', cultivarId: null },
+  ];
+  usePlanStateStore().state.guilds = [
     {
       ...testGuild,
       name: 'Bed',
@@ -208,14 +205,15 @@ it('removes the only instance when remove-all is used', async () => {
     card(wrapper).getByRole('button', { name: 'Remove plant from bed' }),
   );
 
-  expect(store.guilds[0].plants).toEqual([]);
+  expect(usePlanStateStore().state.guilds[0].plants).toEqual([]);
 });
 
 it('adds one instance when add-one is used on a single plant row', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
+  usePlanStateStore().state.plants = [
+    { id: 'plant', speciesId: 'comfrey', cultivarId: null },
+  ];
   const only = baseThing({ id: 'only', plantId: 'plant' });
-  store.guilds = [
+  usePlanStateStore().state.guilds = [
     {
       ...testGuild,
       name: 'Bed',
@@ -228,8 +226,10 @@ it('adds one instance when add-one is used on a single plant row', async () => {
     card(wrapper).getByRole('button', { name: 'Add one plant to bed' }),
   );
 
-  expect(store.guilds[0].plants).toHaveLength(2);
-  expect(store.guilds[0].plants.every((t) => t.plantId === 'plant')).toBe(true);
+  expect(usePlanStateStore().state.guilds[0].plants).toHaveLength(2);
+  expect(
+    usePlanStateStore().state.guilds[0].plants.every((t) => t.plantId === 'plant'),
+  ).toBe(true);
 });
 
 it('uses a warm card surface when the guild is not on the aerial map', async () => {
@@ -241,8 +241,7 @@ it('uses a warm card surface when the guild is not on the aerial map', async () 
 });
 
 it('uses the default card surface when the guild is on the aerial map', async () => {
-  const store = useGardenStore();
-  store.guilds = [
+  usePlanStateStore().state.guilds = [
     {
       ...testGuild,
       path: [
@@ -264,8 +263,7 @@ it('uses the default card surface when the guild is on the aerial map', async ()
 });
 
 it('shows map size and an icon remove control when the guild is on the aerial map', async () => {
-  const store = useGardenStore();
-  store.guilds = [
+  usePlanStateStore().state.guilds = [
     {
       ...testGuild,
       name: 'Bed',
@@ -297,19 +295,18 @@ it('shows map size and an icon remove control when the guild is on the aerial ma
     card(wrapper).getByRole('button', { name: 'Remove from aerial map' }),
   );
 
-  expect(store.guilds[0]).toMatchObject({ id: 'guild', path: [] });
+  expect(usePlanStateStore().state.guilds[0]).toMatchObject({ id: 'guild', path: [] });
 });
 
 it('remove-one only affects the subgroup row that has duplicates', async () => {
-  const store = useGardenStore();
-  store.plants = [
+  usePlanStateStore().state.plants = [
     { id: 'p-gen', speciesId: 'basil', cultivarId: 'genovese' },
     { id: 'p-def', speciesId: 'basil', cultivarId: null },
   ];
   const dupA = baseThing({ id: 't1', plantId: 'p-gen' });
   const dupB = baseThing({ id: 't2', plantId: 'p-gen' });
   const other = baseThing({ id: 't3', plantId: 'p-def' });
-  store.guilds = [
+  usePlanStateStore().state.guilds = [
     {
       ...testGuild,
       name: 'Bed',
@@ -326,7 +323,7 @@ it('remove-one only affects the subgroup row that has duplicates', async () => {
     card(wrapper).getByRole('button', { name: 'Remove one plant from bed' }),
   );
 
-  expect(store.guilds[0].plants).toEqual([dupA, other]);
+  expect(usePlanStateStore().state.guilds[0].plants).toEqual([dupA, other]);
 });
 
 it('hides the add-plant editor until Add plant is clicked', async () => {
@@ -340,7 +337,6 @@ it('hides the add-plant editor until Add plant is clicked', async () => {
 });
 
 it('adds the default catalog plant when Add to guild is clicked', async () => {
-  const store = useGardenStore();
   const pick = defaultCatalogPick(knownSpecies());
   if (!pick) throw new Error('Expected a default catalog plant');
   const wrapper = await renderGuildEditor();
@@ -350,17 +346,16 @@ it('adds the default catalog plant when Add to guild is clicked', async () => {
   await nextTick();
   await fireEvent.click(card(wrapper).getByRole('button', { name: 'Add to guild' }));
 
-  expect(store.plants).toMatchObject([
+  expect(usePlanStateStore().state.plants).toMatchObject([
     { speciesId: pick.speciesId, cultivarId: pick.cultivarId },
   ]);
-  expect(store.guilds[0].plants).toHaveLength(1);
+  expect(usePlanStateStore().state.guilds[0].plants).toHaveLength(1);
   expect(
     card(wrapper).queryByRole('combobox', { name: 'Species and cultivar' }),
   ).not.toBeInTheDocument();
 });
 
 it('adds the selected plant when Enter is pressed in the editor', async () => {
-  const store = useGardenStore();
   const wrapper = await renderGuildEditor();
   await fireEvent.click(
     card(wrapper).getByRole('button', { name: 'Add plant to guild' }),
@@ -373,15 +368,19 @@ it('adds the selected plant when Enter is pressed in the editor', async () => {
     { key: 'Enter' },
   );
 
-  expect(store.guilds[0].plants).toHaveLength(1);
-  expect(store.plants[0]).toMatchObject({ speciesId: 'comfrey', cultivarId: null });
+  expect(usePlanStateStore().state.guilds[0].plants).toHaveLength(1);
+  expect(usePlanStateStore().state.plants[0]).toMatchObject({
+    speciesId: 'comfrey',
+    cultivarId: null,
+  });
 });
 
 it('opens the editor for an existing plant and updates it on confirm', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
+  usePlanStateStore().state.plants = [
+    { id: 'plant', speciesId: 'comfrey', cultivarId: null },
+  ];
   const thing = baseThing({ id: 'thing-a', plantId: 'plant' });
-  store.guilds = [{ ...testGuild, name: 'Bed', plants: [thing] }];
+  usePlanStateStore().state.guilds = [{ ...testGuild, name: 'Bed', plants: [thing] }];
 
   const wrapper = await renderGuildEditor();
   await fireEvent.click(card(wrapper).getByRole('button', { name: 'Edit plant in bed' }));
@@ -409,24 +408,23 @@ it('opens the editor for an existing plant and updates it on confirm', async () 
     card(wrapper).getByRole('button', { name: 'Save plant in guild' }),
   );
 
-  const basilPlant = store.plants.find(
+  const basilPlant = usePlanStateStore().state.plants.find(
     (p) => p.speciesId === 'basil' && p.cultivarId === 'genovese',
   );
-  expect(store.guilds[0].plants).toEqual([
+  expect(usePlanStateStore().state.guilds[0].plants).toEqual([
     {
       ...thing,
       plantId: basilPlant!.id,
       nameOrCultivar: 'Genovese',
     },
   ]);
-  expect(store.plants).toMatchObject([
+  expect(usePlanStateStore().state.plants).toMatchObject([
     { id: 'plant', speciesId: 'comfrey', cultivarId: null },
     { speciesId: 'basil', cultivarId: 'genovese' },
   ]);
 });
 
 it('cancels add plant without changing the guild', async () => {
-  const store = useGardenStore();
   const wrapper = await renderGuildEditor();
   await fireEvent.click(
     card(wrapper).getByRole('button', { name: 'Add plant to guild' }),
@@ -435,7 +433,7 @@ it('cancels add plant without changing the guild', async () => {
     card(wrapper).getByRole('button', { name: 'Cancel adding plant' }),
   );
 
-  expect(store.guilds[0].plants).toEqual([]);
+  expect(usePlanStateStore().state.guilds[0].plants).toEqual([]);
   expect(
     card(wrapper).queryByRole('combobox', { name: 'Species and cultivar' }),
   ).not.toBeInTheDocument();
@@ -443,9 +441,10 @@ it('cancels add plant without changing the guild', async () => {
 });
 
 it('cancels edit plant without changing the guild', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
-  store.guilds = [
+  usePlanStateStore().state.plants = [
+    { id: 'plant', speciesId: 'comfrey', cultivarId: null },
+  ];
+  usePlanStateStore().state.guilds = [
     {
       ...testGuild,
       name: 'Bed',
@@ -460,18 +459,19 @@ it('cancels edit plant without changing the guild', async () => {
     card(wrapper).getByRole('button', { name: 'Cancel editing plant' }),
   );
 
-  expect(store.guilds[0].plants).toEqual([
+  expect(usePlanStateStore().state.guilds[0].plants).toEqual([
     baseThing({ id: 'thing-a', plantId: 'plant' }),
   ]);
   expect(card(wrapper).getByText(/Comfrey/)).toBeVisible();
 });
 
 it('expands a plant group to edit per-instance phase and condition', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
+  usePlanStateStore().state.plants = [
+    { id: 'plant', speciesId: 'comfrey', cultivarId: null },
+  ];
   const first = baseThing({ id: 'thing-a', plantId: 'plant' });
   const second = baseThing({ id: 'thing-b', plantId: 'plant' });
-  store.guilds = [
+  usePlanStateStore().state.guilds = [
     {
       ...testGuild,
       name: 'Bed',
@@ -489,7 +489,7 @@ it('expands a plant group to edit per-instance phase and condition', async () =>
   await fireEvent.change(phaseSelects[0]!, { target: { value: 'young' } });
   await fireEvent.change(phaseSelects[1]!, { target: { value: 'producing' } });
 
-  expect(store.guilds[0].plants).toMatchObject([
+  expect(usePlanStateStore().state.guilds[0].plants).toMatchObject([
     { id: 'thing-a', growthPhase: 'young' },
     { id: 'thing-b', growthPhase: 'producing' },
   ]);
@@ -498,17 +498,18 @@ it('expands a plant group to edit per-instance phase and condition', async () =>
   await fireEvent.click(
     within(conditionGroups[0]!).getByRole('radio', { name: 'Healthy' }),
   );
-  expect(store.guilds[0].plants[0]).toMatchObject({ vigor: 4 });
+  expect(usePlanStateStore().state.guilds[0].plants[0]).toMatchObject({ vigor: 4 });
   await fireEvent.click(
     within(conditionGroups[0]!).getByRole('radio', { name: 'Healthy' }),
   );
-  expect(store.guilds[0].plants[0]?.vigor).toBeUndefined();
+  expect(usePlanStateStore().state.guilds[0].plants[0]?.vigor).toBeUndefined();
 });
 
 it('shows average condition in the group header and ignores unset instances', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
-  store.guilds = [
+  usePlanStateStore().state.plants = [
+    { id: 'plant', speciesId: 'comfrey', cultivarId: null },
+  ];
+  usePlanStateStore().state.guilds = [
     {
       ...testGuild,
       name: 'Bed',
@@ -525,8 +526,9 @@ it('shows average condition in the group header and ignores unset instances', as
 });
 
 it('shows a phase icon per instance in the group header, up to eight, then ellipsis', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
+  usePlanStateStore().state.plants = [
+    { id: 'plant', speciesId: 'comfrey', cultivarId: null },
+  ];
   const plants = Array.from({ length: 9 }, (_, i) =>
     baseThing({
       id: `thing-${i}`,
@@ -534,7 +536,7 @@ it('shows a phase icon per instance in the group header, up to eight, then ellip
       growthPhase: i % 2 === 0 ? 'young' : undefined,
     }),
   );
-  store.guilds = [{ ...testGuild, name: 'Bed', plants }];
+  usePlanStateStore().state.guilds = [{ ...testGuild, name: 'Bed', plants }];
 
   const wrapper = await renderGuildEditor();
   expect(card(wrapper).getAllByRole('img', { name: /^Phase:/ })).toHaveLength(4);
@@ -542,8 +544,7 @@ it('shows a phase icon per instance in the group header, up to eight, then ellip
 });
 
 it('sorts and optionally groups by layer, with unassigned plants last', async () => {
-  const store = useGardenStore();
-  store.plants = [
+  usePlanStateStore().state.plants = [
     {
       id: 'apple',
       speciesId: 'apple',
@@ -572,7 +573,7 @@ it('sorts and optionally groups by layer, with unassigned plants last', async ()
   const plants = ['other', 'apple', 'basil', 'comfrey', 'basil'].map((plantId, index) =>
     baseThing({ id: `thing-${index}`, plantId }),
   );
-  store.guilds = [{ ...testGuild, plants }];
+  usePlanStateStore().state.guilds = [{ ...testGuild, plants }];
   const wrapper = await renderGuildEditor();
   const sortControls = within(
     card(wrapper).getByRole('radiogroup', { name: 'Sort guild plants by' }),
@@ -626,12 +627,11 @@ it('sorts and optionally groups by layer, with unassigned plants last', async ()
     'Expand Comfrey (Symphytum officinale)',
     'Expand Other (Symphytum officinale)',
   ]);
-  expect(store.guilds).toEqual([{ ...testGuild, plants }]);
+  expect(usePlanStateStore().state.guilds).toEqual([{ ...testGuild, plants }]);
   wrapper.unmount();
 });
 
 it('orders all layer groups from canopy to roots using the highest layer of each plant', async () => {
-  const store = useGardenStore();
   const layers: GuildLayer[] = [
     'root',
     'ground_cover',
@@ -641,7 +641,7 @@ it('orders all layer groups from canopy to roots using the highest layer of each
     'understory',
     'overstory',
   ];
-  store.plants = layers.map((layer) => ({
+  usePlanStateStore().state.plants = layers.map((layer) => ({
     id: layer,
     speciesId: 'comfrey',
     cultivarId: null,
@@ -650,7 +650,7 @@ it('orders all layer groups from canopy to roots using the highest layer of each
       layers: layer === 'overstory' ? ['root', 'overstory'] : [layer],
     },
   }));
-  store.guilds = [
+  usePlanStateStore().state.guilds = [
     {
       ...testGuild,
       plants: layers.map((layer) => baseThing({ id: `thing-${layer}`, plantId: layer })),
@@ -669,9 +669,10 @@ it('orders all layer groups from canopy to roots using the highest layer of each
 });
 
 it('keeps notes separate for individual plants and shows them beneath collapsed groups', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'apple', speciesId: 'apple', cultivarId: null }];
-  store.guilds[0]!.plants = [
+  usePlanStateStore().state.plants = [
+    { id: 'apple', speciesId: 'apple', cultivarId: null },
+  ];
+  usePlanStateStore().state.guilds[0]!.plants = [
     baseThing({ id: 'a', plantId: 'apple' }),
     baseThing({ id: 'b', plantId: 'apple', note: 'Second tree' }),
   ];
@@ -690,7 +691,7 @@ it('keeps notes separate for individual plants and shows them beneath collapsed 
   const editor = card(wrapper).getByRole('textbox', { name: /Note for .* instance 1/ });
   await fireEvent.update(editor, 'First tree');
   await fireEvent.blur(editor);
-  expect(store.guilds).toMatchObject([
+  expect(usePlanStateStore().state.guilds).toMatchObject([
     {
       plants: [
         { id: 'a', note: 'First tree' },
@@ -722,7 +723,7 @@ it('keeps notes separate for individual plants and shows them beneath collapsed 
   expect(secondEditor).toHaveValue('Second tree');
   await fireEvent.update(secondEditor, 'Updated second tree');
   await fireEvent.blur(secondEditor);
-  expect(store.guilds).toMatchObject([
+  expect(usePlanStateStore().state.guilds).toMatchObject([
     {
       plants: [
         { id: 'a', note: 'First tree' },
@@ -734,9 +735,12 @@ it('keeps notes separate for individual plants and shows them beneath collapsed 
 });
 
 it('shows an icon-only note action alongside plant actions with tooltips', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'apple', speciesId: 'apple', cultivarId: null }];
-  store.guilds[0]!.plants = [baseThing({ id: 'a', plantId: 'apple' })];
+  usePlanStateStore().state.plants = [
+    { id: 'apple', speciesId: 'apple', cultivarId: null },
+  ];
+  usePlanStateStore().state.guilds[0]!.plants = [
+    baseThing({ id: 'a', plantId: 'apple' }),
+  ];
   const wrapper = await renderGuildEditor();
   const actions = within(card(wrapper).getByRole('group', { name: /Actions for/ }));
   const buttons = actions.getAllByRole('button');

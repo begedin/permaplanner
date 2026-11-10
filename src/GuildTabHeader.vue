@@ -7,7 +7,7 @@
   import HighlightText from './HighlightText.vue';
   import { searchInputPlaceholder } from './searchContext';
   import { useGardenStore } from './useGardenStore';
-  import { useGuildSelection } from './useGuildSelection';
+  import { useMapInteractionStore } from './useMapInteractionStore';
   import { usePlanCommandHistory } from './usePlanCommandHistory';
   import { useGardenSessionStore } from './stores/useGardenSessionStore';
   import { useSearchFocusHotkeys } from './useSearchFocusHotkeys';
@@ -16,7 +16,9 @@
 
   const garden = useGardenStore();
   const gardenSession = useGardenSessionStore();
-  const { selectedGuildId, clearSelection, addGuild } = useGuildSelection();
+  const interaction = useMapInteractionStore();
+  const { selectedGuildId } = storeToRefs(interaction);
+  const { clearSelection, addGuild } = interaction;
   const commandHistory = usePlanCommandHistory();
   const { canUndo, canRedo } = storeToRefs(commandHistory);
   const searchInputRef = ref<HTMLInputElement | null>(null);

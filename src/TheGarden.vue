@@ -10,11 +10,9 @@
 
   import UiIcon from './uiIcons/UiIcon.vue';
   import ToolSlider from './ToolSlider.vue';
-  import { usePlanCommandHistory } from './usePlanCommandHistory';
   import GuildEditor from './GuildEditor.vue';
   import GardenGuild from './GardenGuild.vue';
   import { useGuildPathEdit } from './useGuildPathEdit';
-  import { useGuildMergeMode } from './useGuildMergeMode';
   import { useGardenStore } from './useGardenStore';
   import { useCameraStore } from './useCameraStore';
   import { useMapScaleStore } from './useMapScaleStore';
@@ -31,11 +29,13 @@
   import { useGuildListScroll } from './useGuildListScroll';
   import { useMapInteraction } from './useMapInteraction';
   import ReferenceLine from './ReferenceLine.vue';
+  import { useGardenSessionStore } from './stores/useGardenSessionStore';
   import { usePermaplannerStore } from './usePermaplannerStore';
   import AerialMapToolbar from './AerialMapToolbar.vue';
 
   const plotBorder = usePlotBorderStore();
   const landmarks = useLandmarkStore();
+  const session = useGardenSessionStore();
   const permaplannerStore = usePermaplannerStore();
   const mapSettingsOpen = ref(false);
   const showGuildLabels = useLocalStorage('permaplanner.showGuildLabels', true);
@@ -130,18 +130,10 @@
 
   const mapScale = useMapScaleStore();
 
-  const history = usePlanCommandHistory();
-
-  const updateBackgroundOpacity = (value: number, token: symbol) => {
-    history.runMutation(() => {
-      permaplannerStore.backgroundOpacity = value;
-    }, token);
-  };
-
   const garden = useGardenStore();
-  const { isMerging } = useGuildMergeMode();
   const { hoveredId, clearHover } = useGuildHover();
   const {
+    isMerging,
     selectedGuildId,
     selectedLandmark,
     isBorderSelected,
@@ -447,7 +439,7 @@
               :height="worldBounds.height"
             />
             <PlotBorderLayer
-              :key="permaplannerStore.gardenId"
+              :key="session.gardenId"
               :points="plotBorder.points"
               :selected="isBorderSelected"
               :tool="activeTool"
@@ -542,7 +534,7 @@
                     :min="0"
                     :max="1"
                     :step="0.01"
-                    @update:value="updateBackgroundOpacity"
+                    @update:value="permaplannerStore.setBackgroundOpacity"
                   />
                 </div>
               </div>

@@ -1,3 +1,4 @@
+import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import { setActivePinia, createPinia } from 'pinia';
 import { beforeEach, expect, it } from 'vitest';
 
@@ -43,15 +44,15 @@ it('restores populated and empty state through both store views, preserving serv
   const empty = plan.capture();
   const permaplanner = usePermaplannerStore();
   const scale = useMapScaleStore();
-  permaplanner.setSyncRevision(12);
+  useGardenSessionStore().syncRevision = 12;
   plan.restore(populatedState);
   const { mapScale, ...fields } = populatedState;
-  expect(permaplanner).toMatchObject({ ...fields, syncRevision: 12 });
+  expect(permaplanner).toMatchObject(fields);
   expect(scale).toMatchObject(mapScale);
 
   plan.restore(empty);
   expect(plan.capture()).toEqual(empty);
-  expect(permaplanner.syncRevision).toBe(12);
+  expect(useGardenSessionStore().syncRevision).toBe(12);
 });
 
 it.each<[string, (state: PlanSavableState) => void]>([
@@ -121,16 +122,16 @@ it('compares identical values independently of object key order', () => {
   expect(planSavableStatesEqual(populatedState, state)).toBe(true);
 });
 
-it('commitSnapshot records an edit and undo/redo restores complete plan snapshots', () => {
+it('runMutation records an edit and undo/redo restores complete plan snapshots', () => {
   const plan = usePlanStateStore();
   Object.assign(plan.state, structuredClone(populatedState));
   const before = plan.capture();
-  plan.state.plants = [];
-  plan.state.guilds = [];
-  const after = plan.capture();
-
   const history = usePlanCommandHistory();
-  history.commitSnapshot(before);
+  history.runMutation(() => {
+    plan.state.plants = [];
+    plan.state.guilds = [];
+  });
+  const after = plan.capture();
   expect(plan.capture()).toEqual(after);
   history.undo();
   expect(plan.capture()).toEqual(before);

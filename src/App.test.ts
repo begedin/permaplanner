@@ -1,3 +1,4 @@
+import { usePlanStateStore } from './usePlanStateStore';
 import { computed } from 'vue';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -10,7 +11,6 @@ import { ApiError } from './api/client';
 import App from './App.vue';
 import { createAppRouter, routeNames } from './router';
 import { seedAuthedTestSession } from './testing/authedTestSession';
-import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import { useAuthStore } from './stores/useAuthStore';
@@ -58,13 +58,12 @@ it('opens the plan drawer from the top bar icon', async () => {
 it('shows an unsaved dot on the plan menu button', async () => {
   vi.mocked(gardensApi.updateGarden).mockImplementation(() => new Promise(() => {}));
 
-  const store = usePermaplannerStore();
-  store.gardenId = 'g1';
-  store.gardenName = 'plan.json';
+  useGardenSessionStore().gardenId = 'g1';
+  useGardenSessionStore().gardenName = 'plan.json';
   const gardenSession = useGardenSessionStore();
   gardenSession.markSaved();
   usePlanCommandHistory().runMutation(() => {
-    store.plants.push({
+    usePlanStateStore().state.plants.push({
       id: 'p1',
       speciesId: 'comfrey',
       cultivarId: null,
@@ -79,15 +78,14 @@ it('shows an unsaved dot on the plan menu button', async () => {
 });
 
 it('prompts on page unload only while the plan has unsaved changes', async () => {
-  const store = usePermaplannerStore();
-  store.gardenId = 'g1';
+  useGardenSessionStore().gardenId = 'g1';
   const gardenSession = useGardenSessionStore();
   gardenSession.markSaved();
   const view = renderApp();
   const clean = new Event('beforeunload', { cancelable: true });
   window.dispatchEvent(clean);
   expect(clean.defaultPrevented).toBe(false);
-  store.backgroundOpacity = 0.7;
+  usePlanStateStore().state.backgroundOpacity = 0.7;
   const dirty = new Event('beforeunload', { cancelable: true });
   window.dispatchEvent(dirty);
   expect(dirty.defaultPrevented).toBe(true);
@@ -99,11 +97,10 @@ it('prompts on page unload only while the plan has unsaved changes', async () =>
 
 it('shows a dismissible save failure toast, shows it again on failure, and retries', async () => {
   vi.mocked(useAuthStore().bootstrap).mockResolvedValue();
-  const store = usePermaplannerStore();
-  store.gardenId = 'g1';
+  useGardenSessionStore().gardenId = 'g1';
   const session = useGardenSessionStore();
   session.markSaved();
-  store.backgroundOpacity = 0.7;
+  usePlanStateStore().state.backgroundOpacity = 0.7;
   vi.mocked(gardensApi.updateGarden)
     .mockRejectedValueOnce(new ApiError(502, {}))
     .mockRejectedValueOnce(new ApiError(502, {}))
@@ -136,10 +133,9 @@ it('shows a dismissible save failure toast, shows it again on failure, and retri
 });
 
 it('allows garden view changes but prompts before leaving for import', async () => {
-  const store = usePermaplannerStore();
-  store.gardenId = 'g1';
+  useGardenSessionStore().gardenId = 'g1';
   useGardenSessionStore().markSaved();
-  store.backgroundOpacity = 0.7;
+  usePlanStateStore().state.backgroundOpacity = 0.7;
   const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
   await router.push('/guilds');
   expect(router.currentRoute.value.name).toBe(routeNames.guilds);

@@ -1,3 +1,4 @@
+import { usePlanStateStore } from './usePlanStateStore';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/vue';
 import { flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -10,7 +11,6 @@ import { createAppRouter } from './router';
 import { createAuthedTestRouter } from './testing/authedTestSession';
 import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import * as gardensApi from './api/gardens';
-import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 
 beforeEach(async () => {
@@ -46,10 +46,11 @@ it('disables undo and redo when the command stacks are empty', async () => {
 it('enables undo after an edit and redo after undo', async () => {
   await renderHeader();
   const history = usePlanCommandHistory();
-  const store = usePermaplannerStore();
 
   history.runMutation(() => {
-    store.guilds = [{ id: 'g1', name: 'Bed', path: [], plants: [], mulchLevel: 1 }];
+    usePlanStateStore().state.guilds = [
+      { id: 'g1', name: 'Bed', path: [], plants: [], mulchLevel: 1 },
+    ];
   });
   await flushPromises();
   expect(screen.getByRole('button', { name: 'Undo' }).hasAttribute('disabled')).toBe(
@@ -72,8 +73,7 @@ it('enables undo after an edit and redo after undo', async () => {
 
 it('places Save after Add guild and enables it only for unsaved changes', async () => {
   const router = await createAuthedTestRouter();
-  const store = usePermaplannerStore();
-  store.gardenId = 'g1';
+  useGardenSessionStore().gardenId = 'g1';
   useGardenSessionStore().markSaved();
   vi.mocked(gardensApi.updateGarden).mockResolvedValue(1);
   render(GuildTabHeader, { global: { plugins: [router] } });

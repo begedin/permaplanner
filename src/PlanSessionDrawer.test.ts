@@ -1,3 +1,4 @@
+import { usePlanStateStore } from './usePlanStateStore';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
@@ -7,7 +8,6 @@ import { createRouter, createWebHistory } from 'vue-router';
 import * as gardensApi from './api/gardens';
 
 import PlanSessionDrawer from './PlanSessionDrawer.vue';
-import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import { seedAuthedTestSession } from './testing/authedTestSession';
@@ -66,12 +66,11 @@ it('closes when the backdrop is clicked', async () => {
 it('shows unsaved indicator inside the drawer when there are changes', async () => {
   vi.mocked(gardensApi.updateGarden).mockImplementation(() => new Promise(() => {}));
 
-  const store = usePermaplannerStore();
-  store.gardenId = 'g1';
-  store.gardenName = 'plan.json';
+  useGardenSessionStore().gardenId = 'g1';
+  useGardenSessionStore().gardenName = 'plan.json';
   useGardenSessionStore().markSaved();
   usePlanCommandHistory().runMutation(() => {
-    store.plants.push({
+    usePlanStateStore().state.plants.push({
       id: 'p1',
       speciesId: 'comfrey',
       cultivarId: null,

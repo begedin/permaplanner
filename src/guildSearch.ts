@@ -1,3 +1,4 @@
+import type { DeepReadonly } from 'vue';
 import Fuse, { type IFuseOptions } from 'fuse.js';
 
 import type { Guild, Plant } from './gardenTypes';
@@ -43,7 +44,7 @@ export const guildFuzzyMatchOptions = {
 };
 
 export const buildGuildSearchRecord = (
-  guild: Guild,
+  guild: DeepReadonly<Guild>,
   resolvePlant: (plantId: string) => Plant,
 ): GuildSearchRecord => {
   const labels = new Set<string>();
@@ -92,10 +93,10 @@ export const searchByFuse = <TRecord, TResult>(
 };
 
 export const searchGuilds = (
-  guilds: Guild[],
+  guilds: DeepReadonly<Guild[]>,
   query: string,
   resolvePlant: (plantId: string) => Plant,
-): Guild[] => {
+): DeepReadonly<Guild>[] => {
   const byId = new Map(guilds.map((g) => [g.id, g]));
   return searchByFuse(
     guilds.map((g) => buildGuildSearchRecord(g, resolvePlant)),

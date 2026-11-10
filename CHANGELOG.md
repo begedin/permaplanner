@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.32.0
+
+- [FIX] Keep plant labels consistent across editing, saving, exports, and reloads.
+- [FIX] Preserve undo for edits made immediately after loading a garden and discard pending image pastes when a document is replaced.
+- [CHANGE] Make map drawing, editing, moving, and merging mutually exclusive through shared interaction state.
+- [CHANGE] Bound undo history to the latest 100 edits and share snapshots between adjacent edits.
+- [CHANGE] Separate guild summaries from editor state, expose readonly plan views, and centralize saved garden metadata.
+
 ## 0.31.6
 
 - [FIX] Preserve disconnected guild regions and intentional holes as separate saved boundaries, eliminating connecting-line artefacts.

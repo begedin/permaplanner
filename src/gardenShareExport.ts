@@ -1,7 +1,6 @@
 import type { GardenDocument } from './gardenDocument';
 import type { Guild } from './gardenTypes';
 import { GROWTH_PHASE_LABEL, PLANT_VIGOR_LABEL } from './guildPlantInstanceStatus';
-import { withPersistedGuildPlantLabels } from './guildPlantLabels';
 
 export type GardenSharePayload = {
   gardenName: string;
@@ -44,8 +43,7 @@ export const buildGardenSharePayload = (
   gardenName: string,
   snapshot: GardenDocument,
 ): GardenSharePayload => {
-  const normalized = withPersistedGuildPlantLabels(snapshot);
-  const guilds = normalized.guilds;
+  const guilds = snapshot.guilds;
   return {
     gardenName,
     guilds,

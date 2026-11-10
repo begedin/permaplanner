@@ -1,11 +1,12 @@
 <script lang="ts" setup>
+  import type { DeepReadonly } from 'vue';
   import { computed, ref, toRef, watch } from 'vue';
 
   import type { Guild } from './gardenTypes';
   import { useCameraStore } from './useCameraStore';
   import GardenMeasure from './GardenMeasure.vue';
   import { pathBounds } from './guildPathBounds';
-  import { guildPathData, type GuildPath } from './guildPathClip';
+  import { cloneGuildPath, guildPathData, type GuildPath } from './guildPathClip';
   import type { AerialTool } from './useAerialTool';
   import { useGuildPathMove } from './useGuildPathMove';
 
@@ -13,7 +14,7 @@
     defineProps<{
       previewPath?: GuildPath;
       unitLengthPx: number;
-      guild: Guild;
+      guild: DeepReadonly<Guild>;
       hovered: boolean;
       selected: boolean;
       tool?: AerialTool;
@@ -35,7 +36,7 @@
   watch(
     () => props.previewPath ?? props.guild.path,
     (points) => {
-      path.value = [...points];
+      path.value = cloneGuildPath(points);
     },
     { immediate: true },
   );

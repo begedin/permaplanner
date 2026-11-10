@@ -1,3 +1,4 @@
+import type { DeepReadonly } from 'vue';
 import type { CatalogPhenology } from './plantCatalog';
 import { getSpecies, resolvePhenology } from './plantCatalog';
 import type { Guild, Plant, UserPlant } from './gardenTypes';
@@ -48,7 +49,7 @@ export const formatSpeciesCounts = (
 
 /** Counts from guild bed placements only (not the Plants catalog). */
 export const guildSpeciesCounts = (
-  guilds: readonly Guild[],
+  guilds: DeepReadonly<Guild[]>,
   speciesId: string,
   resolvePlant: (id: string) => Plant,
 ): { cultivarCount: number; plantCount: number } => {
@@ -69,7 +70,7 @@ export const guildSpeciesCounts = (
 
 /** Guild calendar tooltip rows for one species (one row per user plant, counted by bed instances). */
 export const guildSpeciesTooltipRows = (
-  guilds: readonly Guild[],
+  guilds: DeepReadonly<Guild[]>,
   speciesId: string,
   resolvePlant: (id: string) => Plant,
 ): GuildPlantTooltipRow[] =>
@@ -82,7 +83,7 @@ export const guildSpeciesTooltipRows = (
   );
 
 export const listGardenSpecies = (
-  guilds: readonly Guild[],
+  guilds: DeepReadonly<Guild[]>,
   resolvePlant: (id: string) => Plant,
 ): GardenSpeciesSidebarRow[] => {
   const bySpecies = new Map<
@@ -157,15 +158,15 @@ export const listGardenSpecies = (
 };
 
 export const speciesIsPlacedInGuilds = (
-  guilds: readonly Guild[],
+  guilds: DeepReadonly<Guild[]>,
   speciesId: string,
   resolvePlant: (id: string) => Plant,
 ): boolean => guildSpeciesCounts(guilds, speciesId, resolvePlant).plantCount > 0;
 
 export const listCalendarCultivarsForSpecies = (
-  userPlants: readonly UserPlant[],
+  userPlants: DeepReadonly<UserPlant[]>,
   speciesId: string,
-  guilds: readonly Guild[],
+  guilds: DeepReadonly<Guild[]>,
   resolvePlant: (id: string) => Plant,
 ): CalendarCultivarRow[] => {
   const rows: CalendarCultivarRow[] = [];

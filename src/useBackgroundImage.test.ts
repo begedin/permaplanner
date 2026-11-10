@@ -1,8 +1,8 @@
+import { usePlanStateStore } from './usePlanStateStore';
 import { createPinia, setActivePinia } from 'pinia';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { effectScope, reactive } from 'vue';
 import { useBackgroundImage } from './useBackgroundImage';
-import { usePermaplannerStore } from './usePermaplannerStore';
 
 beforeEach(() => setActivePinia(createPinia()));
 afterEach(() => vi.unstubAllGlobals());
@@ -20,18 +20,17 @@ it('clears measurements and ignores obsolete loads after replacement, removal, o
   });
   const scope = effectScope();
   const resource = reactive(scope.run(useBackgroundImage)!);
-  const plan = usePermaplannerStore();
-  plan.backgroundImageDataUrl = 'first';
+  usePlanStateStore().state.backgroundImageDataUrl = 'first';
   const first = images[0]!;
   const staleLoad = first.onload!;
-  plan.backgroundImageDataUrl = 'second';
+  usePlanStateStore().state.backgroundImageDataUrl = 'second';
   staleLoad.call(first, new Event('load'));
   expect(resource.ready).toBe(false);
   images[1]!.dispatchEvent(new Event('load'));
   expect(resource).toMatchObject({ ready: true, imgWidth: 640, imgHeight: 480 });
-  plan.backgroundImageDataUrl = undefined;
+  usePlanStateStore().state.backgroundImageDataUrl = undefined;
   expect(resource).toMatchObject({ ready: false, imgWidth: 0, imgHeight: 0 });
-  plan.backgroundImageDataUrl = 'broken';
+  usePlanStateStore().state.backgroundImageDataUrl = 'broken';
   images[2]!.dispatchEvent(new Event('error'));
   expect(resource.ready).toBe(false);
   const disposedLoad = images[2]!.onload!;

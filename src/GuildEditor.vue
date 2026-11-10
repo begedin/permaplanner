@@ -25,7 +25,8 @@
   import RadioButtonGroup from './RadioButtonGroup.vue';
   import ToggleButton from './ToggleButton.vue';
   import UiIcon from './uiIcons/UiIcon.vue';
-  import { useGuildCardModel } from './useGuildCardModel';
+  import { useGuildSummary } from './useGuildSummary';
+  import { useGuildEditor } from './useGuildEditor';
   import { useGuildSearch } from './useGuildSearch';
 
   const garden = useGardenStore();
@@ -36,8 +37,18 @@
   }>();
 
   const { searchQuery } = useGuildSearch();
+  const summary = useGuildSummary(toRef(props, 'guildId'));
   const {
     guild,
+    groupedGuildPlants,
+    guildFunctions,
+    guildLayers,
+    placedOnMap,
+    guildMapSizeLabel,
+    guildTooltipRows,
+    guildMonthPhenologyCounts,
+  } = summary;
+  const {
     editingName,
     editingNote,
     displayedName,
@@ -50,30 +61,18 @@
     commitNote,
     onNoteKeydown,
     decrementGuildPlantQuantity,
-    addOneGuildThing,
-    groupedGuildPlants,
     openAddPlantEditor,
     openEditPlantEditor,
     isEditingRow,
     closePlantEditor,
     onConfirmPlant,
-    removeGuild,
-    removeFromAerialMap,
-    guildFunctions,
-    guildLayers,
-    placedOnMap,
-    guildMapSizeLabel,
     mulchStars,
-    setMulchLevel,
     phenologySummaryForThingIds,
-    guildTooltipRows,
-    guildMonthPhenologyCounts,
     togglePlantGroup,
     isPlantGroupExpanded,
     guildThing,
     setThingGrowthPhase,
-    setThingVigorLevel,
-  } = useGuildCardModel(toRef(props, 'guildId'));
+  } = useGuildEditor(toRef(props, 'guildId'), guild);
 
   const plantSort = ref<'name' | 'layer'>('name');
   const groupPlants = ref(false);
@@ -135,7 +134,7 @@
               title="Remove from aerial map"
               aria-label="Remove from aerial map"
               class="btn-icon inline-flex size-6 shrink-0 items-center justify-center p-0.5 hover:bg-amber-100"
-              @click.stop="removeFromAerialMap"
+              @click.stop="garden.removeGuildFromAerialMap(guildId)"
             >
               <UiIcon
                 name="unmap"
@@ -148,7 +147,7 @@
             :class="placedOnMap ? '' : 'ml-auto'"
             class="btn-danger inline-flex items-center gap-1 text-xs rounded-lg px-2 py-0.5"
             aria-label="Delete"
-            @click="removeGuild"
+            @click="garden.removeGuild(guildId)"
           >
             <UiIcon name="trash" />
             Delete
@@ -177,9 +176,9 @@
               class="mulch-star"
               :class="n <= guild.mulchLevel ? 'mulch-star-filled' : 'mulch-star-empty'"
               :aria-label="`Mulch level ${n} of 5`"
-              @click="setMulchLevel(n)"
-              @keydown.enter.prevent="setMulchLevel(n)"
-              @keydown.space.prevent="setMulchLevel(n)"
+              @click="garden.setGuildMulchLevel(guildId, n)"
+              @keydown.enter.prevent="garden.setGuildMulchLevel(guildId, n)"
+              @keydown.space.prevent="garden.setGuildMulchLevel(guildId, n)"
             >
               <UiIcon
                 :name="n <= guild.mulchLevel ? 'star' : 'star-outline'"
@@ -357,7 +356,7 @@
                     title="Add one plant to bed"
                     aria-label="Add one plant to bed"
                     class="btn-icon bg-transparent hover:bg-sage-100 p-0.5 px-1"
-                    @click.stop="addOneGuildThing(row.plantId)"
+                    @click.stop="garden.addPlantToGuild(guildId, row.plantId)"
                   >
                     <UiIcon name="add" />
                   </button>
@@ -448,7 +447,9 @@
                       <span class="shrink-0">Condition</span>
                       <PlantVigorRating
                         :vigor="guildThing(thingId)?.vigor"
-                        @update:vigor="setThingVigorLevel(thingId, $event)"
+                        @update:vigor="
+                          garden.setGuildThingVigor(guildId, thingId, $event)
+                        "
                       />
                     </label>
                   </div>

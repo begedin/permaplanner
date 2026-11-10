@@ -1,21 +1,24 @@
 <script lang="ts" setup>
   import { toRef } from 'vue';
+  import { storeToRefs } from 'pinia';
 
   import HighlightText from './HighlightText.vue';
   import GuildSeasonStrip from './GuildSeasonStrip.vue';
   import PlantIcon from './PlantIcon.vue';
   import UiIcon from './uiIcons/UiIcon.vue';
   import { useGardenStore } from './useGardenStore';
-  import { useGuildCardModel } from './useGuildCardModel';
+  import { useGuildSummary } from './useGuildSummary';
   import { useGuildSearch } from './useGuildSearch';
-  import { useGuildSelection } from './useGuildSelection';
+  import { useMapInteractionStore } from './useMapInteractionStore';
 
   const props = defineProps<{
     guildId: string;
   }>();
 
   const garden = useGardenStore();
-  const { selectedGuildId, selectGuild } = useGuildSelection();
+  const interaction = useMapInteractionStore();
+  const { selectedGuildId, mergeSourceId } = storeToRefs(interaction);
+  const { selectGuild } = interaction;
   const { searchQuery } = useGuildSearch();
   const {
     guild,
@@ -24,8 +27,7 @@
     guildMapSizeLabel,
     guildMonthPhenologyCounts,
     guildTooltipRows,
-    removeFromAerialMap,
-  } = useGuildCardModel(toRef(props, 'guildId'));
+  } = useGuildSummary(toRef(props, 'guildId'));
 
   const onListClick = () => {
     void selectGuild(props.guildId);
@@ -45,7 +47,7 @@
     class="flex flex-col gap-1 items-start justify-start p-2 text-ink-600 w-full min-w-0 max-w-full paper-card-interactive"
     :class="{
       'paper-card-selected': selectedGuildId === guildId,
-      'ring-2 ring-amber-600': garden.mergeSourceId === guildId,
+      'ring-2 ring-amber-600': mergeSourceId === guildId,
       'paper-card-not-on-aerial': !placedOnMap,
     }"
     :aria-label="guild.name"
@@ -72,17 +74,15 @@
         </span>
         <button
           type="button"
-          :title="garden.mergeSourceId === guildId ? 'Cancel merge' : 'Merge with'"
-          :aria-label="garden.mergeSourceId === guildId ? 'Cancel merge' : 'Merge with'"
-          :aria-pressed="garden.mergeSourceId === guildId"
+          :title="mergeSourceId === guildId ? 'Cancel merge' : 'Merge with'"
+          :aria-label="mergeSourceId === guildId ? 'Cancel merge' : 'Merge with'"
+          :aria-pressed="mergeSourceId === guildId"
           class="btn-icon inline-flex size-6 shrink-0 items-center justify-center p-0.5 hover:bg-amber-100"
-          :class="{ 'bg-amber-100': garden.mergeSourceId === guildId }"
-          @click.stop="
-            garden.mergeSourceId = garden.mergeSourceId === guildId ? undefined : guildId
-          "
+          :class="{ 'bg-amber-100': mergeSourceId === guildId }"
+          @click.stop="interaction.toggleMerge(guildId)"
         >
           <UiIcon
-            :name="garden.mergeSourceId === guildId ? 'remove' : 'merge'"
+            :name="mergeSourceId === guildId ? 'remove' : 'merge'"
             class="size-4"
           />
         </button>
@@ -92,7 +92,7 @@
           title="Remove from aerial map"
           aria-label="Remove from aerial map"
           class="btn-icon inline-flex size-6 shrink-0 items-center justify-center p-0.5 hover:bg-amber-100"
-          @click.stop="removeFromAerialMap"
+          @click.stop="garden.removeGuildFromAerialMap(guildId)"
         >
           <UiIcon
             name="unmap"
@@ -131,7 +131,7 @@
     </div>
 
     <p
-      v-if="garden.mergeSourceId === guildId"
+      v-if="mergeSourceId === guildId"
       class="text-xs text-ink-600"
       role="status"
     >

@@ -1,3 +1,4 @@
+import type { DeepReadonly } from 'vue';
 import type { PlantCatalogFile } from './plantCatalog';
 import { getCultivar, getSpecies, plantCatalog } from './plantCatalog';
 import type {
@@ -14,18 +15,20 @@ const applyScalarOverride = <T extends string>(base: T, o?: T): T =>
 
 const applyArrayOverride = (
   base: GuildFunction[],
-  o?: GuildFunction[],
+  o?: readonly GuildFunction[],
 ): GuildFunction[] => (o !== undefined ? [...o] : [...base]);
 
-const applyLayerOverride = (base: GuildLayer[], o?: GuildLayer[]): GuildLayer[] =>
-  o !== undefined ? [...o] : [...base];
+const applyLayerOverride = (
+  base: GuildLayer[],
+  o?: readonly GuildLayer[],
+): GuildLayer[] => (o !== undefined ? [...o] : [...base]);
 
 const applyPlantOverrideFields = (
   speciesName: string,
   iconId: PlantIconId,
   functions: GuildFunction[],
   layers: GuildLayer[],
-  o?: PlantOverrideFields,
+  o?: DeepReadonly<PlantOverrideFields>,
 ): {
   speciesName: string;
   iconId: PlantIconId;
@@ -42,7 +45,7 @@ const applyPlantOverrideFields = (
  * Resolved display: db species → speciesOverride → db cultivar → cultivarOverride.
  */
 export const resolveUserPlant = (
-  user: UserPlant,
+  user: DeepReadonly<UserPlant>,
   catalog: PlantCatalogFile = plantCatalog,
 ): Plant => {
   const species = getSpecies(user.speciesId) ?? catalog.species[0];

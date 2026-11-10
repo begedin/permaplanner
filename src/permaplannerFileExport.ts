@@ -1,8 +1,7 @@
 import type { GardenDocument } from './gardenDocument';
-import { withPersistedGuildPlantLabels } from './guildPlantLabels';
 
 export const buildLocalPlanJsonText = (snapshot: GardenDocument): string =>
-  JSON.stringify(withPersistedGuildPlantLabels(snapshot), null, 2);
+  JSON.stringify(snapshot, null, 2);
 
 export const downloadTextAsFile = (
   filename: string,

@@ -1,3 +1,5 @@
+import { useGardenSessionStore } from './stores/useGardenSessionStore';
+import { usePlanStateStore } from './usePlanStateStore';
 import { createPinia, setActivePinia } from 'pinia';
 import { mount } from '@vue/test-utils';
 import { beforeEach, expect, it } from 'vitest';
@@ -44,16 +46,16 @@ it('previews locally and commits only the scale edit as one undo step', async ()
   });
   expect(scale.start).toEqual({ x: 20, y: 20 });
   history.runMutation(() => {
-    plan.backgroundOpacity = 0.8;
+    usePlanStateStore().state.backgroundOpacity = 0.8;
   });
   document.dispatchEvent(new MouseEvent('pointerup', { clientX: 50, clientY: 70 }));
-  expect(plan.onboardingState).toBe('movedFirst');
+  expect(usePlanStateStore().state.onboardingState).toBe('movedFirst');
   expect(scale.start).toEqual({ x: 50, y: 70 });
   history.undo();
   expect(scale.start).toEqual({ x: 20, y: 20 });
   expect(plan).toMatchObject({ onboardingState: 'initial', backgroundOpacity: 0.8 });
   history.undo();
-  expect(plan.backgroundOpacity).toBe(0.4);
+  expect(usePlanStateStore().state.backgroundOpacity).toBe(0.4);
   wrapper.unmount();
 });
 
@@ -68,7 +70,7 @@ it.each(['unmount', 'escape', 'replace'] as const)(
     if (cancel === 'unmount') wrapper.unmount();
     else if (cancel === 'escape')
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-    else await usePermaplannerStore().resetToNewPlan();
+    else await useGardenSessionStore().reset();
     document.dispatchEvent(new MouseEvent('pointerup', { clientX: 100, clientY: 100 }));
     expect(scale.start).toEqual({ x: 20, y: 20 });
     expect(usePlanCommandHistory().canUndo).toBe(false);
@@ -78,21 +80,20 @@ it.each(['unmount', 'escape', 'replace'] as const)(
 
 it('shows transient guidance for both drags and restores it on cancellation', async () => {
   const wrapper = renderLine();
-  const plan = usePermaplannerStore();
   await wrapper
     .get('[data-ref-line-start]')
     .trigger('pointerdown', { button: 0, clientX: 30, clientY: 40 });
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('Try to be as precise');
-  expect(plan.onboardingState).toBe('initial');
+  expect(usePlanStateStore().state.onboardingState).toBe('initial');
   document.dispatchEvent(new MouseEvent('pointerup', { clientX: 30, clientY: 40 }));
   await nextTick();
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('move the other point');
-  expect(plan.onboardingState).toBe('movedFirst');
+  expect(usePlanStateStore().state.onboardingState).toBe('movedFirst');
   await wrapper
     .get('[data-ref-line-end]')
     .trigger('pointerdown', { button: 0, clientX: 100, clientY: 40 });
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('Getting there');
-  expect(plan.onboardingState).toBe('movedFirst');
+  expect(usePlanStateStore().state.onboardingState).toBe('movedFirst');
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   await nextTick();
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('move the other point');
@@ -102,6 +103,6 @@ it('shows transient guidance for both drags and restores it on cancellation', as
   document.dispatchEvent(new MouseEvent('pointerup', { clientX: 100, clientY: 40 }));
   await nextTick();
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('set the length');
-  expect(plan.onboardingState).toBe('movedSecond');
+  expect(usePlanStateStore().state.onboardingState).toBe('movedSecond');
   wrapper.unmount();
 });

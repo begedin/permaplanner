@@ -1,3 +1,4 @@
+import { usePlanStateStore } from './usePlanStateStore';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
@@ -15,7 +16,6 @@ import {
 } from './testing/authedTestSession';
 import { routeNames, routeParam } from './router';
 import { useGardenSessionStore } from './stores/useGardenSessionStore';
-import { useGardenStore } from './useGardenStore';
 import { useGuildSelection } from './useGuildSelection';
 
 beforeEach(() => {
@@ -56,7 +56,7 @@ it.each([true, false])(
     await flushPromises();
     expect(session.bootstrap).toHaveBeenCalledTimes(1);
     if (exists)
-      useGardenStore().guilds = [
+      usePlanStateStore().state.guilds = [
         { id: 'alpha', name: 'Alpha', path: [], plants: [], mulchLevel: 1 },
       ];
     session.isBootstrapping = false;
@@ -71,8 +71,9 @@ it.each([true, false])(
 
 it('reads the guild route param on the guilds tab', async () => {
   const router = await createAuthedTestRouter();
-  const store = useGardenStore();
-  store.guilds = [{ id: 'alpha', name: 'Alpha', path: [], plants: [], mulchLevel: 1 }];
+  usePlanStateStore().state.guilds = [
+    { id: 'alpha', name: 'Alpha', path: [], plants: [], mulchLevel: 1 },
+  ];
 
   await router.push({ name: routeNames.guildsDetail, params: { guildId: 'alpha' } });
   await router.isReady();
@@ -96,18 +97,18 @@ it('add guild navigates to the guilds tab with the new guild selected', async ()
   await flushPromises();
   await router.isReady();
 
-  const store = useGardenStore();
-  expect(store.guilds).toMatchObject([{ name: 'New guild' }]);
+  expect(usePlanStateStore().state.guilds).toMatchObject([{ name: 'New guild' }]);
   expect(router.currentRoute.value.name).toBe(routeNames.guildsDetail);
   expect(routeParam(router.currentRoute.value.params, 'guildId')).toBe(
-    store.guilds[0]!.id,
+    usePlanStateStore().state.guilds[0]!.id,
   );
 });
 
 it('points the guilds tab link at the selected guild in the combined view', async () => {
   const router = await createAuthedTestRouter();
-  const store = useGardenStore();
-  store.guilds = [{ id: 'g1', name: 'Bed', path: [], plants: [], mulchLevel: 1 }];
+  usePlanStateStore().state.guilds = [
+    { id: 'g1', name: 'Bed', path: [], plants: [], mulchLevel: 1 },
+  ];
 
   await router.push({ name: routeNames.guildsDetail, params: { guildId: 'g1' } });
   await router.isReady();

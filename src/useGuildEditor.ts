@@ -1,48 +1,21 @@
-import { computed, ref, type Ref } from 'vue';
-
+import { computed, ref, type Ref, type DeepReadonly } from 'vue';
 import {
   buildCatalogPickGroups,
   catalogPickForSpeciesCultivar,
   defaultCatalogPick,
   type CatalogPlantPick,
 } from './catalogPlantPick';
-import type {
-  GardenThing,
-  Guild,
-  GuildFunction,
-  GuildLayer,
-  MulchLevel,
-} from './gardenTypes';
-import { buildGroupedGuildPlants, type GuildPlantGroupRow } from './guildPlantGroups';
-import { formatGuildMapDimensions, pathBounds } from './guildPathBounds';
-import type { GrowthPhase, PlantVigor } from './guildPlantInstanceStatus';
-import {
-  harvestBloomMonthCountsForPhenologies,
-  phenologySummaryForPlant,
-  plantCatalog,
-  resolvePhenology,
-} from './plantCatalog';
-import { guildPlantTooltipRows } from './guildPlantTooltips';
-import { plantGuildGroupEnglishLabel } from './resolvePlant';
+import type { GardenThing, Guild, MulchLevel } from './gardenTypes';
+import type { GuildPlantGroupRow } from './guildPlantGroups';
+import { GROWTH_PHASES_FOR_SELECT } from './guildPlantInstanceStatus';
+import { phenologySummaryForPlant, plantCatalog } from './plantCatalog';
 import { useGardenStore } from './useGardenStore';
-import { useMapScaleStore } from './useMapScaleStore';
 
 type PlantEditor =
   | { kind: 'add' }
   | { kind: 'edit'; plantId: string; thingIds: string[] };
-
-export const useGuildCardModel = (guildId: Ref<string>) => {
+export const useGuildEditor = (guildId: Ref<string>, guild: Ref<DeepReadonly<Guild>>) => {
   const garden = useGardenStore();
-  const mapScale = useMapScaleStore();
-
-  const guild = computed((): Guild => {
-    const g = garden.guilds.find((x) => x.id === guildId.value);
-    if (!g) {
-      throw new Error(`Guild not found: ${guildId.value}`);
-    }
-    return g;
-  });
-
   const editingName = ref<string | null>(null);
   const editingNote = ref<string | null>(null);
   const plantEditor = ref<PlantEditor | null>(null);
@@ -118,16 +91,6 @@ export const useGuildCardModel = (guildId: Ref<string>) => {
     }
   };
 
-  const addOneGuildThing = (plantId: string) => {
-    garden.addPlantToGuild(guildId.value, plantId);
-  };
-
-  const groupedGuildPlants = computed(() =>
-    buildGroupedGuildPlants(guild.value.plants, (plantId) =>
-      garden.resolvedPlant(plantId),
-    ),
-  );
-
   const openAddPlantEditor = () => {
     plantEditor.value = { kind: 'add' };
     selectedPick.value = null;
@@ -171,76 +134,7 @@ export const useGuildCardModel = (guildId: Ref<string>) => {
     closePlantEditor();
   };
 
-  const removeGuild = () => {
-    garden.removeGuild(guildId.value);
-  };
-
-  const removeFromAerialMap = () => {
-    garden.removeGuildFromAerialMap(guildId.value);
-  };
-
-  const guildFunctions = computed(() => {
-    const functionsByName = {
-      nitrogen_fixer: { label: 'Nitrogen Fixer', count: 0 },
-      dynamic_accumulator: { label: 'Dynamic Accumulator', count: 0 },
-      pollinator_attractor: { label: 'Pollinator Attractor', count: 0 },
-      pest_repellent: { label: 'Pest Repellent', count: 0 },
-      ground_cover: { label: 'Ground Cover', count: 0 },
-      wildfire_suppressor: { label: 'Wildfire Suppressor', count: 0 },
-      mulcher: { label: 'Mulcher', count: 0 },
-      edible: { label: 'Edible', count: 0 },
-      medicinal: { label: 'Medicinal', count: 0 },
-    } satisfies Record<GuildFunction, { label: string; count: number }>;
-
-    guild.value.plants.forEach((thing) => {
-      const plant = garden.resolvedPlant(thing.plantId);
-      plant.functions.forEach((f) => {
-        functionsByName[f].count++;
-      });
-    });
-
-    return functionsByName;
-  });
-
-  const guildLayers = computed(() => {
-    const layersByName = {
-      overstory: { label: 'Overstory', count: 0 },
-      understory: { label: 'Understory', count: 0 },
-      shrub: { label: 'Shrub', count: 0 },
-      ground_cover: { label: 'Ground Cover', count: 0 },
-      vine: { label: 'Vine', count: 0 },
-      herb: { label: 'Herb', count: 0 },
-      root: { label: 'Root', count: 0 },
-    } satisfies Record<GuildLayer, { label: string; count: number }>;
-
-    guild.value.plants.forEach((thing) => {
-      const plant = garden.resolvedPlant(thing.plantId);
-      plant.layers.forEach((layer) => {
-        layersByName[layer].count++;
-      });
-    });
-
-    return layersByName;
-  });
-
-  const placedOnMap = computed(() => guild.value.path.length > 0);
-
-  const guildMapSizeLabel = computed(() => {
-    if (!placedOnMap.value) {
-      return null;
-    }
-    const size = formatGuildMapDimensions(
-      pathBounds(guild.value.path.flat(2)),
-      mapScale.unitLengthPx,
-    );
-    return size ? `${size} ${mapScale.unitLabel}` : null;
-  });
-
   const mulchStars: MulchLevel[] = [1, 2, 3, 4, 5];
-
-  const setMulchLevel = (level: MulchLevel) => {
-    garden.setGuildMulchLevel(guildId.value, level);
-  };
 
   const phenologySummaryForThingIds = (thingIds: string[]): string | null => {
     if (thingIds.length === 0) {
@@ -255,29 +149,6 @@ export const useGuildCardModel = (guildId: Ref<string>) => {
     return phenologySummaryForPlant(rp.speciesId, rp.cultivarId);
   };
 
-  const guildTooltipRows = computed(() =>
-    guildPlantTooltipRows(
-      guild.value.plants.map((thing) => thing.plantId),
-      (plantId) => garden.resolvedPlant(plantId),
-    ),
-  );
-
-  const guildMonthPhenologyCounts = computed(() => {
-    const phenologies = guild.value.plants.map((thing) => {
-      const rp = garden.resolvedPlant(thing.plantId);
-      return resolvePhenology(rp.speciesId, rp.cultivarId);
-    });
-    return harvestBloomMonthCountsForPhenologies(phenologies);
-  });
-
-  const compactPlantTags = computed(() =>
-    groupedGuildPlants.value.map((row) => ({
-      label: plantGuildGroupEnglishLabel(row.representativeResolved),
-      plant: row.representativeResolved,
-      count: row.count,
-    })),
-  );
-
   const togglePlantGroup = (plantId: string) => {
     expandedPlantGroupId.value = expandedPlantGroupId.value === plantId ? null : plantId;
   };
@@ -289,15 +160,12 @@ export const useGuildCardModel = (guildId: Ref<string>) => {
     guild.value.plants.find((t) => t.id === thingId);
 
   const setThingGrowthPhase = (thingId: string, raw: string) => {
-    garden.setGuildThingGrowthPhase(guildId.value, thingId, raw as GrowthPhase | '');
-  };
-
-  const setThingVigorLevel = (thingId: string, vigor: PlantVigor | undefined) => {
-    garden.setGuildThingVigor(guildId.value, thingId, vigor);
+    const phase = GROWTH_PHASES_FOR_SELECT.find((option) => option === raw);
+    if (raw === '' || phase)
+      garden.setGuildThingGrowthPhase(guildId.value, thingId, phase ?? '');
   };
 
   return {
-    guild,
     editingName,
     editingNote,
     displayedName,
@@ -310,29 +178,16 @@ export const useGuildCardModel = (guildId: Ref<string>) => {
     commitNote,
     onNoteKeydown,
     decrementGuildPlantQuantity,
-    addOneGuildThing,
-    groupedGuildPlants,
     openAddPlantEditor,
     openEditPlantEditor,
     isEditingRow,
     closePlantEditor,
     onConfirmPlant,
-    removeGuild,
-    removeFromAerialMap,
-    guildFunctions,
-    guildLayers,
-    placedOnMap,
-    guildMapSizeLabel,
     mulchStars,
-    setMulchLevel,
     phenologySummaryForThingIds,
-    guildTooltipRows,
-    guildMonthPhenologyCounts,
-    compactPlantTags,
     togglePlantGroup,
     isPlantGroupExpanded,
     guildThing,
     setThingGrowthPhase,
-    setThingVigorLevel,
   };
 };

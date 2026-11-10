@@ -1,3 +1,4 @@
+import { withPersistedGuildPlantLabels } from '../guildPlantLabels';
 import { defineStore } from 'pinia';
 import { computed, ref, shallowRef } from 'vue';
 
@@ -6,7 +7,13 @@ import * as gardensApi from '../api/gardens';
 import type { GardenRecord, GardenSummary } from '../api/gardens';
 import { planSavableStatesEqual, type PlanSavableState } from '../planSavableState';
 import { usePlanStateStore } from '../usePlanStateStore';
-import { usePermaplannerStore } from '../usePermaplannerStore';
+import { usePlanCommandHistory } from '../usePlanCommandHistory';
+import { createEmptyPlanState } from '../planSavableState';
+import {
+  GARDEN_DOCUMENT_VERSION,
+  type GardenDocument,
+  type GardenDocumentPayload,
+} from '../gardenDocument';
 import { useAuthStore } from './useAuthStore';
 
 const ACTIVE_GARDEN_KEY = 'permaplanner.activeGardenId';
@@ -18,7 +25,9 @@ export type PlanSaveStatus = 'inactive' | 'unsaved' | 'saving' | 'saved' | 'erro
 
 export const useGardenSessionStore = defineStore('gardenSession', () => {
   const plan = usePlanStateStore();
-  const permaplanner = usePermaplannerStore();
+  const gardenId = ref<string>();
+  const gardenName = ref<string>();
+  const syncRevision = ref(0);
   const auth = useAuthStore();
 
   const gardens = ref<GardenSummary[]>([]);
@@ -28,13 +37,13 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
   const errorMessage = ref<string>();
   const savedState = shallowRef<PlanSavableState>();
 
-  let sessionGeneration = 0;
+  const sessionGeneration = ref(0);
   let activationRequest = 0;
   let listRequest = 0;
   let bootstrapInFlight: Promise<void> | null = null;
 
   const isSaveAvailable = computed(() =>
-    Boolean(auth.user?.totpConfirmed && permaplanner.gardenId),
+    Boolean(auth.user?.totpConfirmed && gardenId.value),
   );
   const hasUnsavedChanges = computed(
     () =>
@@ -52,10 +61,10 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
   });
   const details = computed(() => {
     const rows: { label: string; value: string }[] = [];
-    if (permaplanner.gardenName) {
-      rows.push({ label: 'Garden', value: permaplanner.gardenName });
+    if (gardenName.value) {
+      rows.push({ label: 'Garden', value: gardenName.value });
     }
-    const summary = gardens.value.find((garden) => garden.id === permaplanner.gardenId);
+    const summary = gardens.value.find((garden) => garden.id === gardenId.value);
     rows.push({ label: 'Last saved', value: formatTimestamp(summary?.updatedAt) });
     return rows;
   });
@@ -76,21 +85,40 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
     errorMessage.value = undefined;
   };
 
-  const commitGarden = async (
-    garden: GardenRecord,
-    request: number,
-  ): Promise<boolean> => {
-    if (request !== activationRequest) return false;
+  const buildDocument = (state: PlanSavableState): GardenDocument => {
+    const { backgroundImageDataUrl, ...data } = state;
+    return {
+      ...data,
+      version: GARDEN_DOCUMENT_VERSION,
+      syncRevision: syncRevision.value,
+      ...(backgroundImageDataUrl === undefined
+        ? {}
+        : { backgroundImage: backgroundImageDataUrl }),
+    };
+  };
 
-    await permaplanner.hydrateFromDocument(garden.document, {
-      id: garden.id,
-      name: garden.name,
-    });
-    if (request !== activationRequest) return false;
+  const snapshot = () => buildDocument(plan.capture());
 
-    sessionGeneration += 1;
+  const hydrateFromDocument = (
+    doc: GardenDocument,
+    meta?: { id?: string; name?: string },
+  ) => {
+    sessionGeneration.value += 1;
     saving.value = false;
+    const { version: _version, syncRevision: revision, backgroundImage, ...data } = doc;
+    plan.restore(
+      withPersistedGuildPlantLabels({ ...data, backgroundImageDataUrl: backgroundImage }),
+    );
+    syncRevision.value = revision;
+    gardenId.value = meta?.id;
+    gardenName.value = meta?.name;
+    usePlanCommandHistory().clear();
     markSaved();
+  };
+
+  const commitGarden = (garden: GardenRecord, request: number): boolean => {
+    if (request !== activationRequest) return false;
+    hydrateFromDocument(garden.document, { id: garden.id, name: garden.name });
     persistActiveId(garden.id);
     return true;
   };
@@ -113,19 +141,19 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
   const activateGarden = async (id: string) => {
     const request = ++activationRequest;
     const garden = await gardensApi.fetchGarden(id);
-    await commitGarden(garden, request);
+    commitGarden(garden, request);
     return garden;
   };
 
-  const activateGardenRecord = async (garden: GardenRecord) => {
+  const activateGardenRecord = (garden: GardenRecord) => {
     const request = ++activationRequest;
-    await commitGarden(garden, request);
+    commitGarden(garden, request);
   };
 
   const createEmptyGarden = async (name?: string) => {
     const request = ++activationRequest;
     const garden = await gardensApi.createGarden(name);
-    const committed = await commitGarden(garden, request);
+    const committed = commitGarden(garden, request);
     if (committed) {
       await refreshList().catch(() => undefined);
     }
@@ -152,7 +180,7 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
           : nextGardens[0]?.id;
       if (id) {
         const garden = await gardensApi.fetchGarden(id);
-        await commitGarden(garden, request);
+        commitGarden(garden, request);
       } else {
         persistActiveId(undefined);
       }
@@ -169,23 +197,26 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
   };
 
   const save = async () => {
-    const id = permaplanner.gardenId;
+    const id = gardenId.value;
     if (!canSave.value || !id) return;
 
-    const generation = sessionGeneration;
+    const generation = sessionGeneration.value;
     saving.value = true;
     errorMessage.value = undefined;
     const stateAtStart = plan.capture();
-    const document = permaplanner.snapshotForServer();
+    const { backgroundImage: image, ...data } = buildDocument(stateAtStart);
+    const document: GardenDocumentPayload =
+      image === savedState.value?.backgroundImageDataUrl
+        ? data
+        : { ...data, backgroundImage: image ?? null };
     const isCurrentSave = () =>
-      generation === sessionGeneration && permaplanner.gardenId === id;
+      generation === sessionGeneration.value && gardenId.value === id;
     try {
-      const syncRevision = await gardensApi.updateGarden(id, document);
+      const revision = await gardensApi.updateGarden(id, document);
       if (!isCurrentSave()) {
         return;
       }
-      permaplanner.setSyncRevision(syncRevision);
-      permaplanner.backgroundImageSavedDataUrl = stateAtStart.backgroundImageDataUrl;
+      syncRevision.value = revision;
       savedState.value = stateAtStart;
       await refreshList().catch(() => undefined);
     } catch (error) {
@@ -215,10 +246,9 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
     !hasUnsavedChanges.value ||
     window.confirm('You have unsaved changes. Leave without saving?');
 
-  const reset = async () => {
+  const reset = () => {
     activationRequest += 1;
     listRequest += 1;
-    sessionGeneration += 1;
     bootstrapInFlight = null;
     isBootstrapping.value = true;
     loading.value = false;
@@ -227,10 +257,21 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
     savedState.value = undefined;
     gardens.value = [];
     persistActiveId(undefined);
-    await permaplanner.resetToNewPlan();
+    const { backgroundImageDataUrl: _image, ...data } = createEmptyPlanState();
+    hydrateFromDocument({
+      ...data,
+      version: GARDEN_DOCUMENT_VERSION,
+      syncRevision: 0,
+    });
   };
 
   return {
+    documentGeneration: computed(() => sessionGeneration.value),
+    gardenId,
+    gardenName,
+    syncRevision,
+    snapshot,
+    hydrateFromDocument,
     gardens,
     loading,
     isBootstrapping,

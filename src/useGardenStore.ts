@@ -1,13 +1,14 @@
-import { defineStore, storeToRefs } from 'pinia';
-import { computed, ref, watch } from 'vue';
+import { defineStore } from 'pinia';
+import { computed, readonly, toRefs } from 'vue';
 import { uuid } from './utils';
-import { usePermaplannerStore } from './usePermaplannerStore';
-import type { Guild, MulchLevel, Plant } from './gardenTypes';
+import { usePlanStateStore } from './usePlanStateStore';
+import { withPersistedGuildPlantLabels } from './guildPlantLabels';
+import type { Guild, MulchLevel, Plant, UserPlant } from './gardenTypes';
 import type { GrowthPhase, PlantVigor } from './guildPlantInstanceStatus';
 import { plantCatalog } from './plantCatalog';
 import { confirmGuildDeletion } from './confirmGuildDeletion';
 import { pathBounds } from './guildPathBounds';
-import { joinPaths, type GuildPath } from './guildPathClip';
+import { cloneGuildPath, joinPaths, type GuildPath } from './guildPathClip';
 import { plantDisplayLabel, resolveUserPlant } from './resolvePlant';
 import { useGuildHover } from './useGuildHover';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
@@ -33,23 +34,10 @@ type Bounds = {
 const DEFAULT_PLACEMENT_BOUNDS: Bounds = { x: 0, y: 0, width: 64, height: 64 };
 
 export const useGardenStore = defineStore('garden', () => {
-  const permaplanner = usePermaplannerStore();
-  const { plants, guilds } = storeToRefs(permaplanner);
+  const plan = usePlanStateStore();
+  const { plants, guilds } = toRefs(plan.state);
   const commandHistory = usePlanCommandHistory();
   const { clearHoverIf } = useGuildHover();
-
-  const mergeSourceId = ref<string>();
-  watch(
-    [
-      () => permaplanner.gardenId,
-      () => guilds.value.some((g) => g.id === mergeSourceId.value),
-    ],
-    ([gardenId, sourceExists], [previousGardenId]) => {
-      if (gardenId !== previousGardenId || !sourceExists) {
-        mergeSourceId.value = undefined;
-      }
-    },
-  );
 
   const mergeGuilds = (sourceId: string, targetId: string): boolean => {
     const source = guilds.value.find((g) => g.id === sourceId);
@@ -66,7 +54,6 @@ export const useGardenStore = defineStore('garden', () => {
       source.plants.push(...target.plants);
       removeGuildWithoutConfirm(targetId);
     });
-    mergeSourceId.value = undefined;
     return true;
   };
 
@@ -93,7 +80,7 @@ export const useGardenStore = defineStore('garden', () => {
     clearHoverIf(id);
   };
 
-  const createGuild = (): Guild => {
+  const createGuild = () => {
     let created!: Guild;
     commandHistory.runMutation(() => {
       created = {
@@ -105,7 +92,7 @@ export const useGardenStore = defineStore('garden', () => {
       };
       guilds.value.push(created);
     });
-    return created;
+    return readonly(created);
   };
 
   const removeGuild = (id: string) => {
@@ -132,7 +119,7 @@ export const useGardenStore = defineStore('garden', () => {
       if (!guild) {
         return;
       }
-      guild.path = path;
+      guild.path = cloneGuildPath(path);
     });
   };
 
@@ -320,15 +307,25 @@ export const useGardenStore = defineStore('garden', () => {
     return true;
   };
 
+  const savePlant = (plant: UserPlant) => {
+    commandHistory.runMutation(() => {
+      const saved: UserPlant = JSON.parse(JSON.stringify(plant));
+      const index = plants.value.findIndex((item) => item.id === saved.id);
+      if (index < 0) plants.value.push(saved);
+      else plants.value[index] = saved;
+      guilds.value = withPersistedGuildPlantLabels(plan.state).guilds;
+    });
+  };
+
   return {
-    plants,
+    plants: computed(() => readonly(plants.value)),
+    savePlant,
     plantIsUsed,
     removePlant,
     plantsById,
     resolvedPlant,
-    guilds,
+    guilds: computed(() => readonly(guilds.value)),
 
-    mergeSourceId,
     mergeGuilds,
     removeGuild,
     removeGuildFromAerialMap,

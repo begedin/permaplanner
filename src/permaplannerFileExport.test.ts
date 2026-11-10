@@ -26,7 +26,7 @@ it('buildLocalPlanJsonText includes current version', () => {
   expect(parsed).toMatchObject({ version: GARDEN_DOCUMENT_VERSION, syncRevision: 1 });
 });
 
-it('buildLocalPlanJsonText resolves guild plant names from plant records', () => {
+it('buildLocalPlanJsonText preserves the supplied document unchanged', () => {
   const snapshot: GardenDocument = {
     ...sampleDoc,
     plants: [
@@ -58,7 +58,5 @@ it('buildLocalPlanJsonText resolves guild plant names from plant records', () =>
     ],
   };
 
-  expect(JSON.parse(buildLocalPlanJsonText(snapshot))).toMatchObject({
-    guilds: [{ plants: [{ nameOrCultivar: 'Thai Basil' }] }],
-  });
+  expect(JSON.parse(buildLocalPlanJsonText(snapshot))).toEqual(snapshot);
 });

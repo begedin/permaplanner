@@ -1,12 +1,13 @@
-import { defineStore, storeToRefs } from 'pinia';
+import { defineStore } from 'pinia';
 
 import { advanceOnboardingState, type OnboardingState } from './onboardingTypes';
-import { usePermaplannerStore } from './usePermaplannerStore';
+import { usePlanStateStore } from './usePlanStateStore';
+import { computed, toRefs } from 'vue';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 
 export const useOnboardingStore = defineStore('onboarding', () => {
-  const permaplannerStore = usePermaplannerStore();
-  const { onboardingState } = storeToRefs(permaplannerStore);
+  const plan = usePlanStateStore();
+  const { onboardingState } = toRefs(plan.state);
   const commandHistory = usePlanCommandHistory();
 
   const advanceOnboarding = () => {
@@ -22,7 +23,7 @@ export const useOnboardingStore = defineStore('onboarding', () => {
   };
 
   return {
-    onboardingState,
+    onboardingState: computed(() => onboardingState.value),
     advanceOnboarding,
     setOnboardingState,
   };

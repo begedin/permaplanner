@@ -1,3 +1,4 @@
+import { usePlanStateStore } from './usePlanStateStore';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { setActivePinia } from 'pinia';
@@ -7,7 +8,6 @@ import { createRouter, createWebHistory } from 'vue-router';
 import * as gardenSharesApi from './api/gardenShares';
 
 import PlanSessionPanel from './PlanSessionPanel.vue';
-import { usePermaplannerStore } from './usePermaplannerStore';
 import { seedAuthedTestSession } from './testing/authedTestSession';
 import { routeNames } from './router';
 import { useGardenSessionStore } from './stores/useGardenSessionStore';
@@ -57,9 +57,8 @@ beforeEach(async () => {
 afterEach(() => cleanup());
 
 const renderPanel = () => {
-  const store = usePermaplannerStore();
-  store.gardenId = 'g1';
-  store.gardenName = 'Backyard';
+  useGardenSessionStore().gardenId = 'g1';
+  useGardenSessionStore().gardenName = 'Backyard';
   return render(PlanSessionPanel, { global: { plugins: [router] } });
 };
 
@@ -91,8 +90,7 @@ it('revokes a listed share link', async () => {
 });
 
 it('copies the current guild share JSON payload to the clipboard', async () => {
-  const store = usePermaplannerStore();
-  store.guilds = [
+  usePlanStateStore().state.guilds = [
     {
       id: 'g1',
       name: 'Edge guild',
@@ -131,7 +129,7 @@ it('copies the current guild share JSON payload to the clipboard', async () => {
 
   expect(copied).toMatchObject({
     gardenName: 'Backyard',
-    guilds: store.guilds,
+    guilds: usePlanStateStore().state.guilds,
     summary: expect.stringContaining('Edge guild'),
   });
   expect(copied.summary).toContain('Thai Basil');
@@ -164,14 +162,14 @@ it('copies HTML and JSON share links to the clipboard', async () => {
 it('cancels sign out before changing the session when unsaved changes are kept', async () => {
   renderPanel();
   useGardenSessionStore().markSaved();
-  usePermaplannerStore().backgroundOpacity = 0.7;
+  usePlanStateStore().state.backgroundOpacity = 0.7;
   const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
 
   await fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
 
   expect(confirm).toHaveBeenCalledWith('You have unsaved changes. Leave without saving?');
   expect(useAuthStore().logout).not.toHaveBeenCalled();
-  expect(usePermaplannerStore().gardenId).toBe('g1');
+  expect(useGardenSessionStore().gardenId).toBe('g1');
   confirm.mockRestore();
 });
 

@@ -1,3 +1,4 @@
+import { usePlanStateStore } from './usePlanStateStore';
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
@@ -7,7 +8,6 @@ import { createTestingPinia } from '@pinia/testing';
 import GuildListRow from './GuildListRow.vue';
 import { createAuthedTestRouter } from './testing/authedTestSession';
 import { routeNames, routeParam } from './router';
-import { useGardenStore } from './useGardenStore';
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
@@ -23,9 +23,10 @@ it('throws if no guild in store', async () => {
 });
 
 it('shows guild name, compact plant tags, and season section', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
-  store.guilds = [
+  usePlanStateStore().state.plants = [
+    { id: 'plant', speciesId: 'comfrey', cultivarId: null },
+  ];
+  usePlanStateStore().state.guilds = [
     {
       id: 'guild',
       name: 'A guild',
@@ -61,9 +62,10 @@ it('shows guild name, compact plant tags, and season section', async () => {
 });
 
 it('marks the card as current when this guild is selected on the map', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
-  store.guilds = [
+  usePlanStateStore().state.plants = [
+    { id: 'plant', speciesId: 'comfrey', cultivarId: null },
+  ];
+  usePlanStateStore().state.guilds = [
     {
       id: 'guild',
       name: 'A guild',
@@ -95,8 +97,7 @@ it('marks the card as current when this guild is selected on the map', async () 
 });
 
 it('shows map size and icon remove when the guild is placed on the aerial map', async () => {
-  const store = useGardenStore();
-  store.guilds = [
+  usePlanStateStore().state.guilds = [
     {
       id: 'guild',
       name: 'A guild',
@@ -128,9 +129,10 @@ it('shows map size and icon remove when the guild is placed on the aerial map', 
 });
 
 it('selects the guild in the guild route when the card is clicked', async () => {
-  const store = useGardenStore();
-  store.plants = [{ id: 'plant', speciesId: 'comfrey', cultivarId: null }];
-  store.guilds = [
+  usePlanStateStore().state.plants = [
+    { id: 'plant', speciesId: 'comfrey', cultivarId: null },
+  ];
+  usePlanStateStore().state.guilds = [
     {
       id: 'guild',
       name: 'A guild',

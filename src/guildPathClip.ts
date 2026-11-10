@@ -1,3 +1,4 @@
+import type { DeepReadonly } from 'vue';
 import clipping from 'polygon-clipping';
 import { polygonSmooth } from '@turf/polygon-smooth';
 import simplify from 'simplify-js';
@@ -6,6 +7,9 @@ import Flatbush from 'flatbush';
 export type PathPoint = { x: number; y: number };
 /** Polygons, each containing an exterior ring followed by hole rings. */
 export type GuildPath = PathPoint[][][];
+
+export const cloneGuildPath = (path: DeepReadonly<GuildPath>): GuildPath =>
+  path.map((polygon) => polygon.map((ring) => ring.map((point) => ({ ...point }))));
 
 export const toMultiPolygon = (path: GuildPath): clipping.MultiPolygon =>
   path.map((polygon) => polygon.map((ring) => ring.map(({ x, y }) => [x, y])));

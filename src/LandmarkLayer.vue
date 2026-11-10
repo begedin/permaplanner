@@ -17,7 +17,7 @@
       width: number;
       height: number;
       showLabels?: boolean;
-      landmarks: Landmark[];
+      landmarks: readonly Landmark[];
       selectedId?: string;
       controlsTarget?: SVGGElement;
       tool: AerialTool;

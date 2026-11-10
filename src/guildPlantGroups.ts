@@ -23,7 +23,7 @@ export const plantGroupRowShowsHeaderExtras = (row: GuildPlantGroupRow): boolean
   row.headerPhaseSlots.length > 0 || row.showPhaseOverflow || row.averageVigor !== null;
 
 export const buildGroupedGuildPlants = (
-  things: GardenThing[],
+  things: readonly GardenThing[],
   resolvePlant: (plantId: string) => Plant,
 ): GuildPlantGroupRow[] => {
   const byPlantId = new Map<string, { thingIds: string[]; rp: Plant }>();

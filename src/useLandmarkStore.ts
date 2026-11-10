@@ -1,4 +1,4 @@
-import { computed } from 'vue';
+import { computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { usePlanStateStore } from './usePlanStateStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
@@ -7,12 +7,12 @@ import type { Landmark } from './gardenDocument';
 export const useLandmarkStore = defineStore('landmarks', () => {
   const plan = usePlanStateStore();
   const history = usePlanCommandHistory();
-  const landmarks = computed(() => plan.state.landmarks);
+  const landmarks = computed(() => readonly(plan.state.landmarks));
   const save = (landmark: Landmark) => {
     history.runMutation(() => {
       const index = plan.state.landmarks.findIndex((item) => item.id === landmark.id);
-      if (index < 0) plan.state.landmarks.push(landmark);
-      else plan.state.landmarks[index] = landmark;
+      if (index < 0) plan.state.landmarks.push({ ...landmark });
+      else plan.state.landmarks[index] = { ...landmark };
     });
   };
   const remove = (id: string) => {

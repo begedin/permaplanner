@@ -6,18 +6,16 @@
   import { exportActiveGardenJson } from './exportGardenJson';
   import { buildGardenShareJsonText } from './gardenShareExport';
   import PlanSaveStatus from './PlanSaveStatus.vue';
-  import { usePermaplannerStore } from './usePermaplannerStore';
   import { useAuthStore } from './stores/useAuthStore';
   import { routeNames } from './router';
   import { useGardenSessionStore } from './stores/useGardenSessionStore';
 
-  const permaplannerStore = usePermaplannerStore();
   const auth = useAuthStore();
   const router = useRouter();
   const gardenSession = useGardenSessionStore();
 
   const { state, generateShareLink, revokeShare } = useGardenShares(
-    toRef(permaplannerStore, 'gardenId'),
+    toRef(gardenSession, 'gardenId'),
   );
 
   const formatShareDate = (iso: string): string => new Date(iso).toLocaleString();
@@ -40,8 +38,8 @@
   const copyGuildJson = async () => {
     state.value.error = undefined;
     try {
-      const gardenName = permaplannerStore.gardenName?.trim() || 'garden';
-      const text = buildGardenShareJsonText(gardenName, permaplannerStore.snapshot());
+      const gardenName = gardenSession.gardenName?.trim() || 'garden';
+      const text = buildGardenShareJsonText(gardenName, gardenSession.snapshot());
       await navigator.clipboard.writeText(text);
     } catch (e) {
       state.value.error = e instanceof Error ? e.message : 'Could not copy guild JSON';
@@ -51,7 +49,7 @@
   const logout = async () => {
     if (!gardenSession.confirmLeave()) return;
     await auth.logout();
-    await gardenSession.reset();
+    gardenSession.reset();
     await router.replace({ name: routeNames.login });
   };
 </script>
@@ -60,12 +58,12 @@
   <div class="flex flex-1 flex-col items-stretch gap-2">
     <PlanSaveStatus />
     <span
-      v-if="permaplannerStore.gardenName"
+      v-if="gardenSession.gardenName"
       class="text-xs text-ink-600 truncate"
-      >{{ permaplannerStore.gardenName }}</span
+      >{{ gardenSession.gardenName }}</span
     >
     <div class="grid grid-cols-2 gap-2">
-      <template v-if="permaplannerStore.gardenName">
+      <template v-if="gardenSession.gardenName">
         <button
           type="button"
           class="btn-soft-muted btn-soft-sm w-full p-1.5 text-sm text-ink-800"
@@ -97,7 +95,7 @@
         Import JSON
       </RouterLink>
     </div>
-    <template v-if="permaplannerStore.gardenName">
+    <template v-if="gardenSession.gardenName">
       <ul
         v-if="state.shares.length > 0"
         class="space-y-1"

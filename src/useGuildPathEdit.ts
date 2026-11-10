@@ -1,8 +1,10 @@
+import type { DeepReadonly } from 'vue';
 import { computed, ref, watch, type Ref } from 'vue';
 import { useEventListener, useMagicKeys } from '@vueuse/core';
 
 import { isEditableTarget } from './keyboardShortcuts';
 import {
+  cloneGuildPath,
   joinPaths,
   subtractPaths,
   smoothPath,
@@ -16,7 +18,7 @@ import { clientToSvgUser } from './svgClientToUser';
 
 export const useGuildPathEdit = (options: {
   svg: Ref<SVGSVGElement | undefined>;
-  guild: Ref<Guild | undefined>;
+  guild: Ref<DeepReadonly<Guild> | undefined>;
   onCommit: (guildId: string, path: GuildPath) => void;
   onCancel: () => void;
 }) => {
@@ -80,7 +82,7 @@ export const useGuildPathEdit = (options: {
     ([guildId, savedPath], _previous, onCleanup) => {
       session.cancel();
       stroke.value = [];
-      path.value = savedPath ? [...savedPath] : [];
+      path.value = savedPath ? cloneGuildPath(savedPath) : [];
       if (guildId === undefined || !savedPath) return;
 
       const editModeController = new AbortController();
@@ -111,7 +113,7 @@ export const useGuildPathEdit = (options: {
             e.preventDefault();
             editModeController.abort();
             session.cancel();
-            path.value = [...savedPath];
+            path.value = cloneGuildPath(savedPath);
             options.onCancel();
           }
 

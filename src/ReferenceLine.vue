@@ -1,16 +1,18 @@
 <script lang="ts" setup>
   import { computed, ref, watch } from 'vue';
   import { useMapScaleStore } from './useMapScaleStore';
+  import { useGardenSessionStore } from './stores/useGardenSessionStore';
   import { usePermaplannerStore } from './usePermaplannerStore';
   import { onboardingDuringScaleDrag } from './onboardingTypes';
   import { usePointerSession } from './usePointerSession';
   import { clientToSvgUser } from './svgClientToUser';
 
   const store = useMapScaleStore();
+  const gardenSession = useGardenSessionStore();
   const permaplanner = usePermaplannerStore();
   const draft = ref<{ endpoint: 'start' | 'end'; point: { x: number; y: number } }>();
   const session = usePointerSession();
-  watch(() => [store.start, store.end, permaplanner.gardenId], session.cancel, {
+  watch(() => [store.start, store.end, gardenSession.gardenId], session.cancel, {
     flush: 'sync',
   });
 

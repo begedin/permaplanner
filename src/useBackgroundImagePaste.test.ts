@@ -1,3 +1,5 @@
+import { useGardenSessionStore } from './stores/useGardenSessionStore';
+import { usePlanStateStore } from './usePlanStateStore';
 import { createPinia, setActivePinia } from 'pinia';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { effectScope } from 'vue';
@@ -5,7 +7,6 @@ import {
   MAX_BACKGROUND_IMAGE_BYTES,
   useBackgroundImagePaste,
 } from './useBackgroundImagePaste';
-import { usePermaplannerStore } from './usePermaplannerStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 
 const image = 'data:image/png;base64,aW1hZ2U=';
@@ -50,38 +51,49 @@ const pasteImage = (size = 5) => {
 it('commits pasted images through history and ignores reads from a disposed view', () => {
   pasteImage();
   finishRead();
-  expect(usePermaplannerStore().backgroundImageDataUrl).toBe(image);
+  expect(usePlanStateStore().state.backgroundImageDataUrl).toBe(image);
   usePlanCommandHistory().undo();
-  expect(usePermaplannerStore().backgroundImageDataUrl).toBeUndefined();
+  expect(usePlanStateStore().state.backgroundImageDataUrl).toBeUndefined();
   pasteImage();
   scope.stop();
   finishRead();
-  expect(usePermaplannerStore().backgroundImageDataUrl).toBeUndefined();
+  expect(usePlanStateStore().state.backgroundImageDataUrl).toBeUndefined();
 });
 
-it('discards a pending paste when the garden is replaced', async () => {
-  pasteImage();
-  await usePermaplannerStore().resetToNewPlan();
-  finishRead();
-  expect(usePermaplannerStore().backgroundImageDataUrl).toBeUndefined();
-  expect(usePlanCommandHistory().canUndo).toBe(false);
-});
+it.each(['reset', 'reload'] as const)(
+  'discards a pending paste on %s, even with an unchanged garden id',
+  (replacement) => {
+    const session = useGardenSessionStore();
+    session.hydrateFromDocument(session.snapshot(), { id: 'garden' });
+    pasteImage();
+    const finishStaleRead = finishRead;
+    if (replacement === 'reset') session.reset();
+    else session.hydrateFromDocument(session.snapshot(), { id: 'garden' });
+    finishStaleRead();
+    expect(usePlanStateStore().state.backgroundImageDataUrl).toBeUndefined();
+    expect(usePlanCommandHistory().canUndo).toBe(false);
+
+    pasteImage();
+    finishRead();
+    expect(usePlanStateStore().state.backgroundImageDataUrl).toBe(image);
+    expect(usePlanCommandHistory().canUndo).toBe(true);
+  },
+);
 
 it('rejects images above the limit before reading and accepts the exact limit', () => {
-  const store = usePermaplannerStore();
-  store.backgroundImageDataUrl = 'existing background';
+  usePlanStateStore().state.backgroundImageDataUrl = 'existing background';
   pasteImage(MAX_BACKGROUND_IMAGE_BYTES + 1);
   expect(FileReader.prototype.readAsDataURL).not.toHaveBeenCalled();
   expect(paste.errorMessage.value).toContain('3 MB or less');
-  expect(store.backgroundImageDataUrl).toBe('existing background');
+  expect(usePlanStateStore().state.backgroundImageDataUrl).toBe('existing background');
   expect(usePlanCommandHistory().canUndo).toBe(false);
 
   pasteImage(MAX_BACKGROUND_IMAGE_BYTES);
   finishRead();
   expect(paste.errorMessage.value).toBeUndefined();
-  expect(store.backgroundImageDataUrl).toBe(image);
+  expect(usePlanStateStore().state.backgroundImageDataUrl).toBe(image);
   usePlanCommandHistory().undo();
-  expect(store.backgroundImageDataUrl).toBe('existing background');
+  expect(usePlanStateStore().state.backgroundImageDataUrl).toBe('existing background');
 });
 
 it('cancels an earlier read when a newer paste exceeds the limit and clears errors on garden change', async () => {
@@ -89,9 +101,9 @@ it('cancels an earlier read when a newer paste exceeds the limit and clears erro
   const finishEarlierRead = finishRead;
   pasteImage(MAX_BACKGROUND_IMAGE_BYTES + 1);
   finishEarlierRead();
-  expect(usePermaplannerStore().backgroundImageDataUrl).toBeUndefined();
+  expect(usePlanStateStore().state.backgroundImageDataUrl).toBeUndefined();
   expect(paste.errorMessage.value).toContain('3 MB or less');
 
-  await usePermaplannerStore().resetToNewPlan();
+  await useGardenSessionStore().reset();
   expect(paste.errorMessage.value).toBeUndefined();
 });

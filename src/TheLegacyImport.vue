@@ -15,7 +15,7 @@
     actionError.value = undefined;
     try {
       const garden = await pickAndImportLocalFile();
-      await gardenSession.activateGardenRecord(garden);
+      gardenSession.activateGardenRecord(garden);
       await gardenSession.refreshList().catch(() => undefined);
       await router.replace({ name: routeNames.guilds });
     } catch (e) {

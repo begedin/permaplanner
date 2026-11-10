@@ -1,3 +1,4 @@
+import { usePlanStateStore } from '../usePlanStateStore';
 import { flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, expect, it, vi } from 'vitest';
@@ -56,13 +57,13 @@ it('preserves the active garden, history, and persisted selection when activatio
   const session = useGardenSessionStore();
   await session.activateGardenRecord(gardenRecord('g1'));
   usePlanCommandHistory().runMutation(() => {
-    usePermaplannerStore().backgroundOpacity = 0.7;
+    usePlanStateStore().state.backgroundOpacity = 0.7;
   });
   vi.mocked(gardensApi.fetchGarden).mockRejectedValueOnce(new Error('Network error'));
 
   await expect(session.activateGarden('g2')).rejects.toThrow('Network error');
 
-  expect(usePermaplannerStore()).toMatchObject({
+  expect({ ...usePermaplannerStore(), ...session }).toMatchObject({
     gardenId: 'g1',
     backgroundOpacity: 0.7,
   });
@@ -85,7 +86,7 @@ it('ignores an activation response superseded by a newer request', async () => {
   firstResponse.resolve(gardenRecord('g1', 1));
   await first;
 
-  expect(usePermaplannerStore()).toMatchObject({
+  expect({ ...usePermaplannerStore(), ...session }).toMatchObject({
     gardenId: 'g2',
     gardenName: 'Garden g2',
     syncRevision: 2,
@@ -96,7 +97,7 @@ it('ignores an activation response superseded by a newer request', async () => {
 it('ignores save completion after another garden becomes active', async () => {
   const session = useGardenSessionStore();
   await session.activateGardenRecord(gardenRecord('g1'));
-  usePermaplannerStore().backgroundOpacity = 0.7;
+  usePlanStateStore().state.backgroundOpacity = 0.7;
   const response = deferred<number>();
   vi.mocked(gardensApi.updateGarden).mockReturnValueOnce(response.promise);
 
@@ -106,7 +107,7 @@ it('ignores save completion after another garden becomes active', async () => {
   response.resolve(99);
   await pendingSave;
 
-  expect(usePermaplannerStore()).toMatchObject({
+  expect({ ...usePermaplannerStore(), ...session }).toMatchObject({
     gardenId: 'g2',
     syncRevision: 4,
     backgroundOpacity: 0.4,
@@ -117,7 +118,7 @@ it('ignores save completion after another garden becomes active', async () => {
 it('ignores save completion after the session is reset', async () => {
   const session = useGardenSessionStore();
   await session.activateGardenRecord(gardenRecord('g1'));
-  usePermaplannerStore().backgroundOpacity = 0.7;
+  usePlanStateStore().state.backgroundOpacity = 0.7;
   const response = deferred<number>();
   vi.mocked(gardensApi.updateGarden).mockReturnValueOnce(response.promise);
 
@@ -127,7 +128,7 @@ it('ignores save completion after the session is reset', async () => {
   response.reject(new Error('Late failure'));
   await pendingSave;
 
-  expect(usePermaplannerStore()).toMatchObject({
+  expect({ ...usePermaplannerStore(), ...session }).toMatchObject({
     gardenId: undefined,
     syncRevision: 0,
     backgroundOpacity: 0.4,
@@ -163,7 +164,7 @@ it('keeps a created garden active when refreshing the list fails', async () => {
 
   await useGardenSessionStore().createEmptyGarden('Created');
 
-  expect(usePermaplannerStore()).toMatchObject({
+  expect({ ...usePermaplannerStore(), ...useGardenSessionStore() }).toMatchObject({
     gardenId: 'created',
     gardenName: 'Garden created',
   });
@@ -190,7 +191,7 @@ it('finishes bootstrap when activation supersedes its pending request', async ()
   response.resolve([]);
   await bootstrap;
   expect(session.isBootstrapping).toBe(false);
-  expect(usePermaplannerStore().gardenId).toBe('imported');
+  expect(useGardenSessionStore().gardenId).toBe('imported');
 });
 
 it('does not let a previous account finish the new bootstrap', async () => {
