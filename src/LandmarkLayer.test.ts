@@ -1,3 +1,4 @@
+import { rectangleLandmarkPath } from './landmarkGeometry';
 import { createPinia, setActivePinia } from 'pinia';
 import { mount } from '@vue/test-utils';
 import { defineComponent, nextTick, ref } from 'vue';
@@ -14,6 +15,7 @@ const landmark = {
   width: 40,
   height: 20,
   rotation: 0,
+  path: rectangleLandmarkPath(),
 };
 
 beforeEach(() => {
@@ -33,7 +35,7 @@ const renderLayer = () =>
         const store = useLandmarkStore();
         const selectedId = ref(store.landmarks[0]?.id);
         const controlsTarget = ref<SVGGElement>();
-        const tool = ref(store.landmarks.length ? 'select' : 'landmark');
+        const tool = ref('select');
         const commit = (landmark: import('./gardenDocument').Landmark) => {
           store.save(landmark);
           selectedId.value = landmark.id;
@@ -42,7 +44,7 @@ const renderLayer = () =>
         return { store, selectedId, tool, commit, controlsTarget };
       },
       template:
-        '<svg><LandmarkLayer :width="1000" :height="800" :landmarks="store.landmarks" :selected-id="selectedId" :tool="tool" :controls-target="controlsTarget" @select="selectedId = $event" @commit="commit" /><g ref="controlsTarget" role="group" aria-label="Landmark controls" /></svg>',
+        '<svg><LandmarkLayer :landmarks="store.landmarks" :selected-id="selectedId" :tool="tool" :controls-target="controlsTarget" @select="selectedId = $event" @commit="commit" /><g ref="controlsTarget" role="group" aria-label="Landmark controls" /></svg>',
     }),
   );
 const pointer = (target: EventTarget, type: string, x: number, y: number) => {
@@ -57,35 +59,14 @@ const pointer = (target: EventTarget, type: string, x: number, y: number) => {
   target.dispatchEvent(event);
 };
 
-it('draws in map coordinates, then moves, rotates and resizes with one undo step per gesture', async () => {
-  const wrapper = renderLayer();
+it('moves, rotates and resizes with one undo step per gesture', async () => {
   const store = useLandmarkStore();
+  store.save(landmark);
+  const wrapper = renderLayer();
   const history = usePlanCommandHistory();
-  pointer(
-    wrapper.get('[aria-label="Draw landmark rectangle"]').element,
-    'pointerdown',
-    40,
-    60,
-  );
-  pointer(document, 'pointermove', 120, 100);
-  expect(store.landmarks).toEqual([]);
-  pointer(document, 'pointerup', 120, 100);
-  await nextTick();
-  expect(store.landmarks[0]).toMatchObject({
-    x: 30,
-    y: 20,
-    width: 40,
-    height: 20,
-    rotation: 0,
-  });
   const original = { ...store.landmarks[0]! };
 
-  pointer(
-    wrapper.get('[aria-label="Landmark: Landmark"]').element,
-    'pointerdown',
-    80,
-    80,
-  );
+  pointer(wrapper.get('[aria-label="Landmark: Shed"]').element, 'pointerdown', 80, 80);
   pointer(document, 'pointerup', 100, 100);
   await nextTick();
   expect(store.landmarks[0]).toMatchObject({ x: 40, y: 30, width: 40, height: 20 });
@@ -181,27 +162,22 @@ it('rotates through the controls overlay when another landmark covers the handle
 });
 
 it.each(['Escape', 'pointercancel', 'unmount', 'tool change'])(
-  'discards unfinished drawing on %s',
+  'discards unfinished moves on %s',
   async (reason) => {
+    useLandmarkStore().save(landmark);
     const wrapper = renderLayer();
-    pointer(
-      wrapper.get('[aria-label="Draw landmark rectangle"]').element,
-      'pointerdown',
-      40,
-      60,
-    );
+    pointer(wrapper.get('[aria-label="Landmark: Shed"]').element, 'pointerdown', 40, 60);
     pointer(document, 'pointermove', 120, 100);
     if (reason === 'Escape')
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     if (reason === 'pointercancel') pointer(document, 'pointercancel', 120, 100);
     if (reason === 'unmount') wrapper.unmount();
     if (reason === 'tool change') {
-      wrapper.vm.tool = 'select';
+      wrapper.vm.tool = 'draw';
       await nextTick();
     }
     pointer(document, 'pointerup', 120, 100);
-    expect(useLandmarkStore().landmarks).toEqual([]);
-    expect(usePlanCommandHistory().canUndo).toBe(false);
+    expect(useLandmarkStore().landmarks).toEqual([landmark]);
     if (reason !== 'unmount') wrapper.unmount();
   },
 );

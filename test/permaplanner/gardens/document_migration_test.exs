@@ -22,6 +22,13 @@ defmodule Permaplanner.Gardens.DocumentMigrationTest do
     __DIR__
   )
 
+  @feature_migration Permaplanner.Repo.Migrations.UnifyFeaturePaths
+  @feature_version 20_261_110_160_055
+  Code.require_file(
+    "../../../priv/repo/migrations/20261110160055_unify_feature_paths.exs",
+    __DIR__
+  )
+
   setup do
     # An isolated schema exercises the real migration with separate transactions,
     # without rolling back or rewriting any application test data.
@@ -243,5 +250,57 @@ defmodule Permaplanner.Gardens.DocumentMigrationTest do
     assert Repo.query!(
              "SELECT id, document, file_version, sync_revision, updated_at FROM #{schema}.gardens ORDER BY id"
            ).rows == before
+  end
+
+  test "converts feature geometry while preserving transforms, revisions and metadata", %{
+    schema: schema,
+    document: document,
+    timestamp: timestamp
+  } do
+    border = [%{"x" => 0, "y" => 0}, %{"x" => 100, "y" => 0}, %{"x" => 50, "y" => 80}]
+
+    landmark = %{
+      "id" => "shed",
+      "name" => "Shed",
+      "x" => 100,
+      "y" => 50,
+      "width" => 80,
+      "height" => 40,
+      "rotation" => 35
+    }
+
+    old =
+      document
+      |> Map.put("version", 8)
+      |> Map.put("landmarks", [landmark])
+      |> Map.put("plotBorder", border)
+
+    from(g in "gardens", where: g.id == "garden")
+    |> Repo.update_all([set: [document: old, file_version: 8]], prefix: schema)
+
+    assert :ok =
+             Ecto.Migrator.up(Repo, @feature_version, @feature_migration,
+               prefix: schema,
+               log: false
+             )
+
+    rectangle =
+      Enum.map([{-0.5, -0.5}, {0.5, -0.5}, {0.5, 0.5}, {-0.5, 0.5}, {-0.5, -0.5}], fn {x, y} ->
+        %{"x" => x, "y" => y}
+      end)
+
+    expected =
+      old
+      |> Map.put("version", 9)
+      |> Map.put("landmarks", [Map.put(landmark, "path", [[rectangle]])])
+      |> Map.put("plotBorder", [[border ++ [hd(border)]]])
+
+    assert [%{document: ^expected, file_version: 9, sync_revision: 3, updated_at: ^timestamp}] =
+             Repo.all(
+               from(g in "gardens",
+                 select: map(g, [:document, :file_version, :sync_revision, :updated_at])
+               ),
+               prefix: schema
+             )
   end
 end

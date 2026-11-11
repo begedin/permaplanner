@@ -1,3 +1,4 @@
+import { rectangleLandmarkPath } from '../landmarkGeometry';
 import { convertLegacyGuildPath } from './guildPath';
 import * as gardensApi from '../api/gardens';
 
@@ -94,6 +95,24 @@ export const importGardenDocument = async (
         ...guild,
         path: convertLegacyGuildPath(guild.path),
       })),
+    };
+  }
+  if (
+    document &&
+    typeof document === 'object' &&
+    'version' in document &&
+    document.version === 8
+  ) {
+    const old = document as Record<string, unknown>;
+    const border = records(old.plotBorder);
+    document = {
+      ...old,
+      version: 9,
+      landmarks: records(old.landmarks).map((landmark) => ({
+        ...landmark,
+        path: rectangleLandmarkPath(),
+      })),
+      plotBorder: border.length ? [[[...border, { ...border[0] }]]] : [],
     };
   }
   return gardensApi.importGardenDocument({ document, name: opts?.name });

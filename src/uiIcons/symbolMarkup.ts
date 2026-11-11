@@ -6,6 +6,13 @@ export const UI_ICON_SYMBOL_INNER: Record<UiIconId, string> = {
     <path d="M10 14 L19 10 L29 14 L38 10 L38 34 L29 38 L19 34 L10 38 Z" />
     <path d="M19 10 L19 34 M29 14 L29 38" />
   `,
+  landmark: `
+    <path d="M8 23 L24 9 L40 23 M13 19 L13 39 L35 39 L35 19" />
+    <path d="M21 39 L21 28 L28 28 L28 39" />
+  `,
+  'plot-border': `
+    <path d="M10 10 L38 10 L38 38 L10 38 Z" stroke-dasharray="5 4" />
+  `,
   plants: `
     <path d="M24 38 L24 24" />
     <path d="M24 28 C12 28 10 20 10 14 C20 14 24 20 24 28 Z" />

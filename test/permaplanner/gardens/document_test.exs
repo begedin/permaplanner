@@ -12,7 +12,17 @@ defmodule Permaplanner.Gardens.DocumentTest do
       "y" => 0,
       "width" => 10,
       "height" => 10,
-      "rotation" => 0
+      "rotation" => 0,
+      "path" => [
+        [
+          [
+            %{"x" => -0.5, "y" => -0.5},
+            %{"x" => 0.5, "y" => -0.5},
+            %{"x" => 0.5, "y" => 0.5},
+            %{"x" => -0.5, "y" => -0.5}
+          ]
+        ]
+      ]
     }
 
     document =
@@ -87,7 +97,11 @@ defmodule Permaplanner.Gardens.DocumentTest do
   test "plot borders may be absent or have nonzero area in either winding direction" do
     triangle = [%{"x" => 10, "y" => 10}, %{"x" => 110, "y" => 10}, %{"x" => 110, "y" => 110}]
 
-    for points <- [[], triangle, Enum.reverse(triangle)] do
+    for points <- [
+          [],
+          [[triangle ++ [hd(triangle)]]],
+          [[Enum.reverse(triangle) ++ [List.last(triangle)]]]
+        ] do
       document = Map.put(Gardens.default_document(), "plotBorder", points)
       assert {:ok, ^document, :unchanged} = Document.prepare(document)
     end

@@ -13,6 +13,7 @@ export const useMapInteraction = () => {
   useAerialToolHotkeys({
     canUseGuildTools: refs.canUseGuildTools,
     setTool: interaction.setTool,
+    setBrush: interaction.setBrush,
   });
   useEventListener(
     window,
@@ -42,6 +43,8 @@ export const useMapInteraction = () => {
   );
   return {
     ...refs,
+    commitDrawing: interaction.commitDrawing,
+    setFeature: interaction.setFeature,
     selectGuild: interaction.selectGuild,
     selectLandmark: interaction.selectLandmark,
     commitLandmark: interaction.commitLandmark,
@@ -50,5 +53,6 @@ export const useMapInteraction = () => {
     clearSelection: interaction.clearSelection,
     removeSelection: interaction.removeSelection,
     setTool: interaction.setTool,
+    setBrush: interaction.setBrush,
   };
 };

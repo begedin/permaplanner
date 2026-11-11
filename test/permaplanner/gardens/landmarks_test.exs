@@ -14,10 +14,30 @@ defmodule Permaplanner.Gardens.LandmarksTest do
       "y" => 50,
       "width" => 80,
       "height" => 40,
-      "rotation" => 35
+      "rotation" => 35,
+      "path" => [
+        [
+          [
+            %{"x" => -0.5, "y" => -0.5},
+            %{"x" => 0.5, "y" => -0.5},
+            %{"x" => 0.5, "y" => 0.5},
+            %{"x" => -0.5, "y" => -0.5}
+          ]
+        ]
+      ]
     }
 
-    border = [%{"x" => 0, "y" => 0}, %{"x" => 200, "y" => 0}, %{"x" => 100, "y" => 150}]
+    border = [
+      [
+        [
+          %{"x" => 0, "y" => 0},
+          %{"x" => 200, "y" => 0},
+          %{"x" => 100, "y" => 150},
+          %{"x" => 0, "y" => 0}
+        ]
+      ]
+    ]
+
     assert Gardens.default_document()["plotBorder"] == []
 
     document =
@@ -41,7 +61,10 @@ defmodule Permaplanner.Gardens.LandmarksTest do
                 landmarks: [^landmark],
                 plotBorder: ^border,
                 mapScale: %{"unit" => "ft"},
-                coordinateSystem: %{landmarkPosition: "rectangle centre", north: "unknown"}
+                coordinateSystem: %{
+                  landmarkPosition: "path bounding-box centre",
+                  north: "unknown"
+                }
               }} =
                Tools.call(user, tool, args)
     end

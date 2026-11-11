@@ -21,7 +21,10 @@ defmodule Permaplanner.Gardens.Snapshot do
       plotBorder: garden.document["plotBorder"],
       coordinateSystem: %{
         axes: "x right, y down",
-        landmarkPosition: "rectangle centre",
+        landmarkPosition: "path bounding-box centre",
+        landmarkPath:
+          "local coordinates scaled by width/height, then rotated and translated by x/y",
+        featurePaths: "polygons containing an exterior ring followed by hole rings",
         landmarkRotation: "clockwise degrees",
         dimensions:
           "map coordinates; divide by scale-line coordinate length and multiply by linePhysicalLength to get physical units",

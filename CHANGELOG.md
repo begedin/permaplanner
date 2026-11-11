@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+## 0.33.0
+
+- [CHANGE] Separate map features from path, polygon, and bounding-box brushes; all three brushes work for guilds, landmarks, and the plot border.
+- [CHANGE] Hold Shift to lock path strokes to the nearest horizontal or vertical axis.
+- [CHANGE] Save all feature outlines as paths in document version 9, preserving old shapes through database and local-file conversion.
+
+- [CHANGE] Show icons alongside the guild, landmark, and plot-border labels.
+- [FIX] Apply pending local database migrations during dev startup so existing landmarks load correctly.
+
 ## 0.32.1
 
 - [DB] Added Bluebeard (Caryopteris × clandonensis) to the catalog, with Heavenly Blue, Dark Knight, and Worcester Gold cultivars.

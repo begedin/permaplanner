@@ -1,5 +1,9 @@
 # Agent notes (permaplanner)
 
+## Browser validation
+
+Before completing application changes, run the app in a browser and exercise the affected user flows. Check the browser console for warnings and errors. Changes must introduce neither; fix any new warnings or errors before considering the work complete. Passing unit tests and type checks alone is not sufficient. For saved-data changes, apply pending local migrations and verify an existing garden as well as newly created data. Report what was checked and any browser validation that could not be completed.
+
 ## Plan file format & migrations
 
 Persisted garden data uses a **`version`** field (Postgres garden `document` and downloadable / importable `.json`).

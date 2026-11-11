@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { guildPathData } from './guildPathClip';
+  import DrawingOverlay from './DrawingOverlay.vue';
   import PlotBorderLayer from './PlotBorderLayer.vue';
   import { usePlotBorderStore } from './usePlotBorderStore';
   import LandmarkLayer from './LandmarkLayer.vue';
@@ -12,7 +12,7 @@
   import ToolSlider from './ToolSlider.vue';
   import GuildEditor from './GuildEditor.vue';
   import GardenGuild from './GardenGuild.vue';
-  import { useGuildPathEdit } from './useGuildPathEdit';
+  import { usePathDrawing } from './usePathDrawing';
   import { useGardenStore } from './useGardenStore';
   import { useCameraStore } from './useCameraStore';
   import { useMapScaleStore } from './useMapScaleStore';
@@ -145,6 +145,13 @@
     clearSelection,
     removeSelection,
     activeTool,
+    drawing,
+    drawingPath,
+    commitDrawing,
+    feature,
+    drawingBrush,
+    setFeature,
+    setBrush,
     setTool,
     canUseGuildTools,
   } = useMapInteraction();
@@ -177,24 +184,22 @@
     return g;
   });
 
-  const editingGuild = computed(() =>
-    activeTool.value === 'edit'
-      ? garden.guilds.find((guild) => guild.id === selectedGuildId.value)
-      : undefined,
+  const editingGuildId = computed(() =>
+    drawing.value?.target.feature === 'guild' ? drawing.value.target.id : undefined,
   );
   const {
     path: brushPath,
+    corners,
+    pointer,
     brush,
     stroke,
     brushColor,
     strokeColor,
-  } = useGuildPathEdit({
+  } = usePathDrawing({
     svg: container,
-    guild: editingGuild,
-    onCommit: (id, path) => {
-      garden.setGuildPath(id, path);
-      clearSelection();
-    },
+    savedPath: drawingPath,
+    drawingBrush,
+    onCommit: commitDrawing,
     onCancel: clearSelection,
   });
 </script>
@@ -280,29 +285,35 @@
           <div class="pointer-events-none absolute top-2 right-2 z-10">
             <AerialMapToolbar
               :active-tool="activeTool"
+              :feature="feature"
+              :drawing-brush="drawingBrush"
+              @update:feature="setFeature"
+              @update:drawing-brush="setBrush"
               :can-use-guild-tools="canUseGuildTools"
               @update:active-tool="setTool"
             />
           </div>
-          <p
-            v-if="activeTool === 'landmark'"
-            class="paper-floating pointer-events-none absolute top-16 right-2 z-10 max-w-[calc(100%-1rem)] px-3 py-2 text-sm text-ink-700"
-          >
-            Drag to draw a landmark rectangle. Escape cancels.
-          </p>
           <div
-            v-if="activeTool === 'border' || isBorderSelected"
-            class="paper-floating absolute top-16 right-2 z-10 max-w-[calc(100%-1rem)] px-3 py-2 text-sm text-ink-700"
+            v-if="drawing"
+            class="paper-floating absolute top-28 right-2 z-10 max-w-[calc(100%-1rem)] px-3 py-2 text-sm text-ink-700 pointer-events-none"
           >
-            <p v-if="plotBorder.points.length">
-              Drag corners to adjust the plot border. Escape finishes editing.
+            <p v-if="drawingBrush === 'path'">
+              Drag to paint. Hold Shift to lock an axis; ⌘ to subtract. +/− changes brush
+              size.
             </p>
-            <p v-else>
-              Click to add corners. Click the first corner or press Enter to close.
-              Backspace removes a corner; Escape cancels.
+            <p v-else-if="drawingBrush === 'polygon'">
+              Click to add corners. Backspace removes a corner; click the first corner to
+              finish.
             </p>
+            <p v-else>Drag to draw a bounding box.</p>
+            <p>Enter saves; Escape cancels.</p>
+          </div>
+          <div
+            v-else-if="isBorderSelected"
+            class="paper-floating absolute top-28 right-2 z-10 px-3 py-2 text-sm"
+          >
+            <p>Drag corners to adjust the plot border.</p>
             <button
-              v-if="plotBorder.points.length"
               type="button"
               class="btn-soft mt-2"
               @click="removeSelection"
@@ -392,14 +403,6 @@
               fill="url(#grid)"
               class="pointer-events-none"
             />
-            <path
-              v-if="editingGuild"
-              :d="guildPathData(stroke.length ? stroke : [[brush]])"
-              fill-rule="evenodd"
-              :fill="stroke.length ? strokeColor : brushColor"
-              class="pointer-events-none"
-              data-guild-brush
-            />
             <GardenGuild
               v-for="guild in placedGuildsRenderOrder"
               :key="guild.id"
@@ -413,7 +416,7 @@
               @mouseenter="hoveredId = guild.id"
               @mouseleave="clearHover()"
               @move="garden.setGuildPath(guild.id, $event)"
-              :preview-path="editingGuild?.id === guild.id ? brushPath : undefined"
+              :preview-path="editingGuildId === guild.id ? brushPath : undefined"
             ></GardenGuild>
 
             <GardenGuild
@@ -424,29 +427,41 @@
               :tool="activeTool"
               hovered
               selected
-              :preview-path="editingGuild ? brushPath : undefined"
+              :preview-path="editingGuildId ? brushPath : undefined"
             />
 
             <LandmarkLayer
               :landmarks="landmarks.landmarks"
+              :preview-path="
+                drawing?.target.feature === 'landmark' ? brushPath : undefined
+              "
               :controls-target="landmarkControls"
               :selected-id="selectedLandmark?.id"
               :tool="activeTool"
               @select="selectLandmark"
               @commit="commitLandmark"
               :show-labels="showLandmarkLabels"
-              :width="worldBounds.width"
-              :height="worldBounds.height"
             />
             <PlotBorderLayer
               :key="session.gardenId"
-              :points="plotBorder.points"
+              :path="plotBorder.path"
+              :preview-path="drawing?.target.feature === 'border' ? brushPath : undefined"
               :selected="isBorderSelected"
               :tool="activeTool"
-              :width="worldBounds.width"
-              :height="worldBounds.height"
               @select="selectBorder"
               @commit="commitBorder"
+            />
+            <DrawingOverlay
+              v-if="drawing"
+              :width="worldBounds.width"
+              :height="worldBounds.height"
+              :stroke="stroke"
+              :brush="brush"
+              :corners="corners"
+              :pointer="pointer"
+              :drawing-brush="drawingBrush"
+              :stroke-color="strokeColor"
+              :brush-color="brushColor"
             />
             <ReferenceLine v-slot="{ onboardingState }">
               <OnboardingText

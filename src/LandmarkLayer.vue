@@ -1,6 +1,6 @@
 <script setup lang="ts">
+  import { guildPathData, type GuildPath } from './guildPathClip';
   import { computed, ref, watch } from 'vue';
-  import { v4 as uuid } from 'uuid';
   import { useCameraStore } from './useCameraStore';
   import { transformClientPoint } from './svgClientToUser';
   import { usePointerSession } from './usePointerSession';
@@ -14,9 +14,8 @@
 
   const props = withDefaults(
     defineProps<{
-      width: number;
-      height: number;
       showLabels?: boolean;
+      previewPath?: GuildPath;
       landmarks: readonly Landmark[];
       selectedId?: string;
       controlsTarget?: SVGGElement;
@@ -47,8 +46,7 @@
   watch(() => [props.tool, props.landmarks], session.cancel, { flush: 'sync' });
 
   const start = (event: PointerEvent, gesture: LandmarkGesture) => {
-    if (event.button !== 0 || (props.tool !== 'select' && props.tool !== 'landmark'))
-      return;
+    if (event.button !== 0 || props.tool !== 'select') return;
     const svg = (event.currentTarget as SVGElement).closest('svg');
     if (!(svg instanceof SVGSVGElement)) return;
     session.cancel();
@@ -58,11 +56,8 @@
     const toMapPoint = (event: PointerEvent) =>
       transformClientPoint(matrix, event.clientX, event.clientY);
     const origin = toMapPoint(event);
-    // Snapshot the rectangle; the preview must never mutate the saved object.
-    if (gesture.kind !== 'draw') {
-      gesture = { ...gesture, landmark: { ...gesture.landmark } };
-      emit('select', gesture.landmark.id);
-    }
+    gesture = { ...gesture, landmark: { ...gesture.landmark } };
+    emit('select', gesture.landmark.id);
     session.start(event, {
       update: (next) => {
         draft.value = landmarkAtPointer(
@@ -88,7 +83,7 @@
   <g
     style="touch-action: none"
     :style="{
-      pointerEvents: tool === 'select' || tool === 'landmark' ? 'auto' : 'none',
+      pointerEvents: tool === 'select' ? 'auto' : 'none',
     }"
   >
     <g
@@ -96,11 +91,17 @@
       :key="item.id"
       :transform="`translate(${item.x} ${item.y}) rotate(${item.rotation})`"
     >
-      <rect
-        :x="-item.width / 2"
-        :y="-item.height / 2"
-        :width="item.width"
-        :height="item.height"
+      <path
+        :d="
+          guildPathData(
+            item.path.map((polygon) =>
+              polygon.map((ring) =>
+                ring.map((p) => ({ x: p.x * item.width, y: p.y * item.height })),
+              ),
+            ),
+          )
+        "
+        fill-rule="evenodd"
         fill="#a98b6833"
         :stroke="selectedId === item.id ? '#315b45' : '#806344'"
         stroke-width="2"
@@ -128,18 +129,15 @@
         >{{ item.name }}</text
       >
     </g>
-    <rect
-      v-if="tool === 'landmark'"
-      x="0"
-      y="0"
-      :width="width"
-      :height="height"
-      fill="transparent"
-      class="cursor-crosshair"
-      style="touch-action: none"
-      aria-label="Draw landmark rectangle"
-      @pointerdown="start($event, { kind: 'draw', id: uuid() })"
-      @mousedown.stop
+    <path
+      v-if="previewPath?.length"
+      :d="guildPathData(previewPath)"
+      fill="#a98b6833"
+      stroke="#806344"
+      stroke-width="2"
+      vector-effect="non-scaling-stroke"
+      fill-rule="evenodd"
+      pointer-events="none"
     />
     <Teleport
       v-if="selectedLandmark"

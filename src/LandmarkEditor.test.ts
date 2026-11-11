@@ -1,3 +1,4 @@
+import { rectangleLandmarkPath } from './landmarkGeometry';
 import { createPinia, setActivePinia } from 'pinia';
 import { render, fireEvent, cleanup, waitFor } from '@testing-library/vue';
 import { beforeEach, afterEach, expect, it } from 'vitest';
@@ -19,6 +20,7 @@ it('names, rotates and deletes a landmark with undo', async () => {
     width: 130,
     height: 260,
     rotation: 0,
+    path: rectangleLandmarkPath(),
   });
   const view = render(
     defineComponent({

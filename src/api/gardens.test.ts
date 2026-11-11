@@ -279,3 +279,49 @@ it.each(legacyBoundaryCases)(
     expect(JSON.parse(buildLocalPlanJsonText(converted))).toEqual(converted);
   },
 );
+
+it('converts version 8 rectangles and borders without changing their placement or metadata', async () => {
+  const landmark = {
+    id: 'shed',
+    name: 'Shed',
+    x: 100,
+    y: 50,
+    width: 80,
+    height: 40,
+    rotation: 35,
+  };
+  const border = [
+    { x: 0, y: 0 },
+    { x: 100, y: 0 },
+    { x: 50, y: 80 },
+  ];
+  const old = { ...document, version: 8, landmarks: [landmark], plotBorder: border };
+  const before = structuredClone(old);
+  fetchMock.mockResolvedValueOnce(
+    new Response(JSON.stringify({ garden: { id: 'garden1' } })),
+  );
+  await importLocalDocument(old);
+  const converted = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)).document;
+  expect(converted).toEqual({
+    ...document,
+    landmarks: [
+      {
+        ...landmark,
+        path: [
+          [
+            [
+              { x: -0.5, y: -0.5 },
+              { x: 0.5, y: -0.5 },
+              { x: 0.5, y: 0.5 },
+              { x: -0.5, y: 0.5 },
+              { x: -0.5, y: -0.5 },
+            ],
+          ],
+        ],
+      },
+    ],
+    plotBorder: [[[...border, border[0]]]],
+  });
+  expect(old).toEqual(before);
+  expect(JSON.parse(buildLocalPlanJsonText(converted))).toEqual(converted);
+});

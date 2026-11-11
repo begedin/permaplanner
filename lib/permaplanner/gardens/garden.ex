@@ -9,7 +9,7 @@ defmodule Permaplanner.Gardens.Garden do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
-  @current_file_version 8
+  @current_file_version 9
 
   schema "gardens" do
     field(:name, :string)

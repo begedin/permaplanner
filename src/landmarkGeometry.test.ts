@@ -1,3 +1,4 @@
+import { landmarkFromPath, rectangleLandmarkPath } from './landmarkGeometry';
 import { expect, it } from 'vitest';
 import { landmarkAtPointer, LANDMARK_RESIZE_HANDLES } from './landmarkGeometry';
 
@@ -9,6 +10,7 @@ const house = {
   width: 80,
   height: 60,
   rotation: 0,
+  path: rectangleLandmarkPath(),
 };
 
 it.each([
@@ -49,21 +51,34 @@ it('resizes in local axes without moving the opposite rotated edge', () => {
   });
 });
 
-it('draws a positive rectangle when the pointer travels up and left', () => {
-  expect(
-    landmarkAtPointer(
-      { kind: 'draw', id: 'new' },
-      { x: 100, y: 100 },
-      { x: 40, y: 20 },
-      7,
-    ),
-  ).toEqual({
+it('normalizes an arbitrary landmark path without changing its map bounds', () => {
+  const path = [
+    [
+      [
+        { x: 40, y: 20 },
+        { x: 100, y: 20 },
+        { x: 100, y: 100 },
+        { x: 40, y: 20 },
+      ],
+    ],
+  ];
+  const result = landmarkFromPath('new', path);
+  expect(result).toMatchObject({
     id: 'new',
-    name: 'Landmark',
     x: 70,
     y: 60,
     width: 60,
     height: 80,
     rotation: 0,
   });
+  expect(
+    result.path.map((polygon) =>
+      polygon.map((ring) =>
+        ring.map((p) => ({
+          x: result.x + p.x * result.width,
+          y: result.y + p.y * result.height,
+        })),
+      ),
+    ),
+  ).toEqual(path);
 });

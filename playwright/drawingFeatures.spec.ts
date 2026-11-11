@@ -30,8 +30,8 @@ const selectGuildAndEditBrush = async (page: Page, articleIndex: number) => {
     .getByRole('article', { name: 'New guild' })
     .nth(articleIndex)
     .click();
-  await page.getByRole('button', { name: 'Edit brush (B)' }).click();
-  await expect(page.getByRole('button', { name: 'Edit brush (B)' })).toHaveAttribute(
+  await page.getByRole('button', { name: 'Path brush (B)' }).click();
+  await expect(page.getByRole('button', { name: 'Path brush (B)' })).toHaveAttribute(
     'aria-pressed',
     'true',
   );

@@ -110,3 +110,6 @@ if ! db_exists "$DEV_DB" || ! db_exists "$TEST_DB"; then
   mix ecto.setup
   MIX_ENV=test mix ecto.setup
 fi
+
+# Existing databases also need new migrations before the app reads their documents.
+mix ecto.migrate

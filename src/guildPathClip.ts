@@ -25,7 +25,7 @@ export const subtractPaths = (a: GuildPath, b: GuildPath): GuildPath =>
     ? fromMultiPolygon(clipping.difference(toMultiPolygon(a), toMultiPolygon(b)))
     : [];
 
-export const guildPathData = (path: GuildPath): string =>
+export const guildPathData = (path: DeepReadonly<GuildPath>): string =>
   path
     .flat()
     .map((ring) =>

@@ -2,11 +2,19 @@ import type { Ref } from 'vue';
 import { useEventListener } from '@vueuse/core';
 import { isEditableTarget } from './keyboardShortcuts';
 
-export type AerialTool = 'select' | 'edit' | 'move' | 'landmark' | 'border';
+export type DrawingBrush = 'path' | 'polygon' | 'rectangle';
+export type MapFeature = 'guild' | 'landmark' | 'border';
+
+export type AerialTool = 'select' | 'draw' | 'move';
+export type DrawingTarget =
+  | { feature: 'guild'; id: string }
+  | { feature: 'landmark' | 'border' };
+export type DrawingSession = { target: DrawingTarget; brush: DrawingBrush };
 
 export const useAerialToolHotkeys = (options: {
   canUseGuildTools: Ref<boolean>;
   setTool: (tool: AerialTool) => void;
+  setBrush: (brush: DrawingBrush) => void;
 }) => {
   useEventListener(document, 'keydown', (e) => {
     if (isEditableTarget(e.target)) {
@@ -19,12 +27,12 @@ export const useAerialToolHotkeys = (options: {
     const key = e.key.toLowerCase();
     if (key === 'p') {
       e.preventDefault();
-      options.setTool('border');
+      options.setBrush('polygon');
       return;
     }
     if (key === 'r') {
       e.preventDefault();
-      options.setTool('landmark');
+      options.setBrush('rectangle');
       return;
     }
     if (key === 'v') {
@@ -32,9 +40,9 @@ export const useAerialToolHotkeys = (options: {
       options.setTool('select');
       return;
     }
-    if (key === 'b' && options.canUseGuildTools.value) {
+    if (key === 'b') {
       e.preventDefault();
-      options.setTool('edit');
+      options.setBrush('path');
       return;
     }
     if (key === 'm' && options.canUseGuildTools.value) {

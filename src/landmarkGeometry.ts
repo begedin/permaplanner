@@ -1,9 +1,10 @@
+import { pathBounds } from './guildPathBounds';
+import type { GuildPath } from './guildPathClip';
 import type { Landmark } from './gardenDocument';
 import type { PathPoint } from './guildPathClip';
 
 type ResizeDirection = { x: -1 | 0 | 1; y: -1 | 0 | 1 };
 export type LandmarkGesture =
-  | { kind: 'draw'; id: string }
   | { kind: 'move'; landmark: Landmark }
   | { kind: 'rotate'; landmark: Landmark }
   | { kind: 'resize'; landmark: Landmark; direction: ResizeDirection };
@@ -27,17 +28,6 @@ export const landmarkAtPointer = (
 ): Landmark => {
   const dx = point.x - origin.x;
   const dy = point.y - origin.y;
-  if (gesture.kind === 'draw') {
-    return {
-      id: gesture.id,
-      name: 'Landmark',
-      rotation: 0,
-      x: (origin.x + point.x) / 2,
-      y: (origin.y + point.y) / 2,
-      width: Math.abs(dx),
-      height: Math.abs(dy),
-    };
-  }
   const original = gesture.landmark;
   if (gesture.kind === 'move')
     return { ...original, x: original.x + dx, y: original.y + dy };
@@ -71,5 +61,40 @@ export const landmarkAtPointer = (
     height,
     x: original.x + cos * shiftX - sin * shiftY,
     y: original.y + sin * shiftX + cos * shiftY,
+  };
+};
+
+export const rectangleLandmarkPath = (): GuildPath => [
+  [
+    [
+      { x: -0.5, y: -0.5 },
+      { x: 0.5, y: -0.5 },
+      { x: 0.5, y: 0.5 },
+      { x: -0.5, y: 0.5 },
+      { x: -0.5, y: -0.5 },
+    ],
+  ],
+];
+
+export const landmarkFromPath = (id: string, path: GuildPath): Landmark => {
+  const bounds = pathBounds(path.flat(2));
+  const x = bounds.x + bounds.width / 2;
+  const y = bounds.y + bounds.height / 2;
+  return {
+    id,
+    name: 'Landmark',
+    x,
+    y,
+    width: bounds.width,
+    height: bounds.height,
+    rotation: 0,
+    path: path.map((polygon) =>
+      polygon.map((ring) =>
+        ring.map((point) => ({
+          x: (point.x - x) / bounds.width,
+          y: (point.y - y) / bounds.height,
+        })),
+      ),
+    ),
   };
 };

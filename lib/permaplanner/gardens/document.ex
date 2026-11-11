@@ -28,7 +28,7 @@ defmodule Permaplanner.Gardens.Document do
       is_integer(doc["syncRevision"]) and doc["syncRevision"] >= 0 and
       rows?(doc["plants"], &plant?/1) and rows?(doc["guilds"], &guild?/1) and
       rows?(doc["landmarks"], &landmark?/1) and
-      plot_border?(doc["plotBorder"]) and
+      rows?(doc["plotBorder"], &polygon?/1) and
       scale?(doc["mapScale"]) and is_number(doc["backgroundOpacity"]) and
       doc["backgroundOpacity"] >= 0 and doc["backgroundOpacity"] <= 1 and
       doc["onboardingState"] in @onboarding and valid_references?(doc)
@@ -62,29 +62,9 @@ defmodule Permaplanner.Gardens.Document do
   defp point?(%{"x" => x, "y" => y}), do: is_number(x) and is_number(y)
   defp point?(_), do: false
 
-  defp plot_border?([]), do: true
-
-  defp plot_border?([first | rest] = points) when length(points) >= 3 do
-    if Enum.all?(points, &point?/1) do
-      # Twice the signed area; keep aligned with usePlotBorderStore.save.
-      area =
-        Enum.zip(points, rest ++ [first])
-        |> Enum.reduce(0, fn {point, next}, sum ->
-          sum + point["x"] * next["y"] - next["x"] * point["y"]
-        end)
-
-      abs(area) > 0.001
-    else
-      false
-    end
-  rescue
-    ArithmeticError -> false
-  end
-
-  defp plot_border?(_), do: false
-
   defp landmark?(landmark) when is_map(landmark) do
-    is_binary(landmark["id"]) and is_binary(landmark["name"]) and point?(landmark) and
+    rows?(landmark["path"], &polygon?/1) and landmark["path"] != [] and
+      is_binary(landmark["id"]) and is_binary(landmark["name"]) and point?(landmark) and
       is_number(landmark["width"]) and landmark["width"] > 0 and
       is_number(landmark["height"]) and landmark["height"] > 0 and
       is_number(landmark["rotation"]) and landmark["rotation"] >= 0 and landmark["rotation"] < 360

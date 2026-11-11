@@ -47,6 +47,8 @@ Secrets for local dev (when needed) live in `.env.1password` — see [`.env.1pas
 
 ### Running locally
 
+Validate application changes in the running browser before considering them complete: exercise the affected flows and check the console for warnings and errors. Changes must introduce neither; fix any new warnings or errors before considering the work complete. For saved-data changes, verify existing gardens after migration as well as newly created data. Unit tests and type checks complement this browser check.
+
 | Command                     | What it runs                                                               |
 | --------------------------- | -------------------------------------------------------------------------- |
 | `npm run dev`               | Phoenix (8080) + Vite dev server (5173), with 1Password env                |
@@ -62,7 +64,7 @@ Secrets for local dev (when needed) live in `.env.1password` — see [`.env.1pas
 
 Phoenix expects the **asdf** Postgres instance from [`.tool-versions`](.tool-versions) on **port 5434** (so it does not clash with other local Elixir apps on 5432). Default credentials are in [`config/dev.exs`](config/dev.exs).
 
-`npm run dev` runs [`scripts/ensure-postgres.sh`](scripts/ensure-postgres.sh) first: it starts asdf Postgres on 5434 when needed, runs `mix ecto.setup` when the dev/test databases are missing, and errors if the instance contains unexpected databases.
+`npm run dev` runs [`scripts/ensure-postgres.sh`](scripts/ensure-postgres.sh) first: it starts asdf Postgres on 5434 when needed, runs `mix ecto.setup` when the dev/test databases are missing, applies pending dev migrations, and errors if the instance contains unexpected databases.
 
 One-time: if your asdf data directory was previously on 5432, the script rewrites `port` in `$(asdf where postgres)/data/postgresql.conf` and restarts Postgres.
 
@@ -153,7 +155,7 @@ Month ranges are approximate outdoor northern-hemisphere seasons and vary with c
 ## Garden document format
 
 Stored documents, API responses, frontend state, and downloadable JSON use the
-merged guild format (version 8). `syncRevision` tracks save conflicts.
+shared feature-path format (version 9). `syncRevision` tracks save conflicts.
 Guild `path` stores polygons → rings → `{x, y}` points. Each polygon has one
 closed exterior ring followed by closed hole rings; disconnected regions have
 separate polygons. Only boundaries are saved, with no connecting bridges or brush
@@ -194,6 +196,13 @@ while preserving revisions and geometry. Version 7 adds `plotBorder`, an empty a
 when no border is set. Version 5/6 imports and stored gardens receive an empty border.
 For this single-user app, save before deploying,
 avoid editing during deployment, and reload afterward before saving again.
+
+Version 9 stores all feature outlines as polygons with closed exterior and hole
+rings. Guild and border points use map coordinates. Landmark paths use local
+coordinates, multiplied by their width/height, rotated, and translated to their
+centre; resizing and rotation preserve the outline. The migration and local file
+import convert existing rectangle landmarks and polygon borders without changing
+placement, revisions, images, or other metadata.
 
 ## MCP: connect an AI assistant
 
@@ -301,21 +310,26 @@ reference line's entered length. Changing the unit labels that length; it does n
 convert the number or alter map geometry. New gardens use meters. Older gardens
 keep an unspecified unit until you choose the unit used to calibrate their scale.
 
-Choose **Draw landmark (R)** and drag a rectangle on the aerial map. Select it to
+Choose a feature (**Guild**, **Landmark**, or **Plot border**), then a brush:
+**Path (B)**, **Polygon (P)**, or **Bounding box (R)**. Drag to paint or draw a box;
+click to add polygon corners. Enter saves and Escape cancels. Hold Shift while
+painting to lock to the nearest horizontal or vertical axis; release it to draw
+freely again. +/− changes brush size and Command subtracts a stroke.
+Select a landmark to
 name it, drag it to move, drag the round handle to rotate, or drag any edge or corner
 to resize while keeping the opposite side fixed. You can also enter a rotation in degrees.
 Escape cancels a gesture; landmark edits support undo/redo and JSON export/import.
 
-Landmarks store an ID, name, centre (`x`, `y`), width, height, and clockwise
+Landmarks store an ID, name, local path, centre (`x`, `y`), width, height, and clockwise
 rotation in degrees. Dimensions use map coordinates. Both garden and guild MCP
 responses include all landmarks, the scale unit, and coordinate conventions.
 North is unknown; image up does not imply geographic north.
 
 ### Optional plot border
 
-Gardens start without a border. Choose **Plot border (P)** to draw a polygon: click
+Gardens start without a border. Choose **Plot border**, then **Polygon (P)** to draw a polygon: click
 to place corners, then click the first corner or press Enter to close it. Backspace
-removes the last unfinished corner; Escape cancels. Select the border or its tool
+removes the last unfinished corner; Escape cancels. Use **Select (V)** and select the border
 to drag corners or remove it with Delete or the Remove plot border button. Invalid
 edits that collapse the border to a line leave the previous border intact. Border
 changes support undo/redo and JSON export/import.

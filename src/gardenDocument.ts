@@ -1,7 +1,9 @@
+import type { DeepReadonly } from 'vue';
+import type { GuildPath } from './guildPathClip';
 import type { Guild, UserPlant } from './gardenTypes';
 import type { OnboardingState } from './onboardingTypes';
 
-export const GARDEN_DOCUMENT_VERSION = 8 as const;
+export const GARDEN_DOCUMENT_VERSION = 9 as const;
 
 export type ScaleUnit = 'unspecified' | 'm' | 'ft' | 'cm' | 'in' | 'yd';
 export const SCALE_UNITS: { value: ScaleUnit; label: string }[] = [
@@ -21,6 +23,8 @@ export type Landmark = {
   width: number;
   height: number;
   rotation: number;
+  /** Path in local coordinates, scaled by width/height and rotated around the centre. */
+  path: DeepReadonly<GuildPath>;
 };
 
 /** Current backend document, also used unchanged for local exports. */
@@ -32,7 +36,7 @@ export type GardenDocument = {
   guilds: Guild[];
   landmarks: Landmark[];
   /** Empty when no optional plot border has been drawn. */
-  plotBorder: { x: number; y: number }[];
+  plotBorder: GuildPath;
   mapScale: {
     start: { x: number; y: number };
     end: { x: number; y: number };

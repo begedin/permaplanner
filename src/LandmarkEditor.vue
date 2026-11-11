@@ -22,7 +22,7 @@
     v-if="props.landmark"
     role="group"
     aria-label="Landmark details"
-    class="paper-floating absolute top-16 right-2 z-10 flex w-64 max-w-[calc(100%-1rem)] max-h-[calc(100%-5rem)] overflow-y-auto flex-col gap-4 p-4 text-sm"
+    class="paper-floating absolute top-28 right-2 z-10 flex w-64 max-w-[calc(100%-1rem)] max-h-[calc(100%-8rem)] overflow-y-auto flex-col gap-4 p-4 text-sm"
   >
     <div class="flex items-center gap-2 border-b border-parchment-300 pb-3">
       <UiIcon

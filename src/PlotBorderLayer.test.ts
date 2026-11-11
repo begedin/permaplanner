@@ -1,125 +1,50 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { mount } from '@vue/test-utils';
-import { defineComponent, nextTick, ref } from 'vue';
-import { beforeEach, expect, it, vi, afterEach } from 'vitest';
+import { beforeEach, expect, it } from 'vitest';
 import PlotBorderLayer from './PlotBorderLayer.vue';
-import { usePlotBorderStore } from './usePlotBorderStore';
-import { usePlanCommandHistory } from './usePlanCommandHistory';
+import { cloneGuildPath } from './guildPathClip';
 
 const triangle = [
   { x: 10, y: 10 },
   { x: 110, y: 10 },
   { x: 110, y: 110 },
+  { x: 10, y: 10 },
 ];
-const screenCorners = [
-  [40, 60],
-  [240, 60],
-  [240, 260],
-];
+const path = [[triangle], [triangle.map((p) => ({ x: p.x + 200, y: p.y }))]];
+beforeEach(() => setActivePinia(createPinia()));
 
-beforeEach(() => {
-  setActivePinia(createPinia());
-  Object.defineProperty(SVGSVGElement.prototype, 'getScreenCTM', {
-    configurable: true,
-    value: () => ({ inverse: () => ({ a: 0.5, b: 0, c: 0, d: 0.5, e: -10, f: -20 }) }),
+it('moves a corner in map coordinates while preserving closed rings and other regions', async () => {
+  const wrapper = mount(PlotBorderLayer, {
+    props: { path: cloneGuildPath(path), tool: 'select', selected: true },
   });
-});
-afterEach(() => vi.restoreAllMocks());
-const renderLayer = () =>
-  mount(
-    defineComponent({
-      components: { PlotBorderLayer },
-      setup() {
-        return { tool: ref('border'), border: usePlotBorderStore() };
-      },
-      template:
-        '<svg><PlotBorderLayer :points="border.points" :selected="border.points.length > 0" @commit="border.save" :tool="tool" :width="1000" :height="800" /></svg>',
-    }),
-  );
-
-const drawTriangle = async (wrapper: ReturnType<typeof renderLayer>) => {
-  for (const [clientX, clientY] of screenCorners) {
-    await wrapper
-      .get('[aria-label="Draw plot border"]')
-      .trigger('click', { clientX, clientY, button: 0 });
-  }
-};
-const dragCorner = async (
-  wrapper: ReturnType<typeof renderLayer>,
-  corner: number,
-  clientX: number,
-  clientY: number,
-) => {
-  const [startX, startY] = screenCorners[corner - 1]!;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.getScreenCTM = () =>
+    ({ inverse: () => ({ a: 0.5, b: 0, c: 0, d: 0.5, e: -10, f: -20 }) }) as DOMMatrix;
+  svg.append(wrapper.element);
   await wrapper
-    .get(`[aria-label="Plot border corner ${corner}"]`)
-    .trigger('pointerdown', {
-      button: 0,
-      clientX: startX,
-      clientY: startY,
-      pointerId: 1,
-    });
-  const release = new MouseEvent('pointerup', { clientX, clientY, button: 0 });
-  Object.defineProperty(release, 'pointerId', { value: 1 });
-  document.dispatchEvent(release);
-  await nextTick();
-};
-
-it('draws and edits in map coordinates with one undo step per commit', async () => {
-  const wrapper = renderLayer();
-  const border = usePlotBorderStore();
-  const history = usePlanCommandHistory();
-  expect(border.points).toEqual([]);
-  await drawTriangle(wrapper);
-  expect(border.points).toEqual([]);
-  await wrapper.get('[aria-label="Close plot border"]').trigger('click');
-  expect(border.points).toEqual(triangle);
-  await dragCorner(wrapper, 2, 280, 80);
-  expect(border.points).toEqual([triangle[0], { x: 130, y: 20 }, triangle[2]]);
-  history.undo();
-  expect(border.points).toEqual(triangle);
-  history.undo();
-  expect(border.points).toEqual([]);
-  history.redo();
-  expect(border.points).toEqual(triangle);
+    .get('[aria-label="Plot border corner 5"]')
+    .trigger('pointerdown', { button: 0, clientX: 640, clientY: 60 });
+  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 680, clientY: 80 }));
+  const expected = cloneGuildPath(path);
+  expected[1]![0]![1] = { x: 330, y: 20 };
+  expect(wrapper.emitted('commit')).toEqual([[expected]]);
+  expect(path[1]?.[0]?.[1]).toEqual({ x: 310, y: 10 });
   wrapper.unmount();
 });
 
-it('requires a polygon, supports Backspace and Enter, and discards unfinished points on tool changes', async () => {
-  const wrapper = renderLayer();
-  const border = usePlotBorderStore();
-  const surface = wrapper.get('[aria-label="Draw plot border"]');
-  await surface.trigger('click', { clientX: 40, clientY: 60, button: 0 });
-  await surface.trigger('click', { clientX: 240, clientY: 60, button: 0 });
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-  expect(border.points).toEqual([]);
-  await surface.trigger('click', { clientX: 240, clientY: 260, button: 0 });
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace' }));
-  await nextTick();
-  expect(wrapper.findAll('circle')).toHaveLength(2);
-  wrapper.vm.tool = 'select';
-  await nextTick();
-  wrapper.vm.tool = 'border';
-  await nextTick();
-  expect(wrapper.findAll('circle')).toHaveLength(0);
-  await drawTriangle(wrapper);
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-  expect(border.points).toEqual(triangle);
-  wrapper.unmount();
-});
-
-it('keeps the saved border and history when a corner drag collapses its area', async () => {
-  const border = usePlotBorderStore();
-  const history = usePlanCommandHistory();
-  border.save(triangle);
-  history.clear();
-  const wrapper = renderLayer();
-  await dragCorner(wrapper, 3, 140, 60);
-  expect(border.points).toEqual(triangle);
-  expect(history).toMatchObject({ canUndo: false, canRedo: false });
-  expect(wrapper.get('[aria-label="Plot border corner 3"]').attributes()).toMatchObject({
-    cx: '110',
-    cy: '110',
+it('cancels a corner drag when the selection changes', async () => {
+  const wrapper = mount(PlotBorderLayer, {
+    props: { path, tool: 'select', selected: true },
   });
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.getScreenCTM = () =>
+    ({ inverse: () => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }) }) as DOMMatrix;
+  svg.append(wrapper.element);
+  await wrapper
+    .get('[aria-label="Plot border corner 1"]')
+    .trigger('pointerdown', { button: 0, clientX: 20, clientY: 20 });
+  await wrapper.setProps({ selected: false });
+  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 30, clientY: 30 }));
+  expect(wrapper.emitted('commit')).toBeUndefined();
   wrapper.unmount();
 });

@@ -1,3 +1,4 @@
+import { rectangleLandmarkPath } from './landmarkGeometry';
 import { useMapInteractionStore } from './useMapInteractionStore';
 import { usePlanStateStore } from './usePlanStateStore';
 import {
@@ -195,7 +196,7 @@ it('switches selection to another guild and discards the previous edit', async (
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   await wrapper.vm.$nextTick();
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Edit brush (B)' }));
+  await fireEvent.click(screen.getByRole('button', { name: 'Path brush (B)' }));
 
   await wrapper
     .get('svg')
@@ -308,7 +309,7 @@ it('shows map tools in the top-right of the aerial map', async () => {
   await waitFor(() => {
     expect(screen.getByRole('toolbar', { name: 'Map tools' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Select (V)' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Edit brush (B)' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Path brush (B)' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Move guild (M)' })).toBeVisible();
   });
 });
@@ -316,7 +317,7 @@ it('shows map tools in the top-right of the aerial map', async () => {
 it('disables edit and move tools when no guild is selected', async () => {
   await renderGarden();
 
-  expect(screen.getByRole('button', { name: 'Edit brush (B)' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Path brush (B)' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Move guild (M)' })).toBeDisabled();
 });
 
@@ -327,7 +328,7 @@ it('activates tools with V, B, and M hotkeys', async () => {
   await renderGarden('/guilds/guild');
 
   const selectBtn = screen.getByRole('button', { name: 'Select (V)' });
-  const editBtn = screen.getByRole('button', { name: 'Edit brush (B)' });
+  const editBtn = screen.getByRole('button', { name: 'Path brush (B)' });
   const moveBtn = screen.getByRole('button', { name: 'Move guild (M)' });
 
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'b' }));
@@ -544,9 +545,10 @@ it('keeps the landmark tool active when it deselects a guild and saves the chose
     { id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 },
   ];
   const { router } = await renderGarden('/guilds/guild');
+  await fireEvent.click(screen.getByRole('button', { name: 'landmark' }));
   await fireEvent.keyDown(document, { key: 'r' });
   await waitFor(() => {
-    expect(screen.getByRole('button', { name: 'Draw landmark (R)' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Bounding box (R)' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
@@ -586,7 +588,16 @@ it('toggles guild and landmark names independently and remembers visibility with
     { id: 'unplaced', name: 'Unplaced bed', path: [], plants: [], mulchLevel: 1 },
   ];
   usePlanStateStore().state.landmarks = [
-    { id: 'shed', name: 'Shed', x: 200, y: 100, width: 80, height: 40, rotation: 0 },
+    {
+      id: 'shed',
+      name: 'Shed',
+      x: 200,
+      y: 100,
+      width: 80,
+      height: 40,
+      rotation: 0,
+      path: rectangleLandmarkPath(),
+    },
   ];
   const before = useGardenSessionStore().snapshot();
   const { view } = await renderGarden();
@@ -625,6 +636,7 @@ it('reconciles selection on route re-entry so Delete only removes the current gu
     width: 80,
     height: 40,
     rotation: 0,
+    path: rectangleLandmarkPath(),
   };
   usePlanStateStore().state.landmarks = [house];
   const { router, view } = await renderGarden();
@@ -651,7 +663,16 @@ it('switches between guild and landmark selection and clears it when the garden 
     { id: 'guild', name: 'Guild', path: [], plants: [], mulchLevel: 1 },
   ];
   usePlanStateStore().state.landmarks = [
-    { id: 'house', name: 'House', x: 100, y: 50, width: 80, height: 40, rotation: 0 },
+    {
+      id: 'house',
+      name: 'House',
+      x: 100,
+      y: 50,
+      width: 80,
+      height: 40,
+      rotation: 0,
+      path: rectangleLandmarkPath(),
+    },
   ];
   const { router } = await renderGarden('/guilds/guild');
   await fireEvent.keyDown(screen.getByRole('button', { name: 'Landmark: House' }), {
@@ -683,10 +704,10 @@ it('keeps the plot border optional and cancels drawing with Escape', async () =>
   expect(
     screen.queryByRole('button', { name: 'Edit plot border' }),
   ).not.toBeInTheDocument();
-  await fireEvent.click(screen.getByRole('button', { name: 'Plot border (P)' }));
-  expect(screen.getByLabelText('Draw plot border')).toBeInTheDocument();
+  await fireEvent.click(screen.getByRole('button', { name: 'Plot border' }));
+  expect(screen.getByLabelText('Draw feature')).toBeInTheDocument();
   await fireEvent.keyDown(document, { key: 'Escape' });
-  expect(screen.queryByLabelText('Draw plot border')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Draw feature')).not.toBeInTheDocument();
   expect(usePlanStateStore().state.plotBorder).toEqual([]);
 });
 
@@ -706,7 +727,7 @@ it.each(['Delete', 'Remove plot border'])(
       { x: 200, y: 0 },
       { x: 100, y: 150 },
     ];
-    usePlanStateStore().state.plotBorder = border;
+    usePlanStateStore().state.plotBorder = [[[...border, border[0]!]]];
     const { router } = await renderGarden('/guilds/guild');
     await fireEvent.click(screen.getByRole('button', { name: 'Edit plot border' }));
     await waitFor(() => expect(router.currentRoute.value.name).toBe(routeNames.guilds));
@@ -716,63 +737,23 @@ it.each(['Delete', 'Remove plot border'])(
     expect(usePlanStateStore().state.guilds).toEqual([guild]);
     usePlanCommandHistory().undo();
     await flushPromises();
-    await fireEvent.keyDown(document, { key: 'p' });
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit plot border' }));
     expect(
       screen.getByRole('button', { name: 'Remove plot border' }),
     ).toBeInTheDocument();
     await fireEvent.keyDown(document, { key: 'Escape' });
     await fireEvent.keyDown(document, { key: 'Delete' });
-    expect(usePlanStateStore().state.plotBorder).toEqual(border);
+    expect(usePlanStateStore().state.plotBorder).toEqual([[[...border, border[0]!]]]);
     await fireEvent.keyDown(document, { key: 'p' });
     useGardenSessionStore().gardenId = 'other-garden';
     await flushPromises();
     await fireEvent.keyDown(document, { key: 'Delete' });
-    expect(usePlanStateStore().state.plotBorder).toEqual(border);
+    expect(usePlanStateStore().state.plotBorder).toEqual([[[...border, border[0]!]]]);
     expect(
       screen.queryByRole('button', { name: 'Remove plot border' }),
     ).not.toBeInTheDocument();
   },
 );
-
-it('uses one map brush to preview and commit only the selected guild', async () => {
-  usePlanStateStore().state.guilds = [
-    { id: 'a', name: 'A', plants: [], path: [], mulchLevel: 1 },
-    { id: 'b', name: 'B', plants: [], path: [], mulchLevel: 1 },
-  ];
-  const { view } = await renderGarden('/guilds/a');
-  const svg = view.container.querySelector<SVGSVGElement>('[data-main-svg]')!;
-  svg.getScreenCTM = () =>
-    ({ inverse: () => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }) }) as DOMMatrix;
-  await fireEvent.click(screen.getByRole('button', { name: 'Edit brush (B)' }));
-  expect(view.container.querySelectorAll('[data-guild-brush]')).toHaveLength(1);
-  svg.dispatchEvent(
-    new MouseEvent('pointerdown', { button: 0, clientX: 50, clientY: 50 }),
-  );
-  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 50, clientY: 50 }));
-  expect(usePlanStateStore().state.guilds).toMatchObject([
-    { id: 'a', path: [] },
-    { id: 'b', path: [] },
-  ]);
-  await fireEvent.keyDown(document, { key: 'Enter' });
-  expect(usePlanStateStore().state.guilds).toMatchObject([
-    {
-      id: 'a',
-      path: [
-        [
-          expect.arrayContaining([
-            expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }),
-          ]),
-        ],
-      ],
-    },
-    { id: 'b', path: [] },
-  ]);
-  usePlanCommandHistory().undo();
-  expect(usePlanStateStore().state.guilds).toMatchObject([
-    { id: 'a', path: [] },
-    { id: 'b', path: [] },
-  ]);
-});
 
 it('makes merge and drawing modes exclusive, including keyboard transitions', async () => {
   usePlanStateStore().state.guilds = [
@@ -785,8 +766,9 @@ it('makes merge and drawing modes exclusive, including keyboard transitions', as
   await fireEvent.keyDown(document, { key: 'r' });
   expect(interaction).toMatchObject({
     isMerging: false,
-    activeTool: 'landmark',
-    selectedGuildId: undefined,
+    activeTool: 'draw',
+    drawingBrush: 'rectangle',
+    selectedGuildId: 'bed',
   });
   await flushPromises();
   await fireEvent.click(screen.getByRole('button', { name: 'Merge with' }));
@@ -794,3 +776,156 @@ it('makes merge and drawing modes exclusive, including keyboard transitions', as
   await fireEvent.keyDown(window, { key: 'Escape' });
   expect(interaction).toMatchObject({ isMerging: false, activeTool: 'select' });
 });
+
+it.each(
+  (['guild', 'landmark', 'border'] as const).flatMap((feature) =>
+    (['Path brush (B)', 'Polygon (P)', 'Bounding box (R)'] as const).map((brush) => ({
+      feature,
+      brush,
+    })),
+  ),
+)('draws $feature with $brush and saves an undoable path', async ({ feature, brush }) => {
+  usePlanStateStore().state.guilds = [
+    { id: 'bed', name: 'Bed', path: [], plants: [], mulchLevel: 1 },
+    { id: 'other', name: 'Other', path: [], plants: [], mulchLevel: 1 },
+  ];
+  const { view } = await renderGarden('/guilds/bed');
+  const svg = view.container.querySelector<SVGSVGElement>('[data-main-svg]')!;
+  svg.getScreenCTM = () =>
+    ({
+      a: 2,
+      b: 0,
+      inverse: () => ({ a: 0.5, b: 0, c: 0, d: 0.5, e: -10, f: -20 }),
+    }) as DOMMatrix;
+  if (feature !== 'guild')
+    await fireEvent.click(
+      screen.getByRole('button', {
+        name: feature === 'border' ? 'Plot border' : 'landmark',
+      }),
+    );
+  await fireEvent.click(screen.getByRole('button', { name: brush }));
+  expect(view.container.querySelectorAll('[data-guild-brush]')).toHaveLength(1);
+  const before = useGardenSessionStore().snapshot();
+  const surface = screen.getByLabelText('Draw feature');
+  await fireEvent(
+    surface,
+    new MouseEvent('pointerdown', { bubbles: true, button: 0, clientX: 60, clientY: 80 }),
+  );
+  if (brush === 'Polygon (P)') {
+    for (const [clientX, clientY] of [
+      [160, 80],
+      [160, 180],
+    ]) {
+      await fireEvent(
+        surface,
+        new MouseEvent('pointerdown', { bubbles: true, button: 0, clientX, clientY }),
+      );
+    }
+  } else {
+    document.dispatchEvent(new MouseEvent('pointerup', { clientX: 160, clientY: 180 }));
+  }
+  expect(useGardenSessionStore().snapshot()).toEqual(before);
+  await fireEvent.keyDown(document, { key: 'Enter' });
+  const plan = usePlanStateStore().state;
+  const path =
+    feature === 'guild'
+      ? plan.guilds[0]!.path
+      : feature === 'landmark'
+        ? plan.landmarks[0]!.path
+        : plan.plotBorder;
+  expect(plan.guilds[1]).toEqual(before.guilds[1]);
+  expect(path).toHaveLength(1);
+  for (const ring of path.flat()) {
+    expect(ring.length).toBeGreaterThanOrEqual(4);
+    expect(ring[0]).toEqual(ring.at(-1));
+  }
+  if (brush === 'Bounding box (R)' && feature === 'landmark') {
+    expect(plan.landmarks).toMatchObject([{ x: 45, y: 45, width: 50, height: 50 }]);
+  }
+  usePlanCommandHistory().undo();
+  expect(useGardenSessionStore().snapshot()).toEqual(before);
+});
+
+it.each(['save', 'cancel'])(
+  'replaces the border with its subtraction preview and can %s afterwards',
+  async (action) => {
+    const old = [
+      [
+        [
+          { x: 10, y: 10 },
+          { x: 20, y: 10 },
+          { x: 20, y: 20 },
+          { x: 10, y: 20 },
+          { x: 10, y: 10 },
+        ],
+      ],
+    ];
+    usePlanStateStore().state.plotBorder = old;
+    const { view } = await renderGarden();
+    const svg = view.container.querySelector<SVGSVGElement>('[data-main-svg]')!;
+    svg.getScreenCTM = () =>
+      ({
+        a: 1,
+        b: 0,
+        inverse: () => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }),
+      }) as DOMMatrix;
+    await fireEvent.click(screen.getByRole('button', { name: 'Plot border' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Bounding box (R)' }));
+    const surface = screen.getByLabelText('Draw feature');
+    await fireEvent.keyDown(window, { key: 'Meta', code: 'MetaLeft', metaKey: true });
+    await fireEvent(
+      surface,
+      new MouseEvent('pointerdown', {
+        bubbles: true,
+        button: 0,
+        clientX: 0,
+        clientY: 0,
+        metaKey: true,
+      }),
+    );
+    await fireEvent(
+      document,
+      new MouseEvent('pointerup', { clientX: 30, clientY: 30, metaKey: true }),
+    );
+    await fireEvent.keyUp(window, { key: 'Meta', code: 'MetaLeft', metaKey: false });
+    expect(
+      screen.queryByRole('button', { name: 'Edit plot border' }),
+    ).not.toBeInTheDocument();
+    expect(usePlanStateStore().state.plotBorder).toEqual(old);
+    if (action === 'cancel') {
+      await fireEvent.keyDown(document, { key: 'Escape' });
+      expect(
+        screen.getByRole('button', { name: 'Edit plot border' }),
+      ).toBeInTheDocument();
+      expect(usePlanStateStore().state.plotBorder).toEqual(old);
+      return;
+    }
+    await fireEvent.keyDown(document, { key: 'Enter' });
+    expect(useMapInteractionStore().activeTool).toBe('draw');
+    await fireEvent(
+      surface,
+      new MouseEvent('pointerdown', {
+        bubbles: true,
+        button: 0,
+        clientX: 50,
+        clientY: 50,
+      }),
+    );
+    await fireEvent(document, new MouseEvent('pointerup', { clientX: 80, clientY: 80 }));
+    await fireEvent.keyDown(document, { key: 'Enter' });
+    expect(usePlanStateStore().state.plotBorder).toEqual([
+      [
+        [
+          { x: 50, y: 50 },
+          { x: 80, y: 50 },
+          { x: 80, y: 80 },
+          { x: 50, y: 80 },
+          { x: 50, y: 50 },
+        ],
+      ],
+    ]);
+    expect(useMapInteractionStore().activeTool).toBe('select');
+    usePlanCommandHistory().undo();
+    expect(usePlanStateStore().state.plotBorder).toEqual(old);
+  },
+);

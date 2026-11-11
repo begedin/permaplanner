@@ -1,6 +1,8 @@
 /** Hand-drawn UI action icons (toolbar / card controls). */
 export const UI_ICON_IDS = [
   'guilds',
+  'landmark',
+  'plot-border',
   'plants',
   'calendar',
   'pointer',
