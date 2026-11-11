@@ -2,6 +2,7 @@
 export const UI_ICON_IDS = [
   'guilds',
   'landmark',
+  'path',
   'plot-border',
   'plants',
   'calendar',

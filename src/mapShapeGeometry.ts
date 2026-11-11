@@ -1,15 +1,15 @@
 import { pathBounds } from './guildPathBounds';
 import type { GuildPath } from './guildPathClip';
-import type { Landmark } from './gardenDocument';
+import type { MapShape } from './gardenDocument';
 import type { PathPoint } from './guildPathClip';
 
 type ResizeDirection = { x: -1 | 0 | 1; y: -1 | 0 | 1 };
-export type LandmarkGesture =
-  | { kind: 'move'; landmark: Landmark }
-  | { kind: 'rotate'; landmark: Landmark }
-  | { kind: 'resize'; landmark: Landmark; direction: ResizeDirection };
+export type ShapeGesture =
+  | { kind: 'move'; shape: MapShape }
+  | { kind: 'rotate'; shape: MapShape }
+  | { kind: 'resize'; shape: MapShape; direction: ResizeDirection };
 
-export const LANDMARK_RESIZE_HANDLES = [
+export const SHAPE_RESIZE_HANDLES = [
   { name: 'top', x: 0, y: -1, angle: 90 },
   { name: 'right', x: 1, y: 0, angle: 0 },
   { name: 'bottom', x: 0, y: 1, angle: 90 },
@@ -20,15 +20,15 @@ export const LANDMARK_RESIZE_HANDLES = [
   { name: 'bottom-left', x: -1, y: 1, angle: 135 },
 ] as const;
 
-export const landmarkAtPointer = (
-  gesture: LandmarkGesture,
+export const shapeAtPointer = (
+  gesture: ShapeGesture,
   origin: PathPoint,
   point: PathPoint,
   minimumSize: number,
-): Landmark => {
+): MapShape => {
   const dx = point.x - origin.x;
   const dy = point.y - origin.y;
-  const original = gesture.landmark;
+  const original = gesture.shape;
   if (gesture.kind === 'move')
     return { ...original, x: original.x + dx, y: original.y + dy };
   if (gesture.kind === 'rotate') {
@@ -64,7 +64,7 @@ export const landmarkAtPointer = (
   };
 };
 
-export const rectangleLandmarkPath = (): GuildPath => [
+export const rectangleShapePath = (): GuildPath => [
   [
     [
       { x: -0.5, y: -0.5 },
@@ -76,13 +76,13 @@ export const rectangleLandmarkPath = (): GuildPath => [
   ],
 ];
 
-export const landmarkFromPath = (id: string, path: GuildPath): Landmark => {
+export const shapeFromPath = (id: string, name: string, path: GuildPath): MapShape => {
   const bounds = pathBounds(path.flat(2));
   const x = bounds.x + bounds.width / 2;
   const y = bounds.y + bounds.height / 2;
   return {
     id,
-    name: 'Landmark',
+    name,
     x,
     y,
     width: bounds.width,

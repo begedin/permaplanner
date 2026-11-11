@@ -1,4 +1,4 @@
-import { rectangleLandmarkPath } from './landmarkGeometry';
+import { rectangleShapePath } from './mapShapeGeometry';
 import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import { usePlanStateStore } from './usePlanStateStore';
 import { setActivePinia } from 'pinia';
@@ -42,7 +42,19 @@ it('hydrates from document snapshot round-trip', async () => {
       width: 80,
       height: 40,
       rotation: 35,
-      path: rectangleLandmarkPath(),
+      path: rectangleShapePath(),
+    },
+  ];
+  usePlanStateStore().state.paths = [
+    {
+      id: 'walkway',
+      name: 'Walkway',
+      x: 20,
+      y: 40,
+      width: 15,
+      height: 90,
+      rotation: 15,
+      path: rectangleShapePath(),
     },
   ];
   useMapScaleStore().setUnit('ft');

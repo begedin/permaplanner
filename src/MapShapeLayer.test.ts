@@ -1,10 +1,10 @@
-import { rectangleLandmarkPath } from './landmarkGeometry';
+import { rectangleShapePath } from './mapShapeGeometry';
 import { createPinia, setActivePinia } from 'pinia';
 import { mount } from '@vue/test-utils';
 import { defineComponent, nextTick, ref } from 'vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import LandmarkLayer from './LandmarkLayer.vue';
-import { useLandmarkStore } from './useLandmarkStore';
+import MapShapeLayer from './MapShapeLayer.vue';
+import { useMapShapeStore } from './useMapShapeStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 
 const landmark = {
@@ -15,7 +15,7 @@ const landmark = {
   width: 40,
   height: 20,
   rotation: 0,
-  path: rectangleLandmarkPath(),
+  path: rectangleShapePath(),
 };
 
 beforeEach(() => {
@@ -30,21 +30,20 @@ afterEach(() => vi.restoreAllMocks());
 const renderLayer = () =>
   mount(
     defineComponent({
-      components: { LandmarkLayer },
+      components: { MapShapeLayer },
       setup() {
-        const store = useLandmarkStore();
-        const selectedId = ref(store.landmarks[0]?.id);
+        const store = useMapShapeStore();
+        const selectedId = ref(store.items('landmark')[0]?.id);
         const controlsTarget = ref<SVGGElement>();
         const tool = ref('select');
         const commit = (landmark: import('./gardenDocument').Landmark) => {
-          store.save(landmark);
+          store.save('landmark', landmark);
           selectedId.value = landmark.id;
           tool.value = 'select';
         };
         return { store, selectedId, tool, commit, controlsTarget };
       },
-      template:
-        '<svg><LandmarkLayer :landmarks="store.landmarks" :selected-id="selectedId" :tool="tool" :controls-target="controlsTarget" @select="selectedId = $event" @commit="commit" /><g ref="controlsTarget" role="group" aria-label="Landmark controls" /></svg>',
+      template: `<svg><MapShapeLayer feature="landmark" :shapes="store.items('landmark')" :selected-id="selectedId" :tool="tool" :controls-target="controlsTarget" @select="selectedId = $event" @commit="commit" /><g ref="controlsTarget" role="group" aria-label="Landmark controls" /></svg>`,
     }),
   );
 const pointer = (target: EventTarget, type: string, x: number, y: number) => {
@@ -60,21 +59,26 @@ const pointer = (target: EventTarget, type: string, x: number, y: number) => {
 };
 
 it('moves, rotates and resizes with one undo step per gesture', async () => {
-  const store = useLandmarkStore();
-  store.save(landmark);
+  const store = useMapShapeStore();
+  store.save('landmark', landmark);
   const wrapper = renderLayer();
   const history = usePlanCommandHistory();
-  const original = { ...store.landmarks[0]! };
+  const original = { ...store.items('landmark')[0]! };
 
   pointer(wrapper.get('[aria-label="Landmark: Shed"]').element, 'pointerdown', 80, 80);
   pointer(document, 'pointerup', 100, 100);
   await nextTick();
-  expect(store.landmarks[0]).toMatchObject({ x: 40, y: 30, width: 40, height: 20 });
+  expect(store.items('landmark')[0]).toMatchObject({
+    x: 40,
+    y: 30,
+    width: 40,
+    height: 20,
+  });
 
   pointer(wrapper.get('[aria-label="Rotate landmark"]').element, 'pointerdown', 100, 40);
   pointer(document, 'pointerup', 160, 100);
   await nextTick();
-  expect(store.landmarks[0]?.rotation).toBeCloseTo(90);
+  expect(store.items('landmark')[0]?.rotation).toBeCloseTo(90);
 
   // At 90 degrees, the local bottom-right corner is left/below the centre.
   pointer(
@@ -85,7 +89,7 @@ it('moves, rotates and resizes with one undo step per gesture', async () => {
   );
   pointer(document, 'pointerup', 60, 160);
   await nextTick();
-  expect(store.landmarks[0]).toMatchObject({
+  expect(store.items('landmark')[0]).toMatchObject({
     x: 35,
     y: 35,
     width: 50,
@@ -95,17 +99,17 @@ it('moves, rotates and resizes with one undo step per gesture', async () => {
   history.undo();
   history.undo();
   history.undo();
-  expect(store.landmarks).toEqual([original]);
+  expect(store.items('landmark')).toEqual([original]);
   history.undo();
-  expect(store.landmarks).toEqual([]);
+  expect(store.items('landmark')).toEqual([]);
   history.redo();
-  expect(store.landmarks).toEqual([original]);
+  expect(store.items('landmark')).toEqual([original]);
   wrapper.unmount();
 });
 
 it('does not move a landmark when selection changes the map layout during a click', async () => {
-  const store = useLandmarkStore();
-  store.save(landmark);
+  const store = useMapShapeStore();
+  store.save('landmark', landmark);
   const wrapper = renderLayer();
   let matrix = { a: 0.5, b: 0, c: 0, d: 0.5, e: -10, f: -20 };
   Object.defineProperty(wrapper.get('svg').element, 'getScreenCTM', {
@@ -117,20 +121,20 @@ it('does not move a landmark when selection changes the map layout during a clic
   matrix = { a: 0.25, b: 0, c: 0, d: 0.25, e: -30, f: -10 };
   pointer(document, 'pointerup', 80, 80);
   await nextTick();
-  expect(store.landmarks).toEqual([landmark]);
+  expect(store.items('landmark')).toEqual([landmark]);
 
   pointer(wrapper.get('[aria-label="Landmark: Shed"]').element, 'pointerdown', 80, 80);
   matrix = { a: 0.5, b: 0, c: 0, d: 0.5, e: -10, f: -20 };
   pointer(document, 'pointerup', 120, 100);
   await nextTick();
-  expect(store.landmarks).toEqual([{ ...landmark, x: 40, y: 25 }]);
+  expect(store.items('landmark')).toEqual([{ ...landmark, x: 40, y: 25 }]);
   usePlanCommandHistory().undo();
-  expect(store.landmarks).toEqual([landmark]);
+  expect(store.items('landmark')).toEqual([landmark]);
   wrapper.unmount();
 });
 
 it('rotates through the controls overlay when another landmark covers the handle', async () => {
-  const store = useLandmarkStore();
+  const store = useMapShapeStore();
   const selected = { ...landmark, x: 100, y: 100 };
   const overlapping = {
     ...selected,
@@ -140,8 +144,8 @@ it('rotates through the controls overlay when another landmark covers the handle
     width: 60,
     height: 60,
   };
-  store.save(selected);
-  store.save(overlapping);
+  store.save('landmark', selected);
+  store.save('landmark', overlapping);
   const wrapper = renderLayer();
   await nextTick();
   const handle = wrapper
@@ -152,19 +156,19 @@ it('rotates through the controls overlay when another landmark covers the handle
   pointer(document, 'pointerup', 296, 240);
   await nextTick();
 
-  expect(store.landmarks).toEqual([
+  expect(store.items('landmark')).toEqual([
     { ...selected, rotation: expect.closeTo(90) },
     overlapping,
   ]);
   usePlanCommandHistory().undo();
-  expect(store.landmarks).toEqual([selected, overlapping]);
+  expect(store.items('landmark')).toEqual([selected, overlapping]);
   wrapper.unmount();
 });
 
 it.each(['Escape', 'pointercancel', 'unmount', 'tool change'])(
   'discards unfinished moves on %s',
   async (reason) => {
-    useLandmarkStore().save(landmark);
+    useMapShapeStore().save('landmark', landmark);
     const wrapper = renderLayer();
     pointer(wrapper.get('[aria-label="Landmark: Shed"]').element, 'pointerdown', 40, 60);
     pointer(document, 'pointermove', 120, 100);
@@ -177,14 +181,14 @@ it.each(['Escape', 'pointercancel', 'unmount', 'tool change'])(
       await nextTick();
     }
     pointer(document, 'pointerup', 120, 100);
-    expect(useLandmarkStore().landmarks).toEqual([landmark]);
+    expect(useMapShapeStore().items('landmark')).toEqual([landmark]);
     if (reason !== 'unmount') wrapper.unmount();
   },
 );
 
 it('clamps a dragged edge before it crosses the opposite edge and cancels a resize without saving', async () => {
-  const store = useLandmarkStore();
-  store.save({
+  const store = useMapShapeStore();
+  store.save('landmark', {
     ...landmark,
     id: 'house',
     name: 'House',
@@ -201,8 +205,13 @@ it('clamps a dragged edge before it crosses the opposite edge and cancels a resi
     140,
   );
   pointer(document, 'pointerup', 540, 140);
-  expect(store.landmarks[0]).toMatchObject({ x: 136.5, y: 50, width: 7, height: 60 });
-  const saved = { ...store.landmarks[0]! };
+  expect(store.items('landmark')[0]).toMatchObject({
+    x: 136.5,
+    y: 50,
+    width: 7,
+    height: 60,
+  });
+  const saved = { ...store.items('landmark')[0]! };
   pointer(
     wrapper.get('[aria-label="Resize landmark bottom edge"]').element,
     'pointerdown',
@@ -212,6 +221,6 @@ it('clamps a dragged edge before it crosses the opposite edge and cancels a resi
   pointer(document, 'pointermove', 220, 280);
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   pointer(document, 'pointerup', 220, 280);
-  expect(store.landmarks).toEqual([saved]);
+  expect(store.items('landmark')).toEqual([saved]);
   wrapper.unmount();
 });

@@ -43,6 +43,7 @@ defmodule Permaplanner.Gardens.LandmarksTest do
     document =
       Gardens.default_document()
       |> Map.put("landmarks", [landmark])
+      |> Map.put("paths", [Map.put(landmark, "name", "Walkway")])
       |> Map.put("plotBorder", border)
       |> Map.put("guilds", [
         %{"id" => "bed", "name" => "Bed", "path" => [], "plants" => [], "mulchLevel" => 1}
@@ -59,6 +60,7 @@ defmodule Permaplanner.Gardens.LandmarksTest do
       assert {:ok,
               %{
                 landmarks: [^landmark],
+                paths: [%{"name" => "Walkway"}],
                 plotBorder: ^border,
                 mapScale: %{"unit" => "ft"},
                 coordinateSystem: %{

@@ -1,4 +1,5 @@
-import { rectangleLandmarkPath } from './landmarkGeometry';
+import type { Guild } from './gardenTypes';
+import { rectangleShapePath } from './mapShapeGeometry';
 import { useMapInteractionStore } from './useMapInteractionStore';
 import { usePlanStateStore } from './usePlanStateStore';
 import {
@@ -12,7 +13,7 @@ import {
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
-import { mount } from '@vue/test-utils';
+import { mount, enableAutoUnmount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 
 import TheGarden from './TheGarden.vue';
@@ -25,6 +26,8 @@ import { useMapScaleStore } from './useMapScaleStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import { resetGuildSearch } from './useGuildSearch';
+
+enableAutoUnmount(afterEach);
 
 beforeAll(() => {
   Object.defineProperties(window.navigator, {
@@ -50,6 +53,23 @@ afterEach(() => {
   vi.restoreAllMocks();
   cleanup();
   vi.useRealTimers();
+});
+
+const placedGuild = (id: string, x: number): Guild => ({
+  id,
+  name: id.toUpperCase(),
+  mulchLevel: 1,
+  path: [
+    [
+      [
+        { x, y: 0 },
+        { x: x + 100, y: 0 },
+        { x: x + 100, y: 100 },
+        { x, y: 100 },
+      ],
+    ],
+  ],
+  plants: [],
 });
 
 const renderGarden = async (path = '/guilds') => {
@@ -159,38 +179,8 @@ it('deletes the selected guild on Delete only when confirmed', async () => {
 });
 
 it('switches selection to another guild and discards the previous edit', async () => {
-  const bedA = {
-    id: 'a',
-    name: 'A',
-    mulchLevel: 1 as const,
-    path: [
-      [
-        [
-          { x: 0, y: 0 },
-          { x: 100, y: 0 },
-          { x: 100, y: 100 },
-          { x: 0, y: 100 },
-        ],
-      ],
-    ],
-    plants: [],
-  };
-  const bedB = {
-    id: 'b',
-    name: 'B',
-    mulchLevel: 1 as const,
-    path: [
-      [
-        [
-          { x: 200, y: 0 },
-          { x: 300, y: 0 },
-          { x: 300, y: 100 },
-          { x: 200, y: 100 },
-        ],
-      ],
-    ],
-    plants: [],
-  };
+  const bedA = placedGuild('a', 0);
+  const bedB = placedGuild('b', 200);
   usePlanStateStore().state.guilds = [bedA, bedB];
   const { router } = await renderGarden('/guilds/a');
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
@@ -235,38 +225,8 @@ it('scrolls to the selected guild when opening the guild view with a selection',
 it('scrolls the sidebar to a guild selected on the aerial map', async () => {
   const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView');
 
-  const bedA = {
-    id: 'a',
-    name: 'A',
-    mulchLevel: 1 as const,
-    path: [
-      [
-        [
-          { x: 0, y: 0 },
-          { x: 100, y: 0 },
-          { x: 100, y: 100 },
-          { x: 0, y: 100 },
-        ],
-      ],
-    ],
-    plants: [],
-  };
-  const bedB = {
-    id: 'b',
-    name: 'B',
-    mulchLevel: 1 as const,
-    path: [
-      [
-        [
-          { x: 200, y: 0 },
-          { x: 300, y: 0 },
-          { x: 300, y: 100 },
-          { x: 200, y: 100 },
-        ],
-      ],
-    ],
-    plants: [],
-  };
+  const bedA = placedGuild('a', 0);
+  const bedB = placedGuild('b', 200);
   usePlanStateStore().state.guilds = [bedA, bedB];
   const { router } = await renderGarden('/guilds');
   const wrapper = mount(TheGarden, { global: { plugins: [router] } });
@@ -292,10 +252,9 @@ it('deselects when placement is cancelled', async () => {
     { id: 'guild', path: [], name: 'Guild', plants: [], mulchLevel: 1 },
   ];
   const { router } = await renderGarden('/guilds/guild');
-  const wrapper = mount(TheGarden, { global: { plugins: [router] } });
   hoveredId.value = 'guild';
-  await wrapper.vm.$nextTick();
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  await fireEvent.click(screen.getByRole('button', { name: 'Path brush (B)' }));
+  await fireEvent.keyDown(window, { key: 'Escape' });
   await flushPromises();
   await router.isReady();
   expect(router.currentRoute.value.name).toBe(routeNames.guilds);
@@ -596,7 +555,7 @@ it('toggles guild and landmark names independently and remembers visibility with
       width: 80,
       height: 40,
       rotation: 0,
-      path: rectangleLandmarkPath(),
+      path: rectangleShapePath(),
     },
   ];
   const before = useGardenSessionStore().snapshot();
@@ -636,7 +595,7 @@ it('reconciles selection on route re-entry so Delete only removes the current gu
     width: 80,
     height: 40,
     rotation: 0,
-    path: rectangleLandmarkPath(),
+    path: rectangleShapePath(),
   };
   usePlanStateStore().state.landmarks = [house];
   const { router, view } = await renderGarden();
@@ -671,7 +630,7 @@ it('switches between guild and landmark selection and clears it when the garden 
       width: 80,
       height: 40,
       rotation: 0,
-      path: rectangleLandmarkPath(),
+      path: rectangleShapePath(),
     },
   ];
   const { router } = await renderGarden('/guilds/guild');
@@ -778,7 +737,7 @@ it('makes merge and drawing modes exclusive, including keyboard transitions', as
 });
 
 it.each(
-  (['guild', 'landmark', 'border'] as const).flatMap((feature) =>
+  (['guild', 'landmark', 'path', 'border'] as const).flatMap((feature) =>
     (['Path brush (B)', 'Polygon (P)', 'Bounding box (R)'] as const).map((brush) => ({
       feature,
       brush,
@@ -800,7 +759,8 @@ it.each(
   if (feature !== 'guild')
     await fireEvent.click(
       screen.getByRole('button', {
-        name: feature === 'border' ? 'Plot border' : 'landmark',
+        name:
+          feature === 'border' ? 'Plot border' : feature === 'path' ? 'Path' : 'landmark',
       }),
     );
   await fireEvent.click(screen.getByRole('button', { name: brush }));
@@ -832,7 +792,9 @@ it.each(
       ? plan.guilds[0]!.path
       : feature === 'landmark'
         ? plan.landmarks[0]!.path
-        : plan.plotBorder;
+        : feature === 'path'
+          ? plan.paths[0]!.path
+          : plan.plotBorder;
   expect(plan.guilds[1]).toEqual(before.guilds[1]);
   expect(path).toHaveLength(1);
   for (const ring of path.flat()) {
@@ -929,3 +891,36 @@ it.each(['save', 'cancel'])(
     expect(usePlanStateStore().state.plotBorder).toEqual(old);
   },
 );
+
+it('switches the shared editor between shapes with equal IDs and deletes only the selected feature', async () => {
+  const shape = {
+    id: 'shared',
+    name: 'Shared',
+    x: 100,
+    y: 100,
+    width: 60,
+    height: 40,
+    rotation: 0,
+    path: rectangleShapePath(),
+  };
+  const plan = usePlanStateStore().state;
+  plan.landmarks = [shape];
+  plan.paths = [{ ...shape, x: 200 }];
+  await renderGarden();
+  await fireEvent.keyDown(screen.getByRole('button', { name: 'Landmark: Shared' }), {
+    key: 'Enter',
+  });
+  expect(screen.getByRole('group', { name: 'Landmark details' })).toBeVisible();
+  await fireEvent.keyDown(screen.getByRole('button', { name: 'Path: Shared' }), {
+    key: 'Enter',
+  });
+  expect(
+    screen.queryByRole('group', { name: 'Landmark details' }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole('group', { name: 'Path details' })).toBeVisible();
+  await fireEvent.click(screen.getByRole('button', { name: 'Delete path' }));
+  expect(plan).toMatchObject({ landmarks: [shape], paths: [] });
+  expect(screen.queryByRole('group', { name: 'Path details' })).not.toBeInTheDocument();
+  usePlanCommandHistory().undo();
+  expect(plan.paths).toEqual([{ ...shape, x: 200 }]);
+});

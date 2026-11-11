@@ -28,6 +28,7 @@ defmodule Permaplanner.Gardens.Document do
       is_integer(doc["syncRevision"]) and doc["syncRevision"] >= 0 and
       rows?(doc["plants"], &plant?/1) and rows?(doc["guilds"], &guild?/1) and
       rows?(doc["landmarks"], &landmark?/1) and
+      rows?(doc["paths"], &landmark?/1) and
       rows?(doc["plotBorder"], &polygon?/1) and
       scale?(doc["mapScale"]) and is_number(doc["backgroundOpacity"]) and
       doc["backgroundOpacity"] >= 0 and doc["backgroundOpacity"] <= 1 and
@@ -43,9 +44,12 @@ defmodule Permaplanner.Gardens.Document do
     plants = MapSet.new(doc["plants"], & &1["id"])
     instances = Enum.flat_map(doc["guilds"], & &1["plants"])
 
-    Enum.all?([doc["plants"], doc["guilds"], doc["landmarks"], instances], fn rows ->
-      MapSet.size(MapSet.new(rows, & &1["id"])) == length(rows)
-    end) and Enum.all?(instances, &MapSet.member?(plants, &1["plantId"]))
+    Enum.all?(
+      [doc["plants"], doc["guilds"], doc["landmarks"], doc["paths"], instances],
+      fn rows ->
+        MapSet.size(MapSet.new(rows, & &1["id"])) == length(rows)
+      end
+    ) and Enum.all?(instances, &MapSet.member?(plants, &1["plantId"]))
   end
 
   defp scale?(%{

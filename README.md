@@ -155,7 +155,7 @@ Month ranges are approximate outdoor northern-hemisphere seasons and vary with c
 ## Garden document format
 
 Stored documents, API responses, frontend state, and downloadable JSON use the
-shared feature-path format (version 9). `syncRevision` tracks save conflicts.
+shared feature-path format (version 10). `syncRevision` tracks save conflicts.
 Guild `path` stores polygons → rings → `{x, y}` points. Each polygon has one
 closed exterior ring followed by closed hole rings; disconnected regions have
 separate polygons. Only boundaries are saved, with no connecting bridges or brush
@@ -176,7 +176,7 @@ simplification fall back per region if a candidate loses a hole or conflicts wit
 a neighbor. The API checks numeric points, closed rings, and the nested data shape
 in linear time; it stores the geometry unchanged without calculating area or
 validating topology on each autosave.
-Document validation requires unique IDs within plants, guilds, landmarks, and
+Document validation requires unique IDs within plants, guilds, landmarks, paths, and
 plant instances (across all guilds). Every instance must reference a plant in
 the document; unknown catalog species remain supported.
 Create, update, and import prepare validated document fields and parsed image changes
@@ -310,7 +310,7 @@ reference line's entered length. Changing the unit labels that length; it does n
 convert the number or alter map geometry. New gardens use meters. Older gardens
 keep an unspecified unit until you choose the unit used to calibrate their scale.
 
-Choose a feature (**Guild**, **Landmark**, or **Plot border**), then a brush:
+Choose a feature (**Guild**, **Landmark**, **Path**, or **Plot border**), then a brush:
 **Path (B)**, **Polygon (P)**, or **Bounding box (R)**. Drag to paint or draw a box;
 click to add polygon corners. Enter saves and Escape cancels. Hold Shift while
 painting to lock to the nearest horizontal or vertical axis; release it to draw
@@ -324,6 +324,17 @@ Landmarks store an ID, name, local path, centre (`x`, `y`), width, height, and c
 rotation in degrees. Dimensions use map coordinates. Both garden and guild MCP
 responses include all landmarks, the scale unit, and coordinate conventions.
 North is unknown; image up does not imply geographic north.
+
+### Paths
+
+Choose **Path** in the map feature toolbar, then draw with the path brush, polygon,
+or bounding-box tool. Paths have a sand-coloured fill and their own names. Select a
+path to move, resize, rotate, rename, or delete it. Changes support undo/redo and
+are included in saves, JSON exports/imports, and MCP garden reads.
+
+Document version 10 adds a `paths` collection using the same local geometry,
+position, dimensions, and rotation as landmarks. The database migration and local
+file importer give older gardens an empty collection while preserving their data.
 
 ### Optional plot border
 

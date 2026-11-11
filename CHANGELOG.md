@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.34.0
+
+- [CHANGE] Add paths with all drawing brushes, shape editing, and undo/redo.
+- [CHANGE] Store paths in document version 10 and preserve older gardens through migration and file import.
+
+- [FIX] Keep map tools and shape editors accessible on narrow screens.
+
 ## 0.33.0
 
 - [CHANGE] Separate map features from path, polygon, and bounding-box brushes; all three brushes work for guilds, landmarks, and the plot border.

@@ -1,10 +1,11 @@
 import { v4 as uuid } from 'uuid';
-import { landmarkFromPath } from './landmarkGeometry';
+import { shapeFromPath } from './mapShapeGeometry';
 import { computed, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useGuildSelection } from './useGuildSelection';
 import { useGardenStore } from './useGardenStore';
-import { useLandmarkStore } from './useLandmarkStore';
+import { useMapShapeStore } from './useMapShapeStore';
+import { SHAPE_FEATURES, type ShapeFeature } from './mapShapeFeatures';
 import { usePlotBorderStore } from './usePlotBorderStore';
 import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import type {
@@ -14,13 +15,13 @@ import type {
   DrawingSession,
   DrawingTarget,
 } from './useAerialTool';
-import type { Landmark } from './gardenDocument';
+import type { MapShape } from './gardenDocument';
 import type { GuildPath } from './guildPathClip';
 
 type MapMode =
   | { kind: 'select' | 'move' }
   | ({ kind: 'draw' } & DrawingSession)
-  | { kind: 'landmark'; id: string }
+  | { kind: 'shape'; feature: ShapeFeature; id: string }
   | { kind: 'border' }
   | { kind: 'merge'; sourceId: string };
 
@@ -28,7 +29,7 @@ type MapMode =
 export const useMapInteractionStore = defineStore('mapInteraction', () => {
   const guildSelection = useGuildSelection();
   const garden = useGardenStore();
-  const landmarks = useLandmarkStore();
+  const shapes = useMapShapeStore();
   const border = usePlotBorderStore();
   const session = useGardenSessionStore();
   const preferredFeature = ref<MapFeature>('guild');
@@ -61,8 +62,8 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
       const current = mode.value;
       if (current.kind === 'merge')
         return garden.guilds.some((g) => g.id === current.sourceId);
-      if (current.kind === 'landmark')
-        return landmarks.landmarks.some((l) => l.id === current.id);
+      if (current.kind === 'shape')
+        return shapes.items(current.feature).some((shape) => shape.id === current.id);
       if (current.kind === 'border') return border.path.length > 0;
       return true;
     },
@@ -75,18 +76,18 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
   const selectedGuildId = computed(() => {
     const current = mode.value;
     if (
-      current.kind === 'landmark' ||
+      current.kind === 'shape' ||
       current.kind === 'border' ||
       (current.kind === 'draw' && current.target.feature !== 'guild')
     )
       return undefined;
     return guildSelection.selectedGuildId.value;
   });
-  const selectedLandmark = computed(() => {
+  const selectedShape = computed(() => {
     const current = mode.value;
-    return current.kind === 'landmark'
-      ? landmarks.landmarks.find((l) => l.id === current.id)
-      : undefined;
+    if (current.kind !== 'shape') return undefined;
+    const shape = shapes.items(current.feature).find((item) => item.id === current.id);
+    return shape ? { feature: current.feature, shape } : undefined;
   });
   const isBorderSelected = computed(() => mode.value.kind === 'border');
   const mergeSourceId = computed(() =>
@@ -136,14 +137,14 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
     mode.value = { kind: 'select' };
     return guildSelection.addGuild();
   };
-  const selectLandmark = (id: string) => {
-    preferredFeature.value = 'landmark';
-    mode.value = { kind: 'landmark', id };
+  const selectShape = (feature: ShapeFeature, id: string) => {
+    preferredFeature.value = feature;
+    mode.value = { kind: 'shape', feature, id };
     void guildSelection.clearSelection();
   };
-  const commitLandmark = (landmark: Landmark) => {
-    landmarks.save(landmark);
-    selectLandmark(landmark.id);
+  const commitShape = (feature: ShapeFeature, shape: MapShape) => {
+    shapes.save(feature, shape);
+    selectShape(feature, shape.id);
   };
   const selectBorder = () => {
     preferredFeature.value = 'border';
@@ -155,7 +156,8 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
   };
   const removeSelection = () => {
     if (isBorderSelected.value) border.savePath([]);
-    else if (selectedLandmark.value) landmarks.remove(selectedLandmark.value.id);
+    else if (selectedShape.value)
+      shapes.remove(selectedShape.value.feature, selectedShape.value.shape.id);
     else if (selectedGuildId.value) {
       const id = selectedGuildId.value;
       garden.removeGuild(id);
@@ -175,6 +177,7 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
       case 'border':
         return border.path;
       case 'landmark':
+      case 'path':
         return [];
     }
   });
@@ -192,7 +195,7 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
     if (tool === 'draw') startDrawing(feature.value, drawingBrush.value);
     else if (tool === 'move') {
       if (canUseGuildTools.value) mode.value = { kind: 'move' };
-    } else if (!['landmark', 'border'].includes(mode.value.kind)) {
+    } else if (!['shape', 'border'].includes(mode.value.kind)) {
       mode.value = { kind: 'select' };
     }
   };
@@ -212,9 +215,13 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
         garden.setGuildPath(target.id, path);
         void clearSelection();
         return true;
+      case 'path':
       case 'landmark':
         if (!path.length) return false;
-        commitLandmark(landmarkFromPath(uuid(), path));
+        commitShape(
+          target.feature,
+          shapeFromPath(uuid(), SHAPE_FEATURES[target.feature].label, path),
+        );
         return true;
       case 'border':
         if (!path.length || !border.savePath(path)) return false;
@@ -232,7 +239,7 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
     setFeature,
     setBrush,
     selectedGuildId,
-    selectedLandmark,
+    selectedShape,
     isBorderSelected,
     mergeSourceId,
     isMerging,
@@ -243,8 +250,8 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
     toggleMerge,
     selectGuild,
     addGuild,
-    selectLandmark,
-    commitLandmark,
+    selectShape,
+    commitShape,
     selectBorder,
     commitBorder,
     removeSelection,

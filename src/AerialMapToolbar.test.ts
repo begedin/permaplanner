@@ -17,6 +17,7 @@ it('visually highlights the selected feature and tool as selection changes', asy
   const tools = within(screen.getByRole('toolbar', { name: 'Map tools' }));
   for (const [feature, activeTool, featureName, toolName] of [
     ['guild', 'select', 'guild', 'Select (V)'],
+    ['path', 'draw', 'Path', 'Path brush (B)'],
     ['landmark', 'draw', 'landmark', 'Path brush (B)'],
     ['border', 'draw', 'Plot border', 'Path brush (B)'],
     ['guild', 'move', 'guild', 'Move guild (M)'],

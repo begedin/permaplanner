@@ -2,9 +2,9 @@
   import DrawingOverlay from './DrawingOverlay.vue';
   import PlotBorderLayer from './PlotBorderLayer.vue';
   import { usePlotBorderStore } from './usePlotBorderStore';
-  import LandmarkLayer from './LandmarkLayer.vue';
-  import LandmarkEditor from './LandmarkEditor.vue';
-  import { useLandmarkStore } from './useLandmarkStore';
+  import { useMapShapeStore } from './useMapShapeStore';
+  import MapShapeLayer from './MapShapeLayer.vue';
+  import MapShapeEditor from './MapShapeEditor.vue';
   import { SCALE_UNITS } from './gardenDocument';
   import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
@@ -34,18 +34,25 @@
   import AerialMapToolbar from './AerialMapToolbar.vue';
 
   const plotBorder = usePlotBorderStore();
-  const landmarks = useLandmarkStore();
+  const shapes = useMapShapeStore();
+  const shapeLayerOrder = ['path', 'landmark'] as const;
   const session = useGardenSessionStore();
   const permaplannerStore = usePermaplannerStore();
   const mapSettingsOpen = ref(false);
   const showGuildLabels = useLocalStorage('permaplanner.showGuildLabels', true);
+  const showPathLabels = useLocalStorage('permaplanner.showPathLabels', true);
   const showLandmarkLabels = useLocalStorage('permaplanner.showLandmarkLabels', true);
+
+  const shapeLabels = computed(() => ({
+    landmark: showLandmarkLabels.value,
+    path: showPathLabels.value,
+  }));
 
   const { imgWidth, imgHeight, imgDataUrl, ready } = useBackgroundImage();
   const { errorMessage: backgroundPasteError } = useBackgroundImagePaste();
 
   const container = ref<SVGSVGElement>();
-  const landmarkControls = ref<SVGGElement>();
+  const shapeControls = ref<SVGGElement>();
 
   const { width: containerWidth, height: containerHeight } = useElementSize(container);
 
@@ -135,13 +142,13 @@
   const {
     isMerging,
     selectedGuildId,
-    selectedLandmark,
+    selectedShape,
     isBorderSelected,
     selectBorder,
     commitBorder,
     selectGuild,
-    selectLandmark,
-    commitLandmark,
+    selectShape,
+    commitShape,
     clearSelection,
     removeSelection,
     activeTool,
@@ -282,7 +289,9 @@
               ×
             </button>
           </div>
-          <div class="pointer-events-none absolute top-2 right-2 z-10">
+          <div
+            class="pointer-events-none absolute top-2 right-2 z-10 flex w-max max-w-[calc(100%-1rem)] max-h-[calc(100%-1rem)] flex-col items-end gap-4"
+          >
             <AerialMapToolbar
               :active-tool="activeTool"
               :feature="feature"
@@ -292,41 +301,43 @@
               :can-use-guild-tools="canUseGuildTools"
               @update:active-tool="setTool"
             />
-          </div>
-          <div
-            v-if="drawing"
-            class="paper-floating absolute top-28 right-2 z-10 max-w-[calc(100%-1rem)] px-3 py-2 text-sm text-ink-700 pointer-events-none"
-          >
-            <p v-if="drawingBrush === 'path'">
-              Drag to paint. Hold Shift to lock an axis; ⌘ to subtract. +/− changes brush
-              size.
-            </p>
-            <p v-else-if="drawingBrush === 'polygon'">
-              Click to add corners. Backspace removes a corner; click the first corner to
-              finish.
-            </p>
-            <p v-else>Drag to draw a bounding box.</p>
-            <p>Enter saves; Escape cancels.</p>
-          </div>
-          <div
-            v-else-if="isBorderSelected"
-            class="paper-floating absolute top-28 right-2 z-10 px-3 py-2 text-sm"
-          >
-            <p>Drag corners to adjust the plot border.</p>
-            <button
-              type="button"
-              class="btn-soft mt-2"
-              @click="removeSelection"
+            <div
+              v-if="drawing"
+              class="paper-floating max-w-full px-3 py-2 text-sm text-ink-700"
             >
-              Remove plot border
-            </button>
+              <p v-if="drawingBrush === 'path'">
+                Drag to paint. Hold Shift to lock an axis; ⌘ to subtract. +/− changes
+                brush size.
+              </p>
+              <p v-else-if="drawingBrush === 'polygon'">
+                Click to add corners. Backspace removes a corner; click the first corner
+                to finish.
+              </p>
+              <p v-else>Drag to draw a bounding box.</p>
+              <p>Enter saves; Escape cancels.</p>
+            </div>
+            <div
+              v-else-if="isBorderSelected"
+              class="paper-floating pointer-events-auto max-w-full px-3 py-2 text-sm"
+            >
+              <p>Drag corners to adjust the plot border.</p>
+              <button
+                type="button"
+                class="btn-soft mt-2"
+                @click="removeSelection"
+              >
+                Remove plot border
+              </button>
+            </div>
+            <MapShapeEditor
+              v-if="selectedShape"
+              :shape="selectedShape.shape"
+              :feature="selectedShape.feature"
+              @update="commitShape(selectedShape.feature, $event)"
+              @remove="removeSelection"
+              @done="clearSelection"
+            />
           </div>
-          <LandmarkEditor
-            :landmark="selectedLandmark"
-            @update="commitLandmark"
-            @remove="removeSelection"
-            @done="clearSelection"
-          />
           <svg
             ref="container"
             :viewBox="svgViewbox"
@@ -430,17 +441,24 @@
               :preview-path="editingGuildId ? brushPath : undefined"
             />
 
-            <LandmarkLayer
-              :landmarks="landmarks.landmarks"
+            <MapShapeLayer
+              v-for="shapeFeature in shapeLayerOrder"
+              :key="`${shapeFeature}-${session.gardenId}`"
+              :shapes="shapes.items(shapeFeature)"
+              :feature="shapeFeature"
+              :show-labels="shapeLabels[shapeFeature]"
               :preview-path="
-                drawing?.target.feature === 'landmark' ? brushPath : undefined
+                drawing?.target.feature === shapeFeature ? brushPath : undefined
               "
-              :controls-target="landmarkControls"
-              :selected-id="selectedLandmark?.id"
+              :controls-target="shapeControls"
+              :selected-id="
+                selectedShape?.feature === shapeFeature
+                  ? selectedShape.shape.id
+                  : undefined
+              "
               :tool="activeTool"
-              @select="selectLandmark"
-              @commit="commitLandmark"
-              :show-labels="showLandmarkLabels"
+              @select="selectShape(shapeFeature, $event)"
+              @commit="commitShape(shapeFeature, $event)"
             />
             <PlotBorderLayer
               :key="session.gardenId"
@@ -472,9 +490,9 @@
               />
             </ReferenceLine>
             <g
-              ref="landmarkControls"
+              ref="shapeControls"
               role="group"
-              aria-label="Landmark controls"
+              aria-label="Shape controls"
             />
           </svg>
           <div
@@ -512,6 +530,14 @@
                         class="size-4 accent-sage-800"
                       />
                       Landmark names
+                    </label>
+                    <label class="flex cursor-pointer items-center gap-2 text-ink-700">
+                      <input
+                        v-model="showPathLabels"
+                        type="checkbox"
+                        class="size-4 accent-sage-800"
+                      />
+                      Path names
                     </label>
                   </fieldset>
                   <label class="paper-field-label"

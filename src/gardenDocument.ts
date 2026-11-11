@@ -3,7 +3,7 @@ import type { GuildPath } from './guildPathClip';
 import type { Guild, UserPlant } from './gardenTypes';
 import type { OnboardingState } from './onboardingTypes';
 
-export const GARDEN_DOCUMENT_VERSION = 9 as const;
+export const GARDEN_DOCUMENT_VERSION = 10 as const;
 
 export type ScaleUnit = 'unspecified' | 'm' | 'ft' | 'cm' | 'in' | 'yd';
 export const SCALE_UNITS: { value: ScaleUnit; label: string }[] = [
@@ -14,7 +14,7 @@ export const SCALE_UNITS: { value: ScaleUnit; label: string }[] = [
   { value: 'in', label: 'Inches' },
   { value: 'yd', label: 'Yards' },
 ];
-export type Landmark = {
+export type MapShape = {
   id: string;
   name: string;
   /** Centre in map coordinates; rotation is clockwise degrees. */
@@ -27,6 +27,9 @@ export type Landmark = {
   path: DeepReadonly<GuildPath>;
 };
 
+export type Landmark = MapShape;
+export type GardenPath = MapShape;
+
 /** Current backend document, also used unchanged for local exports. */
 export type GardenDocument = {
   version: typeof GARDEN_DOCUMENT_VERSION;
@@ -35,6 +38,7 @@ export type GardenDocument = {
   plants: UserPlant[];
   guilds: Guild[];
   landmarks: Landmark[];
+  paths: GardenPath[];
   /** Empty when no optional plot border has been drawn. */
   plotBorder: GuildPath;
   mapScale: {

@@ -1,6 +1,6 @@
-import { landmarkFromPath, rectangleLandmarkPath } from './landmarkGeometry';
+import { shapeFromPath, rectangleShapePath } from './mapShapeGeometry';
 import { expect, it } from 'vitest';
-import { landmarkAtPointer, LANDMARK_RESIZE_HANDLES } from './landmarkGeometry';
+import { shapeAtPointer, SHAPE_RESIZE_HANDLES } from './mapShapeGeometry';
 
 const house = {
   id: 'house',
@@ -10,7 +10,7 @@ const house = {
   width: 80,
   height: 60,
   rotation: 0,
-  path: rectangleLandmarkPath(),
+  path: rectangleShapePath(),
 };
 
 it.each([
@@ -23,10 +23,10 @@ it.each([
   ['bottom-right', { x: 105, y: 60, width: 90, height: 80 }],
   ['bottom-left', { x: 105, y: 60, width: 70, height: 80 }],
 ])('anchors the opposite side when resizing %s', (name, expected) => {
-  const direction = LANDMARK_RESIZE_HANDLES.find((handle) => handle.name === name)!;
+  const direction = SHAPE_RESIZE_HANDLES.find((handle) => handle.name === name)!;
   expect(
-    landmarkAtPointer(
-      { kind: 'resize', landmark: house, direction },
+    shapeAtPointer(
+      { kind: 'resize', shape: house, direction },
       { x: 100, y: 50 },
       { x: 110, y: 70 },
       7,
@@ -36,8 +36,8 @@ it.each([
 
 it('resizes in local axes without moving the opposite rotated edge', () => {
   expect(
-    landmarkAtPointer(
-      { kind: 'resize', landmark: { ...house, rotation: 30 }, direction: { x: 1, y: 0 } },
+    shapeAtPointer(
+      { kind: 'resize', shape: { ...house, rotation: 30 }, direction: { x: 1, y: 0 } },
       { x: 100, y: 50 },
       { x: 100 + 10 * Math.sqrt(3), y: 60 },
       7,
@@ -62,9 +62,10 @@ it('normalizes an arbitrary landmark path without changing its map bounds', () =
       ],
     ],
   ];
-  const result = landmarkFromPath('new', path);
+  const result = shapeFromPath('new', 'New shape', path);
   expect(result).toMatchObject({
     id: 'new',
+    name: 'New shape',
     x: 70,
     y: 60,
     width: 60,

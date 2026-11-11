@@ -143,6 +143,7 @@ defmodule Permaplanner.Gardens do
       "plants" => [],
       "guilds" => [],
       "landmarks" => [],
+      "paths" => [],
       "plotBorder" => [],
       "mapScale" => %{
         "start" => %{"x" => 20, "y" => 20},

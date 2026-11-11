@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { SHAPE_FEATURES } from './mapShapeFeatures';
   import UiIcon from './uiIcons/UiIcon.vue';
   import type { AerialTool, DrawingBrush, MapFeature } from './useAerialTool';
   import type { UiIconId } from './uiIcons/iconIds';
@@ -16,7 +17,12 @@
   }>();
   const features: { id: MapFeature; label: string; icon: UiIconId }[] = [
     { id: 'guild', label: 'guild', icon: 'guilds' },
-    { id: 'landmark', label: 'landmark', icon: 'landmark' },
+    {
+      id: 'landmark',
+      label: SHAPE_FEATURES.landmark.label.toLowerCase(),
+      icon: SHAPE_FEATURES.landmark.icon,
+    },
+    { id: 'path', label: SHAPE_FEATURES.path.label, icon: SHAPE_FEATURES.path.icon },
     { id: 'border', label: 'Plot border', icon: 'plot-border' },
   ];
   const brushes: { id: DrawingBrush; label: string; icon: UiIconId }[] = [
@@ -26,11 +32,13 @@
   ];
 </script>
 <template>
-  <div class="paper-floating pointer-events-auto flex flex-col gap-1 p-1.5">
+  <div
+    class="paper-floating pointer-events-auto flex w-max max-w-full shrink-0 flex-col gap-1 p-1.5"
+  >
     <div
       role="group"
       aria-label="Feature"
-      class="flex gap-1"
+      class="flex flex-wrap gap-1"
     >
       <button
         v-for="item in features"
@@ -49,7 +57,7 @@
     <div
       role="toolbar"
       aria-label="Map tools"
-      class="map-toolbar flex gap-1"
+      class="map-toolbar flex flex-wrap gap-1"
     >
       <button
         type="button"

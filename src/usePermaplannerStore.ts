@@ -22,6 +22,7 @@ export const usePermaplannerStore = defineStore('permaplanner', () => {
   return {
     plants: computed(() => readonly(plan.state.plants)),
     guilds: computed(() => readonly(plan.state.guilds)),
+    paths: computed(() => readonly(plan.state.paths)),
     landmarks: computed(() => readonly(plan.state.landmarks)),
     plotBorder: computed(() => readonly(plan.state.plotBorder)),
     backgroundOpacity: computed(() => plan.state.backgroundOpacity),

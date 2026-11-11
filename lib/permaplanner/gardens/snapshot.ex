@@ -18,9 +18,12 @@ defmodule Permaplanner.Gardens.Snapshot do
     |> Map.merge(%{
       mapScale: garden.document["mapScale"],
       landmarks: garden.document["landmarks"],
+      paths: garden.document["paths"],
       plotBorder: garden.document["plotBorder"],
       coordinateSystem: %{
         axes: "x right, y down",
+        pathPosition:
+          "path bounding-box centre; local geometry and rotation use the landmark conventions",
         landmarkPosition: "path bounding-box centre",
         landmarkPath:
           "local coordinates scaled by width/height, then rotated and translated by x/y",

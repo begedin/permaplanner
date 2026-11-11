@@ -10,6 +10,7 @@ export const UI_ICON_SYMBOL_INNER: Record<UiIconId, string> = {
     <path d="M8 23 L24 9 L40 23 M13 19 L13 39 L35 39 L35 19" />
     <path d="M21 39 L21 28 L28 28 L28 39" />
   `,
+  path: `<path d="M10 40 C10 26 28 26 22 8 M28 40 C28 28 42 24 36 8" />`,
   'plot-border': `
     <path d="M10 10 L38 10 L38 38 L10 38 Z" stroke-dasharray="5 4" />
   `,

@@ -29,6 +29,10 @@ defmodule Permaplanner.Gardens.DocumentMigrationTest do
     __DIR__
   )
 
+  @paths_migration Permaplanner.Repo.Migrations.AddGardenPaths
+  @paths_version 20_261_111_085_623
+  Code.require_file("../../../priv/repo/migrations/20261111085623_add_garden_paths.exs", __DIR__)
+
   setup do
     # An isolated schema exercises the real migration with separate transactions,
     # without rolling back or rewriting any application test data.
@@ -302,5 +306,27 @@ defmodule Permaplanner.Gardens.DocumentMigrationTest do
                ),
                prefix: schema
              )
+  end
+
+  test "adds paths without changing existing data or revisions", %{
+    schema: schema,
+    document: document,
+    timestamp: timestamp
+  } do
+    old = Map.put(document, "version", 9)
+
+    from(g in "gardens", where: g.id == "garden")
+    |> Repo.update_all([set: [document: old, file_version: 9]], prefix: schema)
+
+    assert :ok =
+             Ecto.Migrator.up(Repo, @paths_version, @paths_migration, prefix: schema, log: false)
+
+    expected = old |> Map.put("version", 10) |> Map.put("paths", [])
+
+    assert [%{document: ^expected, file_version: 10, sync_revision: 3, updated_at: ^timestamp}] =
+             Repo.all(
+               from(g in "gardens",
+                 select: map(g, [:document, :file_version, :sync_revision, :updated_at])
+               ), prefix: schema)
   end
 end

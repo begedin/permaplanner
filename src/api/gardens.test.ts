@@ -14,6 +14,7 @@ vi.unmock('./gardens');
 
 const document: GardenDocument = {
   landmarks: [],
+  paths: [],
   plotBorder: [],
   version: GARDEN_DOCUMENT_VERSION,
   syncRevision: 3,
@@ -241,6 +242,7 @@ it.each([legacyDocument, splitDocument])(
       document: {
         ...document,
         landmarks: [],
+        paths: [],
         plotBorder: [],
         mapScale: { ...mapScale, unit: 'unspecified' },
       },
@@ -324,4 +326,15 @@ it('converts version 8 rectangles and borders without changing their placement o
   });
   expect(old).toEqual(before);
   expect(JSON.parse(buildLocalPlanJsonText(converted))).toEqual(converted);
+});
+
+it('imports version 9 gardens with an empty paths collection', async () => {
+  fetchMock.mockResolvedValueOnce(
+    new Response(JSON.stringify({ garden: { id: 'garden1' } })),
+  );
+  const { paths: _paths, ...old } = document;
+  await importJsonText(JSON.stringify({ ...old, version: 9 }));
+  expect(JSON.parse(String(fetchMock.mock.calls.at(-1)?.[1]?.body)).document).toEqual(
+    document,
+  );
 });
