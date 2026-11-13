@@ -50,6 +50,7 @@ const document: GardenDocument = {
           nameOrCultivar: 'My herb',
           x: 5,
           y: 6,
+          placed: true,
           width: 7,
           height: 8,
           note: 'Prune after harvest\nCheck new growth',
@@ -337,4 +338,44 @@ it('imports version 9 gardens with an empty paths collection', async () => {
   expect(JSON.parse(String(fetchMock.mock.calls.at(-1)?.[1]?.body)).document).toEqual(
     document,
   );
+});
+
+it('imports legacy placeholders as unplaced while preserving actual layouts and current explicit placements', async () => {
+  const original = document.guilds[0]!.plants[0]!;
+  const { placed: _placed, ...legacy } = original;
+  const instances = [
+    { ...legacy, id: 'placeholder', width: 16, height: 16 },
+    { ...legacy, id: 'drawn', width: 42, height: 42 },
+    { ...legacy, id: 'unplaced', width: 0, height: 0 },
+  ];
+  const old = {
+    ...document,
+    version: 10,
+    guilds: [{ ...document.guilds[0], plants: instances }],
+  };
+  fetchMock.mockImplementation(
+    async () => new Response(JSON.stringify({ garden: { id: 'garden1' } })),
+  );
+  await importJsonText(JSON.stringify(old));
+  const expected = {
+    ...old,
+    version: GARDEN_DOCUMENT_VERSION,
+    guilds: [
+      {
+        ...old.guilds[0],
+        plants: instances.map((thing, index) => ({ ...thing, placed: index === 1 })),
+      },
+    ],
+  };
+  expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+    document: expected,
+  });
+  const current = {
+    ...expected,
+    guilds: [{ ...expected.guilds[0], plants: [{ ...instances[0], placed: true }] }],
+  };
+  await importJsonText(buildLocalPlanJsonText(current as GardenDocument));
+  expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body))).toEqual({
+    document: current,
+  });
 });

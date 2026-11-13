@@ -1,5 +1,6 @@
 <script lang="ts" setup>
   import { computed, ref, toRef } from 'vue';
+  import { hasPlantPlacement } from './gardenTypes';
   import type { GuildLayer } from './gardenTypes';
 
   import HighlightText from './HighlightText.vue';
@@ -34,6 +35,13 @@
 
   const props = defineProps<{
     guildId: string;
+    layoutMode?: boolean;
+    selectedThingId?: string;
+  }>();
+  const emit = defineEmits<{
+    selectPlant: [id: string | undefined];
+    placePlant: [id: string];
+    openLayout: [];
   }>();
 
   const { searchQuery } = useGuildSearch();
@@ -142,16 +150,32 @@
               />
             </button>
           </div>
-          <button
-            type="button"
-            :class="placedOnMap ? '' : 'ml-auto'"
-            class="btn-danger inline-flex items-center gap-1 text-xs rounded-lg px-2 py-0.5"
-            aria-label="Delete"
-            @click="garden.removeGuild(guildId)"
-          >
-            <UiIcon name="trash" />
-            Delete
-          </button>
+          <div class="ml-auto flex shrink-0 items-center gap-1">
+            <button
+              v-if="!layoutMode"
+              type="button"
+              class="btn-soft inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs disabled:opacity-50"
+              :disabled="!placedOnMap"
+              :title="
+                placedOnMap
+                  ? 'Arrange individual plants'
+                  : 'Draw the guild on the aerial map first'
+              "
+              @click="emit('openLayout')"
+            >
+              <UiIcon name="place" />
+              Place plants
+            </button>
+            <button
+              type="button"
+              class="btn-danger inline-flex items-center gap-1 text-xs rounded-lg px-2 py-0.5"
+              aria-label="Delete"
+              @click="garden.removeGuild(guildId)"
+            >
+              <UiIcon name="trash" />
+              Delete
+            </button>
+          </div>
         </div>
         <input
           class="appearance-none bg-transparent border-none focus:outline-none text-ink-600 w-full truncate"
@@ -371,15 +395,60 @@
                   v-for="(thingId, index) in row.thingIds"
                   :key="thingId"
                   v-show="
+                    layoutMode ||
                     isPlantGroupExpanded(row.plantId) ||
                     guildThing(thingId)?.note ||
                     (row.count === 1 && editingPlantNoteId === thingId)
                   "
                   class="flex flex-col gap-1 rounded-lg border border-parchment-300/80 bg-parchment-50/60 px-2 py-1.5"
+                  :class="
+                    layoutMode && selectedThingId === thingId
+                      ? 'ring-2 ring-sage-600 bg-sage-100'
+                      : ''
+                  "
                   :aria-label="
                     row.count > 1 ? `${row.label} instance ${index + 1}` : row.label
                   "
                 >
+                  <div
+                    v-if="layoutMode"
+                    class="flex items-center gap-2"
+                  >
+                    <button
+                      type="button"
+                      class="min-w-0 flex-1 text-left text-xs hover:underline"
+                      :aria-label="`Select ${row.label} #${index + 1}`"
+                      :aria-pressed="selectedThingId === thingId"
+                      @click="
+                        emit(
+                          'selectPlant',
+                          selectedThingId === thingId ? undefined : thingId,
+                        )
+                      "
+                    >
+                      <span class="block truncate"
+                        >{{ row.label
+                        }}<template v-if="row.count > 1">
+                          #{{ index + 1 }}</template
+                        ></span
+                      >
+                      <span class="text-ink-500">{{
+                        hasPlantPlacement(guildThing(thingId)) ? 'Placed' : 'Not placed'
+                      }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-icon shrink-0 p-1 hover:bg-sage-200"
+                      :title="`Place ${row.label} #${index + 1}`"
+                      :aria-label="`Place ${row.label} #${index + 1}`"
+                      @click.stop="emit('placePlant', thingId)"
+                    >
+                      <UiIcon
+                        name="place"
+                        class="size-5"
+                      />
+                    </button>
+                  </div>
                   <div
                     v-if="row.count > 1 && isPlantGroupExpanded(row.plantId)"
                     class="flex items-center justify-between gap-1"

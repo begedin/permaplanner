@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
+export const MAX_ZOOM = 10;
+
 export const useCameraStore = defineStore('camera', () => {
   const scale = ref(1);
   const zoom = ref(1.0);
@@ -8,6 +10,8 @@ export const useCameraStore = defineStore('camera', () => {
   const y = ref(0);
   const width = ref(1000);
   const height = ref(1000);
+
+  const isFullyZoomed = computed(() => zoom.value >= MAX_ZOOM);
 
   const mapLabelFontSize = computed(() => {
     const screenSize = Math.min(13, Math.max(9, 10 * Math.sqrt(zoom.value)));
@@ -44,6 +48,7 @@ export const useCameraStore = defineStore('camera', () => {
      * Height of the camera box
      */
     height,
+    isFullyZoomed,
     cameraToWorld,
     mapLabelFontSize,
   };

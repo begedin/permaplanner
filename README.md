@@ -155,7 +155,7 @@ Month ranges are approximate outdoor northern-hemisphere seasons and vary with c
 ## Garden document format
 
 Stored documents, API responses, frontend state, and downloadable JSON use the
-shared feature-path format (version 10). `syncRevision` tracks save conflicts.
+shared feature-path format (version 11). `syncRevision` tracks save conflicts.
 Guild `path` stores polygons → rings → `{x, y}` points. Each polygon has one
 closed exterior ring followed by closed hole rings; disconnected regions have
 separate polygons. Only boundaries are saved, with no connecting bridges or brush
@@ -390,3 +390,32 @@ from an open dashboard; it cannot erase data already displayed in a browser.
 Totals and rows are refreshed on navigation/search or a page reload, not pushed
 when other users change their gardens. Environment changes require a server restart;
 production restarts and deployments require explicit approval.
+
+### Individual plant layout
+
+Select a guild drawn on the aerial map and click **Place plants** to open
+`/guilds/:guildId/layout`. Use **Back to aerial** to return to its details and map.
+This child route shares the guild sidebar and editable card with the selected-guild
+view, replacing only the aerial panel with the guild closeup. The breadcrumb is
+**Guilds → selected guild → Plant layout**. Selecting another mapped guild keeps
+the closeup open; unmapped guilds return to their details and aerial view.
+Add species through the card, then click an individual's **Place** pin and drag
+from its center outward to draw a canopy. Click its card entry or canopy to select
+it. Drag a canopy to move it, or drag its edge handle to resize it. **Delete** or
+**Remove placement** clears only its map placement; the individual, quantity,
+notes, and condition remain in the guild. Use its Place pin to place it again.
+Centers must be inside the guild; canopies may extend beyond its edge.
+Trees, shrubs, and smaller plants use different stylized canopy textures.
+Placements support undo/redo, appear on the main map, and move with the guild.
+New individuals start unplaced. Version 11 records explicit placement with
+`placed: true`; positive coordinates alone do not place a plant. The version 10
+upgrade marks the old automatic 16×16 placeholders as unplaced, retaining their
+coordinates and all other plant data. Non-placeholder layouts are retained.
+Old-file import applies the same conversion; current files preserve explicit
+placements of any size, including 16×16.
+
+Plant names are always shown in the guild layout. On the main aerial map, enable
+**Map settings → Plant names (maximum zoom)** to show them at maximum zoom,
+when the canopy is at least 24 screen pixels across. This preference is remembered
+in the browser. Guild names give way to visible plant labels; guilds without placed
+plants retain their names.

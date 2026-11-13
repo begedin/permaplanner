@@ -42,6 +42,7 @@ defmodule Permaplanner.Gardens.DocumentTest do
               "nameOrCultivar" => "Plant",
               "x" => 0,
               "y" => 0,
+              "placed" => true,
               "width" => 16,
               "height" => 16
             }
@@ -65,6 +66,7 @@ defmodule Permaplanner.Gardens.DocumentTest do
         List.duplicate(hd(hd(document["guilds"])["plants"]), 2)
       ),
       put_in(document, ["guilds", Access.at(0), "plants", Access.at(0), "plantId"], "missing"),
+      put_in(document, ["guilds", Access.at(0), "plants", Access.at(0), "placed"], "true"),
       Map.put(document, "mapScale", nil),
       put_in(document, ["mapScale", "unit"], "cubits"),
       Map.delete(document, "paths"),

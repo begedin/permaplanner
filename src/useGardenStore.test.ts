@@ -1,3 +1,4 @@
+import { hasPlantPlacement } from './gardenTypes';
 import { usePlanStateStore } from './usePlanStateStore';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useGardenStore } from './useGardenStore';
@@ -201,7 +202,7 @@ it('removeGuildThings removes by id set', () => {
   expect(usePlanStateStore().state.guilds[0]!.plants).toEqual([a]);
 });
 
-it('addCatalogPlantToGuild creates UserPlant and places a thing', () => {
+it('addCatalogPlantToGuild creates an unplaced individual', () => {
   const store = useGardenStore();
   usePlanStateStore().state.guilds = [
     { id: 'g1', path: [], name: 'Bed', plants: [], mulchLevel: 1 },
@@ -216,8 +217,8 @@ it('addCatalogPlantToGuild creates UserPlant and places a thing', () => {
   expect(usePlanStateStore().state.guilds[0]!.plants).toHaveLength(1);
   expect(usePlanStateStore().state.guilds[0]!.plants[0]).toMatchObject({
     plantId: usePlanStateStore().state.plants[0]!.id,
-    width: 16,
-    height: 16,
+    width: 0,
+    height: 0,
   });
 });
 
@@ -424,4 +425,97 @@ it('keeps referenced plants and makes unused plant deletion undoable', () => {
   expect(usePlanStateStore().state.plants).toEqual([used]);
   history.undo();
   expect(usePlanStateStore().state.plants).toEqual([used, unused]);
+});
+
+const createGuildWithPlant = () => {
+  const store = useGardenStore();
+  const guild = store.createGuild();
+  store.addCatalogPlantToGuild(guild.id, 'apple', null);
+  const thing = store.guilds[0]!.plants[0]!;
+  return { store, guild, thing };
+};
+
+it('places and redraws individuals as undoable edits without losing their notes', () => {
+  const { store, guild, thing } = createGuildWithPlant();
+  const history = usePlanCommandHistory();
+  store.updateGuildThingNote(guild.id, thing.id, 'Keep this tree');
+  history.clear();
+  const bounds = { x: 25, y: 40, width: 32, height: 32 };
+  store.setPlantPlacement(guild.id, thing.id, bounds);
+  expect(store.guilds[0]?.plants).toMatchObject([
+    { ...bounds, id: thing.id, note: 'Keep this tree', placed: true },
+  ]);
+  history.undo();
+  expect(store.guilds[0]?.plants).toMatchObject([
+    { x: 0, y: 0, width: 0, height: 0, note: 'Keep this tree', placed: false },
+  ]);
+  history.redo();
+  expect(store.guilds[0]?.plants).toMatchObject([{ ...bounds, id: thing.id }]);
+});
+
+it('rejects invalid plant placements and moves individuals with their guild', () => {
+  const { store, guild, thing } = createGuildWithPlant();
+  const before = JSON.parse(JSON.stringify(store.guilds));
+  store.setPlantPlacement(guild.id, thing.id, { x: NaN, y: 0, width: 10, height: 10 });
+  store.setPlantPlacement(guild.id, thing.id, { x: 0, y: 0, width: 0, height: 10 });
+  store.setPlantPlacement(guild.id, 'missing', { x: 0, y: 0, width: 10, height: 10 });
+  expect(store.guilds).toEqual(before);
+  store.setPlantPlacement(guild.id, thing.id, { x: 5, y: 5, width: 16, height: 16 });
+  const path = [
+    [
+      [
+        { x: 0, y: 0 },
+        { x: 100, y: 0 },
+        { x: 100, y: 100 },
+        { x: 0, y: 0 },
+      ],
+    ],
+  ];
+  store.setGuildPath(guild.id, path);
+  store.setGuildPath(
+    guild.id,
+    path.map((p) =>
+      p.map((r) => r.map((point) => ({ x: point.x + 20, y: point.y - 10 }))),
+    ),
+    true,
+  );
+  expect(store.guilds[0]?.plants).toMatchObject([
+    { x: 25, y: -5, width: 16, height: 16 },
+  ]);
+  usePlanCommandHistory().undo();
+  expect(store.guilds[0]?.plants).toMatchObject([{ x: 5, y: 5 }]);
+});
+
+it('removes only the placement and restores it with undo', () => {
+  const { store, guild, thing } = createGuildWithPlant();
+  store.updateGuildThingNote(guild.id, thing.id, 'My tree');
+  store.setGuildThingVigor(guild.id, thing.id, 4);
+  const bounds = { x: 20, y: 30, width: 40, height: 40 };
+  store.setPlantPlacement(guild.id, thing.id, bounds);
+  const placed = JSON.parse(JSON.stringify(store.guilds));
+  store.removePlantPlacement(guild.id, thing.id);
+  expect(store.guilds[0]?.plants).toMatchObject([
+    {
+      id: thing.id,
+      plantId: thing.plantId,
+      note: 'My tree',
+      vigor: 4,
+      placed: false,
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+    },
+  ]);
+  usePlanCommandHistory().undo();
+  expect(store.guilds).toEqual(placed);
+});
+
+it('requires explicit placement even when legacy coordinates have positive dimensions', () => {
+  const bounds = { width: 16, height: 16 };
+  expect([
+    hasPlantPlacement(bounds),
+    hasPlantPlacement({ ...bounds, placed: false }),
+    hasPlantPlacement({ ...bounds, placed: true }),
+  ]).toEqual([false, false, true]);
 });

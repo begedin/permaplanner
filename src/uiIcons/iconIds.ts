@@ -7,6 +7,7 @@ export const UI_ICON_IDS = [
   'plants',
   'calendar',
   'pointer',
+  'place',
   'rectangle',
   'polygon',
   'move',

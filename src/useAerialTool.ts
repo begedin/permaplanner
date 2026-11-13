@@ -18,7 +18,10 @@ export const useAerialToolHotkeys = (options: {
   setBrush: (brush: DrawingBrush) => void;
 }) => {
   useEventListener(document, 'keydown', (e) => {
-    if (isEditableTarget(e.target)) {
+    if (
+      isEditableTarget(e.target) ||
+      (e.target instanceof Element && e.target.closest('[role=dialog]'))
+    ) {
       return;
     }
     if (e.metaKey || e.ctrlKey || e.altKey) {

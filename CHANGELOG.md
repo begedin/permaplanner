@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.35.0
+
+- [CHANGE] Arrange individual plants in a guild closeup with organic tree, shrub, and plant canopies. Select plants from the guild card, draw their canopies, move and resize placements, and remove placements without deleting individuals. Placement edits support undo/redo.
+- [CHANGE] Share the sidebar and guild card between aerial and layout routes, with animated pan and zoom transitions that respect reduced-motion preferences and restore the aerial position.
+- [CHANGE] Label plants in guild layouts and optionally show aerial plant names at maximum zoom, replacing guild names only when plant labels are visible.
+- [FIX] Keep small selected plants draggable, prevent size jumps when resizing, and move plant graphics and labels with guild drag previews.
+- [DB] Upgrade garden documents to version 11 with explicit plant placement. New individuals and legacy automatic 16×16 placeholders remain unplaced; stored gardens and imported files retain plant details and non-placeholder layouts.
+
 ## 0.34.0
 
 - [CHANGE] Add paths with all drawing brushes, shape editing, and undo/redo.

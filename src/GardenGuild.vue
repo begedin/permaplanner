@@ -2,8 +2,11 @@
   import type { DeepReadonly } from 'vue';
   import { computed, ref, toRef, watch } from 'vue';
 
+  import { hasPlantPlacement } from './gardenTypes';
   import type { Guild } from './gardenTypes';
   import { useCameraStore } from './useCameraStore';
+  import PlantMapLabel from './PlantMapLabel.vue';
+  import PlantCanopy from './PlantCanopy.vue';
   import GardenMeasure from './GardenMeasure.vue';
   import { pathBounds } from './guildPathBounds';
   import { cloneGuildPath, guildPathData, type GuildPath } from './guildPathClip';
@@ -19,10 +22,20 @@
       selected: boolean;
       tool?: AerialTool;
       showLabel?: boolean;
+      showPlantLabels?: boolean;
     }>(),
     { showLabel: true },
   );
   const camera = useCameraStore();
+  const labeledPlants = computed(() =>
+    props.showPlantLabels && camera.isFullyZoomed
+      ? props.guild.plants.filter(
+          (thing) =>
+            hasPlantPlacement(thing) &&
+            Math.min(thing.width, thing.height) * camera.scale * camera.zoom >= 24,
+        )
+      : [],
+  );
   const labelScale = computed(() => 1 / (camera.scale * camera.zoom || 1));
 
   const emit = defineEmits<{
@@ -59,6 +72,11 @@
     }
     return pathBounds(path.value.flat(2));
   });
+  const plantPreviewTransform = computed(() => {
+    if (!isMoving.value || !box.value || !props.guild.path.length) return undefined;
+    const saved = pathBounds(props.guild.path.flat(2));
+    return `translate(${box.value.x - saved.x} ${box.value.y - saved.y})`;
+  });
 </script>
 <template>
   <path
@@ -67,10 +85,10 @@
     fill-rule="evenodd"
     :fill="
       selected
-        ? 'rgba(0, 100, 0, 0.6)'
+        ? 'rgba(0, 100, 0, 0.38)'
         : hovered
-          ? 'rgba(0, 100, 0, 0.3)'
-          : 'rgba(0, 100, 0, 0.2)'
+          ? 'rgba(0, 100, 0, 0.195)'
+          : 'rgba(0, 100, 0, 0.125)'
     "
     :class="['pointer-events-fill', isMoving ? 'cursor-move' : undefined]"
     @pointerdown="onPathPointerDown"
@@ -85,7 +103,7 @@
     class="pointer-events-none"
   />
   <text
-    v-if="box && showLabel"
+    v-if="box && showLabel && !labeledPlants.length"
     :x="box.x + box.width / 2"
     :y="box.y + box.height / 2"
     text-anchor="middle"
@@ -105,5 +123,22 @@
     :box="box"
   />
 
+  <g
+    v-if="path.length"
+    :transform="plantPreviewTransform"
+    class="pointer-events-none"
+  >
+    <PlantCanopy
+      v-for="thing in guild.plants.filter(hasPlantPlacement)"
+      :key="thing.id"
+      :thing="thing"
+    />
+    <PlantMapLabel
+      v-for="thing in labeledPlants"
+      :key="`label-${thing.id}`"
+      :thing="thing"
+      :font-size="camera.mapLabelFontSize"
+    />
+  </g>
   <slot name="features" />
 </template>

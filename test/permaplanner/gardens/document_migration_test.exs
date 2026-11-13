@@ -33,6 +33,15 @@ defmodule Permaplanner.Gardens.DocumentMigrationTest do
   @paths_version 20_261_111_085_623
   Code.require_file("../../../priv/repo/migrations/20261111085623_add_garden_paths.exs", __DIR__)
 
+  @placement_migration Permaplanner.Repo.Migrations.MarkExplicitPlantPlacements
+  @placement_version 20_261_112_215_926
+  if not Code.ensure_loaded?(@placement_migration) do
+    Code.require_file(
+      "../../../priv/repo/migrations/20261112215926_mark_explicit_plant_placements.exs",
+      __DIR__
+    )
+  end
+
   setup do
     # An isolated schema exercises the real migration with separate transactions,
     # without rolling back or rewriting any application test data.
@@ -125,6 +134,8 @@ defmodule Permaplanner.Gardens.DocumentMigrationTest do
              ).rows
   end
 
+  # Slow integration exception: real migration DDL and the Node geometry converter
+  # verify persisted boundary/hole conversion; mocks would miss the migration contract.
   test "separates retraced boundaries and holes without changing metadata", %{
     schema: schema,
     document: document,
@@ -327,6 +338,53 @@ defmodule Permaplanner.Gardens.DocumentMigrationTest do
              Repo.all(
                from(g in "gardens",
                  select: map(g, [:document, :file_version, :sync_revision, :updated_at])
-               ), prefix: schema)
+               ),
+               prefix: schema
+             )
+  end
+
+  test "marks legacy placeholders unplaced without losing geometry, notes, or revisions", %{
+    schema: schema,
+    document: document,
+    timestamp: timestamp
+  } do
+    plants = [
+      %{
+        "id" => "placeholder",
+        "x" => 35,
+        "y" => 45,
+        "width" => 16,
+        "height" => 16,
+        "note" => "Keep me"
+      },
+      %{"id" => "drawn", "x" => 30, "y" => 40, "width" => 48, "height" => 48},
+      %{"id" => "unplaced", "x" => 0, "y" => 0, "width" => 0, "height" => 0},
+      %{"id" => "explicit", "x" => 1, "y" => 2, "width" => 16, "height" => 16, "placed" => true}
+    ]
+
+    old = document |> Map.put("version", 10) |> put_in(["guilds", Access.at(0), "plants"], plants)
+
+    from(g in "gardens", where: g.id == "garden")
+    |> Repo.update_all([set: [document: old, file_version: 10]], prefix: schema)
+
+    assert :ok =
+             Ecto.Migrator.up(Repo, @placement_version, @placement_migration,
+               prefix: schema,
+               log: false
+             )
+
+    expected_plants =
+      Enum.zip_with(plants, [false, true, false, true], &Map.put(&1, "placed", &2))
+
+    expected =
+      old |> Map.put("version", 11) |> put_in(["guilds", Access.at(0), "plants"], expected_plants)
+
+    assert [%{document: ^expected, file_version: 11, sync_revision: 3, updated_at: ^timestamp}] =
+             Repo.all(
+               from(g in "gardens",
+                 select: map(g, [:document, :file_version, :sync_revision, :updated_at])
+               ),
+               prefix: schema
+             )
   end
 end

@@ -123,6 +123,32 @@ export const importGardenDocument = async (
   ) {
     document = { ...document, version: 10, paths: [] };
   }
+  if (
+    document &&
+    typeof document === 'object' &&
+    'version' in document &&
+    document.version === 10
+  ) {
+    const old = document as Record<string, unknown>;
+    document = {
+      ...old,
+      version: 11,
+      guilds: records(old.guilds).map((guild) => ({
+        ...guild,
+        plants: records(guild.plants).map((plant) => ({
+          ...plant,
+          placed:
+            typeof plant.placed === 'boolean'
+              ? plant.placed
+              : typeof plant.width === 'number' &&
+                typeof plant.height === 'number' &&
+                plant.width > 0 &&
+                plant.height > 0 &&
+                !(plant.width === 16 && plant.height === 16),
+        })),
+      })),
+    };
+  }
   return gardensApi.importGardenDocument({ document, name: opts?.name });
 };
 

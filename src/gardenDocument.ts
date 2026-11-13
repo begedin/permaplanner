@@ -3,7 +3,7 @@ import type { GuildPath } from './guildPathClip';
 import type { Guild, UserPlant } from './gardenTypes';
 import type { OnboardingState } from './onboardingTypes';
 
-export const GARDEN_DOCUMENT_VERSION = 10 as const;
+export const GARDEN_DOCUMENT_VERSION = 11 as const;
 
 export type ScaleUnit = 'unspecified' | 'm' | 'ft' | 'cm' | 'in' | 'yd';
 export const SCALE_UNITS: { value: ScaleUnit; label: string }[] = [

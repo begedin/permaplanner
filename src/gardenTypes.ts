@@ -71,6 +71,8 @@ export type GardenThing = {
   plantId: string;
   x: number;
   y: number;
+  /** Only an explicit placement is drawn; legacy coordinates alone are not placement. */
+  placed?: boolean;
   width: number;
   height: number;
   /** Optional note for this individual plant. */
@@ -80,6 +82,10 @@ export type GardenThing = {
   /** Health / vigor (1 = struggling … 5 = thriving). */
   vigor?: PlantVigor;
 };
+
+export const hasPlantPlacement = (
+  thing?: Pick<GardenThing, 'placed' | 'width' | 'height'>,
+): boolean => thing?.placed === true && thing.width > 0 && thing.height > 0;
 
 /** Guild bed mulch coverage / depth (1 = light, 5 = heavy). */
 export type MulchLevel = 1 | 2 | 3 | 4 | 5;

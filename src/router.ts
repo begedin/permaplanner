@@ -27,6 +27,7 @@ export const routeNames = {
   import: 'import',
   guilds: 'guilds',
   guildsDetail: 'guilds-detail',
+  guildLayout: 'guild-layout',
   plants: 'plants',
   calendar: 'calendar',
   calendarDetail: 'calendar-detail',
@@ -34,7 +35,9 @@ export const routeNames = {
 } as const;
 
 export const isGuildsRoute = (name: unknown): boolean =>
-  name === routeNames.guilds || name === routeNames.guildsDetail;
+  name === routeNames.guilds ||
+  name === routeNames.guildsDetail ||
+  name === routeNames.guildLayout;
 
 export const routeParam = (params: unknown, key: string): string | undefined => {
   const value = (params as Record<string, unknown>)[key];
@@ -56,10 +59,16 @@ const selectionRedirect = (
     return undefined;
   }
 
-  if (to.name === routeNames.guildsDetail) {
+  if (to.name === routeNames.guildsDetail || to.name === routeNames.guildLayout) {
     const guildId = routeParam(to.params, 'guildId');
     if (guildId && !guilds.some((guild) => guild.id === guildId)) {
       return { name: routeNames.guilds };
+    }
+    if (
+      to.name === routeNames.guildLayout &&
+      !guilds.find((g) => g.id === guildId)?.path.length
+    ) {
+      return { name: routeNames.guildsDetail, params: { guildId } };
     }
   }
 
@@ -80,13 +89,29 @@ const routes: RouteRecordRaw[] = [
   { path: '/import', name: routeNames.import, component: TheLegacyImport },
   {
     path: '/guilds',
-    name: routeNames.guilds,
     component: () => import('./TheGarden.vue'),
-  },
-  {
-    path: '/guilds/:guildId',
-    name: routeNames.guildsDetail,
-    component: () => import('./TheGarden.vue'),
+    children: [
+      {
+        path: '',
+        name: routeNames.guilds,
+        component: () => import('./GardenMap.vue'),
+      },
+      {
+        path: ':guildId',
+        children: [
+          {
+            path: '',
+            name: routeNames.guildsDetail,
+            component: () => import('./GardenMap.vue'),
+          },
+          {
+            path: 'layout',
+            name: routeNames.guildLayout,
+            component: () => import('./GardenMap.vue'),
+          },
+        ],
+      },
+    ],
   },
   { path: '/plants', name: routeNames.plants, component: ThePlants },
   { path: '/calendar', name: routeNames.calendar, component: TheCalendar },

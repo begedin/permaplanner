@@ -16,7 +16,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { mount, enableAutoUnmount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 
-import TheGarden from './TheGarden.vue';
+import { RouterView } from 'vue-router';
 import { createAuthedTestRouter } from './testing/authedTestSession';
 import { routeNames, routeParam } from './router';
 import { useGardenStore } from './useGardenStore';
@@ -39,6 +39,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   localStorage.removeItem('permaplanner.showGuildLabels');
+  localStorage.removeItem('permaplanner.showPlantLabels');
   localStorage.removeItem('permaplanner.showLandmarkLabels');
   setActivePinia(createTestingPinia({ stubActions: false, createSpy: vi.fn }));
   resetGuildSearch();
@@ -74,7 +75,7 @@ const placedGuild = (id: string, x: number): Guild => ({
 
 const renderGarden = async (path = '/guilds') => {
   const router = await createAuthedTestRouter(path);
-  return { router, view: render(TheGarden, { global: { plugins: [router] } }) };
+  return { router, view: render(RouterView, { global: { plugins: [router] } }) };
 };
 
 it('explains the paste image size limit and allows dismissing the error', async () => {
@@ -183,7 +184,7 @@ it('switches selection to another guild and discards the previous edit', async (
   const bedB = placedGuild('b', 200);
   usePlanStateStore().state.guilds = [bedA, bedB];
   const { router } = await renderGarden('/guilds/a');
-  const wrapper = mount(TheGarden, { global: { plugins: [router] } });
+  const wrapper = mount(RouterView, { global: { plugins: [router] } });
   await wrapper.vm.$nextTick();
 
   await fireEvent.click(screen.getByRole('button', { name: 'Path brush (B)' }));
@@ -229,7 +230,7 @@ it('scrolls the sidebar to a guild selected on the aerial map', async () => {
   const bedB = placedGuild('b', 200);
   usePlanStateStore().state.guilds = [bedA, bedB];
   const { router } = await renderGarden('/guilds');
-  const wrapper = mount(TheGarden, { global: { plugins: [router] } });
+  const wrapper = mount(RouterView, { global: { plugins: [router] } });
   await wrapper.vm.$nextTick();
 
   const guildB = wrapper
@@ -325,7 +326,7 @@ it('does not edit a bed while the select tool is active', async () => {
   };
   usePlanStateStore().state.guilds = [bed];
   const { router } = await renderGarden('/guilds/guild');
-  const wrapper = mount(TheGarden, { global: { plugins: [router] } });
+  const wrapper = mount(RouterView, { global: { plugins: [router] } });
   await wrapper.vm.$nextTick();
 
   await wrapper
@@ -357,7 +358,7 @@ it('uses an aerial guild click as the merge target, including cancellation', asy
     },
   ];
   const router = await createAuthedTestRouter('/guilds');
-  const wrapper = mount(TheGarden, { global: { plugins: [router] } });
+  const wrapper = mount(RouterView, { global: { plugins: [router] } });
   await flushPromises();
   await wrapper.get('[data-guild-id="a"] button[aria-pressed]').trigger('click');
   const target = wrapper
@@ -423,7 +424,8 @@ it('shift-clicking a guild leaves its aerial outline intact', async () => {
   };
   usePlanStateStore().state.guilds = [guild];
   const router = await createAuthedTestRouter('/guilds');
-  const wrapper = mount(TheGarden, { global: { plugins: [router] } });
+  const wrapper = mount(RouterView, { global: { plugins: [router] } });
+  await flushPromises();
 
   await wrapper
     .getComponent(GardenGuild)
@@ -608,7 +610,8 @@ it('reconciles selection on route re-entry so Delete only removes the current gu
   view.unmount();
 
   await router.push('/guilds/guild');
-  render(TheGarden, { global: { plugins: [router] } });
+  render(RouterView, { global: { plugins: [router] } });
+  await flushPromises();
   expect(
     screen.queryByRole('group', { name: 'Landmark details' }),
   ).not.toBeInTheDocument();

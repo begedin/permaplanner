@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import { useRoute } from 'vue-router';
+  import { routeNames } from './router';
   import { computed, ref } from 'vue';
   import { storeToRefs } from 'pinia';
 
@@ -14,6 +16,8 @@
 
   const searchQuery = defineModel<string>('searchQuery', { default: '' });
 
+  const route = useRoute();
+  const isLayout = computed(() => route.name === routeNames.guildLayout);
   const garden = useGardenStore();
   const gardenSession = useGardenSessionStore();
   const interaction = useMapInteractionStore();
@@ -57,7 +61,18 @@
         >
           /
         </span>
+        <RouterLink
+          v-if="isLayout"
+          class="link-soft truncate text-ink-800 hover:underline"
+          :to="{ name: routeNames.guildsDetail, params: { guildId: selectedGuildId } }"
+        >
+          <HighlightText
+            :text="selectedGuildName"
+            :query="searchQuery"
+          />
+        </RouterLink>
         <span
+          v-else
           class="text-ink-800 truncate"
           aria-current="page"
         >
@@ -66,6 +81,18 @@
             :query="searchQuery"
           />
         </span>
+        <template v-if="isLayout">
+          <span
+            class="text-ink-400 shrink-0"
+            aria-hidden="true"
+            >/</span
+          >
+          <span
+            class="text-ink-800 shrink-0"
+            aria-current="page"
+            >Plant layout</span
+          >
+        </template>
       </nav>
       <h1
         v-else

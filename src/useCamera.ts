@@ -1,10 +1,9 @@
 import { isEditableTarget } from './keyboardShortcuts';
 import { ref, type Ref } from 'vue';
 import { clientToSvgUser } from './svgClientToUser';
-import { useCameraStore } from './useCameraStore';
+import { MAX_ZOOM, useCameraStore } from './useCameraStore';
 
 const MIN_ZOOM = 0.1;
-const MAX_ZOOM = 10;
 const ZOOM_SESSION_MS = 200;
 const PAN_ZOOM_GRACE_MS = 200;
 

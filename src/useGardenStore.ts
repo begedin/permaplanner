@@ -3,7 +3,13 @@ import { computed, readonly, toRefs } from 'vue';
 import { uuid } from './utils';
 import { usePlanStateStore } from './usePlanStateStore';
 import { withPersistedGuildPlantLabels } from './guildPlantLabels';
-import type { Guild, MulchLevel, Plant, UserPlant } from './gardenTypes';
+import {
+  hasPlantPlacement,
+  type Guild,
+  type MulchLevel,
+  type Plant,
+  type UserPlant,
+} from './gardenTypes';
 import type { GrowthPhase, PlantVigor } from './guildPlantInstanceStatus';
 import { plantCatalog } from './plantCatalog';
 import { confirmGuildDeletion } from './confirmGuildDeletion';
@@ -30,8 +36,6 @@ type Bounds = {
   width: number;
   height: number;
 };
-
-const DEFAULT_PLACEMENT_BOUNDS: Bounds = { x: 0, y: 0, width: 64, height: 64 };
 
 export const useGardenStore = defineStore('garden', () => {
   const plan = usePlanStateStore();
@@ -66,14 +70,6 @@ export const useGardenStore = defineStore('garden', () => {
   });
 
   const resolvedPlant = (id: string): Plant => plantsById.value[id] ?? FALLBACK_PLANT;
-
-  const guildBoundsById = computed(() =>
-    Object.fromEntries(
-      guilds.value
-        .filter((g) => g.path.length > 0)
-        .map((guild) => [guild.id, pathBounds(guild.path.flat(2))]),
-    ),
-  );
 
   const removeGuildWithoutConfirm = (id: string) => {
     guilds.value = guilds.value.filter((g) => g.id !== id);
@@ -113,11 +109,19 @@ export const useGardenStore = defineStore('garden', () => {
     });
   };
 
-  const setGuildPath = (guildId: string, path: GuildPath) => {
+  const setGuildPath = (guildId: string, path: GuildPath, movePlants = false) => {
     commandHistory.runMutation(() => {
       const guild = guilds.value.find((g) => g.id === guildId);
       if (!guild) {
         return;
+      }
+      if (movePlants && guild.path.length && path.length) {
+        const before = pathBounds(guild.path.flat(2));
+        const after = pathBounds(path.flat(2));
+        for (const thing of guild.plants.filter(hasPlantPlacement)) {
+          thing.x += after.x - before.x;
+          thing.y += after.y - before.y;
+        }
       }
       guild.path = cloneGuildPath(path);
     });
@@ -143,16 +147,16 @@ export const useGardenStore = defineStore('garden', () => {
     if (!guild) {
       return;
     }
-    const bounds = guildBoundsById.value[guildId] ?? DEFAULT_PLACEMENT_BOUNDS;
     const rp = resolvedPlant(plantId);
 
     guild.plants.push({
       id: uuid(),
       plantId,
-      x: bounds.x + 5,
-      y: bounds.y + 5,
-      width: 16,
-      height: 16,
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+      placed: false,
       nameOrCultivar: plantDisplayLabel(rp),
     });
   };
@@ -160,6 +164,31 @@ export const useGardenStore = defineStore('garden', () => {
   const addPlantToGuild = (guildId: string, plantId: string) => {
     commandHistory.runMutation(() => {
       pushPlantThingOntoGuild(guildId, plantId);
+    });
+  };
+
+  const setPlantPlacement = (guildId: string, thingId: string, bounds: Bounds) => {
+    const thing = guilds.value
+      .find((guild) => guild.id === guildId)
+      ?.plants.find((plant) => plant.id === thingId);
+    if (
+      !thing ||
+      !Object.values(bounds).every(Number.isFinite) ||
+      bounds.width <= 0 ||
+      bounds.height <= 0
+    )
+      return;
+    commandHistory.runMutation(() => {
+      Object.assign(thing, bounds, { placed: true });
+    });
+  };
+
+  const removePlantPlacement = (guildId: string, thingId: string) => {
+    commandHistory.runMutation(() => {
+      const thing = guilds.value
+        .find((g) => g.id === guildId)
+        ?.plants.find((t) => t.id === thingId);
+      if (thing) Object.assign(thing, { x: 0, y: 0, width: 0, height: 0, placed: false });
     });
   };
 
@@ -332,6 +361,8 @@ export const useGardenStore = defineStore('garden', () => {
     setGuildPath,
     createGuild,
 
+    setPlantPlacement,
+    removePlantPlacement,
     addPlantToGuild,
     addCatalogPlantToGuild,
     replaceGuildThingsWithCatalogPlant,

@@ -19,6 +19,8 @@ export const useMapInteraction = () => {
     window,
     'keydown',
     (event) => {
+      if (event.target instanceof Element && event.target.closest('[role=dialog]'))
+        return;
       if (event.key === 'Escape' && interaction.isMerging) {
         event.preventDefault();
         interaction.resetMode();

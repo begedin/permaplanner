@@ -30,7 +30,13 @@ export const useGuildSelection = () => {
     if (rawGuildId.value === id) return;
 
     if (isGuildsRoute(route.name)) {
-      await router.push({ name: routeNames.guildsDetail, params: { guildId: id } });
+      await router.push({
+        name:
+          route.name === routeNames.guildLayout && target.path.length
+            ? routeNames.guildLayout
+            : routeNames.guildsDetail,
+        params: { guildId: id },
+      });
     }
   };
 
@@ -50,7 +56,13 @@ export const useGuildSelection = () => {
   const guildsTabTo = computed(() => {
     const id = selectedGuildId.value;
     if (id) {
-      return { name: routeNames.guildsDetail, params: { guildId: id } };
+      return {
+        name:
+          route.name === routeNames.guildLayout
+            ? routeNames.guildLayout
+            : routeNames.guildsDetail,
+        params: { guildId: id },
+      };
     }
     return { name: routeNames.guilds };
   });
