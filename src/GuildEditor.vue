@@ -17,7 +17,6 @@
   import GuildCardSectionLabel from './GuildCardSectionLabel.vue';
   import GuildPlantNote from './GuildPlantNote.vue';
   import { useGardenStore } from './useGardenStore';
-  import GuildPlantQuantityRemoveButton from './GuildPlantQuantityRemoveButton.vue';
   import GuildSeasonStrip from './GuildSeasonStrip.vue';
   import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
   import PlantIcon from './PlantIcon.vue';
@@ -37,6 +36,7 @@
     guildId: string;
     layoutMode?: boolean;
     selectedThingId?: string;
+    placingThingId?: string;
   }>();
   const emit = defineEmits<{
     selectPlant: [id: string | undefined];
@@ -68,7 +68,6 @@
     setEditingNote,
     commitNote,
     onNoteKeydown,
-    decrementGuildPlantQuantity,
     openAddPlantEditor,
     openEditPlantEditor,
     isEditingRow,
@@ -81,6 +80,12 @@
     guildThing,
     setThingGrowthPhase,
   } = useGuildEditor(toRef(props, 'guildId'), guild);
+
+  const PLACEMENT_STATUS = {
+    editing: 'Editing placement',
+    placed: 'Placed',
+    unplaced: 'Not placed',
+  } as const;
 
   const plantSort = ref<'name' | 'layer'>('name');
   const groupPlants = ref(false);
@@ -96,6 +101,15 @@
   const sortedGuildPlants = computed(() => {
     const rows = groupedGuildPlants.value.map((row) => ({
       ...row,
+      individuals: row.thingIds.map((id) => ({
+        id,
+        placementStatus:
+          props.placingThingId === id
+            ? PLACEMENT_STATUS.editing
+            : hasPlantPlacement(guildThing(id))
+              ? PLACEMENT_STATUS.placed
+              : PLACEMENT_STATUS.unplaced,
+      })),
       layerRank: Math.min(
         ...row.representativeResolved.layers.map((layer) => layerRank[layer]),
         Object.keys(layerRank).length,
@@ -384,21 +398,17 @@
                   >
                     <UiIcon name="add" />
                   </button>
-                  <GuildPlantQuantityRemoveButton
-                    :count="row.count"
-                    @decrement="decrementGuildPlantQuantity(row.thingIds)"
-                  />
                 </div>
               </div>
               <div class="flex flex-col gap-1 pb-1 pl-7 pr-1">
                 <div
-                  v-for="(thingId, index) in row.thingIds"
+                  v-for="({ id: thingId, placementStatus }, index) in row.individuals"
                   :key="thingId"
                   v-show="
                     layoutMode ||
                     isPlantGroupExpanded(row.plantId) ||
                     guildThing(thingId)?.note ||
-                    (row.count === 1 && editingPlantNoteId === thingId)
+                    row.count === 1
                   "
                   class="flex flex-col gap-1 rounded-lg border border-parchment-300/80 bg-parchment-50/60 px-2 py-1.5"
                   :class="
@@ -411,10 +421,20 @@
                   "
                 >
                   <div
-                    v-if="layoutMode"
+                    v-if="
+                      layoutMode || row.count === 1 || isPlantGroupExpanded(row.plantId)
+                    "
                     class="flex items-center gap-2"
                   >
+                    <span
+                      v-if="!layoutMode"
+                      class="min-w-0 flex-1 truncate text-xs"
+                    >
+                      {{ row.label
+                      }}<template v-if="row.count > 1"> #{{ index + 1 }}</template>
+                    </span>
                     <button
+                      v-if="layoutMode"
                       type="button"
                       class="min-w-0 flex-1 text-left text-xs hover:underline"
                       :aria-label="`Select ${row.label} #${index + 1}`"
@@ -432,31 +452,28 @@
                           #{{ index + 1 }}</template
                         ></span
                       >
-                      <span class="text-ink-500">{{
-                        hasPlantPlacement(guildThing(thingId)) ? 'Placed' : 'Not placed'
-                      }}</span>
                     </button>
                     <button
                       type="button"
+                      v-if="layoutMode"
                       class="btn-icon shrink-0 p-1 hover:bg-sage-200"
-                      :title="`Place ${row.label} #${index + 1}`"
-                      :aria-label="`Place ${row.label} #${index + 1}`"
+                      :title="placementStatus"
+                      :aria-label="`Place ${row.label} #${index + 1} — ${placementStatus}`"
                       @click.stop="emit('placePlant', thingId)"
                     >
                       <UiIcon
                         name="place"
                         class="size-5"
+                        :class="{
+                          'text-amber-700': placementStatus === PLACEMENT_STATUS.editing,
+                          'text-sage-700': placementStatus === PLACEMENT_STATUS.placed,
+                          'text-red-700': placementStatus === PLACEMENT_STATUS.unplaced,
+                        }"
+                        style="--place-icon-color: currentColor"
                       />
                     </button>
-                  </div>
-                  <div
-                    v-if="row.count > 1 && isPlantGroupExpanded(row.plantId)"
-                    class="flex items-center justify-between gap-1"
-                  >
-                    <span class="text-[10px] font-medium text-ink-500"
-                      >#{{ index + 1 }}</span
-                    >
                     <button
+                      v-if="row.count > 1 && isPlantGroupExpanded(row.plantId)"
                       type="button"
                       :title="`${guildThing(thingId)?.note ? 'Edit' : 'Add'} note for ${row.label} instance ${index + 1}`"
                       :aria-label="`${guildThing(thingId)?.note ? 'Edit' : 'Add'} note for ${row.label} instance ${index + 1}`"
@@ -464,6 +481,18 @@
                       @click.stop="editingPlantNoteId = thingId"
                     >
                       <UiIcon name="document" />
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-icon shrink-0 p-1 hover:bg-red-200"
+                      :title="`Remove ${row.label} #${index + 1} from bed`"
+                      :aria-label="`Remove ${row.label} #${index + 1} from bed`"
+                      @click.stop="garden.removeGuildThings(guildId, [thingId])"
+                    >
+                      <UiIcon
+                        name="remove-one"
+                        class="size-5"
+                      />
                     </button>
                   </div>
                   <button

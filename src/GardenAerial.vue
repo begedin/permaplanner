@@ -52,6 +52,7 @@
   const { errorMessage: backgroundPasteError } = useBackgroundImagePaste();
 
   const shapeControls = ref<SVGGElement>();
+  const guildLabelLayer = ref<SVGGElement>();
   const camera = useCameraStore();
 
   const center = computed(() => {
@@ -258,6 +259,7 @@
         :key="guild.id"
         :show-label="showGuildLabels"
         :show-plant-labels="showPlantLabels"
+        :label-layer="guildLabelLayer"
         :selected="selectedGuildId === guild.id"
         :tool="selectedGuildId === guild.id ? activeTool : undefined"
         :hovered="hoveredId === guild.id"
@@ -274,6 +276,7 @@
         v-if="placementGuildDraft"
         :show-label="showGuildLabels"
         :show-plant-labels="showPlantLabels"
+        :label-layer="guildLabelLayer"
         :guild="placementGuildDraft"
         :unit-length-px="mapScale.unitLengthPx"
         :tool="activeTool"
@@ -326,6 +329,10 @@
           :onboarding-state="onboardingState"
         />
       </ReferenceLine>
+      <g
+        ref="guildLabelLayer"
+        class="pointer-events-none"
+      />
       <g
         ref="shapeControls"
         role="group"

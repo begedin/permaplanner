@@ -23,6 +23,7 @@
       tool?: AerialTool;
       showLabel?: boolean;
       showPlantLabels?: boolean;
+      labelLayer?: SVGGElement;
     }>(),
     { showLabel: true },
   );
@@ -102,21 +103,6 @@
     fill="none"
     class="pointer-events-none"
   />
-  <text
-    v-if="box && showLabel && !labeledPlants.length"
-    :x="box.x + box.width / 2"
-    :y="box.y + box.height / 2"
-    text-anchor="middle"
-    dominant-baseline="middle"
-    class="pointer-events-none font-serif"
-    :font-size="camera.mapLabelFontSize"
-    :stroke-width="2 * labelScale"
-    stroke="#faf6eb"
-    fill="#463c2c"
-    paint-order="stroke"
-    stroke-linejoin="round"
-    >{{ guild.name }}</text
-  >
   <GardenMeasure
     v-if="box && (hovered || selected)"
     :unit-length-px="unitLengthPx"
@@ -133,12 +119,38 @@
       :key="thing.id"
       :thing="thing"
     />
-    <PlantMapLabel
-      v-for="thing in labeledPlants"
-      :key="`label-${thing.id}`"
-      :thing="thing"
-      :font-size="camera.mapLabelFontSize"
-    />
   </g>
+  <Teleport
+    :to="labelLayer || 'body'"
+    :disabled="!labelLayer"
+  >
+    <text
+      v-if="box && showLabel && !labeledPlants.length"
+      :x="box.x + box.width / 2"
+      :y="box.y + box.height / 2"
+      text-anchor="middle"
+      dominant-baseline="middle"
+      class="pointer-events-none font-serif"
+      :font-size="camera.mapLabelFontSize"
+      :stroke-width="2 * labelScale"
+      stroke="#faf6eb"
+      fill="#463c2c"
+      paint-order="stroke"
+      stroke-linejoin="round"
+      >{{ guild.name }}</text
+    >
+    <g
+      v-if="path.length"
+      :transform="plantPreviewTransform"
+      class="pointer-events-none"
+    >
+      <PlantMapLabel
+        v-for="thing in labeledPlants"
+        :key="`label-${thing.id}`"
+        :thing="thing"
+        :font-size="camera.mapLabelFontSize"
+      />
+    </g>
+  </Teleport>
   <slot name="features" />
 </template>

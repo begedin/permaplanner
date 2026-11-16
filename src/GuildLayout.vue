@@ -40,6 +40,9 @@
   const boundary = ref<SVGPathElement>();
   const plantLabelFontSize = computed(() => 11 / props.pixelsPerUnit);
   const message = ref('');
+  const showLabels = ref(true);
+  const hoveredThingId = ref<string>();
+  const focusedThingId = ref<string>();
   const session = usePointerSession();
   const placedThings = computed(() =>
     guild.value.plants
@@ -124,13 +127,6 @@
         ? origin
         : { x: existing.x + existing.width / 2, y: existing.y + existing.height / 2 };
     const point = svg.createSVGPoint();
-    point.x = center.x;
-    point.y = center.y;
-    if (kind === 'place' && !boundary.value?.isPointInFill(point)) {
-      deselect();
-      message.value = 'Start the circle inside the guild boundary.';
-      return;
-    }
     if (kind === 'place') beginPlacement(existing.id);
     else selectPlant(existing.id);
     svg.focus();
@@ -144,17 +140,24 @@
             x: existing.x + (edge.x - origin.x),
             y: existing.y + (edge.y - origin.y),
           };
+        } else if (kind === 'place') {
+          const size = Math.max(0, edge.x - origin.x, edge.y - origin.y);
+          draft.value = {
+            ...existing,
+            placed: true,
+            x: origin.x,
+            y: origin.y,
+            width: size,
+            height: size,
+          };
         } else {
           const distance = Math.hypot(edge.x - center.x, edge.y - center.y);
-          const radius =
-            kind === 'resize'
-              ? Math.max(
-                  0,
-                  existing.width / 2 +
-                    distance -
-                    Math.hypot(origin.x - center.x, origin.y - center.y),
-                )
-              : distance;
+          const radius = Math.max(
+            0,
+            existing.width / 2 +
+              distance -
+              Math.hypot(origin.x - center.x, origin.y - center.y),
+          );
           draft.value = {
             ...existing,
             placed: true,
@@ -202,11 +205,24 @@
 <template>
   <header class="flex items-center justify-between gap-2">
     <h2 class="font-serif text-lg">Plant layout</h2>
-    <RouterLink
-      class="btn-soft text-sm"
-      :to="{ name: routeNames.guildsDetail, params: { guildId } }"
-      >Back to aerial</RouterLink
-    >
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        class="btn-soft inline-flex items-center gap-1 text-sm"
+        :aria-pressed="showLabels"
+        @click="showLabels = !showLabels"
+      >
+        <UiIcon name="labels" />
+        {{ showLabels ? 'Hide labels' : 'Show labels' }}
+      </button>
+      <RouterLink
+        class="btn-soft inline-flex items-center gap-1 text-sm"
+        :to="{ name: routeNames.guildsDetail, params: { guildId } }"
+      >
+        <UiIcon name="guilds" />
+        Back to aerial
+      </RouterLink>
+    </div>
   </header>
   <div class="flex min-h-10 items-center gap-2 text-sm text-ink-600">
     <p
@@ -279,6 +295,10 @@
         :aria-pressed="thing.id === selectedThingId"
         tabindex="0"
         class="cursor-move"
+        @pointerenter="hoveredThingId = thing.id"
+        @pointerleave="hoveredThingId = undefined"
+        @focus="focusedThingId = thing.id"
+        @blur="focusedThingId = undefined"
         @pointerdown.stop="startGesture($event, 'move', thing.id)"
         @keydown.enter.prevent="selectPlant(thing.id)"
         @keydown.space.prevent="selectPlant(thing.id)"
@@ -291,6 +311,7 @@
       <PlantMapLabel
         v-for="thing in placedThings"
         :key="`label-${thing.id}`"
+        v-show="showLabels || hoveredThingId === thing.id || focusedThingId === thing.id"
         :thing="thing"
         :font-size="plantLabelFontSize"
       />

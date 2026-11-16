@@ -119,7 +119,7 @@ it('updates guild name from the name input', async () => {
   expect(usePlanStateStore().state.guilds[0]).toMatchObject({ name: 'New' });
 });
 
-it('removes the last duplicate guild plant when remove-one is used', async () => {
+it('removes the chosen duplicate while preserving the other individual', async () => {
   usePlanStateStore().state.plants = [
     { id: 'plant', speciesId: 'comfrey', cultivarId: null },
   ];
@@ -134,11 +134,12 @@ it('removes the last duplicate guild plant when remove-one is used', async () =>
   ];
 
   const wrapper = await renderGuildEditor();
+  await fireEvent.click(card(wrapper).getByRole('button', { name: /^Expand / }));
   await fireEvent.click(
-    card(wrapper).getByRole('button', { name: 'Remove one plant from bed' }),
+    card(wrapper).getByRole('button', { name: /^Remove .*#1 from bed$/ }),
   );
 
-  expect(usePlanStateStore().state.guilds[0].plants).toEqual([first]);
+  expect(usePlanStateStore().state.guilds[0].plants).toEqual([second]);
 });
 
 it('deletes the guild when confirmed', async () => {
@@ -164,7 +165,7 @@ it('keeps the guild when deletion is cancelled', async () => {
   expect(usePlanStateStore().state.guilds).toEqual([{ ...testGuild, plants: [] }]);
 });
 
-it('shows remove-all control when there is only one instance', async () => {
+it('shows the add control and removes the only individual', async () => {
   usePlanStateStore().state.plants = [
     { id: 'plant', speciesId: 'comfrey', cultivarId: null },
   ];
@@ -177,32 +178,11 @@ it('shows remove-all control when there is only one instance', async () => {
   ];
 
   const wrapper = await renderGuildEditor();
-  expect(
-    card(wrapper).queryByRole('button', { name: 'Remove one plant from bed' }),
-  ).not.toBeInTheDocument();
-  expect(
-    card(wrapper).getByRole('button', { name: 'Remove plant from bed' }),
-  ).toBeVisible();
   expect(
     card(wrapper).getByRole('button', { name: 'Add one plant to bed' }),
   ).toBeVisible();
-});
-
-it('removes the only instance when remove-all is used', async () => {
-  usePlanStateStore().state.plants = [
-    { id: 'plant', speciesId: 'comfrey', cultivarId: null },
-  ];
-  usePlanStateStore().state.guilds = [
-    {
-      ...testGuild,
-      name: 'Bed',
-      plants: [baseThing({ id: 'only', plantId: 'plant' })],
-    },
-  ];
-
-  const wrapper = await renderGuildEditor();
   await fireEvent.click(
-    card(wrapper).getByRole('button', { name: 'Remove plant from bed' }),
+    card(wrapper).getByRole('button', { name: /^Remove .*#1 from bed$/ }),
   );
 
   expect(usePlanStateStore().state.guilds[0].plants).toEqual([]);
@@ -315,12 +295,11 @@ it('remove-one only affects the subgroup row that has duplicates', async () => {
   ];
 
   const wrapper = await renderGuildEditor();
-  expect(
-    card(wrapper).getAllByRole('button', { name: 'Remove one plant from bed' }),
-  ).toHaveLength(1);
-
   await fireEvent.click(
-    card(wrapper).getByRole('button', { name: 'Remove one plant from bed' }),
+    card(wrapper).getByRole('button', { name: /^Expand .*Genovese/ }),
+  );
+  await fireEvent.click(
+    card(wrapper).getByRole('button', { name: /^Remove .*Genovese.*#2 from bed$/ }),
   );
 
   expect(usePlanStateStore().state.guilds[0].plants).toEqual([dupA, other]);
@@ -462,7 +441,9 @@ it('cancels edit plant without changing the guild', async () => {
   expect(usePlanStateStore().state.guilds[0].plants).toEqual([
     baseThing({ id: 'thing-a', plantId: 'plant' }),
   ]);
-  expect(card(wrapper).getByText(/Comfrey/)).toBeVisible();
+  expect(
+    card(wrapper).getByRole('button', { name: /^Remove Comfrey .*#1 from bed$/ }),
+  ).toBeVisible();
 });
 
 it('expands a plant group to edit per-instance phase and condition', async () => {
@@ -679,6 +660,9 @@ it('keeps notes separate for individual plants and shows them beneath collapsed 
   const wrapper = await renderGuildEditor();
   expect(card(wrapper).getByText('Plant 2: Second tree')).toBeVisible();
   expect(
+    card(wrapper).queryByRole('button', { name: /^Remove .* from bed$/ }),
+  ).not.toBeInTheDocument();
+  expect(
     card(wrapper).queryByRole('button', { name: /note for .* instance/ }),
   ).not.toBeInTheDocument();
   await fireEvent.click(card(wrapper).getByRole('button', { name: /Expand Apple/ }));
@@ -756,7 +740,6 @@ it('shows an icon-only note action alongside plant actions with tooltips', async
     },
     { label: 'Edit plant in bed', title: 'Edit plant in bed' },
     { label: 'Add one plant to bed', title: 'Add one plant to bed' },
-    { label: 'Remove plant from bed', title: 'Remove plant from bed' },
   ]);
   expect(
     actions.getByRole('button', { name: 'Add note for Apple (Malus domestica)' }),

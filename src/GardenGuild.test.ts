@@ -170,6 +170,28 @@ it('replaces guild names with optional plant labels only at maximum zoom', async
   expect(wrapper.findAll('text').map((label) => label.text())).toContain(guild.name);
 });
 
+it('hides teleported plant labels when the guild is removed from the aerial map', async () => {
+  const { garden, guild } = createPlantedGuild();
+  useCameraStore().zoom = 10;
+  const labelLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  svg.append(labelLayer);
+  mount(GardenGuild, {
+    attachTo: svg,
+    props: {
+      guild,
+      unitLengthPx: 5,
+      hovered: false,
+      selected: true,
+      showPlantLabels: true,
+      labelLayer,
+    },
+  });
+  expect(labelLayer.querySelector('[data-plant-label]')).not.toBeNull();
+  garden.removeGuildFromAerialMap(guild.id);
+  await nextTick();
+  expect(labelLayer.querySelector('[data-plant-label]')).toBeNull();
+});
+
 it.each(['cancel', 'commit'] as const)(
   'moves canopies and labels with the guild preview on %s',
   async (ending) => {
@@ -201,7 +223,7 @@ it.each(['cancel', 'commit'] as const)(
     await nextTick();
     const canopy = wrapper.get('.canopy');
     const label = wrapper.get('[data-plant-label]');
-    expect(canopy.element.parentElement).toBe(label.element.parentElement);
+    expect(label.element.parentElement).toHaveAttribute('transform', 'translate(5 7)');
     expect(canopy.element.parentElement).toHaveAttribute('transform', 'translate(5 7)');
     expect(thing).toMatchObject({ x: 20, y: 20 });
     if (ending === 'cancel')

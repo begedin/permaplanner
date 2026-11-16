@@ -41,7 +41,7 @@
     },
   );
   provide(guildLayoutKey, layout);
-  const { selectedThingId } = layout;
+  const { selectedThingId, placingThingId } = layout;
 </script>
 
 <template>
@@ -99,6 +99,7 @@
               :guild-id="selectedGuildId"
               :layout-mode="isLayout"
               :selected-thing-id="selectedThingId"
+              :placing-thing-id="placingThingId"
               @select-plant="layout.selectPlant($event)"
               @place-plant="layout.beginPlacement($event)"
               @open-layout="

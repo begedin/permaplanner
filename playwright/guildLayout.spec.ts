@@ -18,7 +18,7 @@ test('draws and saves a placement without changing the individual', async ({ pag
   await page.goto('/guilds/bed/layout');
   const map = page.getByLabel('Draw plant canopies');
   const card = page.getByRole('region', { name: 'Guild details' });
-  const place = card.getByRole('button', { name: /^Place .*#1$/ });
+  const place = card.getByRole('button', { name: /^Place .*#1 —/ });
   await place.click();
   const box = await map.boundingBox();
   if (!box) throw new Error('Missing layout');
@@ -26,10 +26,31 @@ test('draws and saves a placement without changing the individual', async ({ pag
   const cy = box.y + box.height / 2;
   await page.mouse.move(cx, cy);
   await page.mouse.down();
+  const canopy = map.locator('.canopy');
+  await page.mouse.move(cx + 30, cy - 1);
+  const upperPreview = await canopy.evaluate((element) => {
+    const matrix = (element as SVGGraphicsElement).getScreenCTM()!;
+    return { x: matrix.e - matrix.a, y: matrix.f - matrix.d };
+  });
+  expect(upperPreview.x).toBeCloseTo(cx, 0);
+  expect(upperPreview.y).toBeCloseTo(cy, 0);
+  await page.mouse.move(cx - 1, cy + 30);
+  const leftPreview = await canopy.evaluate((element) => {
+    const matrix = (element as SVGGraphicsElement).getScreenCTM()!;
+    return { x: matrix.e - matrix.a, y: matrix.f - matrix.d };
+  });
+  expect(leftPreview.x).toBeCloseTo(cx, 0);
+  expect(leftPreview.y).toBeCloseTo(cy, 0);
   await page.mouse.move(cx + 30, cy, { steps: 6 });
   await page.mouse.up();
-  const canopy = map.locator('.canopy');
   await expect(canopy).toHaveCount(1);
+  const geometry = await canopy.evaluate((element) => {
+    const matrix = (element as SVGGraphicsElement).getScreenCTM()!;
+    return { x: matrix.e - matrix.a, y: matrix.f - matrix.d, width: matrix.a * 2 };
+  });
+  expect(geometry.x).toBeCloseTo(cx, 0);
+  expect(geometry.y).toBeCloseTo(cy, 0);
+  expect(geometry.width).toBeCloseTo(30, 0);
   const placement = await canopy.getAttribute('transform');
   await page.getByRole('button', { name: 'Undo', exact: true }).click();
   await expect(canopy).toHaveCount(0);
@@ -50,11 +71,39 @@ test('draws and saves a placement without changing the individual', async ({ pag
   await map.focus();
   await page.keyboard.press('Delete');
   await expect(canopy).toHaveCount(0);
-  await expect(card.getByRole('button', { name: /^Select .*#1$/ })).toContainText(
+  await expect(card.getByRole('button', { name: /^Place .*#1 —/ })).toHaveAttribute(
+    'title',
     'Not placed',
   );
   await expect(card.getByRole('button', { name: /^Place / })).toHaveCount(2);
   await expect(card.getByText(/Keep this individual/)).toHaveCount(2);
+});
+
+test('accepts a canopy centered inside when its starting corner is outside', async ({
+  page,
+}) => {
+  await importLayoutGarden(page);
+  await page.goto('/guilds/bed/layout');
+  const map = page.getByLabel('Draw plant canopies');
+  const boundary = map.locator('path[fill-rule="evenodd"][stroke="#42613b"]');
+  const box = await boundary.boundingBox();
+  if (!box) throw new Error('Missing guild boundary');
+  await page.getByRole('button', { name: /^Place .*#1 —/ }).click();
+  await page.mouse.move(box.x - 10, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 30, box.y + box.height / 2 + 40);
+  await page.mouse.up();
+  await expect(map.locator('.canopy')).toHaveCount(1);
+
+  await page.getByRole('button', { name: /^Place .*#2 —/ }).click();
+  await page.mouse.move(box.x - 30, box.y + box.height / 3);
+  await page.mouse.down();
+  await page.mouse.move(box.x - 10, box.y + box.height / 3 + 20);
+  await page.mouse.up();
+  await expect(map.locator('.canopy')).toHaveCount(1);
+  await expect(page.getByRole('status')).toHaveText(
+    'Keep the plant center inside the guild boundary.',
+  );
 });
 
 test('switches selection, cancels placement, and resizes immediately after Place', async ({
@@ -64,11 +113,20 @@ test('switches selection, cancels placement, and resizes immediately after Place
   await page.goto('/guilds/bed/layout');
   const map = page.getByLabel('Draw plant canopies');
   const card = page.getByRole('region', { name: 'Guild details' });
-  const firstPlace = card.getByRole('button', { name: /^Place .*#1$/ });
-  const secondPlace = card.getByRole('button', { name: /^Place .*#2$/ });
+  const firstPlace = card.getByRole('button', { name: /^Place .*#1 —/ });
+  const secondPlace = card.getByRole('button', { name: /^Place .*#2 —/ });
   const firstSelect = card.getByRole('button', { name: /^Select .*#1$/ });
   const secondSelect = card.getByRole('button', { name: /^Select .*#2$/ });
+  await expect(firstPlace).toHaveAccessibleName(/ — Placed$/);
+  await expect(secondPlace).toHaveAccessibleName(/ — Not placed$/);
+  await expect(firstPlace).toHaveAttribute('title', 'Placed');
+  await expect(secondPlace).toHaveAttribute('title', 'Not placed');
+  await expect(firstPlace.locator('svg')).toHaveClass(/text-sage-700/);
+  await expect(secondPlace.locator('svg')).toHaveClass(/text-red-700/);
   await firstPlace.click();
+  await expect(firstPlace).toHaveAccessibleName(/ — Editing placement$/);
+  await expect(firstPlace).toHaveAttribute('title', 'Editing placement');
+  await expect(firstPlace.locator('svg')).toHaveClass(/text-amber-700/);
   await secondSelect.click();
   await expect(secondSelect).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toHaveCount(0);
@@ -173,6 +231,19 @@ test('replaces only planted guild names at maximum aerial zoom', async ({ page }
   await importLayoutGarden(page, { placed: true });
   await page.goto('/guilds/bed');
   const map = page.locator('[data-main-svg]');
+  const guildLabel = map.getByText('Orchard', { exact: true });
+  await expect(guildLabel).toBeVisible();
+  expect(
+    await guildLabel.evaluate((label) =>
+      [
+        ...label.ownerSVGElement!.querySelectorAll('.canopy, path[fill-rule="evenodd"]'),
+      ].every((graphic) =>
+        Boolean(
+          graphic.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ),
+      ),
+    ),
+  ).toBe(true);
   await page.getByRole('button', { name: 'Map settings', exact: true }).click();
   const toggle = page.getByRole('checkbox', { name: 'Plant names (maximum zoom)' });
   await toggle.check();
@@ -193,6 +264,13 @@ test('replaces only planted guild names at maximum aerial zoom', async ({ page }
   await expect(map.locator('[data-plant-label]')).toContainText('Granny Smith');
   await expect(map.getByText('Orchard', { exact: true })).toHaveCount(0);
   await expect(map.getByText('Other guild', { exact: true })).toHaveCount(1);
+  await page
+    .getByRole('region', { name: 'Guild details' })
+    .getByRole('button', { name: 'Remove from aerial map' })
+    .click();
+  await expect(map.locator('[data-plant-label]')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect(map.locator('[data-plant-label]')).toContainText('Granny Smith');
   await toggle.uncheck();
   await expect(map.locator('[data-plant-label]')).toHaveCount(0);
   await expect(map.getByText('Orchard', { exact: true })).toHaveCount(1);
@@ -205,7 +283,8 @@ test('legacy placeholders remain unplaced after import and reload', async ({ pag
   await expect(map).toBeVisible();
   await expect(map.locator('.canopy')).toHaveCount(0);
   await page.reload();
-  await expect(page.getByRole('button', { name: /^Select .*#1$/ })).toContainText(
+  await expect(page.getByRole('button', { name: /^Place .*#1 —/ })).toHaveAttribute(
+    'title',
     'Not placed',
   );
   await expect(map.locator('.canopy')).toHaveCount(0);
@@ -296,4 +375,76 @@ test('previews plant graphics with the moving guild and restores them on cancell
   await expect
     .poll(async () => (await label.boundingBox())?.x)
     .toBeCloseTo(labelBefore.x, 0);
+});
+
+test('toggles labels, reveals them across the canopy, and removes the exact individual', async ({
+  page,
+}) => {
+  await importLayoutGarden(page, { placed: true });
+  await page.goto('/guilds/bed/layout');
+  const map = page.getByLabel('Draw plant canopies');
+  const label = map.locator('[data-plant-label]');
+  const canopy = map.getByRole('button', { name: /Select .* on layout/ });
+  await expect(label).toBeVisible();
+  await page.getByRole('button', { name: 'Hide labels' }).click();
+  await expect(label).toBeHidden();
+  const box = await canopy.locator('.canopy > circle').boundingBox();
+  if (!box) throw new Error('Missing canopy');
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(label).toBeVisible();
+  await page.mouse.move(box.x + box.width * 0.9, box.y + box.height / 2);
+  await expect(label).toBeVisible();
+  await page.getByRole('heading', { name: 'Plant layout' }).hover();
+  await expect(label).toBeHidden();
+  await canopy.focus();
+  await expect(label).toBeVisible();
+  await page.getByRole('button', { name: 'Show labels' }).click();
+  await expect(label).toBeVisible();
+  await page.getByRole('button', { name: /^Select .*#1$/ }).click();
+  await page.getByRole('button', { name: /^Remove .*#1 from bed$/ }).click();
+  await expect(canopy).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Place .*#1 —/ })).toHaveAttribute(
+    'title',
+    'Not placed',
+  );
+  await expect(page.getByRole('button', { name: /^Place .*#/ })).toHaveCount(1);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect(canopy).toHaveCount(1);
+  await expect(page.getByRole('button', { name: /^Place .*#/ })).toHaveCount(2);
+});
+
+test('removes specific individuals from the aerial and unmapped guild editors', async ({
+  page,
+}) => {
+  await importLayoutGarden(page, { placed: true });
+  for (const guildId of ['bed', 'unmapped']) {
+    await page.goto('/guilds/bed');
+    const card = page.getByRole('region', { name: 'Guild details' });
+    if (guildId === 'unmapped') {
+      await card.getByRole('button', { name: 'Remove from aerial map' }).click();
+    }
+    const expand = card.getByRole('button', {
+      name: /^(Expand|Collapse) .*Granny Smith/,
+    });
+    await expect(expand).toBeVisible();
+    if ((await expand.getAttribute('aria-expanded')) === 'false') await expand.click();
+    await card.getByRole('button', { name: /^Remove .*#1 from bed$/ }).click();
+    await expect(card.getByRole('button', { name: /^Remove .* from bed$/ })).toHaveCount(
+      1,
+    );
+    if (guildId === 'bed') {
+      await card.getByRole('button', { name: 'Place plants' }).click();
+      await expect(page.getByRole('button', { name: /^Place .*#1 —/ })).toHaveAttribute(
+        'title',
+        'Not placed',
+      );
+      await expect(page.getByLabel('Draw plant canopies').locator('.canopy')).toHaveCount(
+        0,
+      );
+    }
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(page.getByRole('button', { name: /^Remove .* from bed$/ })).toHaveCount(
+      2,
+    );
+  }
 });

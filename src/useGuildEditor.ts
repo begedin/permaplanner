@@ -81,16 +81,6 @@ export const useGuildEditor = (guildId: Ref<string>, guild: Ref<DeepReadonly<Gui
     });
   };
 
-  const decrementGuildPlantQuantity = (thingIds: string[]) => {
-    if (thingIds.length > 1) {
-      garden.removeGuildThings(guildId.value, [thingIds[thingIds.length - 1]!]);
-      return;
-    }
-    if (thingIds.length === 1) {
-      garden.removeGuildThings(guildId.value, thingIds);
-    }
-  };
-
   const openAddPlantEditor = () => {
     plantEditor.value = { kind: 'add' };
     selectedPick.value = null;
@@ -177,7 +167,6 @@ export const useGuildEditor = (guildId: Ref<string>, guild: Ref<DeepReadonly<Gui
     setEditingNote,
     commitNote,
     onNoteKeydown,
-    decrementGuildPlantQuantity,
     openAddPlantEditor,
     openEditPlantEditor,
     isEditingRow,

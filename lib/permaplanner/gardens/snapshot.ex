@@ -22,6 +22,8 @@ defmodule Permaplanner.Gardens.Snapshot do
       plotBorder: garden.document["plotBorder"],
       coordinateSystem: %{
         axes: "x right, y down",
+        plantPlacement:
+          "Global map coordinates, not relative to the guild. When placed is true and width and height are positive, x/y are the top-left of the canopy bounding box; its centre is x + width/2, y + height/2. Coordinates for unplaced plants are not meaningful.",
         pathPosition:
           "path bounding-box centre; local geometry and rotation use the landmark conventions",
         landmarkPosition: "path bounding-box centre",

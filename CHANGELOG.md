@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.36.0
+
+- [CHANGE] Toggle plant labels in the guild layout and reveal hidden labels on hover or keyboard focus. Placement pins show each plant's status and provide accessible descriptions.
+- [CHANGE] Remove individual plants from any guild view and expose plant placement coordinate conventions in MCP garden responses.
+- [FIX] Draw new plant canopies from a fixed top-left corner and keep aerial guild and plant labels above map graphics.
+
 ## 0.35.0
 
 - [CHANGE] Arrange individual plants in a guild closeup with organic tree, shrub, and plant canopies. Select plants from the guild card, draw their canopies, move and resize placements, and remove placements without deleting individuals. Placement edits support undo/redo.
