@@ -75,11 +75,10 @@ export const useGuildSummary = (guildId: Ref<string>) => {
     if (!placedOnMap.value) {
       return null;
     }
-    const size = formatGuildMapDimensions(
+    return formatGuildMapDimensions(
       pathBounds(guild.value.path.flat(2)),
-      mapScale.unitLengthPx,
+      mapScale.measurement,
     );
-    return size ? `${size} ${mapScale.unitLabel}` : null;
   });
 
   const guildTooltipRows = computed(() =>

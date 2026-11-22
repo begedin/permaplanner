@@ -1,11 +1,12 @@
 <script setup lang="ts">
   import { computed, useId } from 'vue';
   import type { DeepReadonly } from 'vue';
-  import type { GardenThing } from './gardenTypes';
+  import { canopyCircle, type GardenThing } from './gardenTypes';
   import { useGardenStore } from './useGardenStore';
 
   const props = defineProps<{ thing: DeepReadonly<GardenThing>; selected?: boolean }>();
   const garden = useGardenStore();
+  const circle = computed(() => canopyCircle(props.thing));
   const clipId = useId();
   const kind = computed(() => {
     const layers = garden.resolvedPlant(props.thing.plantId).layers;
@@ -37,14 +38,11 @@
 
 <template>
   <g
-    :transform="`translate(${thing.x + thing.width / 2} ${thing.y + thing.height / 2}) scale(${thing.width / 2} ${thing.height / 2})`"
+    :transform="`translate(${circle.cx} ${circle.cy}) scale(${circle.r})`"
     :class="`canopy canopy--${kind}`"
+    role="img"
+    :aria-label="thing.nameOrCultivar"
   >
-    <title>{{ thing.nameOrCultivar }}</title>
-    <circle
-      r="1"
-      fill="transparent"
-    />
     <g :transform="`rotate(${rotation})`">
       <defs>
         <clipPath :id="clipId"><path :d="outline" /></clipPath>
@@ -84,10 +82,24 @@
         :stroke-dasharray="selected ? '4 3' : undefined"
       />
     </g>
+    <circle
+      class="canopy-focus-ring"
+      r="1"
+      fill="transparent"
+      vector-effect="non-scaling-stroke"
+    />
   </g>
 </template>
 
 <style scoped>
+  /* The browser's SVG outline grows with map zoom. Use a fixed-width stroke for focus. */
+  .canopy:focus {
+    outline: none;
+  }
+  .canopy:focus-visible > .canopy-focus-ring {
+    stroke: Highlight;
+    stroke-width: 2px;
+  }
   .canopy--tree {
     color: #3f6846;
   }

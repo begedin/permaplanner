@@ -38,7 +38,8 @@ export const useMapInteraction = () => {
         event.preventDefault();
         interaction.removeSelection();
       } else if (event.key === 'Escape') {
-        void interaction.clearSelection();
+        if (interaction.selectedPlantId) interaction.resetMode();
+        else void interaction.clearSelection();
       }
     },
     { capture: true },

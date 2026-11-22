@@ -52,10 +52,18 @@ export type CatalogPhenology = {
   harvest?: CatalogMonthPeriod;
 };
 
+export type CatalogGrowth = {
+  spreadM: number;
+  maturityYears?: number;
+  source: string;
+  timingSource?: string;
+};
+
 /** Cultivar row: include optional fields only when they differ from the species defaults. */
 export type CatalogCultivar = {
   id: string;
   name: string;
+  growth?: CatalogGrowth;
   /** Latin binomial or cultivar epithet; used for search, not primary UI label. */
   name_latin?: string;
   defaultIconId?: PlantIconId;
@@ -70,6 +78,8 @@ export type CatalogCultivar = {
 export type CatalogSpecies = {
   id: string;
   name: string;
+  growth?: CatalogGrowth;
+  rootstockSpreadsM?: Record<string, number>;
   /** Latin binomial; used for search, not primary UI label. */
   name_latin?: string;
   defaultIconId: PlantIconId;

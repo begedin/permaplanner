@@ -52,11 +52,11 @@
       />
     </label>
     <p
-      v-if="scale.unitLengthPx > 0"
       class="paper-inset rounded-lg border border-parchment-300/70 px-3 py-2 text-center font-medium tabular-nums text-ink-700"
     >
-      {{ (props.shape.width / scale.unitLengthPx).toFixed(2) }} ×
-      {{ (props.shape.height / scale.unitLengthPx).toFixed(2) }} {{ scale.unitLabel }}
+      {{ (props.shape.width / scale.measurement.pixelsPerUnit).toFixed(2) }} ×
+      {{ (props.shape.height / scale.measurement.pixelsPerUnit).toFixed(2) }}
+      {{ scale.measurement.unit }}
     </p>
     <p class="text-xs leading-relaxed text-ink-600">
       Drag inside to move, an edge or corner to resize, and the round handle to rotate.

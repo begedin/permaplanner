@@ -15,7 +15,7 @@
   <text
     data-plant-label
     :x="thing.x + thing.width / 2"
-    :y="thing.y + thing.height + fontSize * 1.2"
+    :y="thing.y + thing.width + fontSize * 1.2"
     :font-size="fontSize"
     text-anchor="middle"
     class="pointer-events-none font-serif"

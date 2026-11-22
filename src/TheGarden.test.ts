@@ -451,13 +451,14 @@ it('keeps the guild when Delete is pressed while editing its name', async () => 
 it('edits background opacity from settings inside the aerial map and supports undo', async () => {
   await renderGarden('/guilds');
   const map = within(screen.getByRole('region', { name: 'Aerial map' }));
-  const toggle = map.getByRole('button', { name: 'Map settings' });
+  const settings = within(map.getByRole('group', { name: 'Map settings' }));
+  const toggle = settings.getByRole('button', { name: 'Map settings' });
   expect(toggle).toHaveAttribute('aria-expanded', 'false');
-  expect(map.queryByRole('slider')).not.toBeInTheDocument();
+  expect(settings.queryByRole('slider')).not.toBeInTheDocument();
   await fireEvent.click(toggle);
   expect(toggle).toHaveAttribute('aria-expanded', 'true');
-  expect(map.getByRole('slider', { name: /^Map scale/ })).toBeVisible();
-  const opacity = map.getByRole('slider', { name: /^BG opacity/ });
+  expect(settings.getByRole('slider', { name: /^Map scale/ })).toBeVisible();
+  const opacity = settings.getByRole('slider', { name: /^BG opacity/ });
   const previousOpacity = usePlanStateStore().state.backgroundOpacity;
   await fireEvent.pointerDown(opacity);
   await fireEvent.update(opacity, '0.8');
@@ -467,7 +468,7 @@ it('edits background opacity from settings inside the aerial map and supports un
   expect(usePlanStateStore().state.backgroundOpacity).toBe(previousOpacity);
   await fireEvent.click(toggle);
   expect(toggle).toHaveAttribute('aria-expanded', 'false');
-  expect(map.queryByRole('slider')).not.toBeInTheDocument();
+  expect(settings.queryByRole('slider')).not.toBeInTheDocument();
 });
 
 it('records calibration and onboarding together without delayed document changes', async () => {

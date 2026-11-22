@@ -1,10 +1,18 @@
 import { computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 
-import { SCALE_UNITS } from './gardenDocument';
+import { SCALE_UNITS, type ScaleUnit } from './gardenDocument';
 import { usePlanStateStore } from './usePlanStateStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { onboardingAfterScaleDrag } from './onboardingTypes';
+
+const METERS_PER_UNIT: Record<Exclude<ScaleUnit, 'unspecified'>, number> = {
+  m: 1,
+  cm: 0.01,
+  ft: 0.3048,
+  in: 0.0254,
+  yd: 0.9144,
+};
 
 export const useMapScaleStore = defineStore('mapScale', () => {
   const plan = usePlanStateStore();
@@ -48,6 +56,15 @@ export const useMapScaleStore = defineStore('mapScale', () => {
     const indicatorLengthPx = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
     return indicatorLengthPx / linePhysicalLength.value;
   });
+  const measurement = computed(() => {
+    const pixelsPerUnit = unitLengthPx.value;
+    if (unit.value !== 'unspecified' && plan.state.onboardingState === 'done') {
+      const pixelsPerMeter = pixelsPerUnit / METERS_PER_UNIT[unit.value];
+      if (Number.isFinite(pixelsPerMeter) && pixelsPerMeter > 0)
+        return { unit: unit.value, pixelsPerUnit, pixelsPerMeter };
+    }
+    return { unit: 'map px', pixelsPerUnit: 1, pixelsPerMeter: undefined };
+  });
 
   return {
     unit,
@@ -59,5 +76,6 @@ export const useMapScaleStore = defineStore('mapScale', () => {
     end,
     linePhysicalLength,
     unitLengthPx,
+    measurement,
   };
 });

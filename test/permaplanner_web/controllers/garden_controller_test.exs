@@ -96,7 +96,7 @@ defmodule PermaplannerWeb.GardenControllerTest do
               "x" => 5,
               "y" => 6,
               "width" => 7,
-              "height" => 8
+              "height" => 7
             }
           ]
         }

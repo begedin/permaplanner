@@ -116,8 +116,9 @@ defmodule Permaplanner.Gardens.Document do
   defp thing?(thing) when is_map(thing) do
     is_binary(thing["id"]) and is_binary(thing["plantId"]) and
       is_binary(thing["nameOrCultivar"]) and point?(thing) and
-      is_number(thing["width"]) and is_number(thing["height"]) and
+      is_number(thing["width"]) and thing["height"] == thing["width"] and
       optional?(thing, "placed", &is_boolean/1) and
+      optional?(thing, "matureSpreadM", &(is_number(&1) and &1 > 0)) and
       optional?(thing, "note", &is_binary/1) and
       optional?(thing, "growthPhase", &(&1 in @phases)) and
       optional?(thing, "vigor", &(&1 in 1..5))

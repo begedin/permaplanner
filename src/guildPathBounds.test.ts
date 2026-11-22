@@ -22,11 +22,16 @@ it('pathBounds uses the axis-aligned bounding box', () => {
 });
 
 it('formatGuildMapDimensions matches map measure units', () => {
-  expect(formatGuildMapDimensions({ x: 0, y: 0, width: 130, height: 100 }, 130)).toBe(
-    '1.00×0.77',
-  );
+  expect(
+    formatGuildMapDimensions(
+      { x: 0, y: 0, width: 130, height: 100 },
+      { pixelsPerUnit: 130, unit: 'm' },
+    ),
+  ).toBe('1.00×0.77 m');
 });
 
-it('formatGuildMapDimensions returns null when scale is unset', () => {
-  expect(formatGuildMapDimensions({ x: 0, y: 0, width: 10, height: 10 }, 0)).toBeNull();
+it('omits dimensions for an empty boundary', () => {
+  expect(
+    formatGuildMapDimensions(pathBounds([]), { pixelsPerUnit: 1, unit: 'map px' }),
+  ).toBeNull();
 });

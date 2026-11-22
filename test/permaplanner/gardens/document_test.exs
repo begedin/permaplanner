@@ -43,6 +43,7 @@ defmodule Permaplanner.Gardens.DocumentTest do
               "x" => 0,
               "y" => 0,
               "placed" => true,
+              "matureSpreadM" => 2.7,
               "width" => 16,
               "height" => 16
             }
@@ -67,6 +68,8 @@ defmodule Permaplanner.Gardens.DocumentTest do
       ),
       put_in(document, ["guilds", Access.at(0), "plants", Access.at(0), "plantId"], "missing"),
       put_in(document, ["guilds", Access.at(0), "plants", Access.at(0), "placed"], "true"),
+      put_in(document, ["guilds", Access.at(0), "plants", Access.at(0), "height"], 8),
+      put_in(document, ["guilds", Access.at(0), "plants", Access.at(0), "matureSpreadM"], 0),
       Map.put(document, "mapScale", nil),
       put_in(document, ["mapScale", "unit"], "cubits"),
       Map.delete(document, "paths"),

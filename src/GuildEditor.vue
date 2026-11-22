@@ -198,6 +198,7 @@
           @input="setEditingName"
           @blur="commitName"
         />
+        <slot name="plant-details" />
         <div
           role="radiogroup"
           aria-label="Mulch level"

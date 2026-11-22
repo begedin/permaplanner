@@ -4,6 +4,8 @@ description: >-
     Extends the plant catalog by adding species or cultivars. Prefer common English display names;
     use Latin only when disambiguating. Bump version and CHANGELOG when done.
 ---
+Follow the [catalog growth rules](../../../README.md#adding-plants-to-the-catalog) for new and existing plants. Check the diff for unrelated edits, repeated species defaults, and growth values without a source.
+
 When adding a new species or cultivar to the `plantCatalog.json` database, do the proper research:
 
 - The plant name you are given may be Latin, a cultivar, or informal — identify the plant on the web and use the **common English name** gardeners and seed catalogs use.

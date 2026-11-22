@@ -5,6 +5,8 @@
   import { routeNames } from './router';
   import { guildLayoutKey, useGuildLayoutState } from './useGuildLayoutState';
   import GuildEditor from './GuildEditor.vue';
+  import PlantSpreadEditor from './PlantSpreadEditor.vue';
+  import { useFutureView } from './useFutureView';
   import GuildTabHeader from './GuildTabHeader.vue';
   import GuildListRow from './GuildListRow.vue';
   import { useGardenStore } from './useGardenStore';
@@ -15,6 +17,7 @@
   const router = useRouter();
   const route = useRoute();
   const garden = useGardenStore();
+  const future = useFutureView();
   const { selectedGuildId, isMerging } = storeToRefs(useMapInteractionStore());
   const { searchQuery, filteredGuilds, hasSearchQuery } = useGuildSearch();
   const { guildListScroll } = useGuildListScroll();
@@ -41,7 +44,7 @@
     },
   );
   provide(guildLayoutKey, layout);
-  const { selectedThingId, placingThingId } = layout;
+  const { selectedThing, selectedThingId, placingThingId } = layout;
 </script>
 
 <template>
@@ -82,7 +85,10 @@
       </aside>
       <div
         class="guild-workspace grid flex-1 min-h-0 min-w-0"
-        :class="{ 'guild-workspace--selected': selectedGuildId }"
+        :class="{
+          'guild-workspace--selected': selectedGuildId,
+          'guild-workspace--layout': isLayout,
+        }"
       >
         <section
           class="min-h-0 min-w-0 overflow-hidden paper-surface"
@@ -109,7 +115,16 @@
                 })
               "
               class="flex-1 min-h-0"
-            />
+            >
+              <template #plant-details>
+                <PlantSpreadEditor
+                  v-if="selectedThing && future.horizon !== 'now'"
+                  :key="selectedThing.id"
+                  :guild-id="selectedGuildId"
+                  :thing="selectedThing"
+                />
+              </template>
+            </GuildEditor>
           </div>
         </section>
 
@@ -129,6 +144,12 @@
 
   .guild-workspace--selected {
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  @media (max-width: 767px) {
+    .guild-workspace--layout {
+      grid-template-rows: minmax(0, 1fr) minmax(0, 2fr);
+    }
   }
 
   @media (min-width: 768px) {

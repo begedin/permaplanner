@@ -33,7 +33,11 @@
         "start": 4,
         "end": 8
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "growth": {
+        "spreadM": 1.25,
+        "source": "https://www.rhs.org.uk/plants/18973/vinca-minor/details"
+      }
     },
     {
       "id": "florists_cyclamen",
@@ -59,7 +63,11 @@
         "start": 12,
         "end": 5
       },
-      "defaultIconId": "flower-rosette"
+      "defaultIconId": "flower-rosette",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/101163/cyclamen-persicum/details"
+      }
     },
     {
       "id": "lawsons_cypress",
@@ -71,19 +79,39 @@
         {
           "id": "ellwoodii",
           "name": "Ellwoodii (Ellwood cypress)",
-          "layers": ["shrub", "understory"]
+          "layers": ["shrub", "understory"],
+          "growth": {
+            "spreadM": 2,
+            "maturityYears": 35,
+            "source": "https://www.rhs.org.uk/plants/92331/chamaecyparis-lawsoniana-ellwoodii/details"
+          }
         },
         {
           "id": "ellwoods_gold",
           "name": "Ellwood's Gold",
-          "layers": ["shrub"]
+          "layers": ["shrub"],
+          "growth": {
+            "spreadM": 0.75,
+            "maturityYears": 15,
+            "source": "https://www.rhs.org.uk/plants/90200/chamaecyparis-lawsoniana-ellwoods-gold/details"
+          }
         },
         {
           "id": "columnaris",
-          "name": "Columnaris"
+          "name": "Columnaris",
+          "growth": {
+            "spreadM": 2,
+            "maturityYears": 35,
+            "source": "https://www.rhs.org.uk/plants/98378/chamaecyparis-lawsoniana-columnaris/details"
+          }
         }
       ],
-      "defaultIconId": "evergreen"
+      "defaultIconId": "evergreen",
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 35,
+        "source": "https://www.rhs.org.uk/plants/3571/chamaecyparis-lawsoniana/details"
+      }
     },
     {
       "id": "crocus",
@@ -109,7 +137,11 @@
         "start": 3,
         "end": 4
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "growth": {
+        "spreadM": 0.05,
+        "source": "https://www.rhs.org.uk/plants/4958/crocus-vernus-subsp-vernus/details"
+      }
     },
     {
       "id": "hosta",
@@ -124,18 +156,30 @@
         },
         {
           "id": "patriot",
-          "name": "Patriot"
+          "name": "Patriot",
+          "growth": {
+            "spreadM": 0.75,
+            "source": "https://www.rhs.org.uk/plants/64893/hosta-patriot-v/details"
+          }
         },
         {
           "id": "sum_and_substance",
-          "name": "Sum and Substance"
+          "name": "Sum and Substance",
+          "growth": {
+            "spreadM": 0.75,
+            "source": "https://www.rhs.org.uk/plants/85672/hosta-sum-and-substance/details"
+          }
         }
       ],
       "blooming": {
         "start": 7,
         "end": 8
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/117305/hosta-june/details"
+      }
     },
     {
       "id": "hellebore",
@@ -165,7 +209,11 @@
         "start": 2,
         "end": 4
       },
-      "defaultIconId": "flower-blossom"
+      "defaultIconId": "flower-blossom",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/124882/helleborus-%C3%97-hybridus/details"
+      }
     },
     {
       "id": "houseleek",
@@ -199,6 +247,10 @@
       "blooming": {
         "start": 6,
         "end": 8
+      },
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/17164/sempervivum-tectorum/details"
       }
     },
     {
@@ -211,25 +263,51 @@
         {
           "id": "conica",
           "name": "Conica (Dwarf Alberta spruce)",
-          "layers": ["shrub"]
+          "layers": ["shrub"],
+          "growth": {
+            "spreadM": 1.25,
+            "maturityYears": 35,
+            "source": "https://www.rhs.org.uk/plants/83270/picea-glauca-var-albertiana-conica/details"
+          }
         },
         {
           "id": "alberta_globe",
           "name": "Alberta Globe",
-          "layers": ["shrub"]
+          "layers": ["shrub"],
+          "growth": {
+            "spreadM": 0.75,
+            "maturityYears": 15,
+            "source": "https://www.rhs.org.uk/plants/59793/picea-glauca-var-albertiana-alberta-globe/details"
+          }
         },
         {
           "id": "alberta_blue",
           "name": "Alberta Blue",
-          "layers": ["shrub"]
+          "layers": ["shrub"],
+          "growth": {
+            "spreadM": 0.75,
+            "maturityYears": 15,
+            "source": "https://www.rhs.org.uk/plants/224537/picea-glauca-var-albertiana-alberta-blue/details"
+          }
         },
         {
           "id": "december",
           "name": "December",
-          "layers": ["shrub", "understory"]
+          "layers": ["shrub", "understory"],
+          "growth": {
+            "spreadM": 0.8,
+            "maturityYears": 12.5,
+            "source": "https://www.promessedefleurs.ie/shrubs/conifers/conifers-by-variety/picea/picea-glauca-december-white-spruce.html"
+          }
         }
       ],
-      "defaultIconId": "evergreen"
+      "defaultIconId": "evergreen",
+      "growth": {
+        "spreadM": 5.3,
+        "maturityYears": 35,
+        "source": "https://hort.ifas.ufl.edu/trees/PICGLAA.pdf",
+        "timingSource": "https://www.rhs.org.uk/plants/12941/picea-glauca/details"
+      }
     },
     {
       "id": "mexican_orange",
@@ -266,6 +344,11 @@
       "blooming": {
         "start": 5,
         "end": 6
+      },
+      "growth": {
+        "spreadM": 2,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/3766/choisya-ternata/details"
       }
     },
     {
@@ -292,7 +375,11 @@
         "start": 5,
         "end": 6
       },
-      "defaultIconId": "flower-rose"
+      "defaultIconId": "flower-rose",
+      "growth": {
+        "spreadM": 0.75,
+        "source": "https://www.rhs.org.uk/plants/12123/paeonia-lactiflora/details"
+      }
     },
     {
       "id": "tree_peony",
@@ -322,6 +409,11 @@
       "blooming": {
         "start": 5,
         "end": 5
+      },
+      "growth": {
+        "spreadM": 1.25,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/12182/paeonia-suffruticosa/details"
       }
     },
     {
@@ -333,7 +425,11 @@
       "cultivars": [
         {
           "id": "missmini",
-          "name": "Missmini"
+          "name": "Missmini",
+          "growth": {
+            "spreadM": 0.55,
+            "source": "https://www.hoednerhof.at/pflanzenlexikon/detail/zwerg-chinaschilf/"
+          }
         },
         {
           "id": "morning_light",
@@ -352,6 +448,10 @@
       "blooming": {
         "start": 8,
         "end": 10
+      },
+      "growth": {
+        "spreadM": 1.25,
+        "source": "https://www.rhs.org.uk/plants/95355/miscanthus-sinensis/details"
       }
     },
     {
@@ -386,6 +486,11 @@
       "harvest": {
         "start": 10,
         "end": 2
+      },
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 35,
+        "source": "https://www.rhs.org.uk/plants/97711/ilex-%C3%97-altaclerensis/details"
       }
     },
     {
@@ -420,6 +525,11 @@
       "blooming": {
         "start": 7,
         "end": 9
+      },
+      "growth": {
+        "spreadM": 2,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/40792/hydrangea-macrophylla-h/details"
       }
     },
     {
@@ -441,7 +551,12 @@
         {
           "id": "little_lime",
           "name": "Little Lime",
-          "functions": []
+          "functions": [],
+          "growth": {
+            "spreadM": 1.25,
+            "maturityYears": 7.5,
+            "source": "https://www.rhs.org.uk/plants/336749/hydrangea-paniculata-jane/details"
+          }
         },
         {
           "id": "brussels_lace",
@@ -452,6 +567,11 @@
       "blooming": {
         "start": 7,
         "end": 9
+      },
+      "growth": {
+        "spreadM": 2,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/8944/hydrangea-paniculata/details"
       }
     },
     {
@@ -479,6 +599,11 @@
       "blooming": {
         "start": 6,
         "end": 7
+      },
+      "growth": {
+        "spreadM": 0.75,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/8903/hydrangea-arborescens/details"
       }
     },
     {
@@ -505,6 +630,11 @@
       "blooming": {
         "start": 6,
         "end": 7
+      },
+      "growth": {
+        "spreadM": 2,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/8949/hydrangea-quercifolia/details"
       }
     },
     {
@@ -523,7 +653,12 @@
           }
         }
       ],
-      "defaultIconId": "flower-spike"
+      "defaultIconId": "flower-spike",
+      "growth": {
+        "spreadM": 0.75,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/8352/hebe-pinguifolia/details"
+      }
     },
     {
       "id": "clematis",
@@ -559,7 +694,11 @@
           }
         }
       ],
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "growth": {
+        "spreadM": 0.75,
+        "source": "https://www.rhs.org.uk/plants/96731/clematis-jackmanii-ll/details"
+      }
     },
     {
       "id": "heather",
@@ -593,7 +732,12 @@
         "start": 7,
         "end": 9
       },
-      "defaultIconId": "flower-spike"
+      "defaultIconId": "flower-spike",
+      "growth": {
+        "spreadM": 0.3,
+        "maturityYears": 3.5,
+        "source": "https://www.rhs.org.uk/plants/2712/calluna-vulgaris/details"
+      }
     },
     {
       "id": "paulownia",
@@ -626,7 +770,13 @@
         "start": 4,
         "end": 5
       },
-      "defaultIconId": "tree"
+      "defaultIconId": "tree",
+      "growth": {
+        "spreadM": 13.7,
+        "maturityYears": 35,
+        "source": "https://hort.ifas.ufl.edu/trees/PAUTOMA.pdf",
+        "timingSource": "https://www.rhs.org.uk/plants/21410/paulownia-tomentosa/details"
+      }
     },
     {
       "id": "pampas_grass",
@@ -641,7 +791,11 @@
         },
         {
           "id": "pumila",
-          "name": "Pumila (Dwarf cream)"
+          "name": "Pumila (Dwarf cream)",
+          "growth": {
+            "spreadM": 0.75,
+            "source": "https://www.rhs.org.uk/plants/4435/cortaderia-selloana-pumila/details"
+          }
         },
         {
           "id": "highfield_pink",
@@ -652,7 +806,11 @@
         "start": 8,
         "end": 10
       },
-      "defaultIconId": "grain"
+      "defaultIconId": "grain",
+      "growth": {
+        "spreadM": 2,
+        "source": "https://www.rhs.org.uk/plants/4431/cortaderia-selloana/details"
+      }
     },
     {
       "id": "aster",
@@ -678,7 +836,11 @@
         "start": 8,
         "end": 10
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "growth": {
+        "spreadM": 0.75,
+        "source": "https://www.rhs.org.uk/plants/92915/aster-amellus/details"
+      }
     },
     {
       "id": "golden_rain_tree",
@@ -689,7 +851,12 @@
       "cultivars": [
         {
           "id": "fastigiata",
-          "name": "Fastigiata (Upright)"
+          "name": "Fastigiata (Upright)",
+          "growth": {
+            "spreadM": 3.25,
+            "maturityYears": 35,
+            "source": "https://www.rhs.org.uk/plants/95532/koelreuteria-paniculata-fastigiata/details"
+          }
         },
         {
           "id": "september",
@@ -716,6 +883,12 @@
       "harvest": {
         "start": 9,
         "end": 10
+      },
+      "growth": {
+        "spreadM": 10.7,
+        "maturityYears": 35,
+        "source": "https://hort.ifas.ufl.edu/database/documents/pdf/tree_fact_sheets/koepana.pdf",
+        "timingSource": "https://www.rhs.org.uk/plants/9772/koelreuteria-paniculata/details"
       }
     },
     {
@@ -750,7 +923,12 @@
         "end": 10
       },
       "defaultIconId": "pear",
-      "name_latin": "Pyrus pyrifolia"
+      "name_latin": "Pyrus pyrifolia",
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/56864/pyrus-pyrifolia/details"
+      }
     },
     {
       "id": "nanking_cherry",
@@ -780,7 +958,12 @@
         "end": 7
       },
       "defaultIconId": "cherry",
-      "name_latin": "Prunus tomentosa"
+      "name_latin": "Prunus tomentosa",
+      "growth": {
+        "spreadM": 2,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/90492/prunus-tomentosa/details"
+      }
     },
     {
       "id": "apple",
@@ -866,7 +1049,20 @@
         "end": 10
       },
       "defaultIconId": "apple",
-      "name_latin": "Malus domestica"
+      "name_latin": "Malus domestica",
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/66641/malus-domestica-granny-smith-d/details"
+      },
+      "rootstockSpreadsM": {
+        "M27": 1.5,
+        "M9": 2.7,
+        "M26": 3.6,
+        "MM106": 4,
+        "MM111": 4.5,
+        "M25": 6
+      }
     },
     {
       "id": "pear",
@@ -904,7 +1100,12 @@
         "end": 9
       },
       "defaultIconId": "pear",
-      "name_latin": "Pyrus communis"
+      "name_latin": "Pyrus communis",
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/74814/pyrus-communis-conference-d/details"
+      }
     },
     {
       "id": "narcissus",
@@ -938,7 +1139,11 @@
         "start": 3,
         "end": 5
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/99309/narcissus-dutch-master-1/details"
+      }
     },
     {
       "id": "nasturtium",
@@ -964,7 +1169,11 @@
         "end": 9
       },
       "defaultIconId": "flower",
-      "name_latin": "Tropaeolum majus"
+      "name_latin": "Tropaeolum majus",
+      "growth": {
+        "spreadM": 2,
+        "source": "https://www.rhs.org.uk/plants/85362/tropaeolum-majus/details"
+      }
     },
     {
       "id": "haskap",
@@ -1042,7 +1251,12 @@
         "end": 7
       },
       "defaultIconId": "haskap",
-      "name_latin": "Lonicera caerulea"
+      "name_latin": "Lonicera caerulea",
+      "growth": {
+        "spreadM": 2,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/10446/lonicera-caerulea/details"
+      }
     },
     {
       "id": "strawberry",
@@ -1076,7 +1290,11 @@
         "end": 8
       },
       "defaultIconId": "strawberry",
-      "name_latin": "Fragaria × ananassa"
+      "name_latin": "Fragaria × ananassa",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/69875/fragaria-%C3%97-ananassa-cambridge-favourite-f/details"
+      }
     },
     {
       "id": "basil",
@@ -1106,7 +1324,11 @@
         "end": 9
       },
       "defaultIconId": "leaf-herb",
-      "name_latin": "Ocimum basilicum"
+      "name_latin": "Ocimum basilicum",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/11649/i-ocimum-basilicum-i/details"
+      }
     },
     {
       "id": "chives",
@@ -1128,7 +1350,11 @@
         "end": 8
       },
       "defaultIconId": "onion",
-      "name_latin": "Allium schoenoprasum"
+      "name_latin": "Allium schoenoprasum",
+      "growth": {
+        "spreadM": 0.05,
+        "source": "https://www.rhs.org.uk/plants/859/allium-schoenoprasum/details"
+      }
     },
     {
       "id": "bunching_onion",
@@ -1155,7 +1381,11 @@
         "end": 7
       },
       "defaultIconId": "onion",
-      "name_latin": "Allium fistulosum"
+      "name_latin": "Allium fistulosum",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/26473/allium-fistulosum/details"
+      }
     },
     {
       "id": "ornamental_allium",
@@ -1173,7 +1403,11 @@
         "start": 5,
         "end": 6
       },
-      "defaultIconId": "flower-blossom"
+      "defaultIconId": "flower-blossom",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/841/allium-neapolitanum/details"
+      }
     },
     {
       "id": "daisy",
@@ -1184,7 +1418,11 @@
         {
           "id": "shasta",
           "name": "Shasta",
-          "name_latin": "Leucanthemum × superbum"
+          "name_latin": "Leucanthemum × superbum",
+          "growth": {
+            "spreadM": 0.75,
+            "source": "https://www.rhs.org.uk/plants/98781/leucanthemum-%C3%97-superbum/details"
+          }
         },
         {
           "id": "oxeye",
@@ -1194,14 +1432,22 @@
         {
           "id": "english",
           "name": "English",
-          "name_latin": "Bellis perennis"
+          "name_latin": "Bellis perennis",
+          "growth": {
+            "spreadM": 0.05,
+            "source": "https://www.rhs.org.uk/plants/94326/bellis-perennis/details"
+          }
         }
       ],
       "blooming": {
         "start": 5,
         "end": 9
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/32804/leucanthemum-vulgare/details"
+      }
     },
     {
       "id": "snapdragon",
@@ -1231,7 +1477,11 @@
         "end": 9
       },
       "defaultIconId": "flower-spike",
-      "name_latin": "Antirrhinum majus"
+      "name_latin": "Antirrhinum majus",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/69565/antirrhinum-majus/details"
+      }
     },
     {
       "id": "japanese_maple",
@@ -1244,7 +1494,12 @@
         "end": 5
       },
       "defaultIconId": "maple",
-      "name_latin": "Acer palmatum"
+      "name_latin": "Acer palmatum",
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/225/acer-palmatum/details"
+      }
     },
     {
       "id": "jostaberry",
@@ -1282,7 +1537,12 @@
         "end": 8
       },
       "defaultIconId": "blueberry",
-      "name_latin": "Ribes × nidigrolaria"
+      "name_latin": "Ribes × nidigrolaria",
+      "growth": {
+        "spreadM": 1.25,
+        "maturityYears": 3.5,
+        "source": "https://www.rhs.org.uk/plants/297045/ribes-%C3%97-nidigrolaria-f/details"
+      }
     },
     {
       "id": "jujube",
@@ -1332,7 +1592,11 @@
         "end": 10
       },
       "defaultIconId": "tree",
-      "name_latin": "Ziziphus jujuba"
+      "name_latin": "Ziziphus jujuba",
+      "growth": {
+        "spreadM": 6.1,
+        "source": "https://hort.ifas.ufl.edu/database/documents/pdf/tree_fact_sheets/zizjuja.pdf"
+      }
     },
     {
       "id": "judas_tree",
@@ -1354,7 +1618,13 @@
         "end": 4
       },
       "defaultIconId": "tree",
-      "name_latin": "Cercis siliquastrum"
+      "name_latin": "Cercis siliquastrum",
+      "growth": {
+        "spreadM": 6.1,
+        "maturityYears": 35,
+        "source": "https://plantfinder.mobot.org/PlantFinderDetails.aspx?taxonid=280444",
+        "timingSource": "https://www.rhs.org.uk/plants/24283/cercis-siliquastrum/details"
+      }
     },
     {
       "id": "banana",
@@ -1368,11 +1638,19 @@
         },
         {
           "id": "dwarf_cavendish",
-          "name": "Dwarf Cavendish"
+          "name": "Dwarf Cavendish",
+          "growth": {
+            "spreadM": 2,
+            "source": "https://www.rhs.org.uk/plants/56394/musa-acuminata-dwarf-cavendish-aaa-group-f/details"
+          }
         }
       ],
       "defaultIconId": "banana",
-      "name_latin": "Musa acuminata"
+      "name_latin": "Musa acuminata",
+      "growth": {
+        "spreadM": 2.4,
+        "source": "https://plantfinder.mobot.org/PlantFinderDetails.aspx?taxonid=282778"
+      }
     },
     {
       "id": "gooseberry",
@@ -1402,7 +1680,12 @@
         "end": 7
       },
       "defaultIconId": "pea",
-      "name_latin": "Ribes uva-crispa"
+      "name_latin": "Ribes uva-crispa",
+      "growth": {
+        "spreadM": 1.25,
+        "maturityYears": 3.5,
+        "source": "https://www.rhs.org.uk/plants/15898/ribes-uva-crispa/details"
+      }
     },
     {
       "id": "goumi",
@@ -1432,7 +1715,11 @@
         "end": 8
       },
       "defaultIconId": "cherry",
-      "name_latin": "Elaeagnus multiflora"
+      "name_latin": "Elaeagnus multiflora",
+      "growth": {
+        "spreadM": 2.4,
+        "source": "https://plantfinder.mobot.org/PlantFinderDetails.aspx?taxonid=279925"
+      }
     },
     {
       "id": "comfrey",
@@ -1465,7 +1752,11 @@
         "end": 7
       },
       "defaultIconId": "flower-spike",
-      "name_latin": "Symphytum officinale"
+      "name_latin": "Symphytum officinale",
+      "growth": {
+        "spreadM": 1.25,
+        "source": "https://www.rhs.org.uk/plants/17886/symphytum-officinale/details"
+      }
     },
     {
       "id": "plantain",
@@ -1493,7 +1784,11 @@
         "end": 9
       },
       "defaultIconId": "leaf-herb",
-      "name_latin": "Plantago major"
+      "name_latin": "Plantago major",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/42126/plantago-major/details"
+      }
     },
     {
       "id": "calendula",
@@ -1523,7 +1818,11 @@
         "end": 10
       },
       "defaultIconId": "flower",
-      "name_latin": "Calendula officinalis"
+      "name_latin": "Calendula officinalis",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/62350/calendula-officinalis/details"
+      }
     },
     {
       "id": "common_mallow",
@@ -1545,7 +1844,11 @@
         "end": 9
       },
       "defaultIconId": "flower",
-      "name_latin": "Malva sylvestris"
+      "name_latin": "Malva sylvestris",
+      "growth": {
+        "spreadM": 0.75,
+        "source": "https://www.rhs.org.uk/plants/10799/malva-sylvestris/details"
+      }
     },
     {
       "id": "carpathian_bellflower",
@@ -1571,7 +1874,11 @@
         "end": 9
       },
       "defaultIconId": "flower",
-      "name_latin": "Campanula carpatica"
+      "name_latin": "Campanula carpatica",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/24372/campanula-carpatica/details"
+      }
     },
     {
       "id": "sweet_william",
@@ -1597,7 +1904,11 @@
         "end": 8
       },
       "defaultIconId": "flower-blossom",
-      "name_latin": "Dianthus barbatus"
+      "name_latin": "Dianthus barbatus",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/105495/dianthus-barbatus/details"
+      }
     },
     {
       "id": "tagetes",
@@ -1626,7 +1937,11 @@
         "start": 6,
         "end": 10
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/105531/tagetes-patula/details"
+      }
     },
     {
       "id": "sunflower",
@@ -1660,7 +1975,11 @@
         "end": 10
       },
       "defaultIconId": "sunflower",
-      "name_latin": "Helianthus annuus"
+      "name_latin": "Helianthus annuus",
+      "growth": {
+        "spreadM": 0.75,
+        "source": "https://www.rhs.org.uk/plants/105515/helianthus-annuus/details"
+      }
     },
     {
       "id": "mint",
@@ -1677,7 +1996,11 @@
         "start": 7,
         "end": 8
       },
-      "defaultIconId": "leaf-herb"
+      "defaultIconId": "leaf-herb",
+      "growth": {
+        "spreadM": 1.25,
+        "source": "https://www.rhs.org.uk/plants/11050/mentha-%C3%97-piperita/details"
+      }
     },
     {
       "id": "marjoram",
@@ -1695,7 +2018,11 @@
         "end": 9
       },
       "defaultIconId": "leaf-herb",
-      "name_latin": "Origanum majorana"
+      "name_latin": "Origanum majorana",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/11919/origanum-majorana/details"
+      }
     },
     {
       "id": "oregano",
@@ -1719,7 +2046,11 @@
         "end": 9
       },
       "defaultIconId": "leaf-herb",
-      "name_latin": "Origanum vulgare"
+      "name_latin": "Origanum vulgare",
+      "growth": {
+        "spreadM": 0.75,
+        "source": "https://www.rhs.org.uk/plants/11923/origanum-vulgare/details"
+      }
     },
     {
       "id": "mulberry",
@@ -1729,7 +2060,12 @@
       "cultivars": [
         {
           "id": "red",
-          "name": "Red mulberry"
+          "name": "Red mulberry",
+          "growth": {
+            "spreadM": 6,
+            "maturityYears": 35,
+            "source": "https://www.rhs.org.uk/plants/49960/morus-rubra/details"
+          }
         },
         {
           "id": "white",
@@ -1737,7 +2073,13 @@
         },
         {
           "id": "black",
-          "name": "Black mulberry"
+          "name": "Black mulberry",
+          "growth": {
+            "spreadM": 10.5,
+            "maturityYears": 35,
+            "source": "https://www.vdberk.com/trees/morus-nigra/",
+            "timingSource": "https://www.rhs.org.uk/plants/11217/morus-nigra-f/details"
+          }
         }
       ],
       "blooming": {
@@ -1749,7 +2091,13 @@
         "end": 8
       },
       "defaultIconId": "mulberry",
-      "name_latin": "Morus alba"
+      "name_latin": "Morus alba",
+      "growth": {
+        "spreadM": 12.2,
+        "maturityYears": 35,
+        "source": "https://plantfinder.mobot.org/PlantFinderDetails.aspx?taxonid=282726",
+        "timingSource": "https://www.rhs.org.uk/plants/11216/morus-alba/details"
+      }
     },
     {
       "id": "sage",
@@ -1775,7 +2123,12 @@
         "end": 8
       },
       "defaultIconId": "leaf-herb",
-      "name_latin": "Salvia officinalis"
+      "name_latin": "Salvia officinalis",
+      "growth": {
+        "spreadM": 0.75,
+        "maturityYears": 3.5,
+        "source": "https://www.rhs.org.uk/plants/16356/salvia-officinalis/details"
+      }
     },
     {
       "id": "dill",
@@ -1805,7 +2158,11 @@
         "end": 9
       },
       "defaultIconId": "leaf-herb",
-      "name_latin": "Anethum graveolens"
+      "name_latin": "Anethum graveolens",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/43298/anethum-graveolens/details"
+      }
     },
     {
       "id": "che",
@@ -1831,7 +2188,11 @@
         "end": 10
       },
       "defaultIconId": "blueberry",
-      "name_latin": "Cudrania tricuspidata"
+      "name_latin": "Cudrania tricuspidata",
+      "growth": {
+        "spreadM": 7.6,
+        "source": "https://www.treepeony.com/products/cudrania-chul-ri-che-melonberry"
+      }
     },
     {
       "id": "black_currant",
@@ -1861,7 +2222,12 @@
         "end": 8
       },
       "defaultIconId": "black-currant",
-      "name_latin": "Ribes nigrum"
+      "name_latin": "Ribes nigrum",
+      "growth": {
+        "spreadM": 1.25,
+        "maturityYears": 3.5,
+        "source": "https://www.rhs.org.uk/plants/106234/ribes-nigrum-b/details"
+      }
     },
     {
       "id": "white_currant",
@@ -1887,7 +2253,12 @@
         "end": 8
       },
       "defaultIconId": "white-currant",
-      "name_latin": "Ribes rubrum"
+      "name_latin": "Ribes rubrum",
+      "growth": {
+        "spreadM": 1.25,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/57940/ribes-rubrum-white-grape-w/details"
+      }
     },
     {
       "id": "red_currant",
@@ -1917,7 +2288,12 @@
         "end": 8
       },
       "defaultIconId": "red-currant",
-      "name_latin": "Ribes rubrum"
+      "name_latin": "Ribes rubrum",
+      "growth": {
+        "spreadM": 1.25,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/15884/ribes-rubrum/details"
+      }
     },
     {
       "id": "peach",
@@ -1951,7 +2327,12 @@
         "end": 9
       },
       "defaultIconId": "peach",
-      "name_latin": "Prunus persica"
+      "name_latin": "Prunus persica",
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/156648/prunus-persica/details"
+      }
     },
     {
       "id": "nectarine",
@@ -1985,7 +2366,12 @@
         "end": 8
       },
       "defaultIconId": "peach",
-      "name_latin": "Prunus persica var. nucipersica"
+      "name_latin": "Prunus persica var. nucipersica",
+      "growth": {
+        "spreadM": 3.25,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/219283/prunus-persica-var-nucipersica/details"
+      }
     },
     {
       "id": "apricot",
@@ -2063,7 +2449,12 @@
         "end": 8
       },
       "defaultIconId": "peach",
-      "name_latin": "Prunus armeniaca"
+      "name_latin": "Prunus armeniaca",
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/13949/prunus-armeniaca/details"
+      }
     },
     {
       "id": "plum",
@@ -2118,7 +2509,12 @@
         "end": 9
       },
       "defaultIconId": "plum",
-      "name_latin": "Prunus domestica"
+      "name_latin": "Prunus domestica",
+      "growth": {
+        "spreadM": 3.25,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/84405/prunus-domestica-d-c/details"
+      }
     },
     {
       "id": "persimmon",
@@ -2148,7 +2544,12 @@
         "end": 11
       },
       "defaultIconId": "apricot",
-      "name_latin": "Diospyros kaki"
+      "name_latin": "Diospyros kaki",
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 35,
+        "source": "https://www.rhs.org.uk/plants/5919/diospyros-kaki-f/details"
+      }
     },
     {
       "id": "sweet_cherry",
@@ -2206,7 +2607,13 @@
         },
         {
           "id": "from_seed",
-          "name": "From seed (not grafted)"
+          "name": "From seed (not grafted)",
+          "growth": {
+            "spreadM": 10.7,
+            "maturityYears": 35,
+            "source": "https://americanillustration.org/project/prunus-avium/",
+            "timingSource": "https://www.rhs.org.uk/plants/13950/prunus-avium/details"
+          }
         }
       ],
       "blooming": {
@@ -2218,7 +2625,12 @@
         "end": 7
       },
       "defaultIconId": "cherry",
-      "name_latin": "Prunus avium"
+      "name_latin": "Prunus avium",
+      "growth": {
+        "spreadM": 3.25,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/59056/prunus-avium-stella-f/details"
+      }
     },
     {
       "id": "sour_cherry",
@@ -2280,7 +2692,12 @@
         "end": 7
       },
       "defaultIconId": "cherry",
-      "name_latin": "Prunus cerasus"
+      "name_latin": "Prunus cerasus",
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/160703/prunus-cerasus/details"
+      }
     },
     {
       "id": "service_tree",
@@ -2306,7 +2723,13 @@
         "end": 11
       },
       "defaultIconId": "cherry",
-      "name_latin": "Sorbus domestica"
+      "name_latin": "Sorbus domestica",
+      "growth": {
+        "spreadM": 9,
+        "maturityYears": 35,
+        "source": "https://www.vdberk.com/trees/sorbus-domestica/",
+        "timingSource": "https://www.rhs.org.uk/plants/17553/sorbus-domestica/details"
+      }
     },
     {
       "id": "fig",
@@ -2348,7 +2771,12 @@
         "end": 10
       },
       "defaultIconId": "tree",
-      "name_latin": "Ficus carica"
+      "name_latin": "Ficus carica",
+      "growth": {
+        "spreadM": 3.25,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/7199/ficus-carica-f/details"
+      }
     },
     {
       "id": "fir",
@@ -2366,7 +2794,12 @@
         "start": 4,
         "end": 5
       },
-      "defaultIconId": "tree"
+      "defaultIconId": "tree",
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 35,
+        "source": "https://www.rhs.org.uk/plants/327545/abies-nordmanniana-subsp-nordmanniana/details"
+      }
     },
     {
       "id": "kiwi",
@@ -2397,7 +2830,11 @@
         "end": 11
       },
       "defaultIconId": "kiwi",
-      "name_latin": "Actinidia deliciosa"
+      "name_latin": "Actinidia deliciosa",
+      "growth": {
+        "spreadM": 3.25,
+        "source": "https://www.rhs.org.uk/plants/96689/actinidia-deliciosa-1/details"
+      }
     },
     {
       "id": "hardy_kiwi",
@@ -2431,7 +2868,11 @@
         "end": 9
       },
       "defaultIconId": "kiwi",
-      "name_latin": "Actinidia arguta"
+      "name_latin": "Actinidia arguta",
+      "growth": {
+        "spreadM": 3.25,
+        "source": "https://www.rhs.org.uk/plants/232463/actinidia-arguta-1/details"
+      }
     },
     {
       "id": "hazelnut",
@@ -2469,7 +2910,12 @@
         "end": 9
       },
       "defaultIconId": "chestnut",
-      "name_latin": "Corylus avellana"
+      "name_latin": "Corylus avellana",
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/4511/corylus-avellana-f/details"
+      }
     },
     {
       "id": "walnut",
@@ -2487,7 +2933,11 @@
         },
         {
           "id": "heartnut",
-          "name": "Heartnut"
+          "name": "Heartnut",
+          "growth": {
+            "spreadM": 10.7,
+            "source": "https://oaksummitnursery.ca/products/heartnut-trees-juglans-ailantifolia-var-cordiformis"
+          }
         }
       ],
       "blooming": {
@@ -2499,7 +2949,13 @@
         "end": 10
       },
       "defaultIconId": "chestnut",
-      "name_latin": "Juglans regia"
+      "name_latin": "Juglans regia",
+      "growth": {
+        "spreadM": 22.5,
+        "maturityYears": 35,
+        "source": "https://www.vdberk.com/trees/juglans-regia/",
+        "timingSource": "https://www.rhs.org.uk/plants/9504/juglans-regia-f/details"
+      }
     },
     {
       "id": "blueberry",
@@ -2529,7 +2985,12 @@
         "end": 8
       },
       "defaultIconId": "blueberry",
-      "name_latin": "Vaccinium corymbosum"
+      "name_latin": "Vaccinium corymbosum",
+      "growth": {
+        "spreadM": 0.75,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/82189/vaccinium-corymbosum-bluecrop-f/details"
+      }
     },
     {
       "id": "raspberry",
@@ -2567,7 +3028,11 @@
         "end": 8
       },
       "defaultIconId": "raspberry",
-      "name_latin": "Rubus idaeus"
+      "name_latin": "Rubus idaeus",
+      "growth": {
+        "spreadM": 0.75,
+        "source": "https://www.rhs.org.uk/plants/16137/rubus-idaeus/details"
+      }
     },
     {
       "id": "blackberry",
@@ -2601,7 +3066,11 @@
         "end": 9
       },
       "defaultIconId": "blackberry",
-      "name_latin": "Rubus fruticosus"
+      "name_latin": "Rubus fruticosus",
+      "growth": {
+        "spreadM": 2,
+        "source": "https://www.rhs.org.uk/plants/75680/rubus-fruticosus-agg-loch-ness-b/details"
+      }
     },
     {
       "id": "tayberry",
@@ -2627,7 +3096,11 @@
         "end": 8
       },
       "defaultIconId": "blueberry",
-      "name_latin": "Rubus × loganobaccus"
+      "name_latin": "Rubus × loganobaccus",
+      "growth": {
+        "spreadM": 3.25,
+        "source": "https://www.rhs.org.uk/plants/50568/rubus-tayberry-group-tayberry-f/details"
+      }
     },
     {
       "id": "thyme",
@@ -2715,7 +3188,11 @@
         "end": 8
       },
       "defaultIconId": "leaf-herb",
-      "name_latin": "Thymus vulgaris"
+      "name_latin": "Thymus vulgaris",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/18213/thymus-vulgaris/details"
+      }
     },
     {
       "id": "yamlina",
@@ -2731,7 +3208,11 @@
         "start": 7,
         "end": 8
       },
-      "defaultIconId": "raspberry"
+      "defaultIconId": "raspberry",
+      "growth": {
+        "spreadM": 0.6,
+        "source": "https://www.rasadnik-milic.hr/proizvodi/sadnice-bobicastog-voca/sadnice-maline/yamlina-jagoda-malina/"
+      }
     },
     {
       "id": "lemon",
@@ -2761,7 +3242,13 @@
         "end": 4
       },
       "defaultIconId": "lemon",
-      "name_latin": "Citrus limon"
+      "name_latin": "Citrus limon",
+      "growth": {
+        "spreadM": 6.1,
+        "maturityYears": 15,
+        "source": "https://ask.ifas.ufl.edu/publication/ST169",
+        "timingSource": "https://www.rhs.org.uk/plants/212971/citrus-limonum/details"
+      }
     },
     {
       "id": "orange",
@@ -2791,7 +3278,13 @@
         "end": 4
       },
       "defaultIconId": "orange",
-      "name_latin": "Citrus × sinensis"
+      "name_latin": "Citrus × sinensis",
+      "growth": {
+        "spreadM": 3.5,
+        "maturityYears": 15,
+        "source": "https://plants.ces.ncsu.edu/plants/citrus-x-sinensis/",
+        "timingSource": "https://www.rhs.org.uk/plants/55274/citrus-sinensis/details"
+      }
     },
     {
       "id": "hardy_orange",
@@ -2801,7 +3294,12 @@
       "cultivars": [
         {
           "id": "flying_dragon",
-          "name": "Flying Dragon"
+          "name": "Flying Dragon",
+          "growth": {
+            "spreadM": 2,
+            "maturityYears": 7.5,
+            "source": "https://www.rhs.org.uk/plants/320455/citrus-trifoliata-flying-dragon/details"
+          }
         },
         {
           "id": "standard",
@@ -2817,7 +3315,12 @@
         "end": 11
       },
       "defaultIconId": "lemon",
-      "name_latin": "Poncirus trifoliata"
+      "name_latin": "Poncirus trifoliata",
+      "growth": {
+        "spreadM": 2,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/13499/poncirus-trifoliata/details"
+      }
     },
     {
       "id": "goji",
@@ -2847,7 +3350,12 @@
         "end": 10
       },
       "defaultIconId": "goji",
-      "name_latin": "Lycium barbarum"
+      "name_latin": "Lycium barbarum",
+      "growth": {
+        "spreadM": 3.25,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/86879/lycium-barbarum-f/details"
+      }
     },
     {
       "id": "babys_breath",
@@ -2873,7 +3381,11 @@
         "end": 8
       },
       "defaultIconId": "bouquet",
-      "name_latin": "Gypsophila paniculata"
+      "name_latin": "Gypsophila paniculata",
+      "growth": {
+        "spreadM": 1.25,
+        "source": "https://www.rhs.org.uk/plants/8171/gypsophila-paniculata/details"
+      }
     },
     {
       "id": "cornelian_cherry",
@@ -2903,7 +3415,12 @@
         "end": 9
       },
       "defaultIconId": "cherry",
-      "name_latin": "Cornus mas"
+      "name_latin": "Cornus mas",
+      "growth": {
+        "spreadM": 3.25,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/4399/cornus-mas/details"
+      }
     },
     {
       "id": "american_sweetgum",
@@ -2913,11 +3430,22 @@
       "cultivars": [
         {
           "id": "worplesdon",
-          "name": "Worplesdon"
+          "name": "Worplesdon",
+          "growth": {
+            "spreadM": 10,
+            "maturityYears": 15,
+            "source": "https://www.vdberk.com/en_US/pdf/tree/2442/liquidambar-styraciflua-worplesdon.pdf",
+            "timingSource": "https://www.rhs.org.uk/plants/98807/liquidambar-styraciflua-worplesdon/details"
+          }
         },
         {
           "id": "slender_silhouette",
-          "name": "Slender Silhouette"
+          "name": "Slender Silhouette",
+          "growth": {
+            "spreadM": 3.25,
+            "maturityYears": 15,
+            "source": "https://www.rhs.org.uk/plants/237350/liquidambar-styraciflua-slender-silhouette/details"
+          }
         },
         {
           "id": "rotundiloba",
@@ -2934,7 +3462,11 @@
         "end": 10
       },
       "defaultIconId": "tree",
-      "name_latin": "Liquidambar styraciflua"
+      "name_latin": "Liquidambar styraciflua",
+      "growth": {
+        "spreadM": 17.5,
+        "source": "https://www.vdberk.com/trees/liquidambar-styraciflua/"
+      }
     },
     {
       "id": "sweet_chestnut",
@@ -2964,7 +3496,13 @@
         "end": 10
       },
       "defaultIconId": "chestnut",
-      "name_latin": "Castanea sativa"
+      "name_latin": "Castanea sativa",
+      "growth": {
+        "spreadM": 22.5,
+        "maturityYears": 35,
+        "source": "https://www.vdberk.com/en_US/pdf/tree/2118/castanea-sativa.pdf",
+        "timingSource": "https://www.rhs.org.uk/plants/3191/castanea-sativa/details"
+      }
     },
     {
       "id": "chinese_chestnut",
@@ -2994,7 +3532,11 @@
         "end": 10
       },
       "defaultIconId": "chestnut",
-      "name_latin": "Castanea mollissima"
+      "name_latin": "Castanea mollissima",
+      "growth": {
+        "spreadM": 15.4,
+        "source": "https://www.nwmissouri.edu/arboretum/tree/castaneamollissima.htm"
+      }
     },
     {
       "id": "yellowhorn",
@@ -3020,7 +3562,12 @@
         "end": 10
       },
       "defaultIconId": "flower",
-      "name_latin": "Xanthoceras sorbifolium"
+      "name_latin": "Xanthoceras sorbifolium",
+      "growth": {
+        "spreadM": 2,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/19138/xanthoceras-sorbifolium/details"
+      }
     },
     {
       "id": "rosemary",
@@ -3050,7 +3597,12 @@
         "end": 6
       },
       "defaultIconId": "leaf-herb",
-      "name_latin": "Salvia rosmarinus"
+      "name_latin": "Salvia rosmarinus",
+      "growth": {
+        "spreadM": 2,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/384211/salvia-rosmarinus-ro/details"
+      }
     },
     {
       "id": "birch",
@@ -3061,24 +3613,47 @@
         {
           "id": "river",
           "name": "River birch",
-          "name_latin": "Betula nigra"
+          "name_latin": "Betula nigra",
+          "growth": {
+            "spreadM": 6,
+            "maturityYears": 35,
+            "source": "https://www.rhs.org.uk/plants/2258/betula-nigra/details"
+          }
         },
         {
           "id": "paper",
           "name": "Paper birch",
-          "name_latin": "Betula papyrifera"
+          "name_latin": "Betula papyrifera",
+          "growth": {
+            "spreadM": 8.4,
+            "maturityYears": 35,
+            "source": "https://ask.ifas.ufl.edu/publication/ST096",
+            "timingSource": "https://www.rhs.org.uk/plants/2260/betula-papyrifera/details"
+          }
         },
         {
           "id": "sweet",
           "name": "Sweet birch",
-          "name_latin": "Betula lenta"
+          "name_latin": "Betula lenta",
+          "growth": {
+            "spreadM": 9,
+            "maturityYears": 35,
+            "source": "https://www.vdberk.com/trees/betula-lenta/",
+            "timingSource": "https://www.rhs.org.uk/plants/2251/betula-lenta/details"
+          }
         }
       ],
       "blooming": {
         "start": 3,
         "end": 5
       },
-      "defaultIconId": "tree"
+      "defaultIconId": "tree",
+      "growth": {
+        "spreadM": 6.1,
+        "maturityYears": 35,
+        "source": "https://hort.ifas.ufl.edu/database/documents/pdf/tree_fact_sheets/betpena.pdf",
+        "timingSource": "https://www.rhs.org.uk/plants/2261/betula-pendula/details"
+      }
     },
     {
       "id": "hibiscus",
@@ -3107,7 +3682,11 @@
         "start": 7,
         "end": 9
       },
-      "defaultIconId": "flower-tropical"
+      "defaultIconId": "flower-tropical",
+      "growth": {
+        "spreadM": 0.75,
+        "source": "https://www.rhs.org.uk/plants/50176/hibiscus-moscheutos/details"
+      }
     },
     {
       "id": "hyssop",
@@ -3125,7 +3704,12 @@
         "end": 9
       },
       "defaultIconId": "leaf-herb",
-      "name_latin": "Hyssopus officinalis"
+      "name_latin": "Hyssopus officinalis",
+      "growth": {
+        "spreadM": 0.75,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/9057/hyssopus-officinalis/details"
+      }
     },
     {
       "id": "english_lavender",
@@ -3151,7 +3735,12 @@
         "end": 8
       },
       "defaultIconId": "leaf-herb",
-      "name_latin": "Lavandula angustifolia"
+      "name_latin": "Lavandula angustifolia",
+      "growth": {
+        "spreadM": 1.25,
+        "maturityYears": 3.5,
+        "source": "https://www.rhs.org.uk/plants/91398/lavandula-angustifolia/details"
+      }
     },
     {
       "id": "indian_lilac",
@@ -3164,7 +3753,11 @@
         "end": 4
       },
       "defaultIconId": "tree",
-      "name_latin": "Azadirachta indica"
+      "name_latin": "Azadirachta indica",
+      "growth": {
+        "spreadM": 10,
+        "source": "https://apps.worldagroforestry.org/treedb2/speciesprofile.php/AFTPDFS/?Spid=271"
+      }
     },
     {
       "id": "larkspur",
@@ -3190,7 +3783,11 @@
         "end": 8
       },
       "defaultIconId": "bouquet",
-      "name_latin": "Consolida ajacis"
+      "name_latin": "Consolida ajacis",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/25953/consolida-ajacis/details"
+      }
     },
     {
       "id": "night_scented_stock",
@@ -3208,7 +3805,11 @@
         "end": 9
       },
       "defaultIconId": "flower",
-      "name_latin": "Matthiola longipetala subsp. bicornis"
+      "name_latin": "Matthiola longipetala subsp. bicornis",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/140124/matthiola-longipetala-subsp-bicornis/details"
+      }
     },
     {
       "id": "lilac",
@@ -3223,7 +3824,12 @@
         {
           "id": "miss_kim",
           "name": "Miss Kim",
-          "name_latin": "Syringa pubescens subsp. patula"
+          "name_latin": "Syringa pubescens subsp. patula",
+          "growth": {
+            "spreadM": 1.25,
+            "maturityYears": 15,
+            "source": "https://www.rhs.org.uk/plants/119023/syringa-pubescens-subsp-patula-miss-kim/details"
+          }
         },
         {
           "id": "president_grevy",
@@ -3245,7 +3851,12 @@
         "end": 5
       },
       "defaultIconId": "flower-spike",
-      "name_latin": "Syringa vulgaris"
+      "name_latin": "Syringa vulgaris",
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/99011/syringa-vulgaris/details"
+      }
     },
     {
       "id": "livingstone_daisy",
@@ -3258,7 +3869,11 @@
         "end": 7
       },
       "defaultIconId": "flower",
-      "name_latin": "Dorotheanthus bellidiformis"
+      "name_latin": "Dorotheanthus bellidiformis",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/156622/dorotheanthus-bellidiformis/details"
+      }
     },
     {
       "id": "magnolia",
@@ -3273,7 +3888,12 @@
             "start": 2,
             "end": 3
           },
-          "name_latin": "Magnolia stellata"
+          "name_latin": "Magnolia stellata",
+          "growth": {
+            "spreadM": 3.25,
+            "maturityYears": 15,
+            "source": "https://www.rhs.org.uk/plants/10721/magnolia-stellata/details"
+          }
         },
         {
           "id": "saucer_magnolia",
@@ -3291,22 +3911,43 @@
             "start": 5,
             "end": 6
           },
-          "name_latin": "Magnolia grandiflora"
+          "name_latin": "Magnolia grandiflora",
+          "growth": {
+            "spreadM": 10.7,
+            "maturityYears": 35,
+            "source": "https://hort.ifas.ufl.edu/trees/MAGGRAA.pdf",
+            "timingSource": "https://www.rhs.org.uk/plants/10699/magnolia-grandiflora/details"
+          }
         },
         {
           "id": "little_gem",
-          "name": "Little Gem"
+          "name": "Little Gem",
+          "growth": {
+            "spreadM": 3.25,
+            "maturityYears": 15,
+            "source": "https://www.rhs.org.uk/plants/65554/magnolia-grandiflora-little-gem/details"
+          }
         },
         {
           "id": "ann",
-          "name": "Ann"
+          "name": "Ann",
+          "growth": {
+            "spreadM": 3.25,
+            "maturityYears": 15,
+            "source": "https://www.rhs.org.uk/plants/81963/magnolia-ann/details"
+          }
         }
       ],
       "blooming": {
         "start": 3,
         "end": 5
       },
-      "defaultIconId": "flower-blossom"
+      "defaultIconId": "flower-blossom",
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/60020/magnolia-%C3%97-soulangeana/details"
+      }
     },
     {
       "id": "sea_lavender",
@@ -3318,7 +3959,11 @@
         "start": 6,
         "end": 8
       },
-      "defaultIconId": "flower-spike"
+      "defaultIconId": "flower-spike",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/332159/limonium-sinuatum-forever-gold/details"
+      }
     },
     {
       "id": "curry_plant",
@@ -3336,7 +3981,12 @@
         "end": 9
       },
       "defaultIconId": "flower",
-      "name_latin": "Helichrysum italicum"
+      "name_latin": "Helichrysum italicum",
+      "growth": {
+        "spreadM": 0.75,
+        "maturityYears": 3.5,
+        "source": "https://www.rhs.org.uk/plants/34062/helichrysum-italicum/details"
+      }
     },
     {
       "id": "rosehip",
@@ -3351,7 +4001,12 @@
         },
         {
           "id": "rugosa",
-          "name": "Rugosa rose"
+          "name": "Rugosa rose",
+          "growth": {
+            "spreadM": 2,
+            "maturityYears": 3.5,
+            "source": "https://www.rhs.org.uk/plants/16074/rosa-rugosa-ru/details"
+          }
         },
         {
           "id": "ornamental",
@@ -3373,7 +4028,12 @@
         "end": 11
       },
       "defaultIconId": "flower-rose",
-      "name_latin": "Rosa canina"
+      "name_latin": "Rosa canina",
+      "growth": {
+        "spreadM": 2,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/16017/rosa-canina-s/details"
+      }
     },
     {
       "id": "coneflower",
@@ -3399,7 +4059,11 @@
         "end": 9
       },
       "defaultIconId": "flower-blossom",
-      "name_latin": "Echinacea purpurea"
+      "name_latin": "Echinacea purpurea",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/41568/echinacea-purpurea/details"
+      }
     },
     {
       "id": "verbena_bonariensis",
@@ -3412,7 +4076,11 @@
         "end": 10
       },
       "defaultIconId": "flower",
-      "name_latin": "Verbena bonariensis"
+      "name_latin": "Verbena bonariensis",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/42079/verbena-bonariensis/details"
+      }
     },
     {
       "id": "viburnum",
@@ -3422,21 +4090,41 @@
       "cultivars": [
         {
           "id": "korean_spice",
-          "name": "Korean spice (V. carlesii)"
+          "name": "Korean spice (V. carlesii)",
+          "growth": {
+            "spreadM": 2,
+            "maturityYears": 15,
+            "source": "https://www.rhs.org.uk/plants/89716/viburnum-carlesii-1/details"
+          }
         },
         {
           "id": "snowball",
           "name": "Snowball (V. opulus 'Roseum')",
           "harvest": null,
-          "functions": []
+          "functions": [],
+          "growth": {
+            "spreadM": 3.25,
+            "maturityYears": 7.5,
+            "source": "https://www.rhs.org.uk/plants/82128/viburnum-opulus-roseum/details"
+          }
         },
         {
           "id": "arrowwood",
-          "name": "Arrowwood (V. dentatum)"
+          "name": "Arrowwood (V. dentatum)",
+          "growth": {
+            "spreadM": 3.25,
+            "maturityYears": 7.5,
+            "source": "https://www.rhs.org.uk/plants/18893/viburnum-dentatum/details"
+          }
         },
         {
           "id": "david_viburnum",
-          "name": "David viburnum (V. davidii)"
+          "name": "David viburnum (V. davidii)",
+          "growth": {
+            "spreadM": 1.25,
+            "maturityYears": 15,
+            "source": "https://www.rhs.org.uk/plants/100354/viburnum-davidii-m/details"
+          }
         }
       ],
       "blooming": {
@@ -3447,7 +4135,12 @@
         "start": 8,
         "end": 10
       },
-      "defaultIconId": "flower-blossom"
+      "defaultIconId": "flower-blossom",
+      "growth": {
+        "spreadM": 3.25,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/18919/viburnum-opulus/details"
+      }
     },
     {
       "id": "aubrieta",
@@ -3473,7 +4166,11 @@
         "end": 5
       },
       "defaultIconId": "flower",
-      "name_latin": "Aubrieta deltoidea"
+      "name_latin": "Aubrieta deltoidea",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/1909/aubrieta-deltoidea/details"
+      }
     },
     {
       "id": "aronia",
@@ -3503,7 +4200,12 @@
         "end": 9
       },
       "defaultIconId": "blueberry",
-      "name_latin": "Aronia melanocarpa"
+      "name_latin": "Aronia melanocarpa",
+      "growth": {
+        "spreadM": 3.25,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/1610/aronia-melanocarpa/details/"
+      }
     },
     {
       "id": "elderberry",
@@ -3537,7 +4239,12 @@
         "end": 9
       },
       "defaultIconId": "elderflower",
-      "name_latin": "Sambucus nigra"
+      "name_latin": "Sambucus nigra",
+      "growth": {
+        "spreadM": 3.25,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/16391/sambucus-nigra/details"
+      }
     },
     {
       "id": "asparagus",
@@ -3571,7 +4278,11 @@
         "end": 6
       },
       "defaultIconId": "leaf-herb",
-      "name_latin": "Asparagus officinalis"
+      "name_latin": "Asparagus officinalis",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/41557/asparagus-officinalis/details"
+      }
     },
     {
       "id": "pole_bean",
@@ -3609,7 +4320,11 @@
         "end": 10
       },
       "defaultIconId": "pea",
-      "name_latin": "Phaseolus vulgaris"
+      "name_latin": "Phaseolus vulgaris",
+      "growth": {
+        "spreadM": 0.75,
+        "source": "https://www.rhs.org.uk/plants/199447/phaseolus-vulgaris-blue-lake/details"
+      }
     },
     {
       "id": "bush_bean",
@@ -3643,7 +4358,11 @@
         "end": 9
       },
       "defaultIconId": "pea",
-      "name_latin": "Phaseolus vulgaris"
+      "name_latin": "Phaseolus vulgaris",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/119131/phaseolus-vulgaris-the-prince/details"
+      }
     },
     {
       "id": "dianthus",
@@ -3677,7 +4396,11 @@
         "end": 9
       },
       "defaultIconId": "flower-blossom",
-      "name_latin": "Dianthus plumarius"
+      "name_latin": "Dianthus plumarius",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/5734/dianthus-plumarius/details"
+      }
     },
     {
       "id": "sweet_potato",
@@ -3699,7 +4422,11 @@
         }
       ],
       "defaultIconId": "seedling",
-      "name_latin": "Ipomoea batatas"
+      "name_latin": "Ipomoea batatas",
+      "growth": {
+        "spreadM": 0.75,
+        "source": "https://www.rhs.org.uk/plants/9185/ipomoea-batatas/details"
+      }
     },
     {
       "id": "globe_artichoke",
@@ -3721,7 +4448,11 @@
         "end": 6
       },
       "defaultIconId": "flower-rosette",
-      "name_latin": "Cynara cardunculus var. scolymus"
+      "name_latin": "Cynara cardunculus var. scolymus",
+      "growth": {
+        "spreadM": 1.25,
+        "source": "https://www.rhs.org.uk/plants/56390/cynara-cardunculus-scolymus-group/details"
+      }
     },
     {
       "id": "leaf_celery",
@@ -3743,7 +4474,11 @@
         "end": 10
       },
       "defaultIconId": "leaf-herb",
-      "name_latin": "Apium graveolens var. secalinum"
+      "name_latin": "Apium graveolens var. secalinum",
+      "growth": {
+        "spreadM": 0.38,
+        "source": "https://plants.ces.ncsu.edu/plants/apium-graveolens/common-name/celery/"
+      }
     },
     {
       "id": "swiss_chard",
@@ -3765,7 +4500,11 @@
         "end": 11
       },
       "defaultIconId": "leaf-herb",
-      "name_latin": "Beta vulgaris subsp. vulgaris"
+      "name_latin": "Beta vulgaris subsp. vulgaris",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/139363/beta-vulgaris-subsp-cicla-swiss-chard/details"
+      }
     },
     {
       "id": "dichondra_repens",
@@ -3783,7 +4522,11 @@
         "end": 8
       },
       "defaultIconId": "seedling",
-      "name_latin": "Dichondra repens"
+      "name_latin": "Dichondra repens",
+      "growth": {
+        "spreadM": 1,
+        "source": "https://www.plantmark.com.au/dichondra-repens"
+      }
     },
     {
       "id": "white_willow",
@@ -3810,7 +4553,13 @@
         "end": 7
       },
       "defaultIconId": "tree",
-      "name_latin": "Salix alba"
+      "name_latin": "Salix alba",
+      "growth": {
+        "spreadM": 16.8,
+        "maturityYears": 35,
+        "source": "https://plants.ces.ncsu.edu/plants/salix-alba/",
+        "timingSource": "https://www.rhs.org.uk/plants/97712/salix-alba/details"
+      }
     },
     {
       "id": "lambs_lettuce",
@@ -3832,7 +4581,11 @@
         "end": 4
       },
       "defaultIconId": "lettuce",
-      "name_latin": "Valerianella locusta"
+      "name_latin": "Valerianella locusta",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/67250/valerianella-locusta/details"
+      }
     },
     {
       "id": "watermelon",
@@ -3870,7 +4623,11 @@
         "end": 9
       },
       "defaultIconId": "seedling",
-      "name_latin": "Citrullus lanatus"
+      "name_latin": "Citrullus lanatus",
+      "growth": {
+        "spreadM": 2.3,
+        "source": "https://plants.ces.ncsu.edu/plants/citrullus-lanatus/"
+      }
     },
     {
       "id": "wild_rocket",
@@ -3892,7 +4649,11 @@
         "end": 10
       },
       "defaultIconId": "leaf-herb",
-      "name_latin": "Diplotaxis tenuifolia"
+      "name_latin": "Diplotaxis tenuifolia",
+      "growth": {
+        "spreadM": 0.3,
+        "source": "https://www.rhs.org.uk/plants/61139/diplotaxis-tenuifolia/details"
+      }
     },
     {
       "id": "greater_snowdrop",
@@ -3914,6 +4675,10 @@
       "blooming": {
         "start": 1,
         "end": 2
+      },
+      "growth": {
+        "spreadM": 0.05,
+        "source": "https://www.rhs.org.uk/plants/7556/galanthus-elwesii/details"
       }
     },
     {
@@ -3930,7 +4695,12 @@
         },
         {
           "id": "sem",
-          "name": "Sem"
+          "name": "Sem",
+          "growth": {
+            "spreadM": 1.25,
+            "maturityYears": 3.5,
+            "source": "https://www.rhs.org.uk/plants/217822/sorbaria-sorbifolia-sem/details"
+          }
         },
         {
           "id": "pink_hopi",
@@ -3938,7 +4708,12 @@
           "name_latin": "Sorbaria sorbifolia 'Cousorb05'"
         }
       ],
-      "defaultIconId": "flower-spike"
+      "defaultIconId": "flower-spike",
+      "growth": {
+        "spreadM": 3.25,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/17517/sorbaria-sorbifolia/details"
+      }
     },
     {
       "id": "sea_buckthorn",
@@ -3960,7 +4735,12 @@
           "name": "Leikora"
         }
       ],
-      "defaultIconId": "tree"
+      "defaultIconId": "tree",
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 35,
+        "source": "https://www.rhs.org.uk/plants/8765/hippophae-rhamnoides/details"
+      }
     },
     {
       "id": "hybrid_mahonia",
@@ -3982,7 +4762,12 @@
           "name": "Charity"
         }
       ],
-      "defaultIconId": "flower-spike"
+      "defaultIconId": "flower-spike",
+      "growth": {
+        "spreadM": 3.25,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/131472/mahonia-%C3%97-media/details"
+      }
     },
     {
       "id": "flowering_quince",
@@ -4004,7 +4789,12 @@
           "name": "Jet Trail"
         }
       ],
-      "defaultIconId": "flower-blossom"
+      "defaultIconId": "flower-blossom",
+      "growth": {
+        "spreadM": 2,
+        "maturityYears": 3.5,
+        "source": "https://www.rhs.org.uk/plants/209918/chaenomeles-superba/details"
+      }
     },
     {
       "id": "firethorn",
@@ -4027,7 +4817,12 @@
           "name": "Orange Star"
         }
       ],
-      "defaultIconId": "tree"
+      "defaultIconId": "tree",
+      "growth": {
+        "spreadM": 3.25,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/14208/pyracantha-coccinea/details"
+      }
     },
     {
       "id": "dappled_willow",
@@ -4045,7 +4840,12 @@
           "name": "Flamingo"
         }
       ],
-      "defaultIconId": "tree"
+      "defaultIconId": "tree",
+      "growth": {
+        "spreadM": 2,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/66597/salix-integra-hakuro-nishiki-v/details"
+      }
     },
     {
       "id": "broom",
@@ -4069,7 +4869,12 @@
           "name_latin": "Cytisus 'Lena'"
         }
       ],
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "growth": {
+        "spreadM": 1.25,
+        "maturityYears": 3.5,
+        "source": "https://www.rhs.org.uk/plants/5254/cytisus-scoparius/details"
+      }
     },
     {
       "id": "bluebeard",
@@ -4095,7 +4900,12 @@
         "start": 8,
         "end": 9
       },
-      "defaultIconId": "flower"
+      "defaultIconId": "flower",
+      "growth": {
+        "spreadM": 1.25,
+        "maturityYears": 7.5,
+        "source": "https://www.rhs.org.uk/plants/97161/caryopteris-%C3%97-clandonensis-heavenly-blue/details"
+      }
     }
   ]
 }

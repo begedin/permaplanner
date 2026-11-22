@@ -6,6 +6,7 @@ import { withPersistedGuildPlantLabels } from './guildPlantLabels';
 import {
   hasPlantPlacement,
   type Guild,
+  type GardenThing,
   type MulchLevel,
   type Plant,
   type UserPlant,
@@ -30,12 +31,11 @@ const FALLBACK_PLANT: Plant = {
   layers: [],
 };
 
-type Bounds = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
+const matchesCatalogPlant = (
+  plant: Pick<UserPlant, 'speciesId' | 'cultivarId'> | undefined,
+  speciesId: string,
+  cultivarId: string | null,
+) => plant?.speciesId === speciesId && (plant.cultivarId ?? null) === cultivarId;
 
 export const useGardenStore = defineStore('garden', () => {
   const plan = usePlanStateStore();
@@ -131,8 +131,8 @@ export const useGardenStore = defineStore('garden', () => {
     speciesId: string,
     cultivarId: string | null,
   ): string => {
-    const existing = plants.value.find(
-      (pl) => pl.speciesId === speciesId && (pl.cultivarId ?? null) === cultivarId,
+    const existing = plants.value.find((plant) =>
+      matchesCatalogPlant(plant, speciesId, cultivarId),
     );
     if (existing) {
       return existing.id;
@@ -167,19 +167,17 @@ export const useGardenStore = defineStore('garden', () => {
     });
   };
 
-  const setPlantPlacement = (guildId: string, thingId: string, bounds: Bounds) => {
+  const setPlantPlacement = (
+    guildId: string,
+    thingId: string,
+    { x, y, width }: Pick<GardenThing, 'x' | 'y' | 'width'>,
+  ) => {
     const thing = guilds.value
       .find((guild) => guild.id === guildId)
       ?.plants.find((plant) => plant.id === thingId);
-    if (
-      !thing ||
-      !Object.values(bounds).every(Number.isFinite) ||
-      bounds.width <= 0 ||
-      bounds.height <= 0
-    )
-      return;
+    if (!thing || ![x, y, width].every(Number.isFinite) || width <= 0) return;
     commandHistory.runMutation(() => {
-      Object.assign(thing, bounds, { placed: true });
+      Object.assign(thing, { x, y, width, height: width, placed: true });
     });
   };
 
@@ -189,6 +187,22 @@ export const useGardenStore = defineStore('garden', () => {
         .find((g) => g.id === guildId)
         ?.plants.find((t) => t.id === thingId);
       if (thing) Object.assign(thing, { x: 0, y: 0, width: 0, height: 0, placed: false });
+    });
+  };
+
+  const setMatureSpread = (guildId: string, thingId: string, meters?: number) => {
+    const thing = guilds.value
+      .find((g) => g.id === guildId)
+      ?.plants.find((p) => p.id === thingId);
+    if (
+      !thing ||
+      thing.matureSpreadM === meters ||
+      (meters !== undefined && (!Number.isFinite(meters) || meters <= 0))
+    )
+      return;
+    commandHistory.runMutation(() => {
+      if (meters === undefined) delete thing.matureSpreadM;
+      else thing.matureSpreadM = meters;
     });
   };
 
@@ -318,6 +332,10 @@ export const useGardenStore = defineStore('garden', () => {
       for (const thingId of thingIds) {
         const thing = guild.plants.find((t) => t.id === thingId);
         if (thing) {
+          if (
+            !matchesCatalogPlant(plantsById.value[thing.plantId], speciesId, cultivarId)
+          )
+            delete thing.matureSpreadM;
           thing.plantId = plantId;
           thing.nameOrCultivar = label;
         }
@@ -341,7 +359,18 @@ export const useGardenStore = defineStore('garden', () => {
       const saved: UserPlant = JSON.parse(JSON.stringify(plant));
       const index = plants.value.findIndex((item) => item.id === saved.id);
       if (index < 0) plants.value.push(saved);
-      else plants.value[index] = saved;
+      else {
+        if (
+          !matchesCatalogPlant(plants.value[index], saved.speciesId, saved.cultivarId)
+        ) {
+          for (const guild of guilds.value) {
+            for (const thing of guild.plants) {
+              if (thing.plantId === saved.id) delete thing.matureSpreadM;
+            }
+          }
+        }
+        plants.value[index] = saved;
+      }
       guilds.value = withPersistedGuildPlantLabels(plan.state).guilds;
     });
   };
@@ -362,6 +391,7 @@ export const useGardenStore = defineStore('garden', () => {
     createGuild,
 
     setPlantPlacement,
+    setMatureSpread,
     removePlantPlacement,
     addPlantToGuild,
     addCatalogPlantToGuild,

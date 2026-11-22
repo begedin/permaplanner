@@ -107,6 +107,7 @@ The editable plant list lives in [`src/data/plantCatalog.json`](src/data/plantCa
    - **`functions`**: array of guild roles. Allowed values are exactly those in [`GuildFunction`](src/gardenTypes.ts) (`nitrogen_fixer`, `dynamic_accumulator`, `pollinator_attractor`, `pest_repellent`, `ground_cover`, `wildfire_suppressor`, `mulcher`, `edible`, `medicinal`).
    - **`layers`**: vertical niche tags. Allowed values are in [`GuildLayer`](src/gardenTypes.ts) (`overstory`, `understory`, `shrub`, `ground_cover`, `vine`, `herb`, `root`).
    - **`cultivars`**: array of `{ "id", "name" }` (and optionally `name_latin`, `defaultIconId`, `functions`, `layers`, `blooming`, `harvest` to override species defaults). Cultivar **`id`** must be unique within that species.
+   - **`growth`** supplies the typical mature width of one plant or clump in metres (`spreadM`) and its source. Add `maturityYears` only for trees and shrubs with a persistent woody canopy and a published period to mature size. Omit it for plants with runners or renewing canes. Use `timingSource` if the period comes from a separate source. A cultivar inherits the species profile unless it has its own. The unknown plant has no default width.
    - **`blooming`** / **`harvest`** (optional on species or cultivar): `{ "start": 1–12, "end": 1–12 }` for calendar months; if `start` > `end`, the range wraps across the year (see `formatMonthPeriod` in `plantCatalog.ts`). On a **cultivar** only: omit the field to inherit the species value; set **`null`** to clear that aspect (e.g. species has a harvest period but this cultivar does not).
 3. **Validate**: ensure the file parses as JSON (your editor usually does this). Run `npx vitest run src/plantCatalog.test.ts` if you changed phenology or want a quick sanity check.
 4. **Types**: `plantCatalog.ts` types should match the JSON shape; if you add new top-level fields, update the TypeScript types there as well.
@@ -392,6 +393,12 @@ when other users change their gardens. Environment changes require a server rest
 production restarts and deployments require explicit approval.
 
 ### Individual plant layout
+
+The **Future view** slider appears below the aerial map and guild layout. Calibrate the reference line and select its unit. Place each plant and draw its present canopy. Move the slider to 1–10, 15 or 20 years to see estimated tree and shrub spreads as dashed outlines. Select **Final** to see the mature width of each plant with a known width, or **Now** to hide the outlines. Hover over or select a plant to show its circular footprint and radius (R) beside its drawn canopy. Measurements use map pixels until you confirm the scale and unit. The values follow the slider. Select an empty part of the guild to see the guild dimensions again. In the guild layout, select a plant to see the source or enter a nursery width in metres in the guild details panel. Apple trees also have rootstock width suggestions. Clear a custom width to use the catalog again.
+
+Year views use a published maturity period to estimate the spread of a persistent woody canopy. Each year adds the mature width divided by that period to the drawn diameter, up to the mature width. A canopy that already exceeds the mature width keeps its drawn diameter in year views. This is a linear estimate. The catalog generally uses the midpoint of a published range and some entries use a representative variety. Plants without a suitable period keep their drawn size in year views. In Final, the outline of a strawberry represents one mature plant. Runners and daughter plants are outside the estimate. Training, climate and site conditions can change the actual spread.
+
+Future view is temporary. A nursery width is an optional positive `matureSpreadM` on the plant instance in version 11 garden documents. Existing gardens need no conversion.
 
 Select a guild drawn on the aerial map and click **Place plants** to open
 `/guilds/:guildId/layout`. Use **Back to aerial** to return to its details and map.

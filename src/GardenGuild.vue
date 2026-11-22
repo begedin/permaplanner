@@ -7,6 +7,7 @@
   import { useCameraStore } from './useCameraStore';
   import PlantMapLabel from './PlantMapLabel.vue';
   import PlantCanopy from './PlantCanopy.vue';
+  import FutureCanopies from './FutureCanopies.vue';
   import GardenMeasure from './GardenMeasure.vue';
   import { pathBounds } from './guildPathBounds';
   import { cloneGuildPath, guildPathData, type GuildPath } from './guildPathClip';
@@ -16,10 +17,11 @@
   const props = withDefaults(
     defineProps<{
       previewPath?: GuildPath;
-      unitLengthPx: number;
       guild: DeepReadonly<Guild>;
       hovered: boolean;
       selected: boolean;
+      selectPlants?: boolean;
+      selectedPlantId?: string;
       tool?: AerialTool;
       showLabel?: boolean;
       showPlantLabels?: boolean;
@@ -28,12 +30,20 @@
     { showLabel: true },
   );
   const camera = useCameraStore();
+  const hoveredPlantId = ref<string>();
+  const focusedPlantId = ref<string>();
+  const measuredPlant = computed(() => {
+    if (!props.selectPlants) return;
+    const id = hoveredPlantId.value ?? focusedPlantId.value ?? props.selectedPlantId;
+    return props.guild.plants.find(
+      (plant) => plant.id === id && hasPlantPlacement(plant),
+    );
+  });
   const labeledPlants = computed(() =>
     props.showPlantLabels && camera.isFullyZoomed
       ? props.guild.plants.filter(
           (thing) =>
-            hasPlantPlacement(thing) &&
-            Math.min(thing.width, thing.height) * camera.scale * camera.zoom >= 24,
+            hasPlantPlacement(thing) && thing.width * camera.scale * camera.zoom >= 24,
         )
       : [],
   );
@@ -43,6 +53,7 @@
     (e: 'move', path: GuildPath): void;
     (e: 'mouseenter' | 'mouseleave'): void;
     (e: 'click', evt: MouseEvent): void;
+    (e: 'selectPlant', id: string): void;
   }>();
 
   const path = ref<GuildPath>([]);
@@ -80,45 +91,61 @@
   });
 </script>
 <template>
-  <path
-    v-if="path.length > 0"
-    :d="outline"
-    fill-rule="evenodd"
-    :fill="
-      selected
-        ? 'rgba(0, 100, 0, 0.38)'
-        : hovered
-          ? 'rgba(0, 100, 0, 0.195)'
-          : 'rgba(0, 100, 0, 0.125)'
-    "
-    :class="['pointer-events-fill', isMoving ? 'cursor-move' : undefined]"
-    @pointerdown="onPathPointerDown"
-    @mouseenter="emit('mouseenter')"
-    @mouseleave="emit('mouseleave')"
-    @click="emit('click', $event)"
-  />
-  <path
-    :d="outline"
-    stroke="black"
-    fill="none"
-    class="pointer-events-none"
-  />
-  <GardenMeasure
-    v-if="box && (hovered || selected)"
-    :unit-length-px="unitLengthPx"
-    :box="box"
-  />
-
   <g
-    v-if="path.length"
-    :transform="plantPreviewTransform"
-    class="pointer-events-none"
+    @mouseenter="emit('mouseenter')"
+    @mouseleave="
+      hoveredPlantId = undefined;
+      emit('mouseleave');
+    "
   >
-    <PlantCanopy
-      v-for="thing in guild.plants.filter(hasPlantPlacement)"
-      :key="thing.id"
-      :thing="thing"
+    <path
+      v-if="path.length > 0"
+      :d="outline"
+      fill-rule="evenodd"
+      :fill="
+        selected
+          ? 'rgba(0, 100, 0, 0.38)'
+          : hovered
+            ? 'rgba(0, 100, 0, 0.195)'
+            : 'rgba(0, 100, 0, 0.125)'
+      "
+      :class="['pointer-events-fill', isMoving ? 'cursor-move' : undefined]"
+      @pointerdown="onPathPointerDown"
+      @click="emit('click', $event)"
     />
+    <path
+      :d="outline"
+      stroke="black"
+      fill="none"
+      class="pointer-events-none"
+    />
+    <g
+      v-if="path.length"
+      :transform="plantPreviewTransform"
+      class="pointer-events-none"
+    >
+      <PlantCanopy
+        v-for="thing in guild.plants.filter(hasPlantPlacement)"
+        :key="thing.id"
+        :thing="thing"
+        :selected="thing.id === selectedPlantId"
+        :class="{ 'pointer-events-auto': selectPlants }"
+        :tabindex="selectPlants ? 0 : undefined"
+        :role="selectPlants ? 'button' : 'img'"
+        :aria-pressed="selectPlants ? thing.id === selectedPlantId : undefined"
+        :aria-describedby="
+          measuredPlant?.id === thing.id ? `plant-size-${thing.id}` : undefined
+        "
+        @pointerenter="hoveredPlantId = thing.id"
+        @pointerleave="hoveredPlantId = undefined"
+        @focus="focusedPlantId = thing.id"
+        @blur="focusedPlantId = undefined"
+        @click.exact="selectPlants && emit('selectPlant', thing.id)"
+        @keydown.enter.prevent="selectPlants && emit('selectPlant', thing.id)"
+        @keydown.space.prevent="selectPlants && emit('selectPlant', thing.id)"
+      />
+      <FutureCanopies :plants="guild.plants" />
+    </g>
   </g>
   <Teleport
     :to="labelLayer || 'body'"
@@ -151,6 +178,12 @@
         :font-size="camera.mapLabelFontSize"
       />
     </g>
+    <GardenMeasure
+      v-if="box && (hovered || selected || measuredPlant)"
+      :box="box"
+      :plant="measuredPlant"
+      :font-size="camera.mapLabelFontSize"
+    />
   </Teleport>
   <slot name="features" />
 </template>

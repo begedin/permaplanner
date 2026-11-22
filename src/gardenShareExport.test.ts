@@ -25,7 +25,7 @@ const sampleGuild: Guild = {
       x: 1,
       y: 2,
       width: 3,
-      height: 4,
+      height: 3,
       growthPhase: 'young',
       vigor: 4,
     },

@@ -73,6 +73,9 @@ export type GardenThing = {
   y: number;
   /** Only an explicit placement is drawn; legacy coordinates alone are not placement. */
   placed?: boolean;
+  /** Expected mature width from the gardener's nursery label, in metres. */
+  matureSpreadM?: number;
+  /** Canopy diameter. The garden document stores the same value in height. */
   width: number;
   height: number;
   /** Optional note for this individual plant. */
@@ -84,8 +87,13 @@ export type GardenThing = {
 };
 
 export const hasPlantPlacement = (
-  thing?: Pick<GardenThing, 'placed' | 'width' | 'height'>,
-): boolean => thing?.placed === true && thing.width > 0 && thing.height > 0;
+  thing?: Pick<GardenThing, 'placed' | 'width'>,
+): boolean => thing?.placed === true && thing.width > 0;
+
+export const canopyCircle = ({ x, y, width }: Pick<GardenThing, 'x' | 'y' | 'width'>) => {
+  const r = width / 2;
+  return { cx: x + r, cy: y + r, r };
+};
 
 /** Guild bed mulch coverage / depth (1 = light, 5 = heavy). */
 export type MulchLevel = 1 | 2 | 3 | 4 | 5;

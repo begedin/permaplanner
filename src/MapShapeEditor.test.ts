@@ -37,7 +37,7 @@ it.each<ShapeFeature>(['landmark', 'path'])(
       [{ ...shape, name: 'House' }],
       [{ ...shape, rotation: 315 }],
     ]);
-    expect(view.getByText('1.00 × 2.00 m')).toBeVisible();
+    expect(view.getByText('130.00 × 260.00 map px')).toBeVisible();
     await fireEvent.click(view.getByRole('button', { name: `Delete ${feature}` }));
     expect(view.emitted('remove')).toEqual([[]]);
   },

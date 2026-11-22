@@ -52,7 +52,7 @@ const document: GardenDocument = {
           y: 6,
           placed: true,
           width: 7,
-          height: 8,
+          height: 7,
           note: 'Prune after harvest\nCheck new growth',
           growthPhase: 'young',
           vigor: 4,

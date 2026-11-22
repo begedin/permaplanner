@@ -18,9 +18,9 @@ test.describe('calendar tab', () => {
     await page.getByRole('button', { name: 'Add guild' }).click();
 
     const guildDetails = page.getByRole('region', { name: 'Guild details' });
-    await addPlantToGuild(page, 'apple');
+    await addPlantToGuild(page, 'Malus domestica');
     await guildDetails.getByRole('button', { name: 'Add one plant to bed' }).click();
-    await addPlantToGuild(page, 'basil');
+    await addPlantToGuild(page, 'Ocimum basilicum');
 
     await openNavTab(page, 'Calendar');
 

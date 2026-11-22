@@ -73,7 +73,7 @@ defmodule PermaplannerWeb.MCPControllerTest do
               "x" => 10,
               "y" => 20,
               "width" => 3,
-              "height" => 4,
+              "height" => 3,
               "note" => "Planted yesterday",
               "growthPhase" => "transplanted",
               "vigor" => 3

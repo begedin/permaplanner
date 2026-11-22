@@ -1,14 +1,48 @@
 import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
+import type { GardenThing, UserPlant } from '../../src/gardenTypes';
 import { waitForMainApp } from '../helpers';
+
+type Canopy = { x: number; y: number; diameter: number };
+type LayoutPlant = { plant: UserPlant; individuals: Omit<GardenThing, 'plantId'>[] };
+
+export const createGrannySmiths = (firstCanopy?: Canopy): LayoutPlant => ({
+  plant: { id: 'apple_granny_smith', speciesId: 'apple', cultivarId: 'granny_smith' },
+  individuals: ['first', 'second'].map((id, index) => {
+    const canopy = index === 0 ? firstCanopy : undefined;
+    return {
+      id,
+      nameOrCultivar: 'Granny Smith',
+      x: canopy?.x ?? 5,
+      y: canopy?.y ?? 5,
+      width: canopy?.diameter ?? 16,
+      height: canopy?.diameter ?? 16,
+      placed: !!canopy,
+      note: 'Keep this individual',
+    };
+  }),
+});
+
+export const createStrawberry = ({ x, y, diameter }: Canopy): LayoutPlant => ({
+  plant: { id: 'strawberry', speciesId: 'strawberry', cultivarId: null },
+  individuals: [
+    {
+      id: 'berry',
+      nameOrCultivar: 'Strawberry',
+      x,
+      y,
+      width: diameter,
+      height: diameter,
+      placed: true,
+      note: '',
+    },
+  ],
+});
 
 export const importLayoutGarden = async (
   page: Page,
-  {
-    placed = false,
-    legacy = false,
-    canopySize = 20,
-  }: { placed?: boolean; legacy?: boolean; canopySize?: number } = {},
+  plants: LayoutPlant[],
+  { legacy = false } = {},
 ) => {
   const empty = JSON.parse(
     readFileSync(new URL('./emptyPlan.json', import.meta.url), 'utf8'),
@@ -28,21 +62,18 @@ export const importLayoutGarden = async (
         ],
       ],
     ],
-    plants: ['first', 'second'].map((id, index) => ({
-      id,
-      plantId: 'apple_granny_smith',
-      nameOrCultivar: 'Granny Smith',
-      x: placed ? 40 : 5,
-      y: placed ? 40 : 5,
-      width: placed && index === 0 ? canopySize : 16,
-      height: placed && index === 0 ? canopySize : 16,
-      ...(legacy ? {} : { placed: placed && index === 0 }),
-      note: 'Keep this individual',
-    })),
+    plants: plants.flatMap(({ plant, individuals }) =>
+      individuals.map(({ placed, ...individual }) => ({
+        ...individual,
+        plantId: plant.id,
+        ...(legacy ? {} : { placed }),
+      })),
+    ),
   };
   const document = {
     ...empty,
     version: legacy ? 10 : 11,
+    plants: plants.map(({ plant }) => plant),
     landmarks: [],
     paths: [],
     plotBorder: [],

@@ -15,6 +15,7 @@
   import { useGardenStore } from './useGardenStore';
   import { useCameraStore } from './useCameraStore';
   import { useMapScaleStore } from './useMapScaleStore';
+  import { useOnboardingStore } from './useOnboardingStore';
 
   import { useBackgroundImagePaste } from './useBackgroundImagePaste';
   import { useLocalStorage } from '@vueuse/core';
@@ -64,11 +65,14 @@
   });
 
   const mapScale = useMapScaleStore();
+  const onboarding = useOnboardingStore();
 
   const garden = useGardenStore();
   const { hoveredId, clearHover } = useGuildHover();
   const {
     selectedGuildId,
+    selectedPlantId,
+    isMerging,
     selectedShape,
     isBorderSelected,
     selectBorder,
@@ -261,11 +265,13 @@
         :show-plant-labels="showPlantLabels"
         :label-layer="guildLabelLayer"
         :selected="selectedGuildId === guild.id"
+        :selected-plant-id="selectedGuildId === guild.id ? selectedPlantId : undefined"
+        :select-plants="activeTool === 'select' && !isMerging"
         :tool="selectedGuildId === guild.id ? activeTool : undefined"
         :hovered="hoveredId === guild.id"
         :guild="guild"
-        :unit-length-px="mapScale.unitLengthPx"
         @click.exact="selectGuild(guild.id)"
+        @select-plant="selectGuild(guild.id, $event)"
         @mouseenter="hoveredId = guild.id"
         @mouseleave="clearHover()"
         @move="garden.setGuildPath(guild.id, $event, true)"
@@ -278,7 +284,6 @@
         :show-plant-labels="showPlantLabels"
         :label-layer="guildLabelLayer"
         :guild="placementGuildDraft"
-        :unit-length-px="mapScale.unitLengthPx"
         :tool="activeTool"
         hovered
         selected
@@ -416,6 +421,18 @@
             :step="1"
             @update:value="mapScale.setPhysicalLength"
           />
+          <button
+            v-if="
+              onboarding.onboardingState !== 'done' &&
+              mapScale.unit !== 'unspecified' &&
+              mapScale.unitLengthPx > 0
+            "
+            type="button"
+            class="btn-soft self-start"
+            @click="onboarding.setOnboardingState('done')"
+          >
+            Confirm scale · {{ mapScale.linePhysicalLength }} {{ mapScale.unit }}
+          </button>
           <ToolSlider
             :value="permaplannerStore.backgroundOpacity"
             label="BG opacity"

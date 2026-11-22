@@ -16,10 +16,12 @@ import type {
   DrawingTarget,
 } from './useAerialTool';
 import type { MapShape } from './gardenDocument';
+import { hasPlantPlacement } from './gardenTypes';
 import type { GuildPath } from './guildPathClip';
 
 type MapMode =
-  | { kind: 'select' | 'move' }
+  | { kind: 'select'; plantId?: string }
+  | { kind: 'move' }
   | ({ kind: 'draw' } & DrawingSession)
   | { kind: 'shape'; feature: ShapeFeature; id: string }
   | { kind: 'border' }
@@ -60,6 +62,18 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
   watch(
     () => {
       const current = mode.value;
+      if (current.kind === 'select' && current.plantId)
+        return (
+          garden.guilds
+            .find(
+              (guild) =>
+                guild.id === guildSelection.selectedGuildId.value &&
+                guild.path.length > 0,
+            )
+            ?.plants.some(
+              (plant) => plant.id === current.plantId && hasPlantPlacement(plant),
+            ) ?? false
+        );
       if (current.kind === 'merge')
         return garden.guilds.some((g) => g.id === current.sourceId);
       if (current.kind === 'shape')
@@ -100,6 +114,9 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
     return 'select';
   });
   const canUseGuildTools = computed(() => selectedGuildId.value !== undefined);
+  const selectedPlantId = computed(() =>
+    mode.value.kind === 'select' ? mode.value.plantId : undefined,
+  );
 
   const clearSelection = () => {
     mode.value = { kind: 'select' };
@@ -113,7 +130,7 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
     mode.value =
       mergeSourceId.value === sourceId ? { kind: 'select' } : { kind: 'merge', sourceId };
   };
-  const selectGuild = async (id: string) => {
+  const selectGuild = async (id: string, plantId?: string) => {
     preferredFeature.value = 'guild';
     const target = garden.guilds.find((g) => g.id === id);
     if (!target) return;
@@ -131,6 +148,13 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
     }
     mode.value = { kind: 'select' };
     await guildSelection.selectGuild(id);
+    if (
+      plantId &&
+      !source &&
+      selectedGuildId.value === id &&
+      mode.value.kind === 'select'
+    )
+      mode.value = { kind: 'select', plantId };
   };
   const addGuild = () => {
     preferredFeature.value = 'guild';
@@ -155,6 +179,11 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
     if (border.savePath(points)) selectBorder();
   };
   const removeSelection = () => {
+    if (selectedPlantId.value && selectedGuildId.value) {
+      garden.removePlantPlacement(selectedGuildId.value, selectedPlantId.value);
+      mode.value = { kind: 'select' };
+      return;
+    }
     if (isBorderSelected.value) border.savePath([]);
     else if (selectedShape.value)
       shapes.remove(selectedShape.value.feature, selectedShape.value.shape.id);
@@ -239,6 +268,7 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
     setFeature,
     setBrush,
     selectedGuildId,
+    selectedPlantId,
     selectedShape,
     isBorderSelected,
     mergeSourceId,

@@ -52,7 +52,7 @@ test.describe('guilds tab', () => {
         const mapBounds = await map.boundingBox();
         return mapBounds!.width / detailsBounds!.width;
       })
-      .toBeCloseTo(2, 1);
+      .toBeCloseTo(1.5, 1);
     await expect(page.getByRole('link', { name: 'Aerial', exact: true })).toHaveCount(0);
 
     await guildDetails.locator('input').first().fill('Berry guild');

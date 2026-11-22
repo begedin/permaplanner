@@ -3,6 +3,9 @@
   import { useElementSize } from '@vueuse/core';
   import GardenAerial from './GardenAerial.vue';
   import GuildLayout from './GuildLayout.vue';
+  import FutureViewControls from './FutureViewControls.vue';
+  import { useFutureView } from './useFutureView';
+  import { hasPlantPlacement } from './gardenTypes';
   import { useBackgroundImage } from './useBackgroundImage';
   import { useCamera } from './useCamera';
   import { useCameraStore } from './useCameraStore';
@@ -13,6 +16,7 @@
 
   const { guild, placingThingId } = useGuildLayout();
   const camera = useCameraStore();
+  const future = useFutureView();
   const plan = usePermaplannerStore();
   const svg = ref<SVGSVGElement>();
   const { width, height } = useElementSize(svg);
@@ -55,7 +59,22 @@
       const { x, y, width, height } = camera;
       return { x, y, width, height };
     }
-    const box = pathBounds(guild.value.path.flat(2));
+    const points = guild.value.path.flat(2);
+    if (future.horizon !== 'now') {
+      for (const plant of guild.value.plants.filter(hasPlantPlacement)) {
+        const outline = future.footprint(
+          plant,
+          future.horizon === 'final' ? 'final' : 20,
+        );
+        if (!outline) continue;
+        const r = Math.max(outline.r, plant.width / 2);
+        points.push(
+          { x: outline.cx - r, y: outline.cy - r },
+          { x: outline.cx + r, y: outline.cy + r },
+        );
+      }
+    }
+    const box = pathBounds(points);
     const padding = Math.max(box.width, box.height) * 0.08 || 10;
     const aspect = width.value > 0 && height.value > 0 ? width.value / height.value : 1;
     const w = Math.max(box.width + padding * 2, (box.height + padding * 2) * aspect);
@@ -94,55 +113,63 @@
     :class="guild ? 'gap-2 p-3' : ''"
     :aria-label="guild ? 'Plant layout' : 'Aerial map'"
     :data-view-transition="transitioning ? 'active' : undefined"
-    :inert="transitioning"
   >
-    <template v-if="svg">
-      <GuildLayout
-        v-if="guild"
-        :key="guild.id"
-        :guild="guild"
-        :svg="svg"
-        :pixels-per-unit="pixelsPerUnit"
-      />
-      <GardenAerial
-        v-else
-        :svg="svg"
-        :world-bounds="worldBounds"
-        :viewport="viewport"
-      />
-    </template>
-    <svg
-      ref="svg"
-      :viewBox="viewBox"
-      :data-main-svg="guild ? undefined : ''"
-      data-map-camera
-      :tabindex="guild ? 0 : undefined"
-      :aria-label="guild ? 'Draw plant canopies' : undefined"
-      preserveAspectRatio="xMinYMin meet"
-      class="min-h-0 w-full flex-1"
-      :class="{
-        'rounded-lg border border-parchment-400 bg-parchment-200': guild,
-        'cursor-crosshair': placingThingId,
-      }"
-      style="touch-action: none"
+    <div
+      :inert="transitioning"
+      class="relative flex min-h-0 flex-1 flex-col"
+      :class="{ 'gap-2': guild }"
     >
-      <rect
-        x="0"
-        y="0"
-        :width="worldBounds.width"
-        :height="worldBounds.height"
-        class="fill-parchment-200"
-        data-world-stage
-      />
-      <image
-        v-if="imgDataUrl"
-        :href="imgDataUrl"
-        x="0"
-        y="0"
-        :width="worldBounds.width"
-        :height="worldBounds.height"
-        :opacity="plan.backgroundOpacity"
-      />
-    </svg>
+      <template v-if="svg">
+        <GuildLayout
+          v-if="guild"
+          :key="guild.id"
+          :guild="guild"
+          :svg="svg"
+          :pixels-per-unit="pixelsPerUnit"
+        />
+        <GardenAerial
+          v-else
+          :svg="svg"
+          :world-bounds="worldBounds"
+          :viewport="viewport"
+        />
+      </template>
+      <svg
+        ref="svg"
+        :viewBox="viewBox"
+        :data-main-svg="guild ? undefined : ''"
+        data-map-camera
+        :tabindex="guild ? 0 : undefined"
+        :aria-label="guild ? 'Draw plant canopies' : undefined"
+        preserveAspectRatio="xMinYMin meet"
+        class="min-h-0 w-full flex-1"
+        :class="{
+          'rounded-lg border border-parchment-400 bg-parchment-200': guild,
+          'cursor-crosshair': placingThingId,
+        }"
+        style="touch-action: none"
+      >
+        <g>
+          <rect
+            x="0"
+            y="0"
+            :width="worldBounds.width"
+            :height="worldBounds.height"
+            class="fill-parchment-200"
+            data-world-stage
+          />
+          <image
+            v-if="imgDataUrl"
+            :href="imgDataUrl"
+            x="0"
+            y="0"
+            :width="worldBounds.width"
+            :height="worldBounds.height"
+            :opacity="plan.backgroundOpacity"
+          />
+        </g>
+      </svg>
+    </div>
+    <FutureViewControls />
   </section>
 </template>

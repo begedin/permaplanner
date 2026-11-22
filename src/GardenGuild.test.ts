@@ -69,7 +69,7 @@ it.each([
     mulchLevel: 1 as const,
   };
   const wrapper = mount(GardenGuild, {
-    props: { guild, unitLengthPx: 5, hovered: false, selected: true, tool: 'move' },
+    props: { guild, hovered: false, selected: true, tool: 'move' },
     attachTo: svg,
   });
 
@@ -104,7 +104,7 @@ it('updates a merged area and outlines only its boundaries', async () => {
     mulchLevel: 1 as const,
   });
   const wrapper = mount(GardenGuild, {
-    props: { guild, unitLengthPx: 5, hovered: false, selected: false },
+    props: { guild, hovered: false, selected: false },
   });
   const hole = first.map(({ x, y }) => ({ x: x / 5 + 4, y: y / 5 + 4 }));
   guild.path = joinPaths(subtractPaths([[first]], [[hole]]), [[second]]);
@@ -134,7 +134,7 @@ const createPlantedGuild = () => {
   ]);
   garden.addCatalogPlantToGuild(guild.id, 'apple', 'granny_smith');
   const thing = guild.plants[0]!;
-  garden.setPlantPlacement(guild.id, thing.id, { x: 20, y: 20, width: 16, height: 16 });
+  garden.setPlantPlacement(guild.id, thing.id, { x: 20, y: 20, width: 16 });
   return { garden, guild, thing };
 };
 
@@ -142,7 +142,7 @@ it('replaces guild names with optional plant labels only at maximum zoom', async
   const { garden, guild, thing } = createPlantedGuild();
   const camera = useCameraStore();
   const wrapper = mount(GardenGuild, {
-    props: { guild, unitLengthPx: 5, hovered: false, selected: false },
+    props: { guild, hovered: false, selected: false },
   });
   camera.zoom = 10;
   await nextTick();
@@ -179,7 +179,7 @@ it('hides teleported plant labels when the guild is removed from the aerial map'
     attachTo: svg,
     props: {
       guild,
-      unitLengthPx: 5,
+
       hovered: false,
       selected: true,
       showPlantLabels: true,
@@ -201,7 +201,7 @@ it.each(['cancel', 'commit'] as const)(
       attachTo: svg,
       props: {
         guild,
-        unitLengthPx: 5,
+
         hovered: false,
         selected: true,
         tool: 'move',

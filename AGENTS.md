@@ -4,9 +4,17 @@
 
 Before completing application changes, run the app in a browser and exercise the affected user flows. Check the browser console for warnings and errors. Changes must introduce neither; fix any new warnings or errors before considering the work complete. Passing unit tests and type checks alone is not sufficient. For saved-data changes, apply pending local migrations and verify an existing garden as well as newly created data. Report what was checked and any browser validation that could not be completed.
 
+## Playwright tests
+
+- Let each test build its plants with factories and pass them to the garden fixture. Keep species flags out of the importer.
+- Check what the user sees. For a slider, use `toHaveValue()` for its position. Check the visible label for its meaning and `aria-valuetext` for the screen reader text.
+- Repeat the action that caused a bug. For plant selection, click the plant, move the pointer away, and check its measurement. For a visual bug, compare the rendered element. Check CSS only when an action changes it and no clearer check shows the result.
+
 ## Plan file format & migrations
 
 Persisted garden data uses a **`version`** field (Postgres garden `document` and downloadable / importable `.json`).
+
+Add compatibility code only for data a released editor, importer, or API supported. Plant canopies are circles. Use one diameter to draw, edit, and project them, even though the file stores width and height.
 
 **Before changing saved fields or JSON layout:** read [`.cursor/skills/data-format-migration/SKILL.md`](.cursor/skills/data-format-migration/SKILL.md) and follow it (align the frontend with the backend contract, handle old file layouts at import, and migrate stored documents only when their format changes). Cursor auto-attaches [`.cursor/rules/data-format-migration.mdc`](.cursor/rules/data-format-migration.mdc) when you edit those paths.
 

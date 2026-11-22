@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.37.0
+
+- [CHANGE] Add Future view to the aerial map and guild layouts. Preview tree and shrub spread at 1–10, 15 or 20 years. Select Final to see each plant at its typical mature width. Each plant can use a width from its nursery label.
+- [CHANGE] Hover over or select a plant to see its diameter and radius beside its current canopy. The label shows the projected size in Future view.
+- [DB] Add sourced mature widths for named catalog plants, published maturity periods for trees and shrubs where available, and apple rootstock widths.
+
 ## 0.36.0
 
 - [CHANGE] Toggle plant labels in the guild layout and reveal hidden labels on hover or keyboard focus. Placement pins show each plant's status and provide accessible descriptions.

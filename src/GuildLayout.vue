@@ -4,6 +4,9 @@
   import { routeNames } from './router';
   import PlantMapLabel from './PlantMapLabel.vue';
   import PlantCanopy from './PlantCanopy.vue';
+  import GardenMeasure from './GardenMeasure.vue';
+  import FutureCanopies from './FutureCanopies.vue';
+  import { useFutureView } from './useFutureView';
   import MapShapeLayer from './MapShapeLayer.vue';
   import { useGardenStore } from './useGardenStore';
   import { useMapShapeStore } from './useMapShapeStore';
@@ -23,6 +26,7 @@
   }>();
   const garden = useGardenStore();
   const shapes = useMapShapeStore();
+  const future = useFutureView();
   const {
     selection,
     selectedThingId,
@@ -52,6 +56,12 @@
   );
   const selectedCanopy = computed(() =>
     placedThings.value.find((t) => t.id === selectedThingId.value),
+  );
+  const measuredPlant = computed(
+    () =>
+      placedThings.value.find(
+        (t) => t.id === (hoveredThingId.value ?? focusedThingId.value),
+      ) ?? selectedCanopy.value,
   );
   const handleSize = computed(() => Math.max(box.value.width, box.value.height) * 0.012);
   const instructions = computed(() => {
@@ -125,7 +135,7 @@
     const center =
       kind === 'place'
         ? origin
-        : { x: existing.x + existing.width / 2, y: existing.y + existing.height / 2 };
+        : { x: existing.x + existing.width / 2, y: existing.y + existing.width / 2 };
     const point = svg.createSVGPoint();
     if (kind === 'place') beginPlacement(existing.id);
     else selectPlant(existing.id);
@@ -185,17 +195,12 @@
         )
           return;
         point.x = result.x + result.width / 2;
-        point.y = result.y + result.height / 2;
+        point.y = result.y + result.width / 2;
         if (!boundary.value?.isPointInFill(point)) {
           message.value = 'Keep the plant center inside the guild boundary.';
           return;
         }
-        garden.setPlantPlacement(guildId.value, existing.id, {
-          x: result.x,
-          y: result.y,
-          width: result.width,
-          height: result.height,
-        });
+        garden.setPlantPlacement(guildId.value, existing.id, result);
         cancelPlacement();
       },
     });
@@ -287,11 +292,16 @@
           fill-rule="evenodd"
         />
       </g>
-      <g
+      <PlantCanopy
         v-for="thing in placedThings"
         :key="thing.id"
+        :thing="thing"
+        :selected="thing.id === selectedThingId"
         role="button"
         :aria-label="`Select ${thing.nameOrCultivar} on layout`"
+        :aria-describedby="
+          measuredPlant?.id === thing.id ? `plant-size-${thing.id}` : undefined
+        "
         :aria-pressed="thing.id === selectedThingId"
         tabindex="0"
         class="cursor-move"
@@ -302,12 +312,17 @@
         @pointerdown.stop="startGesture($event, 'move', thing.id)"
         @keydown.enter.prevent="selectPlant(thing.id)"
         @keydown.space.prevent="selectPlant(thing.id)"
-      >
-        <PlantCanopy
-          :thing="thing"
-          :selected="thing.id === selectedThingId"
+      />
+      <template v-if="future.horizon !== 'now'">
+        <FutureCanopies
+          v-for="neighbor in garden.guilds.filter(
+            (g) => g.id !== guildId && g.path.length,
+          )"
+          :key="neighbor.id"
+          :plants="neighbor.plants"
         />
-      </g>
+        <FutureCanopies :plants="placedThings" />
+      </template>
       <PlantMapLabel
         v-for="thing in placedThings"
         :key="`label-${thing.id}`"
@@ -319,8 +334,8 @@
         <line
           :x1="selectedCanopy.x + selectedCanopy.width"
           :x2="selectedCanopy.x + selectedCanopy.width + handleSize + 2 / pixelsPerUnit"
-          :y1="selectedCanopy.y + selectedCanopy.height / 2"
-          :y2="selectedCanopy.y + selectedCanopy.height / 2"
+          :y1="selectedCanopy.y + selectedCanopy.width / 2"
+          :y2="selectedCanopy.y + selectedCanopy.width / 2"
           stroke="#a65b23"
           stroke-width="1"
           vector-effect="non-scaling-stroke"
@@ -328,7 +343,7 @@
         />
         <circle
           :cx="selectedCanopy.x + selectedCanopy.width + handleSize + 2 / pixelsPerUnit"
-          :cy="selectedCanopy.y + selectedCanopy.height / 2"
+          :cy="selectedCanopy.y + selectedCanopy.width / 2"
           :r="handleSize"
           fill="#fffaf0"
           stroke="#a65b23"
@@ -339,6 +354,11 @@
           @pointerdown.stop="startGesture($event, 'resize', selectedThingId)"
         />
       </g>
+      <GardenMeasure
+        :box="box"
+        :plant="measuredPlant"
+        :font-size="plantLabelFontSize"
+      />
     </g>
   </Teleport>
 </template>

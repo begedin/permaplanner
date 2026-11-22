@@ -233,11 +233,17 @@ it('replaceGuildThingsWithCatalogPlant retargets things and preserves geometry',
     x: 12,
     y: 34,
     width: 20,
-    height: 18,
+    height: 20,
     nameOrCultivar: 'Comfrey',
   };
   usePlanStateStore().state.guilds = [
-    { id: 'g1', path: [], name: 'Bed', plants: [thing], mulchLevel: 1 },
+    {
+      id: 'g1',
+      path: [],
+      name: 'Bed',
+      plants: [{ ...thing, matureSpreadM: 0.6 }],
+      mulchLevel: 1,
+    },
   ];
 
   store.replaceGuildThingsWithCatalogPlant('g1', ['t1'], 'basil', 'genovese');
@@ -252,6 +258,29 @@ it('replaceGuildThingsWithCatalogPlant retargets things and preserves geometry',
       nameOrCultivar: 'Genovese',
     },
   ]);
+});
+
+it('clears nursery widths for each instance of a changed cultivar in one undo step', () => {
+  const garden = useGardenStore();
+  const guilds = [garden.createGuild(), garden.createGuild()];
+  for (const guild of guilds) {
+    garden.addCatalogPlantToGuild(guild.id, 'apple', 'granny_smith');
+    garden.setMatureSpread(guild.id, guild.plants[0]!.id, 2.7);
+  }
+  const renamed = {
+    id: garden.plants[0]!.id,
+    speciesId: 'apple',
+    cultivarId: 'granny_smith',
+    speciesOverride: { name: 'Orchard apple' },
+  };
+  const widths = () => garden.guilds.map((guild) => guild.plants[0]?.matureSpreadM);
+  garden.savePlant(renamed);
+  expect(widths()).toEqual([2.7, 2.7]);
+  garden.savePlant({ ...renamed, cultivarId: null });
+  expect(widths()).toEqual([undefined, undefined]);
+  usePlanCommandHistory().undo();
+  expect(garden.plants).toMatchObject([renamed]);
+  expect(widths()).toEqual([2.7, 2.7]);
 });
 
 it('setGuildThingGrowthPhase and setGuildThingVigor set and clear fields', () => {
@@ -289,7 +318,7 @@ it('merges guild contents and notes as one undoable change', () => {
     x: 2,
     y: 3,
     width: 4,
-    height: 5,
+    height: 4,
     nameOrCultivar: 'Comfrey',
   };
   const otherPlant = { ...plant, id: 'p2', x: 20, growthPhase: 'established' as const };
@@ -440,10 +469,10 @@ it('places and redraws individuals as undoable edits without losing their notes'
   const history = usePlanCommandHistory();
   store.updateGuildThingNote(guild.id, thing.id, 'Keep this tree');
   history.clear();
-  const bounds = { x: 25, y: 40, width: 32, height: 32 };
+  const bounds = { x: 25, y: 40, width: 32 };
   store.setPlantPlacement(guild.id, thing.id, bounds);
   expect(store.guilds[0]?.plants).toMatchObject([
-    { ...bounds, id: thing.id, note: 'Keep this tree', placed: true },
+    { ...bounds, height: 32, id: thing.id, note: 'Keep this tree', placed: true },
   ]);
   history.undo();
   expect(store.guilds[0]?.plants).toMatchObject([
@@ -456,11 +485,11 @@ it('places and redraws individuals as undoable edits without losing their notes'
 it('rejects invalid plant placements and moves individuals with their guild', () => {
   const { store, guild, thing } = createGuildWithPlant();
   const before = JSON.parse(JSON.stringify(store.guilds));
-  store.setPlantPlacement(guild.id, thing.id, { x: NaN, y: 0, width: 10, height: 10 });
-  store.setPlantPlacement(guild.id, thing.id, { x: 0, y: 0, width: 0, height: 10 });
-  store.setPlantPlacement(guild.id, 'missing', { x: 0, y: 0, width: 10, height: 10 });
+  store.setPlantPlacement(guild.id, thing.id, { x: NaN, y: 0, width: 10 });
+  store.setPlantPlacement(guild.id, thing.id, { x: 0, y: 0, width: 0 });
+  store.setPlantPlacement(guild.id, 'missing', { x: 0, y: 0, width: 10 });
   expect(store.guilds).toEqual(before);
-  store.setPlantPlacement(guild.id, thing.id, { x: 5, y: 5, width: 16, height: 16 });
+  store.setPlantPlacement(guild.id, thing.id, { x: 5, y: 5, width: 16 });
   const path = [
     [
       [
@@ -490,8 +519,7 @@ it('removes only the placement and restores it with undo', () => {
   const { store, guild, thing } = createGuildWithPlant();
   store.updateGuildThingNote(guild.id, thing.id, 'My tree');
   store.setGuildThingVigor(guild.id, thing.id, 4);
-  const bounds = { x: 20, y: 30, width: 40, height: 40 };
-  store.setPlantPlacement(guild.id, thing.id, bounds);
+  store.setPlantPlacement(guild.id, thing.id, { x: 20, y: 30, width: 40 });
   const placed = JSON.parse(JSON.stringify(store.guilds));
   store.removePlantPlacement(guild.id, thing.id);
   expect(store.guilds[0]?.plants).toMatchObject([
