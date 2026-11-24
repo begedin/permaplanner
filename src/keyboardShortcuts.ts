@@ -4,3 +4,10 @@ export const isEditableTarget = (target: EventTarget | null): boolean => {
   const editable = target.closest('[contenteditable]');
   return editable !== null && editable.getAttribute('contenteditable') !== 'false';
 };
+
+export const isInDialog = (target: EventTarget | null): boolean =>
+  target instanceof Element && target.closest('[role="dialog"]') !== null;
+
+export const isInMapSettingsOrDialog = (target: EventTarget | null): boolean =>
+  isInDialog(target) ||
+  (target instanceof Element && target.closest('[data-map-settings]') !== null);

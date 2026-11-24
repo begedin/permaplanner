@@ -1,7 +1,7 @@
 import type { ShapeFeature } from './mapShapeFeatures';
 import type { Ref } from 'vue';
 import { useEventListener } from '@vueuse/core';
-import { isEditableTarget } from './keyboardShortcuts';
+import { isEditableTarget, isInMapSettingsOrDialog } from './keyboardShortcuts';
 
 export type DrawingBrush = 'path' | 'polygon' | 'rectangle';
 export type MapFeature = 'guild' | 'border' | ShapeFeature;
@@ -18,12 +18,7 @@ export const useAerialToolHotkeys = (options: {
   setBrush: (brush: DrawingBrush) => void;
 }) => {
   useEventListener(document, 'keydown', (e) => {
-    if (
-      isEditableTarget(e.target) ||
-      (e.target instanceof Element && e.target.closest('[role=dialog]'))
-    ) {
-      return;
-    }
+    if (isEditableTarget(e.target) || isInMapSettingsOrDialog(e.target)) return;
     if (e.metaKey || e.ctrlKey || e.altKey) {
       return;
     }

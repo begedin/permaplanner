@@ -1,7 +1,9 @@
-import { onScopeDispose, shallowRef, watch, type Ref } from 'vue';
+import { onScopeDispose, shallowRef, watch, type InjectionKey, type Ref } from 'vue';
 import { useMediaQuery } from '@vueuse/core';
 
 export type MapViewBounds = { x: number; y: number; width: number; height: number };
+export const mapViewportKey: InjectionKey<Ref<MapViewBounds>> =
+  Symbol('visible map bounds');
 
 export const useMapViewTransition = (
   target: Ref<MapViewBounds>,

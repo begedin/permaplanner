@@ -1,16 +1,15 @@
 <script setup lang="ts">
-  import { computed, onScopeDispose, ref, watch } from 'vue';
+  import { computed, onScopeDispose, provide, ref, watch } from 'vue';
   import { useElementSize } from '@vueuse/core';
   import GardenAerial from './GardenAerial.vue';
   import GuildLayout from './GuildLayout.vue';
-  import FutureViewControls from './FutureViewControls.vue';
   import { useFutureView } from './useFutureView';
   import { hasPlantPlacement } from './gardenTypes';
   import { useBackgroundImage } from './useBackgroundImage';
   import { useCamera } from './useCamera';
   import { useCameraStore } from './useCameraStore';
   import { useGuildLayout } from './useGuildLayoutState';
-  import { useMapViewTransition } from './useMapViewTransition';
+  import { mapViewportKey, useMapViewTransition } from './useMapViewTransition';
   import { usePermaplannerStore } from './usePermaplannerStore';
   import { pathBounds } from './guildPathBounds';
 
@@ -95,6 +94,15 @@
     () =>
       Math.min(width.value / bounds.value.width, height.value / bounds.value.height) || 1,
   );
+  provide(
+    mapViewportKey,
+    computed(() => ({
+      x: bounds.value.x,
+      y: bounds.value.y,
+      width: width.value / pixelsPerUnit.value,
+      height: height.value / pixelsPerUnit.value,
+    })),
+  );
 
   watch(
     [svg, view, transitioning],
@@ -112,64 +120,58 @@
     class="relative flex min-h-0 min-w-0 flex-1 flex-col"
     :class="guild ? 'gap-2 p-3' : ''"
     :aria-label="guild ? 'Plant layout' : 'Aerial map'"
+    :inert="transitioning"
     :data-view-transition="transitioning ? 'active' : undefined"
   >
-    <div
-      :inert="transitioning"
-      class="relative flex min-h-0 flex-1 flex-col"
-      :class="{ 'gap-2': guild }"
+    <template v-if="svg">
+      <GuildLayout
+        v-if="guild"
+        :key="guild.id"
+        :guild="guild"
+        :svg="svg"
+        :pixels-per-unit="pixelsPerUnit"
+      />
+      <GardenAerial
+        v-else
+        :svg="svg"
+        :world-bounds="worldBounds"
+        :viewport="viewport"
+      />
+    </template>
+    <svg
+      ref="svg"
+      :viewBox="viewBox"
+      :data-main-svg="guild ? undefined : ''"
+      data-map-camera
+      tabindex="0"
+      :aria-label="guild ? 'Draw plant canopies' : 'Aerial map canvas'"
+      preserveAspectRatio="xMinYMin meet"
+      class="min-h-0 w-full flex-1"
+      :class="{
+        'rounded-lg border border-parchment-400 bg-parchment-200': guild,
+        'cursor-crosshair': placingThingId,
+      }"
+      style="touch-action: none"
     >
-      <template v-if="svg">
-        <GuildLayout
-          v-if="guild"
-          :key="guild.id"
-          :guild="guild"
-          :svg="svg"
-          :pixels-per-unit="pixelsPerUnit"
+      <g>
+        <rect
+          x="0"
+          y="0"
+          :width="worldBounds.width"
+          :height="worldBounds.height"
+          class="fill-parchment-200"
+          data-world-stage
         />
-        <GardenAerial
-          v-else
-          :svg="svg"
-          :world-bounds="worldBounds"
-          :viewport="viewport"
+        <image
+          v-if="imgDataUrl"
+          :href="imgDataUrl"
+          x="0"
+          y="0"
+          :width="worldBounds.width"
+          :height="worldBounds.height"
+          :opacity="plan.backgroundOpacity"
         />
-      </template>
-      <svg
-        ref="svg"
-        :viewBox="viewBox"
-        :data-main-svg="guild ? undefined : ''"
-        data-map-camera
-        :tabindex="guild ? 0 : undefined"
-        :aria-label="guild ? 'Draw plant canopies' : undefined"
-        preserveAspectRatio="xMinYMin meet"
-        class="min-h-0 w-full flex-1"
-        :class="{
-          'rounded-lg border border-parchment-400 bg-parchment-200': guild,
-          'cursor-crosshair': placingThingId,
-        }"
-        style="touch-action: none"
-      >
-        <g>
-          <rect
-            x="0"
-            y="0"
-            :width="worldBounds.width"
-            :height="worldBounds.height"
-            class="fill-parchment-200"
-            data-world-stage
-          />
-          <image
-            v-if="imgDataUrl"
-            :href="imgDataUrl"
-            x="0"
-            y="0"
-            :width="worldBounds.width"
-            :height="worldBounds.height"
-            :opacity="plan.backgroundOpacity"
-          />
-        </g>
-      </svg>
-    </div>
-    <FutureViewControls />
+      </g>
+    </svg>
   </section>
 </template>

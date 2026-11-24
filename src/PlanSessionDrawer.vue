@@ -1,6 +1,6 @@
 <script setup lang="ts">
-  import { computed } from 'vue';
-  import { useEventListener } from '@vueuse/core';
+  import { computed, nextTick, ref } from 'vue';
+  import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue';
 
   import PlanSessionPanel from './PlanSessionPanel.vue';
   import UiIcon from './uiIcons/UiIcon.vue';
@@ -8,55 +8,58 @@
   const props = defineProps<{ triggerElement?: HTMLElement }>();
 
   const open = defineModel<boolean>('open', { default: false });
+  const closeButton = ref<HTMLButtonElement | null>(null);
 
   const closeButtonPosition = computed(() => {
     if (!open.value || !props.triggerElement) return undefined;
     const bounds = props.triggerElement.getBoundingClientRect();
     return { paddingLeft: `${bounds.left}px`, paddingTop: `${bounds.top}px` };
   });
-
-  const close = () => {
-    open.value = false;
-  };
-
-  useEventListener(document, 'keydown', (e) => {
-    if (e.key === 'Escape' && open.value) close();
-  });
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition
-      name="plan-drawer"
-      appear
+  <TransitionRoot
+    as="template"
+    :show="open"
+    appear
+    @after-leave="nextTick(() => triggerElement?.focus())"
+  >
+    <Dialog
+      class="fixed inset-0 z-50"
+      aria-label="Plan"
+      :initial-focus="closeButton"
+      @close="open = false"
     >
-      <div
-        v-if="open"
-        class="fixed inset-0 z-50 flex"
+      <TransitionChild
+        as="div"
+        class="relative flex h-full"
+        enter="plan-drawer-enter-active"
+        enter-from="plan-drawer-enter-from"
+        leave="plan-drawer-leave-active"
+        leave-to="plan-drawer-leave-to"
       >
         <button
           type="button"
+          tabindex="-1"
           class="absolute inset-0 bg-ink-900/25 cursor-default"
           aria-label="Close plan menu"
-          @click="close"
+          @click="open = false"
         />
-        <aside
+        <DialogPanel
+          as="aside"
           class="plan-drawer-panel relative flex flex-col w-[min(100%,280px)] max-w-full h-full paper-surface shadow-parchment-lg overflow-y-auto"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Plan"
-          @click.stop
         >
           <div
             class="flex shrink-0 items-center justify-start border-b border-parchment-400/60 px-2 py-2"
             :style="closeButtonPosition"
           >
             <button
+              ref="closeButton"
               type="button"
               class="nav-icon-btn w-auto gap-1 pr-2"
               aria-label="Close"
               title="Close"
-              @click="close"
+              @click="open = false"
             >
               <UiIcon
                 name="remove"
@@ -68,10 +71,10 @@
           <div class="flex flex-1 flex-col p-3">
             <PlanSessionPanel />
           </div>
-        </aside>
-      </div>
-    </Transition>
-  </Teleport>
+        </DialogPanel>
+      </TransitionChild>
+    </Dialog>
+  </TransitionRoot>
 </template>
 
 <style scoped>

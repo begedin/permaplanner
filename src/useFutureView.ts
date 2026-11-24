@@ -40,20 +40,24 @@ export const useFutureView = defineStore('futureView', () => {
         }),
       ),
   );
+  const projectedWidthM = (thing: GardenThing, time: Horizon = horizon.value) => {
+    if (time === 'now') return;
+    const profile = profiles.value.get(thing.plantId);
+    const mature = thing.matureSpreadM ?? profile?.spreadM;
+    if (time === 'final' || mature === undefined) return mature;
+    const { pixelsPerMeter } = scale.measurement;
+    if (!pixelsPerMeter || !profile?.maturityYears) return;
+    const current = thing.width / pixelsPerMeter;
+    const growth = mature * Math.min(1, time / profile.maturityYears);
+    return Math.max(current, Math.min(mature, current + growth));
+  };
   const footprint = (thing: GardenThing, time: Horizon = horizon.value) => {
     const { pixelsPerMeter } = scale.measurement;
-    if (time === 'now' || !pixelsPerMeter) return;
-    const profile = profiles.value.get(thing.plantId);
-    const meters = thing.matureSpreadM ?? profile?.spreadM;
-    if (!meters) return;
-    const mature = meters * pixelsPerMeter;
-    let diameter = mature;
-    if (time !== 'final') {
-      if (!profile?.maturityYears) return;
-      const growth = (mature * time) / profile.maturityYears;
-      diameter = Math.max(thing.width, Math.min(mature, thing.width + growth));
-    }
-    return { ...canopyCircle(thing), r: diameter / 2 };
+    if (!pixelsPerMeter) return;
+    const meters = projectedWidthM(thing, time);
+    if (meters === undefined) return;
+    const r = (meters / 2) * pixelsPerMeter;
+    if (Number.isFinite(r)) return { ...canopyCircle(thing), r };
   };
-  return { horizon, profiles, footprint };
+  return { horizon, profiles, projectedWidthM, footprint };
 });

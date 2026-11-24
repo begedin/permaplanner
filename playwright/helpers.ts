@@ -152,5 +152,5 @@ export const onboard = async (page: Page): Promise<void> => {
   await page.mouse.up();
 
   await page.getByRole('button', { name: 'Map settings' }).click();
-  await page.getByLabel('Map scale').fill('100');
+  await page.getByLabel('Reference line length').fill('100');
 };

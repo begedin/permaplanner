@@ -584,15 +584,30 @@
         {
           "id": "annabelle",
           "name": "Annabelle",
-          "functions": []
+          "functions": [],
+          "growth": {
+            "spreadM": 2,
+            "maturityYears": 15,
+            "source": "https://www.rhs.org.uk/plants/63034/hydrangea-arborescens-annabelle/details"
+          }
         },
         {
           "id": "haas_halo",
-          "name": "Haas' Halo"
+          "name": "Haas' Halo",
+          "growth": {
+            "spreadM": 1.22,
+            "maturityYears": 3.5,
+            "source": "https://growersoutlet.com/Plant_Info/Shrubs/Hydrangea/Hydrangea_arborescens_Halo_Haas.pdf"
+          }
         },
         {
           "id": "white_dome",
-          "name": "White Dome"
+          "name": "White Dome",
+          "growth": {
+            "spreadM": 1.25,
+            "maturityYears": 7.5,
+            "source": "https://www.rhs.org.uk/plants/240320/hydrangea-arborescens-white-dome-dardom/details"
+          }
         }
       ],
       "defaultIconId": "bouquet",
@@ -1482,6 +1497,110 @@
         "spreadM": 0.3,
         "source": "https://www.rhs.org.uk/plants/69565/antirrhinum-majus/details"
       }
+    },
+    {
+      "id": "common_maple",
+      "name": "Common maple (field maple)",
+      "name_latin": "Acer campestre",
+      "defaultIconId": "maple",
+      "functions": ["pollinator_attractor"],
+      "layers": ["overstory"],
+      "blooming": { "start": 4, "end": 5 },
+      "growth": {
+        "spreadM": 6,
+        "maturityYears": 15,
+        "source": "https://www.rhs.org.uk/plants/166/acer-campestre/details"
+      },
+      "cultivars": [
+        { "id": "carnival", "name": "Carnival" },
+        { "id": "elsrijk", "name": "Elsrijk" },
+        {
+          "id": "william_caldwell",
+          "name": "William Caldwell",
+          "growth": {
+            "spreadM": 6,
+            "maturityYears": 35,
+            "source": "https://www.rhs.org.uk/plants/99757/acer-campestre-william-caldwell/details"
+          }
+        }
+      ]
+    },
+    {
+      "id": "norway_maple",
+      "name": "Norway maple",
+      "name_latin": "Acer platanoides",
+      "defaultIconId": "maple",
+      "functions": ["pollinator_attractor"],
+      "layers": ["overstory"],
+      "blooming": { "start": 4, "end": 4 },
+      "growth": {
+        "spreadM": 17.5,
+        "maturityYears": 35,
+        "source": "https://www.vdberk.com/trees/acer-platanoides/",
+        "timingSource": "https://www.rhs.org.uk/plants/246/acer-platanoides/details"
+      },
+      "cultivars": [
+        {
+          "id": "crimson_king",
+          "name": "Crimson King",
+          "growth": {
+            "spreadM": 10,
+            "maturityYears": 35,
+            "source": "https://www.vdberk.com/trees/acer-platanoides-crimson-king/",
+            "timingSource": "https://www.rhs.org.uk/plants/89715/acer-platanoides-crimson-king/details"
+          }
+        },
+        {
+          "id": "globosum",
+          "name": "Globosum",
+          "layers": ["understory"],
+          "growth": {
+            "spreadM": 6,
+            "maturityYears": 35,
+            "source": "https://www.vdberk.com/trees/acer-platanoides-globosum/",
+            "timingSource": "https://www.rhs.org.uk/plants/99961/acer-platanoides-globosum/details"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sycamore_maple",
+      "name": "Sycamore maple",
+      "name_latin": "Acer pseudoplatanus",
+      "defaultIconId": "maple",
+      "functions": ["pollinator_attractor"],
+      "layers": ["overstory"],
+      "blooming": { "start": 4, "end": 5 },
+      "growth": {
+        "spreadM": 22.5,
+        "maturityYears": 80,
+        "source": "https://www.vdberk.com/trees/acer-pseudoplatanus/",
+        "timingSource": "https://www.nw-fva.de/fileadmin/nwfva/publikationen/pdf/schloesser_2025_fungi_associated_with_living_woody_tissue_of_sycam.pdf#page=11",
+        "timingNote": "The canopy estimate uses the reported age at mature height."
+      },
+      "cultivars": [
+        {
+          "id": "brilliantissimum",
+          "name": "Brilliantissimum",
+          "layers": ["understory"],
+          "growth": {
+            "spreadM": 6,
+            "maturityYears": 35,
+            "source": "https://www.rhs.org.uk/plants/90164/acer-pseudoplatanus-brilliantissimum/details"
+          }
+        },
+        {
+          "id": "esk_sunset",
+          "name": "Esk Sunset",
+          "name_latin": "Acer pseudoplatanus f. variegatum",
+          "layers": ["understory"],
+          "growth": {
+            "spreadM": 6,
+            "maturityYears": 35,
+            "source": "https://www.rhs.org.uk/plants/175032/acer-pseudoplatanus-f-variegatum-esk-sunset-v/details"
+          }
+        }
+      ]
     },
     {
       "id": "japanese_maple",

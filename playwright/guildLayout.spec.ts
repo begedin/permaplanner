@@ -1,6 +1,7 @@
 import { registerAndReachImport, pasteAerialPhotoOntoMap } from './helpers';
 import {
   createGrannySmiths,
+  createLayoutPlant,
   createStrawberry,
   importLayoutGarden,
 } from './fixtures/guildLayout';
@@ -73,7 +74,31 @@ test('draws and saves a placement without changing the individual', async ({ pag
   ]);
   await page.reload();
   await expect(canopy).toHaveAttribute('transform', placement!);
-  await card.getByRole('button', { name: /^Select .*#1$/ }).click();
+  await canopy.dragTo(map);
+  await expect(canopy).not.toHaveAttribute('transform', placement!);
+  const moved = await canopy.getAttribute('transform');
+  const plan = page.getByRole('button', { name: /^Plan(?:, unsaved changes)?$/ });
+  await plan.click();
+  const drawer = page.getByRole('dialog', { name: 'Plan' });
+  await expect(drawer.getByRole('button', { name: 'Close', exact: true })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(drawer.getByRole('link', { name: 'Privacy' })).toBeFocused();
+  await page.keyboard.press('Delete');
+  await page.keyboard.press('ControlOrMeta+z');
+  await page.keyboard.press('Escape');
+  await expect(plan).toBeFocused();
+  await expect(canopy).toHaveAttribute('transform', moved!);
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(canopy).toHaveAttribute('transform', placement!);
+  await plan.click();
+  await drawer
+    .getByRole('button', { name: 'Close', exact: true })
+    .press('ControlOrMeta+Shift+z');
+  await page.keyboard.press('Escape');
+  await expect(plan).toBeFocused();
+  await expect(canopy).toHaveAttribute('transform', placement!);
+  await page.keyboard.press('ControlOrMeta+Shift+z');
+  await expect(canopy).toHaveAttribute('transform', moved!);
   await map.focus();
   await page.keyboard.press('Delete');
   await expect(canopy).toHaveCount(0);
@@ -120,7 +145,9 @@ test('previews future spreads on both maps and saves a nursery width', async ({
     createStrawberry({ x: 70, y: 70, diameter: 13 }),
   ]);
   await page.goto('/guilds/bed');
-  const time = page.getByRole('slider', { name: 'Future view' });
+  const settings = page.getByRole('group', { name: 'Map settings' });
+  const toggle = settings.getByRole('button', { name: 'Map settings' });
+  const time = settings.getByRole('slider', { name: 'Future view' });
   const spreads = page.getByLabel('Estimated plant spreads');
   const outline = spreads.getByLabel('Granny Smith', { exact: true });
   const strawberry = spreads.getByLabel(/^Strawberry\b/);
@@ -128,8 +155,11 @@ test('previews future spreads on both maps and saves a nursery width', async ({
   const measure = map.locator('[data-map-measure]');
   const apple = map.getByRole('button', { name: 'Granny Smith', exact: true });
   const berry = map.getByRole('button', { name: /^Strawberry/ });
+  await expect(page.getByRole('slider', { name: 'Future view' })).toBeHidden();
+  await toggle.click();
   await expect(time).toHaveValue('0');
-  await expect(page.getByText('Now', { exact: true })).toBeVisible();
+  await expect(settings.getByText('Off', { exact: true })).toBeVisible();
+  await expect(time).toHaveAttribute('aria-valuetext', 'Off');
   for (const label of [
     '1 year',
     ...[2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20].map((year) => `${year} years`),
@@ -140,30 +170,34 @@ test('previews future spreads on both maps and saves a nursery width', async ({
   }
   await expect(time).toHaveAttribute('aria-valuetext', 'Final');
   await time.press('Home');
+  await toggle.click();
   await expect(measure).toHaveText('0.77×0.77 m');
   await berry.hover();
   await expect(measure).toHaveText('0.1 × 0.1 m · R 0.05 m');
   await apple.click();
   await expect(apple).toBeFocused();
   const clickedCanopy = await apple.screenshot({ animations: 'disabled' });
-  await time.focus();
+  await toggle.focus();
   expect(
     clickedCanopy.equals(await apple.screenshot({ animations: 'disabled' })),
     'Moving focus away should preserve the selected canopy appearance',
   ).toBe(true);
-  await time.hover();
+  await toggle.hover();
   await expect(measure).toHaveText('0.154 × 0.154 m · R 0.0769 m');
+  await toggle.click();
   await time.press('ArrowRight');
   await expect(outline).toHaveAttribute('r', '36');
   await expect(strawberry).toHaveCount(0);
   await expect(measure).toHaveText('0.554 × 0.554 m · R 0.277 m');
   await expect(measure).toHaveAttribute('x', '40');
   await expect(measure).toHaveAttribute('y', '40');
+  await time.hover();
   const track = await time.boundingBox();
   if (!track) throw new Error('Missing Future view slider');
   await time.click({ position: { x: track.width - 1, y: track.height / 2 } });
   await expect(strawberry).toHaveAttribute('r', '19.5');
   await expect(measure).toHaveText('6 × 6 m · R 3 m');
+  await toggle.click();
   await expect(measure).toHaveAttribute('x', '40');
   await expect(measure).toHaveAttribute('y', '40');
   await berry.hover();
@@ -173,10 +207,12 @@ test('previews future spreads on both maps and saves a nursery width', async ({
     .first()
     .click({ position: { x: 3, y: 3 } });
   await expect(measure).toHaveText('0.77×0.77 m');
+  await toggle.click();
   await time.press('Home');
   for (let year = 1; year <= 5; year++) await time.press('ArrowRight');
   await expect(outline).toHaveAttribute('r', '140');
   await page.getByRole('button', { name: 'Place plants' }).click();
+  await toggle.click();
   await expect(time).toHaveValue('5');
   await expect(outline).toHaveAttribute('cx', '50');
   await time.press('End');
@@ -189,6 +225,7 @@ test('previews future spreads on both maps and saves a nursery width', async ({
   await time.press('End');
   await expect(outline).toHaveAttribute('r', '390');
   await expect(strawberry).toHaveAttribute('r', '19.5');
+  await toggle.click();
   await page.getByRole('combobox', { name: 'Rootstock width' }).selectOption('1.5');
   await expect(outline).toHaveAttribute('r', '97.5');
   const width = page.getByRole('spinbutton', { name: 'Mature width (m)' });
@@ -209,19 +246,119 @@ test('previews future spreads on both maps and saves a nursery width', async ({
     page.getByRole('button', { name: 'Save', exact: true }).click(),
   ]);
   await page.reload();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await toggle.click();
   await expect(time).toHaveValue('0');
   await expect(outline).toHaveCount(0);
-  await page.setViewportSize({ width: 390, height: 844 });
   await time.press('End');
+  await toggle.click();
   await expect(outline).toHaveAttribute('r', '175.5');
   await expect(outline).toBeInViewport({ ratio: 0.95 });
   await map.getByRole('button', { name: 'Select Granny Smith on layout' }).click();
   await expect(width).toHaveValue('2.7');
-  const height = await map.evaluate((el) => el.getBoundingClientRect().height);
-  expect(height).toBeGreaterThan(150);
-  await page.getByRole('button', { name: 'How sizes are estimated' }).click();
-  await expect(page.getByText(/Year views estimate canopy growth/)).toBeVisible();
-  expect(await map.evaluate((el) => el.getBoundingClientRect().height)).toBe(height);
+});
+
+test('selects overlapping plants and distinguishes known and unknown mature sizes', async ({
+  page,
+}) => {
+  await importLayoutGarden(page, [
+    createLayoutPlant({ id: 'custom', speciesId: 'unknown', cultivarId: null }, 'Plant', {
+      x: 50,
+      y: 50,
+      diameter: 10,
+    }),
+    createLayoutPlant(
+      { id: 'hydrangea', speciesId: 'smooth_hydrangea', cultivarId: 'annabelle' },
+      'Annabelle',
+      { x: 26, y: 26, diameter: 48 },
+    ),
+  ]);
+  const map = page.locator('svg[data-map-camera]');
+  const measure = map.locator('[data-map-measure]');
+  const settings = page.getByRole('button', { name: 'Map settings' });
+  const slider = page.getByRole('slider', { name: 'Future view' });
+  for (const path of ['/guilds/bed', '/guilds/bed/layout']) {
+    await page.goto(path);
+    const small = map.getByRole('button', { name: /^(Select )?Plant( on layout)?$/ });
+    await small.click();
+    await settings.hover();
+    await expect(small).toHaveAttribute('aria-pressed', 'true');
+    await expect(measure).toHaveText('0.0769 × 0.0769 m · R 0.0385 m');
+    await settings.click();
+    await slider.press('End');
+    await expect(measure).toHaveText('Mature size unknown');
+  }
+  await settings.click();
+  await map.getByRole('button', { name: 'Select Annabelle on layout' }).click();
+  await expect(measure).toHaveText('2 × 2 m · R 1 m');
+  await expect(
+    page.getByRole('link', { name: 'Estimated maturity · 15 years' }),
+  ).toBeVisible();
+  await settings.click();
+  await slider.press('Home');
+  await slider.press('ArrowRight');
+  await expect(measure).toHaveText('0.503 × 0.503 m · R 0.251 m');
+});
+
+test('moves a corner plant on mobile and explains its mature width', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 375, height: 667 });
+  await importLayoutGarden(page, [createStrawberry({ x: 93, y: 93, diameter: 6 })]);
+  await page.goto('/guilds/bed/layout');
+  const map = page.getByLabel('Draw plant canopies');
+  const plant = map.getByRole('button', { name: /Select Strawberry/ });
+  await plant.click();
+  await page.getByRole('heading', { name: 'Plant layout' }).hover();
+  await expect(map.locator('[data-map-measure]')).toBeInViewport({ ratio: 0.99 });
+  const before = await plant.getAttribute('transform');
+  await plant.dragTo(map);
+  await expect(plant).toHaveAttribute('aria-pressed', 'true');
+  await expect(plant).not.toHaveAttribute('transform', before!);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mapHeight = (await map.boundingBox())!.height;
+  expect(mapHeight).toBeGreaterThan(150);
+  const settings = page.getByRole('group', { name: 'Map settings' });
+  const toggle = settings.getByRole('button', { name: 'Map settings' });
+  const help = settings.getByRole('button', { name: 'How sizes are estimated' });
+  const slider = settings.getByRole('slider', { name: 'Future view' });
+  await toggle.press('Enter');
+  await page.keyboard.press('Tab');
+  await expect(help).toBeFocused();
+  await page.keyboard.press('Delete');
+  await expect(plant).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Tab');
+  await expect(slider).toBeFocused();
+  await slider.press('End');
+  const projection = map.getByLabel('Estimated plant spreads').getByLabel(/^Strawberry/);
+  await expect(projection).toBeVisible();
+  const hint = settings.getByText(
+    'These plants have no yearly estimate. Final shows their known mature widths.',
+  );
+  await expect(hint).toHaveCount(0);
+  await help.click();
+  await expect(hint).toBeInViewport();
+  const position = (await slider.boundingBox())!;
+  expect((await hint.boundingBox())!.y).toBeGreaterThanOrEqual(
+    position.y + position.height,
+  );
+  await slider.press('Home');
+  expect(await slider.boundingBox()).toEqual(position);
+  expect((await map.boundingBox())!.height).toBe(mapHeight);
+  await help.click();
+  await expect(hint).toHaveCount(0);
+  expect((await map.boundingBox())!.height).toBe(mapHeight);
+
+  await page.setViewportSize({ width: 740, height: 360 });
+  await slider.click();
+  await expect(slider).not.toHaveValue('0');
+  await help.click();
+  await expect(hint).toBeInViewport();
+  await slider.press('End');
+  await toggle.click();
+  await expect(projection).toBeInViewport({ ratio: 0.99 });
+  await page.setViewportSize({ width: 667, height: 375 });
+  await expect(projection).toBeInViewport({ ratio: 0.99 });
 });
 
 test('switches selection, cancels placement, and resizes immediately after Place', async ({
@@ -363,7 +500,14 @@ test('replaces only planted guild names at maximum aerial zoom', async ({ page }
     ),
   ).toBe(true);
   await page.getByRole('button', { name: 'Map settings', exact: true }).click();
-  const toggle = page.getByRole('checkbox', { name: 'Plant names (maximum zoom)' });
+  const labels = page.getByRole('group', { name: 'Labels', exact: true });
+  await expect(labels.locator('label')).toHaveText([
+    'Plants (max. zoom)',
+    'Guilds',
+    'Landmarks',
+    'Paths',
+  ]);
+  const toggle = labels.getByRole('checkbox', { name: 'Plants (max. zoom)' });
   await toggle.check();
   await map.dispatchEvent('wheel', {
     ctrlKey: true,
@@ -465,7 +609,7 @@ test('previews plant graphics with the moving guild and restores them on cancell
   await page.goto('/guilds/bed');
   const map = page.locator('[data-main-svg]');
   await page.getByRole('button', { name: 'Map settings', exact: true }).click();
-  await page.getByRole('checkbox', { name: 'Plant names (maximum zoom)' }).check();
+  await page.getByRole('checkbox', { name: 'Plants (max. zoom)' }).check();
   const canopy = map.locator('.canopy');
   const initial = await canopy.boundingBox();
   if (!initial) throw new Error('Missing canopy');
@@ -560,9 +704,19 @@ test('removes specific individuals from the aerial and unmapped guild editors', 
       await expect(canopy).toBeVisible();
       await unmap.click();
     } else {
+      const prompts: string[] = [];
+      page.on('dialog', async (dialog) => {
+        prompts.push(dialog.message());
+        await dialog.dismiss();
+      });
       await canopy.click();
-      await canopy.press('Delete');
+      await page.keyboard.down('Delete');
       await expect(canopy).toHaveCount(0);
+      await page.keyboard.down('Delete');
+      await page.keyboard.up('Delete');
+      expect(prompts).toEqual([]);
+      await page.keyboard.press('Delete');
+      expect(prompts).toEqual([expect.stringContaining('Delete guild')]);
       await page.getByRole('button', { name: 'Undo', exact: true }).click();
       await expect(canopy).toBeVisible();
     }

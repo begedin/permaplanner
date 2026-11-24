@@ -8,7 +8,7 @@
   import { SCALE_UNITS } from './gardenDocument';
   import { computed, ref, toRef } from 'vue';
 
-  import UiIcon from './uiIcons/UiIcon.vue';
+  import MapSettings from './MapSettings.vue';
   import ToolSlider from './ToolSlider.vue';
   import GardenGuild from './GardenGuild.vue';
   import { usePathDrawing } from './usePathDrawing';
@@ -38,7 +38,6 @@
   const shapeLayerOrder = ['path', 'landmark'] as const;
   const session = useGardenSessionStore();
   const permaplannerStore = usePermaplannerStore();
-  const mapSettingsOpen = ref(false);
   const showPlantLabels = useLocalStorage('permaplanner.showPlantLabels', false);
   const showGuildLabels = useLocalStorage('permaplanner.showGuildLabels', true);
   const showPathLabels = useLocalStorage('permaplanner.showPathLabels', true);
@@ -345,148 +344,90 @@
       />
     </g>
   </Teleport>
-  <div
-    class="map-settings-panel paper-floating absolute bottom-2 right-2 z-10 flex max-w-[calc(100%-1rem)] flex-col p-1.5 text-sm"
-    :class="{ 'map-settings-panel--open': mapSettingsOpen }"
-    role="group"
-    aria-label="Map settings"
-  >
-    <div
-      id="map-settings-controls"
-      class="map-settings-content"
-      :aria-hidden="!mapSettingsOpen"
-      :inert="!mapSettingsOpen"
-    >
-      <div class="min-h-0 overflow-hidden">
-        <div class="flex flex-col gap-3 p-3">
-          <fieldset class="flex flex-col gap-2 border-b border-parchment-300 pb-3">
-            <legend class="mb-2 font-serif font-medium text-ink-800">Map labels</legend>
-            <label class="flex cursor-pointer items-center gap-2 text-ink-700">
-              <input
-                v-model="showPlantLabels"
-                type="checkbox"
-                class="size-4 accent-sage-800"
-              />
-              Plant names (maximum zoom)
-            </label>
-            <label class="flex cursor-pointer items-center gap-2 text-ink-700">
-              <input
-                v-model="showGuildLabels"
-                type="checkbox"
-                class="size-4 accent-sage-800"
-              />
-              Guild names
-            </label>
-            <label class="flex cursor-pointer items-center gap-2 text-ink-700">
-              <input
-                v-model="showLandmarkLabels"
-                type="checkbox"
-                class="size-4 accent-sage-800"
-              />
-              Landmark names
-            </label>
-            <label class="flex cursor-pointer items-center gap-2 text-ink-700">
-              <input
-                v-model="showPathLabels"
-                type="checkbox"
-                class="size-4 accent-sage-800"
-              />
-              Path names
-            </label>
-          </fieldset>
-          <label class="paper-field-label"
-            >Scale unit
-            <select
-              class="input-soft w-full px-2 py-1.5 font-normal text-ink-800"
-              :value="mapScale.unit"
-              @change="mapScale.setUnit(($event.target as HTMLSelectElement).value)"
-            >
-              <option
-                v-for="unit in SCALE_UNITS"
-                :key="unit.value"
-                :value="unit.value"
-              >
-                {{ unit.label }}
-              </option>
-            </select>
-          </label>
-          <p class="text-xs leading-relaxed text-ink-600">
-            Choose the unit for the reference line’s length.
-          </p>
-          <ToolSlider
-            :value="mapScale.linePhysicalLength"
-            label="Map scale"
-            :min="1"
-            :max="300"
-            :step="1"
-            @update:value="mapScale.setPhysicalLength"
-          />
-          <button
-            v-if="
-              onboarding.onboardingState !== 'done' &&
-              mapScale.unit !== 'unspecified' &&
-              mapScale.unitLengthPx > 0
-            "
-            type="button"
-            class="btn-soft self-start"
-            @click="onboarding.setOnboardingState('done')"
-          >
-            Confirm scale · {{ mapScale.linePhysicalLength }} {{ mapScale.unit }}
-          </button>
-          <ToolSlider
-            :value="permaplannerStore.backgroundOpacity"
-            label="BG opacity"
-            :min="0"
-            :max="1"
-            :step="0.01"
-            @update:value="permaplannerStore.setBackgroundOpacity"
-          />
-        </div>
-      </div>
-    </div>
-    <button
-      type="button"
-      class="flex items-center gap-1 rounded px-2 py-1 text-ink-700 hover:bg-sage-200/75"
-      :aria-expanded="mapSettingsOpen"
-      aria-controls="map-settings-controls"
-      @click="mapSettingsOpen = !mapSettingsOpen"
-    >
-      <UiIcon
-        name="guilds"
-        class="size-5"
+  <MapSettings>
+    <fieldset class="flex flex-col gap-2">
+      <legend class="mb-2 font-serif font-medium text-ink-800">Labels</legend>
+      <label class="flex cursor-pointer items-center gap-2 text-ink-700">
+        <input
+          v-model="showPlantLabels"
+          type="checkbox"
+          class="size-4 accent-sage-800"
+        />
+        Plants (max. zoom)
+      </label>
+      <label class="flex cursor-pointer items-center gap-2 text-ink-700">
+        <input
+          v-model="showGuildLabels"
+          type="checkbox"
+          class="size-4 accent-sage-800"
+        />
+        Guilds
+      </label>
+      <label class="flex cursor-pointer items-center gap-2 text-ink-700">
+        <input
+          v-model="showLandmarkLabels"
+          type="checkbox"
+          class="size-4 accent-sage-800"
+        />
+        Landmarks
+      </label>
+      <label class="flex cursor-pointer items-center gap-2 text-ink-700">
+        <input
+          v-model="showPathLabels"
+          type="checkbox"
+          class="size-4 accent-sage-800"
+        />
+        Paths
+      </label>
+    </fieldset>
+    <ToolSlider
+      :value="permaplannerStore.backgroundOpacity"
+      label="BG opacity"
+      :min="0"
+      :max="1"
+      :step="0.01"
+      @update:value="permaplannerStore.setBackgroundOpacity"
+    />
+    <hr class="border-parchment-300" />
+    <fieldset class="flex flex-col gap-2">
+      <legend class="mb-2 font-serif font-medium text-ink-800">Scale</legend>
+      <ToolSlider
+        :value="mapScale.linePhysicalLength"
+        label="Reference line length"
+        :min="1"
+        :max="300"
+        :step="1"
+        @update:value="mapScale.setPhysicalLength"
       />
-      <span>Map settings</span>
-    </button>
-  </div>
+      <label class="paper-field-label"
+        >Unit
+        <select
+          class="input-soft w-full px-2 py-1.5 font-normal text-ink-800"
+          :value="mapScale.unit"
+          @change="mapScale.setUnit(($event.target as HTMLSelectElement).value)"
+        >
+          <option
+            v-for="unit in SCALE_UNITS"
+            :key="unit.value"
+            :value="unit.value"
+          >
+            {{ unit.label }}
+          </option>
+        </select>
+      </label>
+      <button
+        v-if="
+          onboarding.onboardingState !== 'done' &&
+          mapScale.unit !== 'unspecified' &&
+          mapScale.unitLengthPx > 0
+        "
+        type="button"
+        class="btn-soft self-start"
+        @click="onboarding.setOnboardingState('done')"
+      >
+        Confirm scale · {{ mapScale.linePhysicalLength }} {{ mapScale.unit }}
+      </button>
+    </fieldset>
+    <hr class="border-parchment-300" />
+  </MapSettings>
 </template>
-<style scoped>
-  .map-settings-panel {
-    width: 10rem;
-    transition: width 250ms ease-in-out;
-  }
-
-  .map-settings-panel--open {
-    width: 15rem;
-  }
-
-  .map-settings-content {
-    display: grid;
-    grid-template-rows: 0fr;
-    opacity: 0;
-    transition:
-      grid-template-rows 250ms ease-in-out,
-      opacity 250ms ease-in-out;
-  }
-
-  .map-settings-panel--open .map-settings-content {
-    grid-template-rows: 1fr;
-    opacity: 1;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .map-settings-panel,
-    .map-settings-content {
-      transition: none;
-    }
-  }
-</style>

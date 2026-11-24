@@ -8,16 +8,22 @@
   import FutureCanopies from './FutureCanopies.vue';
   import { useFutureView } from './useFutureView';
   import MapShapeLayer from './MapShapeLayer.vue';
+  import MapSettings from './MapSettings.vue';
   import { useGardenStore } from './useGardenStore';
   import { useMapShapeStore } from './useMapShapeStore';
   import { useEventListener } from '@vueuse/core';
-  import { isEditableTarget } from './keyboardShortcuts';
+  import { isEditableTarget, isInMapSettingsOrDialog } from './keyboardShortcuts';
   import UiIcon from './uiIcons/UiIcon.vue';
   import { usePointerSession } from './usePointerSession';
   import { transformClientPoint } from './svgClientToUser';
   import { guildPathData } from './guildPathClip';
   import { pathBounds } from './guildPathBounds';
-  import { hasPlantPlacement, type GardenThing, type Guild } from './gardenTypes';
+  import {
+    hasPlantPlacement,
+    placedCanopies,
+    type GardenThing,
+    type Guild,
+  } from './gardenTypes';
 
   const props = defineProps<{
     guild: DeepReadonly<Guild>;
@@ -49,10 +55,9 @@
   const focusedThingId = ref<string>();
   const session = usePointerSession();
   const placedThings = computed(() =>
-    guild.value.plants
-      .map((t) => (t.id === draft.value?.id ? draft.value : t))
-      .filter(hasPlantPlacement)
-      .sort((a, b) => b.width - a.width),
+    placedCanopies(
+      guild.value.plants.map((t) => (t.id === draft.value?.id ? draft.value : t)),
+    ),
   );
   const selectedCanopy = computed(() =>
     placedThings.value.find((t) => t.id === selectedThingId.value),
@@ -98,7 +103,7 @@
   useEventListener(window, 'keydown', (event) => {
     if (
       isEditableTarget(event.target) ||
-      (event.target instanceof Element && event.target.closest('[role="dialog"]')) ||
+      isInMapSettingsOrDialog(event.target) ||
       event.isComposing ||
       event.metaKey ||
       event.ctrlKey ||
@@ -208,9 +213,9 @@
 </script>
 
 <template>
-  <header class="flex items-center justify-between gap-2">
-    <h2 class="font-serif text-lg">Plant layout</h2>
-    <div class="flex items-center gap-2">
+  <header class="flex items-start justify-between gap-2">
+    <div class="flex flex-1 flex-wrap items-center gap-2">
+      <h2 class="mr-auto font-serif text-lg">Plant layout</h2>
       <button
         type="button"
         class="btn-soft inline-flex items-center gap-1 text-sm"
@@ -228,6 +233,7 @@
         Back to aerial
       </RouterLink>
     </div>
+    <MapSettings in-header />
   </header>
   <div class="flex min-h-10 items-center gap-2 text-sm text-ink-600">
     <p

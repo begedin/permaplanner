@@ -1,7 +1,7 @@
 import { onScopeDispose } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useEventListener } from '@vueuse/core';
-import { isEditableTarget } from './keyboardShortcuts';
+import { isEditableTarget, isInMapSettingsOrDialog } from './keyboardShortcuts';
 import { useAerialToolHotkeys } from './useAerialTool';
 import { useMapInteractionStore } from './useMapInteractionStore';
 
@@ -19,8 +19,7 @@ export const useMapInteraction = () => {
     window,
     'keydown',
     (event) => {
-      if (event.target instanceof Element && event.target.closest('[role=dialog]'))
-        return;
+      if (isInMapSettingsOrDialog(event.target)) return;
       if (event.key === 'Escape' && interaction.isMerging) {
         event.preventDefault();
         interaction.resetMode();
@@ -36,7 +35,7 @@ export const useMapInteraction = () => {
         return;
       if (event.key === 'Delete') {
         event.preventDefault();
-        interaction.removeSelection();
+        if (!event.repeat) interaction.removeSelection();
       } else if (event.key === 'Escape') {
         if (interaction.selectedPlantId) interaction.resetMode();
         else void interaction.clearSelection();

@@ -54,7 +54,10 @@
   >
     <GuildTabHeader v-model:search-query="searchQuery" />
 
-    <div class="flex flex-col md:flex-row flex-1 min-h-0 min-w-0">
+    <div
+      class="flex flex-col md:flex-row flex-1 min-h-0 min-w-0"
+      :class="{ 'guild-panes--layout': isLayout }"
+    >
       <aside
         class="flex flex-col min-h-0 min-w-0 max-h-40 md:max-h-none md:w-72 md:shrink-0 border-r border-parchment-400/60 paper-surface"
         aria-label="Guild list"
@@ -85,10 +88,7 @@
       </aside>
       <div
         class="guild-workspace grid flex-1 min-h-0 min-w-0"
-        :class="{
-          'guild-workspace--selected': selectedGuildId,
-          'guild-workspace--layout': isLayout,
-        }"
+        :class="{ 'guild-workspace--selected': selectedGuildId }"
       >
         <section
           class="min-h-0 min-w-0 overflow-hidden paper-surface"
@@ -128,7 +128,7 @@
           </div>
         </section>
 
-        <RouterView />
+        <RouterView class="guild-map" />
       </div>
     </div>
   </div>
@@ -147,8 +147,25 @@
   }
 
   @media (max-width: 767px) {
-    .guild-workspace--layout {
+    .guild-panes--layout .guild-workspace {
       grid-template-rows: minmax(0, 1fr) minmax(0, 2fr);
+    }
+  }
+
+  @media (max-width: 767px) and (orientation: landscape) {
+    .guild-panes--layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      grid-template-rows: minmax(0, 1fr) minmax(0, 2fr);
+    }
+
+    .guild-panes--layout .guild-workspace {
+      display: contents;
+    }
+
+    .guild-panes--layout .guild-map {
+      grid-column: 2;
+      grid-row: 1 / -1;
     }
   }
 

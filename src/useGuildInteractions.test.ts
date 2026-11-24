@@ -66,63 +66,50 @@ const setup = (initialTool: AerialTool, brush: DrawingBrush = 'path') => {
 };
 
 it('removes edit shortcuts when the component scope is disposed during editing', () => {
-  const { onCommit, onCancel } = setup('draw');
+  const { svg, onCommit, onCancel } = setup('draw');
   scope.stop();
   const enter = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true });
-  document.dispatchEvent(enter);
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  svg.dispatchEvent(enter);
+  svg.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   expect(onCommit).not.toHaveBeenCalled();
   expect(onCancel).not.toHaveBeenCalled();
   expect(enter.defaultPrevented).toBe(false);
 });
 
-it.each(['input', 'textarea', 'select', 'contenteditable'])(
-  'leaves editing shortcuts to %s controls',
-  (tag) => {
-    const { edit, onCommit, onCancel } = setup('draw');
-    const control = document.createElement(tag === 'contenteditable' ? 'div' : tag);
-    if (tag === 'contenteditable') control.setAttribute('contenteditable', 'true');
-    document.body.append(control);
-    const target =
-      tag === 'contenteditable'
-        ? control.appendChild(document.createElement('span'))
-        : control;
-    const before = edit.brush.value;
-    for (const key of ['+', '-', 'Enter', 'Escape']) {
-      const event = new KeyboardEvent('keydown', {
-        key,
-        bubbles: true,
-        cancelable: true,
-      });
-      target.dispatchEvent(event);
-      expect(event.defaultPrevented).toBe(false);
-    }
-    expect(edit.brush.value).toEqual(before);
-    expect(onCommit).not.toHaveBeenCalled();
-    expect(onCancel).not.toHaveBeenCalled();
-  },
-);
+it('leaves Enter to a focused control inside the map', () => {
+  const { polygon, onCommit } = setup('draw');
+  polygon.setAttribute('tabindex', '0');
+  polygon.focus();
+  const enter = new KeyboardEvent('keydown', {
+    key: 'Enter',
+    bubbles: true,
+    cancelable: true,
+  });
+  polygon.dispatchEvent(enter);
+  expect(enter.defaultPrevented).toBe(false);
+  expect(onCommit).not.toHaveBeenCalled();
+});
 
 it('clamps the brush radius to 1–50', () => {
-  const { edit } = setup('draw');
+  const { svg, edit } = setup('draw');
   for (let i = 0; i < 100; i++)
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: '+' }));
+    svg.dispatchEvent(new KeyboardEvent('keydown', { key: '+' }));
   expect(edit.brush.value[0]).toEqual({ x: 50, y: 0 });
   for (let i = 0; i < 100; i++)
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: '-' }));
+    svg.dispatchEvent(new KeyboardEvent('keydown', { key: '-' }));
   expect(edit.brush.value[0]).toEqual({ x: 1, y: 0 });
 });
 
 it('disposes and reinstalls shortcuts when changing tools', async () => {
-  const { tool, onCommit } = setup('draw');
+  const { svg, tool, onCommit } = setup('draw');
   tool.value = 'select';
   await nextTick();
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+  svg.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
   expect(onCommit).not.toHaveBeenCalled();
   tool.value = 'draw';
   await nextTick();
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+  svg.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+  svg.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
   expect(onCommit).toHaveBeenCalledTimes(1);
 });
 
@@ -188,7 +175,7 @@ it('keeps completed brush strokes local until Enter and discards them when switc
   expect(edit.path.value).not.toEqual(initialPath);
   expect(onCommit).not.toHaveBeenCalled();
   const preview = [...edit.path.value];
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+  svg.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
   expect(onCommit).toHaveBeenCalledTimes(1);
   expect(onCommit).toHaveBeenCalledWith(preview);
   tool.value = 'select';
@@ -229,7 +216,7 @@ it('closes a polygon at its first corner, supports Backspace, and discards draft
   click(50, 50);
   click(100, 50);
   click(100, 100);
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace' }));
+  svg.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace' }));
   expect(edit.corners.value).toEqual([
     { x: 50, y: 50 },
     { x: 100, y: 50 },
@@ -259,11 +246,11 @@ it('uses the same acceptance contract for polygon closure and Enter', () => {
     svg.dispatchEvent(new MouseEvent('pointerdown', { button: 0, clientX, clientY }));
   }
   expect(edit.corners.value).toHaveLength(3);
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+  svg.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
   expect(onCommit).toHaveBeenCalledTimes(2);
   expect(onCommit.mock.calls[0]).toEqual(onCommit.mock.calls[1]);
   expect(edit.corners.value).toEqual([]);
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+  svg.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
   expect(onCommit).toHaveBeenCalledTimes(2);
 });
 

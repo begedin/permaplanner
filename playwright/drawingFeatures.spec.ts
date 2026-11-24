@@ -46,6 +46,8 @@ test.describe('drawing features', () => {
   test('creates and edits guild beds on the aerial map', async ({ page }) => {
     await page.goto('/guilds');
     await onboard(page);
+    const settings = page.getByRole('button', { name: 'Map settings' });
+    await settings.click();
 
     await page.getByRole('link', { name: 'Guilds' }).click();
     await page.getByRole('button', { name: 'Add guild' }).click();
@@ -79,6 +81,10 @@ test.describe('drawing features', () => {
     const currentPath = await bedPaths(page).last().getAttribute('d');
 
     await selectGuildAndEditBrush(page, 1);
+    await settings.press('Enter');
+    await expect(page.getByRole('slider', { name: 'Future view' })).toBeVisible();
+    await expect(page.getByText('Enter saves; Escape cancels.')).toBeVisible();
+    await settings.press('Enter');
     await drawBrushStroke(page, [
       { x: 500, y: 300 },
       { x: 520, y: 350 },
@@ -86,6 +92,8 @@ test.describe('drawing features', () => {
 
     await expect(bedPaths(page)).toHaveCount(2);
     await expect(bedPaths(page).last()).not.toHaveAttribute('d', currentPath ?? '');
+    await expect(page.getByText('Enter saves; Escape cancels.')).toBeHidden();
+    await expect(settings).toHaveAttribute('aria-expanded', 'false');
   });
 
   test('moves a placed guild bed with the move tool', async ({ page }) => {

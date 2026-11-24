@@ -82,11 +82,11 @@ test.describe('guilds tab', () => {
         .locator('strong', { hasText: 'My garden' }),
     ).toBeVisible();
     await expect(
-      page.getByRole('dialog', { name: 'Plan' }).getByLabel('Map scale'),
+      page.getByRole('dialog', { name: 'Plan' }).getByLabel('Reference line length'),
     ).toHaveCount(0);
     await page.keyboard.press('Escape');
     await map.getByRole('button', { name: 'Map settings' }).click();
-    await expect(map.getByLabel('Map scale')).toBeVisible();
+    await expect(map.getByLabel('Reference line length')).toBeVisible();
     await expect(map.getByLabel('BG opacity')).toBeVisible();
   });
 });

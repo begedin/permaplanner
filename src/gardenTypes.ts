@@ -90,6 +90,9 @@ export const hasPlantPlacement = (
   thing?: Pick<GardenThing, 'placed' | 'width'>,
 ): boolean => thing?.placed === true && thing.width > 0;
 
+export const placedCanopies = (plants: readonly GardenThing[]) =>
+  plants.filter(hasPlantPlacement).sort((a, b) => b.width - a.width);
+
 export const canopyCircle = ({ x, y, width }: Pick<GardenThing, 'x' | 'y' | 'width'>) => {
   const r = width / 2;
   return { cx: x + r, cy: y + r, r };

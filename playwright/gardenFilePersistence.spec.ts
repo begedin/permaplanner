@@ -10,8 +10,16 @@ test('edit map scale, save, reload — plan restores from server', async ({ page
   await page.goto('/guilds');
   await waitForMainApp(page);
 
-  await page.getByRole('button', { name: 'Map settings' }).click();
-  await page.getByLabel('Map scale').fill('77');
+  await page.getByRole('button', { name: 'Map settings' }).press('Enter');
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('checkbox', { name: 'Plants (max. zoom)' })).toBeFocused();
+  const scale = page.getByRole('group', { name: 'Scale', exact: true });
+  const length = scale.getByRole('slider', { name: /^Reference line length/ });
+  const unit = scale.getByRole('combobox', { name: 'Unit', exact: true });
+  await length.fill('77');
+  await length.press('Tab');
+  await expect(unit).toBeFocused();
+  await unit.selectOption('ft');
   await openPlanSessionDrawer(page);
   await expect(
     page
@@ -33,5 +41,6 @@ test('edit map scale, save, reload — plan restores from server', async ({ page
   ).toBeVisible();
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Map settings' }).click();
-  await expect(page.getByLabel('Map scale')).toHaveValue('77');
+  await expect(length).toHaveValue('77');
+  await expect(unit).toHaveValue('ft');
 });

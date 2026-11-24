@@ -2,7 +2,6 @@ import type { DeepReadonly } from 'vue';
 import { computed, ref, watch, type Ref } from 'vue';
 import { useEventListener, useMagicKeys } from '@vueuse/core';
 
-import { isEditableTarget } from './keyboardShortcuts';
 import {
   cloneGuildPath,
   joinPaths,
@@ -60,6 +59,7 @@ export const usePathDrawing = (options: {
   useEventListener(options.svg, 'pointerdown', (event: PointerEvent) => {
     const svg = options.svg.value;
     if (!isEditing.value || !svg || event.button !== 0) return;
+    svg.focus({ preventScroll: true });
     const origin = clientToSvgUser(svg, event.clientX, event.clientY);
     if (drawingBrush.value === 'polygon') {
       event.preventDefault();
@@ -164,10 +164,10 @@ export const usePathDrawing = (options: {
     },
     { immediate: true, flush: 'sync' },
   );
-  useEventListener(document, 'keydown', (event) => {
+  useEventListener(options.svg, 'keydown', (event: KeyboardEvent) => {
     if (
       !isEditing.value ||
-      isEditableTarget(event.target) ||
+      event.target !== event.currentTarget ||
       event.isComposing ||
       event.metaKey ||
       event.ctrlKey ||

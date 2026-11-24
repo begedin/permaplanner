@@ -2,7 +2,7 @@
   import type { DeepReadonly } from 'vue';
   import { computed, ref, toRef, watch } from 'vue';
 
-  import { hasPlantPlacement } from './gardenTypes';
+  import { placedCanopies } from './gardenTypes';
   import type { Guild } from './gardenTypes';
   import { useCameraStore } from './useCameraStore';
   import PlantMapLabel from './PlantMapLabel.vue';
@@ -32,19 +32,15 @@
   const camera = useCameraStore();
   const hoveredPlantId = ref<string>();
   const focusedPlantId = ref<string>();
+  const canopies = computed(() => placedCanopies(props.guild.plants));
   const measuredPlant = computed(() => {
     if (!props.selectPlants) return;
     const id = hoveredPlantId.value ?? focusedPlantId.value ?? props.selectedPlantId;
-    return props.guild.plants.find(
-      (plant) => plant.id === id && hasPlantPlacement(plant),
-    );
+    return canopies.value.find((plant) => plant.id === id);
   });
   const labeledPlants = computed(() =>
     props.showPlantLabels && camera.isFullyZoomed
-      ? props.guild.plants.filter(
-          (thing) =>
-            hasPlantPlacement(thing) && thing.width * camera.scale * camera.zoom >= 24,
-        )
+      ? canopies.value.filter((thing) => thing.width * camera.scale * camera.zoom >= 24)
       : [],
   );
   const labelScale = computed(() => 1 / (camera.scale * camera.zoom || 1));
@@ -125,7 +121,7 @@
       class="pointer-events-none"
     >
       <PlantCanopy
-        v-for="thing in guild.plants.filter(hasPlantPlacement)"
+        v-for="thing in canopies"
         :key="thing.id"
         :thing="thing"
         :selected="thing.id === selectedPlantId"

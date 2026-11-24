@@ -59,11 +59,17 @@ export const useMapScaleStore = defineStore('mapScale', () => {
   const measurement = computed(() => {
     const pixelsPerUnit = unitLengthPx.value;
     if (unit.value !== 'unspecified' && plan.state.onboardingState === 'done') {
-      const pixelsPerMeter = pixelsPerUnit / METERS_PER_UNIT[unit.value];
+      const metersPerUnit = METERS_PER_UNIT[unit.value];
+      const pixelsPerMeter = pixelsPerUnit / metersPerUnit;
       if (Number.isFinite(pixelsPerMeter) && pixelsPerMeter > 0)
-        return { unit: unit.value, pixelsPerUnit, pixelsPerMeter };
+        return { unit: unit.value, pixelsPerUnit, pixelsPerMeter, metersPerUnit };
     }
-    return { unit: 'map px', pixelsPerUnit: 1, pixelsPerMeter: undefined };
+    return {
+      unit: 'map px',
+      pixelsPerUnit: 1,
+      pixelsPerMeter: undefined,
+      metersPerUnit: undefined,
+    };
   });
 
   return {

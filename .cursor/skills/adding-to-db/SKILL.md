@@ -1,17 +1,24 @@
 ---
 name: extending-the-db
-description: >-
-    Extends the plant catalog by adding species or cultivars. Prefer common English display names;
-    use Latin only when disambiguating. Bump version and CHANGELOG when done.
+description: Add or correct catalog species and cultivars, including their sourced Future view estimates.
 ---
-Follow the [catalog growth rules](../../../README.md#adding-plants-to-the-catalog) for new and existing plants. Check the diff for unrelated edits, repeated species defaults, and growth values without a source.
+
+Use the [catalog fields and allowed values](../../../README.md#adding-plants-to-the-catalog).
 
 When adding a new species or cultivar to the `plantCatalog.json` database, do the proper research:
 
 - The plant name you are given may be Latin, a cultivar, or informal — identify the plant on the web and use the **common English name** gardeners and seed catalogs use.
 - Add a few well-known cultivars (English trade names when that is how they are sold).
-- If the plant or cultivar is already in the database but your research says the info is wrong, stop and let me know so I can decide.
+- For an addition, flag conflicting data in an existing entry before changing it. For a requested correction, update the entry and its source.
 - If you cannot identify the plant from what you were given, stop and let me know.
+
+## Future view
+
+- Find the typical mature width of one plant or clump. Use a source that names the species or cultivar. Check that the figure is crown width or spread. Height, planting distance, and the area covered by runners measure different things.
+- Store the width in metres as `growth.spreadM` and link the source. Use the midpoint of a published range unless the source gives a typical value. Leave unsupported estimates out.
+- Add `maturityYears` only for a persistent woody canopy with a published time to mature size. Fruiting age does not establish canopy maturity. Strawberries and plants with renewing canes use Final only.
+- For each cultivar you add or edit, compare its width and maturity period with the species. When you change a species default, check its cultivars too. Keep matching defaults inherited. When the figures differ, supply a complete cultivar `growth` profile. It replaces the whole species profile. Use `timingSource` if the period comes from a different source.
+- Check the resolved values in Future view. Final should show the documented width. A year view should draw an estimate only when the plant qualifies. Keep nursery widths for individual garden plants out of the catalog.
 
 ## Display names (`name` fields)
 

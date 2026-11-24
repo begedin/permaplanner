@@ -35,6 +35,15 @@ for (const feature of ['Path', 'Landmark']) {
         await page.mouse.click(x, y);
         await page.mouse.click(x + 80, y);
         await page.mouse.click(x + 80, y + 80);
+        if (feature === 'Path') {
+          const plan = page.getByRole('button', { name: /^Plan\b/ });
+          await plan.press('Enter');
+          await expect(page.getByRole('dialog', { name: 'Plan' })).toBeVisible();
+          await page.keyboard.press('Escape');
+          await expect(plan).toBeFocused();
+          await expect(page.getByLabel('Draw feature')).toBeVisible();
+          await map.focus();
+        }
       } else {
         await page.mouse.move(x, y);
         await page.mouse.down();

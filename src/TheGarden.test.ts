@@ -457,7 +457,7 @@ it('edits background opacity from settings inside the aerial map and supports un
   expect(settings.queryByRole('slider')).not.toBeInTheDocument();
   await fireEvent.click(toggle);
   expect(toggle).toHaveAttribute('aria-expanded', 'true');
-  expect(settings.getByRole('slider', { name: /^Map scale/ })).toBeVisible();
+  expect(settings.getByRole('slider', { name: /^Reference line length/ })).toBeVisible();
   const opacity = settings.getByRole('slider', { name: /^BG opacity/ });
   const previousOpacity = usePlanStateStore().state.backgroundOpacity;
   await fireEvent.pointerDown(opacity);
@@ -482,7 +482,7 @@ it('records calibration and onboarding together without delayed document changes
   const session = useGardenSessionStore();
   session.markSaved();
   await fireEvent.click(screen.getByRole('button', { name: 'Map settings' }));
-  const slider = screen.getByRole('slider', { name: /^Map scale/ });
+  const slider = screen.getByRole('slider', { name: /^Reference line length/ });
   vi.useFakeTimers();
   await fireEvent.update(slider, '20');
   expect(usePlanStateStore().state.onboardingState).toBe('done');
@@ -517,9 +517,7 @@ it('keeps the landmark tool active when it deselects a guild and saves the chose
     expect(router.currentRoute.value.name).toBe(routeNames.guilds);
   });
   await fireEvent.click(screen.getByRole('button', { name: 'Map settings' }));
-  await fireEvent.change(screen.getByLabelText('Scale unit'), {
-    target: { value: 'ft' },
-  });
+  await fireEvent.update(screen.getByRole('combobox', { name: 'Unit' }), 'ft');
   expect(useGardenSessionStore().snapshot().mapScale).toMatchObject({
     unit: 'ft',
     linePhysicalLength: 1,
@@ -568,12 +566,12 @@ it('toggles guild and landmark names independently and remembers visibility with
   expect(map.getByText('Shed')).toBeInTheDocument();
   expect(map.queryByText('Unplaced bed')).not.toBeInTheDocument();
   await fireEvent.click(map.getByRole('button', { name: 'Map settings' }));
-  await fireEvent.click(map.getByRole('checkbox', { name: 'Guild names' }));
+  await fireEvent.click(map.getByRole('checkbox', { name: 'Guilds' }));
   expect(map.queryByText('Orchard')).not.toBeInTheDocument();
   expect(map.getByText('Shed')).toBeInTheDocument();
-  await fireEvent.click(map.getByRole('checkbox', { name: 'Landmark names' }));
+  await fireEvent.click(map.getByRole('checkbox', { name: 'Landmarks' }));
   expect(map.queryByText('Shed')).not.toBeInTheDocument();
-  await fireEvent.click(map.getByRole('checkbox', { name: 'Guild names' }));
+  await fireEvent.click(map.getByRole('checkbox', { name: 'Guilds' }));
   expect(map.getByText('Orchard')).toBeInTheDocument();
   expect(useGardenSessionStore().snapshot()).toEqual(before);
   view.unmount();
@@ -581,8 +579,8 @@ it('toggles guild and landmark names independently and remembers visibility with
   await renderGarden();
   const restored = within(screen.getByRole('region', { name: 'Aerial map' }));
   await fireEvent.click(restored.getByRole('button', { name: 'Map settings' }));
-  expect(restored.getByRole('checkbox', { name: 'Guild names' })).toBeChecked();
-  expect(restored.getByRole('checkbox', { name: 'Landmark names' })).not.toBeChecked();
+  expect(restored.getByRole('checkbox', { name: 'Guilds' })).toBeChecked();
+  expect(restored.getByRole('checkbox', { name: 'Landmarks' })).not.toBeChecked();
   expect(restored.queryByText('Shed')).not.toBeInTheDocument();
 });
 
@@ -789,7 +787,7 @@ it.each(
     document.dispatchEvent(new MouseEvent('pointerup', { clientX: 160, clientY: 180 }));
   }
   expect(useGardenSessionStore().snapshot()).toEqual(before);
-  await fireEvent.keyDown(document, { key: 'Enter' });
+  await fireEvent.keyDown(svg, { key: 'Enter' });
   const plan = usePlanStateStore().state;
   const path =
     feature === 'guild'
@@ -859,14 +857,14 @@ it.each(['save', 'cancel'])(
     ).not.toBeInTheDocument();
     expect(usePlanStateStore().state.plotBorder).toEqual(old);
     if (action === 'cancel') {
-      await fireEvent.keyDown(document, { key: 'Escape' });
+      await fireEvent.keyDown(svg, { key: 'Escape' });
       expect(
         screen.getByRole('button', { name: 'Edit plot border' }),
       ).toBeInTheDocument();
       expect(usePlanStateStore().state.plotBorder).toEqual(old);
       return;
     }
-    await fireEvent.keyDown(document, { key: 'Enter' });
+    await fireEvent.keyDown(svg, { key: 'Enter' });
     expect(useMapInteractionStore().activeTool).toBe('draw');
     await fireEvent(
       surface,
@@ -878,7 +876,7 @@ it.each(['save', 'cancel'])(
       }),
     );
     await fireEvent(document, new MouseEvent('pointerup', { clientX: 80, clientY: 80 }));
-    await fireEvent.keyDown(document, { key: 'Enter' });
+    await fireEvent.keyDown(svg, { key: 'Enter' });
     expect(usePlanStateStore().state.plotBorder).toEqual([
       [
         [

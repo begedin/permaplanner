@@ -23,12 +23,16 @@ export const createGrannySmiths = (firstCanopy?: Canopy): LayoutPlant => ({
   }),
 });
 
-export const createStrawberry = ({ x, y, diameter }: Canopy): LayoutPlant => ({
-  plant: { id: 'strawberry', speciesId: 'strawberry', cultivarId: null },
+export const createLayoutPlant = (
+  plant: UserPlant,
+  nameOrCultivar: string,
+  { x, y, diameter }: Canopy,
+): LayoutPlant => ({
+  plant,
   individuals: [
     {
-      id: 'berry',
-      nameOrCultivar: 'Strawberry',
+      id: `${plant.id}-1`,
+      nameOrCultivar,
       x,
       y,
       width: diameter,
@@ -38,6 +42,13 @@ export const createStrawberry = ({ x, y, diameter }: Canopy): LayoutPlant => ({
     },
   ],
 });
+
+export const createStrawberry = (canopy: Canopy) =>
+  createLayoutPlant(
+    { id: 'strawberry', speciesId: 'strawberry', cultivarId: null },
+    'Strawberry',
+    canopy,
+  );
 
 export const importLayoutGarden = async (
   page: Page,

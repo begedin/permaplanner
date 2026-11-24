@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.37.1
+
+- [CHANGE] Moved Future view into Map settings below Scale. Select Off to hide projections. The help button explains the slider.
+- [FIX] Kept plant measurements inside the map and made smaller plants selectable under larger canopies in the same guild. Final shows when a mature size is unknown.
+- [FIX] Kept Delete and drawing shortcuts from changing the map while using Map settings or the Plan menu. Holding Delete removes one plant placement.
+- [FIX] Kept projected canopies and map controls visible in narrow and landscape guild layouts.
+- [DB] Added common maple (field maple) and its Carnival, Elsrijk, and William Caldwell cultivars to the catalog.
+- [DB] Added sycamore maple and Norway maple to the catalog, with two cultivars each.
+- [DB] Corrected growth estimates for Annabelle, Haas' Halo, and White Dome smooth hydrangeas.
+
 ## 0.37.0
 
 - [CHANGE] Add Future view to the aerial map and guild layouts. Preview tree and shrub spread at 1–10, 15 or 20 years. Select Final to see each plant at its typical mature width. Each plant can use a width from its nursery label.

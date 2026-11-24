@@ -50,7 +50,7 @@ it('shows plan actions when open', async () => {
 it('closes from the header close button', async () => {
   const { emitted } = renderDrawer({ open: true });
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+  await fireEvent.click(await screen.findByRole('button', { name: 'Close' }));
 
   expect(emitted()['update:open']).toEqual([[false]]);
 });
@@ -58,7 +58,7 @@ it('closes from the header close button', async () => {
 it('closes when the backdrop is clicked', async () => {
   const { emitted } = renderDrawer({ open: true });
 
-  await fireEvent.click(screen.getByLabelText('Close plan menu'));
+  await fireEvent.click(await screen.findByLabelText('Close plan menu'));
 
   expect(emitted()['update:open']).toEqual([[false]]);
 });

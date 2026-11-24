@@ -107,12 +107,17 @@ The editable plant list lives in [`src/data/plantCatalog.json`](src/data/plantCa
    - **`functions`**: array of guild roles. Allowed values are exactly those in [`GuildFunction`](src/gardenTypes.ts) (`nitrogen_fixer`, `dynamic_accumulator`, `pollinator_attractor`, `pest_repellent`, `ground_cover`, `wildfire_suppressor`, `mulcher`, `edible`, `medicinal`).
    - **`layers`**: vertical niche tags. Allowed values are in [`GuildLayer`](src/gardenTypes.ts) (`overstory`, `understory`, `shrub`, `ground_cover`, `vine`, `herb`, `root`).
    - **`cultivars`**: array of `{ "id", "name" }` (and optionally `name_latin`, `defaultIconId`, `functions`, `layers`, `blooming`, `harvest` to override species defaults). Cultivar **`id`** must be unique within that species.
-   - **`growth`** supplies the typical mature width of one plant or clump in metres (`spreadM`) and its source. Add `maturityYears` only for trees and shrubs with a persistent woody canopy and a published period to mature size. Omit it for plants with runners or renewing canes. Use `timingSource` if the period comes from a separate source. A cultivar inherits the species profile unless it has its own. The unknown plant has no default width.
+   - **`growth`** supplies the typical mature width of one plant or clump in metres (`spreadM`) and its source. Add `maturityYears` only for trees and shrubs with a persistent woody canopy and a published period to mature size. Omit it for plants with runners or renewing canes. Use `timingSource` if the period comes from a separate source. Use `timingNote` to explain the basis of an estimate beside its source in the plant editor. A cultivar inherits the species profile unless it has its own. The unknown plant has no default width.
    - **`blooming`** / **`harvest`** (optional on species or cultivar): `{ "start": 1–12, "end": 1–12 }` for calendar months; if `start` > `end`, the range wraps across the year (see `formatMonthPeriod` in `plantCatalog.ts`). On a **cultivar** only: omit the field to inherit the species value; set **`null`** to clear that aspect (e.g. species has a harvest period but this cultivar does not).
 3. **Validate**: ensure the file parses as JSON (your editor usually does this). Run `npx vitest run src/plantCatalog.test.ts` if you changed phenology or want a quick sanity check.
 4. **Types**: `plantCatalog.ts` types should match the JSON shape; if you add new top-level fields, update the TypeScript types there as well.
 
 Runtime resolution and labels are implemented in [`src/resolvePlant.ts`](src/resolvePlant.ts) and [`src/plantCatalog.ts`](src/plantCatalog.ts).
+
+### Catalog addition sources (0.37.1)
+
+- Common maple (_Acer campestre_) flowers in April and May and provides pollen and nectar for bees. [University College Cork](https://www.ucc.ie/en/tree-explorers/trees/a-z/acercampestre/) and [Woodland Trust](https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/field-maple/).
+- For sycamore maple, Future view uses the midpoint of the published crown width range (20–25 m). It uses the age at typical mature height (about 80 years) to estimate annual canopy growth. [Van den Berk](https://www.vdberk.com/trees/acer-pseudoplatanus/) and [Northwest German Forest Research Institute](https://www.nw-fva.de/fileadmin/nwfva/publikationen/pdf/schloesser_2025_fungi_associated_with_living_woody_tissue_of_sycam.pdf).
 
 ### Catalog addition sources (0.32.1)
 
@@ -394,7 +399,7 @@ production restarts and deployments require explicit approval.
 
 ### Individual plant layout
 
-The **Future view** slider appears below the aerial map and guild layout. Calibrate the reference line and select its unit. Place each plant and draw its present canopy. Move the slider to 1–10, 15 or 20 years to see estimated tree and shrub spreads as dashed outlines. Select **Final** to see the mature width of each plant with a known width, or **Now** to hide the outlines. Hover over or select a plant to show its circular footprint and radius (R) beside its drawn canopy. Measurements use map pixels until you confirm the scale and unit. The values follow the slider. Select an empty part of the guild to see the guild dimensions again. In the guild layout, select a plant to see the source or enter a nursery width in metres in the guild details panel. Apple trees also have rootstock width suggestions. Clear a custom width to use the catalog again.
+Open **Map settings** on the aerial map or guild layout to use the **Future view** slider. Calibrate the reference line and select its unit. Place each plant and draw its present canopy. Move the slider to 1–10, 15 or 20 years to see estimated tree and shrub spreads as dashed outlines. Select **Final** to see the mature width of each plant with a known width, or **Off** to hide the outlines. Hover over or select a plant to show its circular footprint and radius (R) beside its drawn canopy. Before you set the scale, drawn sizes use map pixels. Final shows known mature sizes in metres. If the mature width is unknown, the label says **Mature size unknown**. Select an empty part of the guild to see the guild dimensions again. In the guild layout, select a plant to see the source or enter a nursery width in metres in the guild details panel. Apple trees also have rootstock width suggestions. Clear a custom width to use the catalog again.
 
 Year views use a published maturity period to estimate the spread of a persistent woody canopy. Each year adds the mature width divided by that period to the drawn diameter, up to the mature width. A canopy that already exceeds the mature width keeps its drawn diameter in year views. This is a linear estimate. The catalog generally uses the midpoint of a published range and some entries use a representative variety. Plants without a suitable period keep their drawn size in year views. In Final, the outline of a strawberry represents one mature plant. Runners and daughter plants are outside the estimate. Training, climate and site conditions can change the actual spread.
 
@@ -422,7 +427,7 @@ Old-file import applies the same conversion; current files preserve explicit
 placements of any size, including 16×16.
 
 Plant names are always shown in the guild layout. On the main aerial map, enable
-**Map settings → Plant names (maximum zoom)** to show them at maximum zoom,
+**Map settings → Labels → Plants (max. zoom)** to show them at maximum zoom,
 when the canopy is at least 24 screen pixels across. This preference is remembered
 in the browser. Guild names give way to visible plant labels; guilds without placed
 plants retain their names.

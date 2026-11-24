@@ -9,12 +9,6 @@ test('onboards', async ({ page }) => {
   await setupAuthenticatedGarden(page);
   await page.goto('/guilds');
 
-  const future = page.getByRole('slider', { name: 'Future view' });
-  await future.press('End');
-  await future.press('ArrowLeft');
-  await expect(
-    page.getByText('Set the aerial map scale and unit to see plant spreads.'),
-  ).toBeVisible();
   await expect(page.locator('[data-onboarding-text]')).toHaveText(
     /Paste an aerial photo/,
   );
@@ -54,8 +48,27 @@ test('onboards', async ({ page }) => {
 
   await expect(page.locator('[data-onboarding-text]')).toHaveText(/set the length/);
 
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Map settings' }).click();
-  await page.getByLabel('Map scale').fill('100');
+  const future = page.getByRole('slider', { name: 'Future view' });
+  const help = page.getByRole('button', { name: 'How sizes are estimated' });
+  await future.hover();
+  const initialPosition = await future.boundingBox();
+  await future.press('ArrowRight');
+  await expect(future).toHaveValue('1');
+  expect(await future.boundingBox()).toEqual(initialPosition);
+  await future.press('End');
+  await expect(future).toHaveValue('13');
+  expect(await future.boundingBox()).toEqual(initialPosition);
+  await help.click();
+  await expect(help).toHaveAttribute('aria-expanded', 'true');
+  await expect(
+    page.getByText('Set the aerial map scale and unit to see plant spreads.'),
+  ).toBeVisible();
+  await help.click();
+  await expect(page.getByText(/Year views estimate canopy growth/)).toBeHidden();
+  await page.getByLabel('Reference line length').fill('100');
+  await help.click();
   await expect(
     page.getByText('Place a plant on the map to see its future spread.'),
   ).toBeVisible();

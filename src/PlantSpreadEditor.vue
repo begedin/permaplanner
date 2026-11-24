@@ -39,14 +39,16 @@
     >
       Catalog spread · {{ profile.spreadM }} m
     </a>
-    <a
-      v-if="profile?.maturityYears"
-      class="link-soft"
-      :href="profile.timingSource ?? profile.source"
-      target="_blank"
-      rel="noopener noreferrer"
-      >Estimated maturity · {{ profile.maturityYears }} years</a
-    >
+    <span v-if="profile?.maturityYears">
+      <a
+        class="link-soft"
+        :href="profile.timingSource ?? profile.source"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Estimated maturity · {{ profile.maturityYears }} years</a
+      >
+      {{ profile.timingNote }}
+    </span>
     <span v-else-if="profile && future.horizon !== 'final'"
       >Mature width appears in Final.</span
     >

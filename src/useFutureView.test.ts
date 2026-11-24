@@ -29,7 +29,7 @@ it('uses the dwarf cultivar width and preserves an already larger canopy in year
   const future = useFutureView();
   const wide = { ...spruce, width: 8, height: 8 };
   future.horizon = 20;
-  expect(future.footprint(wide)?.r).toBe(4);
+  expect(future.footprint(wide)?.r).toBeCloseTo(4, 12);
   future.horizon = 'final';
   const radius = 1.25 / 0.3048 / 2;
   expect(future.footprint(wide)).toMatchObject({
@@ -44,6 +44,7 @@ it('requires a known scale and lets an unidentified plant use a nursery width in
   const future = useFutureView();
   const custom = { ...spruce, matureSpreadM: 2 };
   future.horizon = 'final';
+  expect(future.projectedWidthM(custom)).toBe(2);
   expect(future.footprint(custom)).toBeUndefined();
   plan.onboardingState = 'done';
   plan.mapScale.unit = 'unspecified';

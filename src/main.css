@@ -87,6 +87,34 @@
     @apply size-9 rounded-lg disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent;
   }
 
+  .map-settings-aerial {
+    @apply paper-floating absolute bottom-2 right-2 z-10 flex w-40 max-h-[calc(100%-1rem)] max-w-[calc(100%-1rem)] flex-col-reverse p-1.5 transition-[width] duration-200 motion-reduce:transition-none;
+  }
+
+  .map-settings-aerial:has(> button[aria-expanded='true']) {
+    @apply w-60;
+  }
+
+  .map-settings-aerial > button {
+    @apply rounded px-2 py-1 text-ink-700 hover:bg-sage-200/75;
+  }
+
+  .map-settings-header {
+    @apply relative shrink-0;
+  }
+
+  .map-settings-header > button {
+    @apply btn-soft;
+  }
+
+  .map-settings-header > #map-settings-controls {
+    @apply absolute right-0 z-10 my-1 w-60 max-w-[calc(100vw-1.5rem)];
+  }
+
+  .map-settings-header .settings-panel {
+    @apply paper-floating;
+  }
+
   .map-toolbar .nav-icon-btn-active {
     @apply bg-sage-800 text-parchment-50 hover:bg-sage-900 hover:text-parchment-50;
     box-shadow:

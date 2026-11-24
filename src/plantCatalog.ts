@@ -57,6 +57,7 @@ export type CatalogGrowth = {
   maturityYears?: number;
   source: string;
   timingSource?: string;
+  timingNote?: string;
 };
 
 /** Cultivar row: include optional fields only when they differ from the species defaults. */
