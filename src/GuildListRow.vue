@@ -14,6 +14,7 @@
   const props = defineProps<{
     guildId: string;
   }>();
+  const emit = defineEmits<{ selected: [] }>();
 
   const garden = useGardenStore();
   const interaction = useMapInteractionStore();
@@ -29,8 +30,9 @@
     guildTooltipRows,
   } = useGuildSummary(toRef(props, 'guildId'));
 
-  const onListClick = () => {
-    void selectGuild(props.guildId);
+  const onListClick = async () => {
+    await selectGuild(props.guildId);
+    if (!interaction.isMerging) emit('selected');
   };
 
   const onListKeydown = (e: KeyboardEvent) => {

@@ -83,36 +83,25 @@
     @apply flex flex-col gap-1.5 text-sm font-semibold text-ink-600;
   }
 
+  .map-toolbar {
+    @apply paper-floating flex h-9 min-w-0 items-stretch;
+  }
+
+  .map-toolbar > button {
+    @apply rounded-none border-0 shadow-none first:rounded-l-[11px] last:rounded-r-[11px] focus-visible:z-10 disabled:cursor-not-allowed disabled:opacity-35;
+  }
+
   .map-toolbar .nav-icon-btn {
-    @apply size-9 rounded-lg disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent;
+    @apply h-auto w-9 min-w-0 disabled:hover:bg-transparent;
   }
 
-  .map-settings-aerial {
-    @apply paper-floating absolute bottom-2 right-2 z-10 flex w-40 max-h-[calc(100%-1rem)] max-w-[calc(100%-1rem)] flex-col-reverse p-1.5 transition-[width] duration-200 motion-reduce:transition-none;
+  .map-control-button {
+    @apply paper-floating inline-flex h-9 shrink-0 items-center justify-center gap-1 whitespace-nowrap px-2 max-[360px]:px-1.5 text-sm text-ink-700 hover:bg-sage-100 aria-expanded:border-sage-500 focus-visible:outline-sage-600;
   }
 
-  .map-settings-aerial:has(> button[aria-expanded='true']) {
-    @apply w-60;
-  }
-
-  .map-settings-aerial > button {
-    @apply rounded px-2 py-1 text-ink-700 hover:bg-sage-200/75;
-  }
-
-  .map-settings-header {
-    @apply relative shrink-0;
-  }
-
-  .map-settings-header > button {
-    @apply btn-soft;
-  }
-
-  .map-settings-header > #map-settings-controls {
-    @apply absolute right-0 z-10 my-1 w-60 max-w-[calc(100vw-1.5rem)];
-  }
-
-  .map-settings-header .settings-panel {
-    @apply paper-floating;
+  .map-settings-aerial .map-toolbar > button,
+  .map-settings-aerial .map-control-button {
+    @apply [@container(width<40rem)]:w-[min(2.25rem,8cqi)] [@container(width<40rem)]:px-0;
   }
 
   .map-toolbar .nav-icon-btn-active {

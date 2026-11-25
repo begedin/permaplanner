@@ -3,14 +3,15 @@
   import { computed, ref, watch } from 'vue';
   import { useCameraStore } from './useCameraStore';
   import { transformClientPoint } from './svgClientToUser';
-  import { usePointerSession } from './usePointerSession';
+  import { trackDragMovement, usePointerSession } from './usePointerSession';
   import {
     SHAPE_RESIZE_HANDLES,
-    shapeAtPointer,
+    startShapeDrag,
     type ShapeGesture,
   } from './mapShapeGeometry';
   import type { AerialTool } from './useAerialTool';
   import { SHAPE_FEATURES, type ShapeFeature } from './mapShapeFeatures';
+  import { useAerialMapBounds } from './aerialMapBounds';
   import type { MapShape } from './gardenDocument';
 
   const props = withDefaults(
@@ -27,16 +28,13 @@
   );
   const appearance = computed(() => SHAPE_FEATURES[props.feature]);
   const emit = defineEmits<{ select: [id: string]; commit: [shape: MapShape] }>();
+  const world = useAerialMapBounds();
   const camera = useCameraStore();
   const draft = ref<MapShape>();
-  const displayed = computed(() => {
-    const rows = props.shapes.map((item) =>
-      item.id === draft.value?.id ? draft.value : item,
-    );
-    if (draft.value && !rows.some((item) => item.id === draft.value?.id))
-      rows.push(draft.value);
-    return rows;
-  });
+  const outlines = computed(() => props.shapes.map((shape) => guildPathData(shape.path)));
+  const displayed = computed(() =>
+    props.shapes.map((shape) => (shape.id === draft.value?.id ? draft.value : shape)),
+  );
   const selectedShape = computed(() =>
     displayed.value.find((item) => item.id === props.selectedId),
   );
@@ -44,12 +42,62 @@
   const resizeEdges = SHAPE_RESIZE_HANDLES.filter(
     (handle) => handle.x === 0 || handle.y === 0,
   );
+  let grabbedRotationEdge: (typeof resizeEdges)[number] | undefined;
+  const rotationGrip = computed(() => {
+    const shape = selectedShape.value;
+    if (!shape) return;
+    const angle = (shape.rotation * Math.PI) / 180;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const halfWidth = (Math.abs(cos) * shape.width + Math.abs(sin) * shape.height) / 2;
+    const halfHeight = (Math.abs(sin) * shape.width + Math.abs(cos) * shape.height) / 2;
+    if (
+      shape.x + halfWidth < camera.x ||
+      shape.x - halfWidth > camera.x + camera.width ||
+      shape.y + halfHeight < camera.y ||
+      shape.y - halfHeight > camera.y + camera.height
+    )
+      return;
+    const margin = 2 * handleSize.value;
+    let best;
+    let shortest = Infinity;
+    for (const edge of draft.value && grabbedRotationEdge
+      ? [grabbedRotationEdge]
+      : resizeEdges) {
+      const dx = cos * edge.x - sin * edge.y;
+      const dy = sin * edge.x + cos * edge.y;
+      const halfSize = (edge.x ? shape.width : shape.height) / 2;
+      const x1 = shape.x + dx * halfSize;
+      const y1 = shape.y + dy * halfSize;
+      const tipX = x1 + dx * 4 * handleSize.value;
+      const tipY = y1 + dy * 4 * handleSize.value;
+      const x2 = Math.max(
+        camera.x + margin,
+        Math.min(tipX, camera.x + camera.width - margin),
+      );
+      const y2 = Math.max(
+        camera.y + margin,
+        Math.min(tipY, camera.y + camera.height - margin),
+      );
+      const distance = Math.hypot(tipX - x2, tipY - y2);
+      if (distance < shortest) {
+        best = { edge, line: { x1, y1, x2, y2 } };
+        shortest = distance;
+        if (distance === 0) break;
+      }
+    }
+    return best;
+  });
   const resizeCursors = ['ew-resize', 'nwse-resize', 'ns-resize', 'nesw-resize'];
   const session = usePointerSession();
-  watch(() => [props.tool, props.shapes], session.cancel, { flush: 'sync' });
+  watch(() => [props.tool, props.shapes, world.value], session.cancel, { flush: 'sync' });
 
   const start = (event: PointerEvent, gesture: ShapeGesture) => {
     if (event.button !== 0 || props.tool !== 'select') return;
+    if (!world.value) {
+      emit('select', gesture.shape.id);
+      return;
+    }
     const svg = (event.currentTarget as SVGElement).closest('svg');
     if (!(svg instanceof SVGSVGElement)) return;
     session.cancel();
@@ -59,11 +107,15 @@
     const toMapPoint = (event: PointerEvent) =>
       transformClientPoint(matrix, event.clientX, event.clientY);
     const origin = toMapPoint(event);
+    const moved = trackDragMovement(event);
+    grabbedRotationEdge =
+      gesture.kind === 'rotate' ? rotationGrip.value?.edge : undefined;
     gesture = { ...gesture, shape: { ...gesture.shape } };
+    const drag = startShapeDrag(gesture, origin, handleSize.value, world.value);
     emit('select', gesture.shape.id);
     session.start(event, {
       update: (next) => {
-        draft.value = shapeAtPointer(gesture, origin, toMapPoint(next), handleSize.value);
+        draft.value = moved(next) ? drag(toMapPoint(next)) : undefined;
       },
       cancel: () => {
         draft.value = undefined;
@@ -85,20 +137,13 @@
     }"
   >
     <g
-      v-for="item in displayed"
+      v-for="(item, index) in displayed"
       :key="item.id"
       :transform="`translate(${item.x} ${item.y}) rotate(${item.rotation})`"
     >
       <path
-        :d="
-          guildPathData(
-            item.path.map((polygon) =>
-              polygon.map((ring) =>
-                ring.map((p) => ({ x: p.x * item.width, y: p.y * item.height })),
-              ),
-            ),
-          )
-        "
+        :d="outlines[index]"
+        :transform="`scale(${item.width} ${item.height})`"
         fill-rule="evenodd"
         :fill="appearance.fill"
         :stroke="selectedId === item.id ? '#315b45' : appearance.stroke"
@@ -148,23 +193,6 @@
         style="touch-action: none"
       >
         <line
-          x1="0"
-          :y1="-selectedShape.height / 2"
-          x2="0"
-          :y2="-selectedShape.height / 2 - handleSize * 4"
-          stroke="#315b45"
-        />
-        <circle
-          cx="0"
-          :cy="-selectedShape.height / 2 - handleSize * 4"
-          :r="handleSize"
-          fill="#315b45"
-          :aria-label="`Rotate ${appearance.label.toLowerCase()}`"
-          class="cursor-grab"
-          @pointerdown="start($event, { kind: 'rotate', shape: selectedShape })"
-          @mousedown.stop
-        />
-        <line
           v-for="edge in resizeEdges"
           :key="edge.name"
           :x1="
@@ -212,6 +240,26 @@
               direction: handle,
             })
           "
+          @mousedown.stop
+        />
+      </g>
+      <g
+        v-if="rotationGrip"
+        :style="{ pointerEvents: tool === 'select' ? 'auto' : 'none' }"
+      >
+        <line
+          v-bind="rotationGrip.line"
+          stroke="#315b45"
+          pointer-events="none"
+        />
+        <circle
+          :cx="rotationGrip.line.x2"
+          :cy="rotationGrip.line.y2"
+          :r="handleSize"
+          fill="#315b45"
+          :aria-label="`Rotate ${appearance.label.toLowerCase()}`"
+          class="cursor-grab"
+          @pointerdown="start($event, { kind: 'rotate', shape: selectedShape })"
           @mousedown.stop
         />
       </g>

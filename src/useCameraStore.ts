@@ -10,6 +10,10 @@ export const useCameraStore = defineStore('camera', () => {
   const y = ref(0);
   const width = ref(1000);
   const height = ref(1000);
+  const center = computed(() => ({
+    x: x.value + width.value / 2,
+    y: y.value + height.value / 2,
+  }));
 
   const isFullyZoomed = computed(() => zoom.value >= MAX_ZOOM);
 
@@ -22,10 +26,7 @@ export const useCameraStore = defineStore('camera', () => {
 
   return {
     /**
-     * The ratio of image natural dimensions to the viewport dimensions, after it's been fitted to the svg container.
-     * This is the smaller of the X and Y ratios.
-     *
-     * Needed to convert camera coordinates to image natural coordinates
+     * Screen pixels per map unit when the whole map fits in the viewport.
      */
     scale,
     /**
@@ -48,6 +49,7 @@ export const useCameraStore = defineStore('camera', () => {
      * Height of the camera box
      */
     height,
+    center,
     isFullyZoomed,
     cameraToWorld,
     mapLabelFontSize,

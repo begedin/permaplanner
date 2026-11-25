@@ -85,7 +85,7 @@ it('shows transient guidance for both drags and restores it on cancellation', as
     .trigger('pointerdown', { button: 0, clientX: 30, clientY: 40 });
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('Try to be as precise');
   expect(usePlanStateStore().state.onboardingState).toBe('initial');
-  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 30, clientY: 40 }));
+  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 34, clientY: 45 }));
   await nextTick();
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('move the other point');
   expect(usePlanStateStore().state.onboardingState).toBe('movedFirst');
@@ -100,9 +100,22 @@ it('shows transient guidance for both drags and restores it on cancellation', as
   await wrapper
     .get('[data-ref-line-end]')
     .trigger('pointerdown', { button: 0, clientX: 100, clientY: 40 });
-  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 100, clientY: 40 }));
+  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 110, clientY: 50 }));
   await nextTick();
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('set the length');
   expect(usePlanStateStore().state.onboardingState).toBe('movedSecond');
+  wrapper.unmount();
+});
+
+it('keeps an off-map endpoint and calibration unchanged on a tap', async () => {
+  usePlanStateStore().state.mapScale.start = { x: 40, y: -100 };
+  const scale = useMapScaleStore();
+  const calibration = scale.unitLengthPx;
+  const wrapper = renderLine();
+  const contact = { button: 0, clientX: 41, clientY: -99 };
+  await wrapper.get('[data-ref-line-start]').trigger('pointerdown', contact);
+  document.dispatchEvent(new MouseEvent('pointerup', contact));
+  expect(scale).toMatchObject({ start: { x: 40, y: -100 }, unitLengthPx: calibration });
+  expect(usePlanCommandHistory().canUndo).toBe(false);
   wrapper.unmount();
 });

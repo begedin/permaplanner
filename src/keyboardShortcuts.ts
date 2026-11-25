@@ -1,3 +1,5 @@
+import { useGuildWorkspaceStore } from './useGuildWorkspaceStore';
+
 export const isEditableTarget = (target: EventTarget | null): boolean => {
   if (!(target instanceof Element)) return false;
   if (target.closest('input, textarea, select')) return true;
@@ -8,6 +10,10 @@ export const isEditableTarget = (target: EventTarget | null): boolean => {
 export const isInDialog = (target: EventTarget | null): boolean =>
   target instanceof Element && target.closest('[role="dialog"]') !== null;
 
-export const isInMapSettingsOrDialog = (target: EventTarget | null): boolean =>
-  isInDialog(target) ||
-  (target instanceof Element && target.closest('[data-map-settings]') !== null);
+export const useMapShortcutGuard = () => {
+  const workspace = useGuildWorkspaceStore();
+  return (target: EventTarget | null) =>
+    workspace.mapVisibility === 'hidden' ||
+    isInDialog(target) ||
+    (target instanceof Element && target.closest('[data-map-settings]') !== null);
+};

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-  import { computed, provide, watch } from 'vue';
+  import { computed, onScopeDispose, provide, ref, watch } from 'vue';
+  import { useEventListener } from '@vueuse/core';
   import { storeToRefs } from 'pinia';
   import { useRoute, useRouter } from 'vue-router';
   import { routeNames } from './router';
@@ -13,21 +14,75 @@
   import { useGuildSearch } from './useGuildSearch';
   import { useGuildListScroll } from './useGuildListScroll';
   import { useMapInteractionStore } from './useMapInteractionStore';
+  import { isInDialog } from './keyboardShortcuts';
+  import { pathBounds } from './guildPathBounds';
+  import { useGuildWorkspaceStore } from './useGuildWorkspaceStore';
 
   const router = useRouter();
   const route = useRoute();
   const garden = useGardenStore();
   const future = useFutureView();
-  const { selectedGuildId, isMerging } = storeToRefs(useMapInteractionStore());
+  const interaction = useMapInteractionStore();
+  const { selectedGuildId, isMerging } = storeToRefs(interaction);
   const { searchQuery, filteredGuilds, hasSearchQuery } = useGuildSearch();
-  const { guildListScroll } = useGuildListScroll();
   const isLayout = computed(() => route.name === routeNames.guildLayout);
+  const workspace = useGuildWorkspaceStore();
+  const header = ref<InstanceType<typeof GuildTabHeader>>();
+  onScopeDispose(workspace.leave);
+  const selectedGuild = computed(() =>
+    garden.guilds.find((guild) => guild.id === selectedGuildId.value),
+  );
+  const selectedBounds = computed(() => {
+    const path = selectedGuild.value?.path;
+    return path?.length ? pathBounds(path.flat(2)) : undefined;
+  });
+  const selectView = (view: 'details' | 'aerial') => {
+    if (view === 'details') workspace.showDetails();
+    else if (isLayout.value) {
+      workspace.showMap();
+      void router.push({
+        name: routeNames.guildsDetail,
+        params: { guildId: selectedGuildId.value },
+      });
+    } else workspace.showMap(() => selectedBounds.value);
+  };
+  const { listVisible, drawerOpen } = storeToRefs(workspace);
+  const listMounted = computed<boolean>((wasMounted) => wasMounted || listVisible.value);
+  const { guildListScroll } = useGuildListScroll(listVisible);
+  const closeGuildList = () => {
+    workspace.listOpen = false;
+    if (workspace.compact) header.value?.focusListToggle();
+  };
+
+  useEventListener(window, 'keydown', (event) => {
+    if (event.key !== 'Escape' || !drawerOpen.value || isInDialog(event.target)) return;
+    event.preventDefault();
+    if (isMerging.value) interaction.resetMode();
+    else closeGuildList();
+  });
+
+  watch(
+    [selectedGuildId, isLayout],
+    ([id, inLayout], [previousId]) => {
+      workspace.listOpen = false;
+      if (inLayout) workspace.showMap();
+      else selectView(id && id !== previousId ? 'details' : 'aerial');
+    },
+    { immediate: true },
+  );
+
+  watch(
+    () => interaction.selectedPlantId,
+    (plantId) => {
+      if (plantId) workspace.showMap();
+    },
+  );
+
+  watch(searchQuery, (query) => {
+    if (workspace.compact && query.trim()) workspace.listOpen = true;
+  });
   const layout = useGuildLayoutState(
-    computed(() =>
-      isLayout.value
-        ? garden.guilds.find((guild) => guild.id === selectedGuildId.value)
-        : undefined,
-    ),
+    computed(() => (isLayout.value ? selectedGuild.value : undefined)),
   );
   watch(
     () => isLayout.value && !layout.guild.value?.path.length,
@@ -52,46 +107,92 @@
     class="flex flex-col h-full min-h-0 bg-parchment-100/50"
     :class="{ 'guild-merge-mode': isMerging }"
   >
-    <GuildTabHeader v-model:search-query="searchQuery" />
+    <GuildTabHeader
+      ref="header"
+      v-model:search-query="searchQuery"
+      v-model:guild-list-open="workspace.listOpen"
+      :show-guild-details="workspace.detailsSelected"
+      @select-view="selectView"
+    />
 
     <div
-      class="flex flex-col md:flex-row flex-1 min-h-0 min-w-0"
-      :class="{ 'guild-panes--layout': isLayout }"
+      class="relative isolate grid flex-1 min-h-0 min-w-0 grid-cols-1 grid-rows-[minmax(0,1fr)] max-lg:overflow-hidden lg:grid-cols-[18rem_minmax(0,1fr)]"
     >
-      <aside
-        class="flex flex-col min-h-0 min-w-0 max-h-40 md:max-h-none md:w-72 md:shrink-0 border-r border-parchment-400/60 paper-surface"
-        aria-label="Guild list"
+      <button
+        v-if="drawerOpen"
+        type="button"
+        tabindex="-1"
+        class="absolute inset-0 z-10 bg-ink-900/25"
+        aria-label="Close guild list"
+        @click="closeGuildList"
+      />
+      <Transition
+        enter-active-class="motion-safe:max-lg:transition-transform motion-safe:duration-200 ease-out"
+        leave-active-class="motion-safe:max-lg:transition-transform motion-safe:duration-200 ease-in"
+        enter-from-class="max-lg:-translate-x-full"
+        leave-to-class="max-lg:-translate-x-full"
       >
-        <div
-          v-if="garden.guilds.length === 0"
-          class="p-4 text-ink-600 text-sm"
+        <aside
+          v-show="listVisible"
+          id="guild-list"
+          class="absolute inset-y-0 left-0 z-20 flex w-full min-h-0 min-w-0 flex-col border-r border-parchment-400/60 paper-surface max-lg:shadow-parchment-lg min-[368px]:w-72 lg:static lg:z-auto lg:col-start-1 lg:row-start-1 lg:w-auto"
+          :inert="!listVisible"
+          :aria-hidden="listVisible ? undefined : true"
+          aria-label="Guild list"
         >
-          No guilds yet. Click <strong>Add guild</strong> to create one.
-        </div>
-        <div
-          v-else-if="filteredGuilds.length === 0 && hasSearchQuery"
-          class="p-4 text-ink-600 text-sm"
-        >
-          No guilds match “{{ searchQuery.trim() }}”.
-        </div>
-        <div
-          v-else
-          ref="guildListScroll"
-          class="guild-list flex-1 min-h-0 overflow-x-hidden overflow-y-auto p-2 flex flex-col gap-2"
-        >
-          <GuildListRow
-            v-for="guild in filteredGuilds"
-            :guild-id="guild.id"
-            :key="guild.id"
-          />
-        </div>
-      </aside>
+          <template v-if="listMounted">
+            <button
+              v-if="drawerOpen && selectedGuildId"
+              type="button"
+              class="btn-soft m-2 mb-0 self-start px-2 py-1 text-sm"
+              @click="interaction.clearSelection()"
+            >
+              Clear guild selection
+            </button>
+            <div
+              v-if="garden.guilds.length === 0"
+              class="p-4 text-ink-600 text-sm"
+            >
+              No guilds yet. Click <strong>Add guild</strong> to create one.
+            </div>
+            <div
+              v-else-if="filteredGuilds.length === 0 && hasSearchQuery"
+              class="p-4 text-ink-600 text-sm"
+            >
+              No guilds match “{{ searchQuery.trim() }}”.
+            </div>
+            <div
+              v-else
+              ref="guildListScroll"
+              class="guild-list flex-1 min-h-0 overflow-x-hidden overflow-y-auto p-2 flex flex-col gap-2"
+            >
+              <GuildListRow
+                v-for="guild in filteredGuilds"
+                :guild-id="guild.id"
+                :key="guild.id"
+                @selected="
+                  closeGuildList();
+                  if (isLayout) workspace.showMap();
+                  else workspace.showDetails();
+                "
+              />
+            </div>
+          </template>
+        </aside>
+      </Transition>
       <div
-        class="guild-workspace grid flex-1 min-h-0 min-w-0"
-        :class="{ 'guild-workspace--selected': selectedGuildId }"
+        class="z-0 col-start-1 row-start-1 grid min-h-0 min-w-0 grid-cols-1 grid-rows-[minmax(0,1fr)] lg:col-start-2 motion-safe:lg:transition-[grid-template-columns] motion-safe:lg:duration-300 motion-safe:lg:ease-in-out"
+        :class="
+          selectedGuildId
+            ? 'lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]'
+            : 'lg:grid-cols-[minmax(0,0fr)_minmax(0,5fr)]'
+        "
+        :inert="drawerOpen"
       >
         <section
-          class="min-h-0 min-w-0 overflow-hidden paper-surface"
+          id="guild-details"
+          class="col-start-1 row-start-1 min-h-0 min-w-0 overflow-hidden paper-surface"
+          :class="{ 'max-lg:hidden': !workspace.detailsSelected || !selectedGuildId }"
           :aria-hidden="!selectedGuildId"
           :inert="!selectedGuildId"
           aria-label="Guild details"
@@ -107,12 +208,17 @@
               :selected-thing-id="selectedThingId"
               :placing-thing-id="placingThingId"
               @select-plant="layout.selectPlant($event)"
-              @place-plant="layout.beginPlacement($event)"
+              @place-plant="
+                layout.beginPlacement($event);
+                workspace.showMap();
+              "
               @open-layout="
-                router.push({
-                  name: routeNames.guildLayout,
-                  params: { guildId: selectedGuildId },
-                })
+                workspace.showMap();
+                if (!isLayout)
+                  router.push({
+                    name: routeNames.guildLayout,
+                    params: { guildId: selectedGuildId },
+                  });
               "
               class="flex-1 min-h-0"
             >
@@ -128,61 +234,14 @@
           </div>
         </section>
 
-        <RouterView class="guild-map" />
+        <RouterView
+          id="guild-map"
+          :aerial-focus="workspace.aerialFocus"
+          :aria-hidden="workspace.mapVisibility === 'hidden' ? true : undefined"
+          class="col-start-1 row-start-1 lg:col-start-2"
+          :class="{ 'max-lg:invisible': workspace.detailsSelected && selectedGuildId }"
+        />
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-  .guild-workspace {
-    grid-template-rows: minmax(0, 0fr) minmax(0, 1fr);
-    transition:
-      grid-template-columns 300ms ease-in-out,
-      grid-template-rows 300ms ease-in-out;
-  }
-
-  .guild-workspace--selected {
-    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
-  }
-
-  @media (max-width: 767px) {
-    .guild-panes--layout .guild-workspace {
-      grid-template-rows: minmax(0, 1fr) minmax(0, 2fr);
-    }
-  }
-
-  @media (max-width: 767px) and (orientation: landscape) {
-    .guild-panes--layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-      grid-template-rows: minmax(0, 1fr) minmax(0, 2fr);
-    }
-
-    .guild-panes--layout .guild-workspace {
-      display: contents;
-    }
-
-    .guild-panes--layout .guild-map {
-      grid-column: 2;
-      grid-row: 1 / -1;
-    }
-  }
-
-  @media (min-width: 768px) {
-    .guild-workspace {
-      grid-template-rows: minmax(0, 1fr);
-      grid-template-columns: minmax(0, 0fr) minmax(0, 5fr);
-    }
-
-    .guild-workspace--selected {
-      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .guild-workspace {
-      transition: none;
-    }
-  }
-</style>

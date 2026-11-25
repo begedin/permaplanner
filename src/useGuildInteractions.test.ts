@@ -29,6 +29,7 @@ const initialPath = [
 const setup = (initialTool: AerialTool, brush: DrawingBrush = 'path') => {
   const drawingBrush = ref(brush);
   const svg = createMapSvg();
+  const worldBounds = ref({ width: 1000, height: 1000 });
   const path = ref([...initialPath]);
   const selected = ref(true);
   const tool = ref<AerialTool | undefined>(initialTool);
@@ -41,13 +42,14 @@ const setup = (initialTool: AerialTool, brush: DrawingBrush = 'path') => {
     edit: usePathDrawing({
       drawingBrush,
       svg: ref(svg),
+      worldBounds,
       savedPath: computed(() =>
         selected.value && tool.value === 'draw' ? initialPath : undefined,
       ),
       onCommit,
       onCancel,
     }),
-    move: useGuildPathMove({ path, selected, tool, onCommit }),
+    move: useGuildPathMove({ path, worldBounds, selected, tool, onCommit }),
   }))!;
   const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
   polygon.addEventListener('pointerdown', interactions.move.onPathPointerDown);

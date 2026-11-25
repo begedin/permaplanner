@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { computed, onScopeDispose, provide, ref, watch } from 'vue';
+  import { computed, onScopeDispose, provide, ref, toRef, watch } from 'vue';
   import { useElementSize } from '@vueuse/core';
   import GardenAerial from './GardenAerial.vue';
   import GuildLayout from './GuildLayout.vue';
@@ -7,49 +7,35 @@
   import { hasPlantPlacement } from './gardenTypes';
   import { useBackgroundImage } from './useBackgroundImage';
   import { useCamera } from './useCamera';
-  import { useCameraStore } from './useCameraStore';
+  import { fitGuildView, type CameraFocus } from './useCameraViewport';
   import { useGuildLayout } from './useGuildLayoutState';
+  import { useMapInteractionStore } from './useMapInteractionStore';
   import { mapViewportKey, useMapViewTransition } from './useMapViewTransition';
   import { usePermaplannerStore } from './usePermaplannerStore';
   import { pathBounds } from './guildPathBounds';
 
+  import { aerialMapBoundsKey } from './aerialMapBounds';
+
+  const props = defineProps<{ aerialFocus?: CameraFocus }>();
   const { guild, placingThingId } = useGuildLayout();
-  const camera = useCameraStore();
+  const interaction = useMapInteractionStore();
   const future = useFutureView();
   const plan = usePermaplannerStore();
   const svg = ref<SVGSVGElement>();
   const { width, height } = useElementSize(svg);
-  const viewport = computed(() => ({ width: width.value, height: height.value }));
-  const { imgDataUrl, imgWidth, imgHeight, ready } = useBackgroundImage();
-  const worldBounds = computed(() =>
-    ready.value
-      ? { width: imgWidth.value, height: imgHeight.value }
-      : { width: 1000, height: 1000 },
-  );
+  const { imgDataUrl, mapSize: worldBounds } = useBackgroundImage();
+  provide(aerialMapBoundsKey, worldBounds);
   const dimensions = computed(() => ({
     containerWidth: width.value,
     containerHeight: height.value,
-    worldWidth: worldBounds.value.width,
-    worldHeight: worldBounds.value.height,
+    worldWidth: worldBounds.value?.width ?? 0,
+    worldHeight: worldBounds.value?.height ?? 0,
   }));
-  const { fitToViewPort, setupCamera, teardownCamera } = useCamera(svg, dimensions);
-  watch(
-    [worldBounds, () => width.value > 0 && height.value > 0],
-    () => {
-      if (width.value > 0 && height.value > 0) fitToViewPort();
-    },
-    { immediate: true },
-  );
-  watch(
+  const { camera, setupCamera, teardownCamera } = useCamera(
+    svg,
     dimensions,
-    (value) => {
-      if (value.containerWidth > 0 && value.containerHeight > 0)
-        camera.scale = Math.min(
-          value.containerWidth / value.worldWidth,
-          value.containerHeight / value.worldHeight,
-        );
-    },
-    { immediate: true },
+    () => interaction.activeTool !== 'draw',
+    toRef(props, 'aerialFocus'),
   );
 
   const view = computed(() => guild.value?.id);
@@ -73,17 +59,7 @@
         );
       }
     }
-    const box = pathBounds(points);
-    const padding = Math.max(box.width, box.height) * 0.08 || 10;
-    const aspect = width.value > 0 && height.value > 0 ? width.value / height.value : 1;
-    const w = Math.max(box.width + padding * 2, (box.height + padding * 2) * aspect);
-    const h = w / aspect;
-    return {
-      x: box.x + (box.width - w) / 2,
-      y: box.y + (box.height - h) / 2,
-      width: w,
-      height: h,
-    };
+    return fitGuildView(pathBounds(points), width.value, height.value).bounds;
   });
   const { bounds, transitioning } = useMapViewTransition(target, view);
   const viewBox = computed(
@@ -105,10 +81,10 @@
   );
 
   watch(
-    [svg, view, transitioning],
-    ([element, layoutId, moving]) => {
-      teardownCamera();
-      if (element && !layoutId && !moving) setupCamera();
+    [svg, view, transitioning, worldBounds],
+    ([element, layoutId, moving, size]) => {
+      if (element && !layoutId && !moving && size) setupCamera();
+      else teardownCamera();
     },
     { flush: 'post' },
   );
@@ -118,7 +94,7 @@
 <template>
   <section
     class="relative flex min-h-0 min-w-0 flex-1 flex-col"
-    :class="guild ? 'gap-2 p-3' : ''"
+    :class="guild ? 'gap-2 p-3' : '[container-type:inline-size]'"
     :aria-label="guild ? 'Plant layout' : 'Aerial map'"
     :inert="transitioning"
     :data-view-transition="transitioning ? 'active' : undefined"
@@ -134,8 +110,6 @@
       <GardenAerial
         v-else
         :svg="svg"
-        :world-bounds="worldBounds"
-        :viewport="viewport"
       />
     </template>
     <svg
@@ -146,31 +120,32 @@
       tabindex="0"
       :aria-label="guild ? 'Draw plant canopies' : 'Aerial map canvas'"
       preserveAspectRatio="xMinYMin meet"
-      class="min-h-0 w-full flex-1"
+      class="min-h-0 w-full flex-1 touch-none"
       :class="{
         'rounded-lg border border-parchment-400 bg-parchment-200': guild,
         'cursor-crosshair': placingThingId,
       }"
-      style="touch-action: none"
     >
       <g>
-        <rect
-          x="0"
-          y="0"
-          :width="worldBounds.width"
-          :height="worldBounds.height"
-          class="fill-parchment-200"
-          data-world-stage
-        />
-        <image
-          v-if="imgDataUrl"
-          :href="imgDataUrl"
-          x="0"
-          y="0"
-          :width="worldBounds.width"
-          :height="worldBounds.height"
-          :opacity="plan.backgroundOpacity"
-        />
+        <template v-if="worldBounds">
+          <rect
+            x="0"
+            y="0"
+            :width="worldBounds.width"
+            :height="worldBounds.height"
+            class="fill-parchment-200"
+            data-world-stage
+          />
+          <image
+            v-if="imgDataUrl"
+            :href="imgDataUrl"
+            x="0"
+            y="0"
+            :width="worldBounds.width"
+            :height="worldBounds.height"
+            :opacity="plan.backgroundOpacity"
+          />
+        </template>
       </g>
     </svg>
   </section>

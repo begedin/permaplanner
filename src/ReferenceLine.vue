@@ -5,26 +5,30 @@
   import { usePermaplannerStore } from './usePermaplannerStore';
   import { onboardingDuringScaleDrag } from './onboardingTypes';
   import { usePointerSession } from './usePointerSession';
-  import { clientToSvgUser } from './svgClientToUser';
+  import { startMapPointDrag, useAerialMapBounds } from './aerialMapBounds';
 
   const store = useMapScaleStore();
+  const world = useAerialMapBounds();
   const gardenSession = useGardenSessionStore();
   const permaplanner = usePermaplannerStore();
   const draft = ref<{ endpoint: 'start' | 'end'; point: { x: number; y: number } }>();
   const session = usePointerSession();
-  watch(() => [store.start, store.end, gardenSession.gardenId], session.cancel, {
-    flush: 'sync',
-  });
+  watch(
+    () => [store.start, store.end, gardenSession.gardenId, world.value],
+    session.cancel,
+    {
+      flush: 'sync',
+    },
+  );
 
   const startDrag = (event: PointerEvent, endpoint: 'start' | 'end') => {
     const svg = (event.currentTarget as SVGElement).closest('svg');
-    if (!(svg instanceof SVGSVGElement)) return;
+    if (!(svg instanceof SVGSVGElement) || !world.value) return;
+    const original = store[endpoint];
+    const drag = startMapPointDrag(svg, event, original, world.value);
     session.start(event, {
       update: (next) => {
-        draft.value = {
-          endpoint,
-          point: clientToSvgUser(svg, next.clientX, next.clientY),
-        };
+        draft.value = { endpoint, point: drag(next) ?? original };
       },
       cancel: () => {
         draft.value = undefined;

@@ -11,6 +11,14 @@
 
   const { guildsTabTo } = useGuildSelection();
   const { calendarTabTo } = useCalendarSelection();
+  const tabs = computed(
+    () =>
+      [
+        { label: 'Guilds', icon: 'guilds', to: guildsTabTo.value },
+        { label: 'Plants', icon: 'plants', to: { name: routeNames.plants } },
+        { label: 'Calendar', icon: 'calendar', to: calendarTabTo.value },
+      ] as const,
+  );
   const planDrawerOpen = ref(false);
   const planToggle = ref<HTMLButtonElement>();
   const { hasUnsavedChanges } = storeToRefs(useGardenSessionStore());
@@ -21,14 +29,14 @@
 
 <template>
   <header
-    class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 shrink-0 border-b border-parchment-400/60 paper-surface px-2 py-2"
+    class="grid shrink-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 border-b border-parchment-400/60 paper-surface p-2 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-3"
   >
-    <div class="flex min-w-0 items-center justify-start gap-3">
-      <div class="relative shrink-0 flex items-center px-0.5">
+    <div class="contents lg:flex lg:min-w-0 lg:items-center lg:gap-3">
+      <div class="flex shrink-0 items-center gap-1 px-0.5">
         <button
           ref="planToggle"
           type="button"
-          class="nav-icon-btn"
+          class="nav-icon-btn relative"
           :class="{ 'nav-icon-btn-active': planDrawerOpen }"
           :aria-label="planMenuLabel"
           :aria-expanded="planDrawerOpen"
@@ -38,62 +46,43 @@
             name="document"
             class="size-5"
           />
+          <span
+            v-if="hasUnsavedChanges"
+            class="pointer-events-none absolute top-0.5 right-0.5 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-sage-100"
+            aria-hidden="true"
+          />
         </button>
-        <span
-          v-if="hasUnsavedChanges"
-          class="pointer-events-none absolute top-0.5 right-0.5 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-sage-100"
-          aria-hidden="true"
-        />
+        <slot name="menu" />
       </div>
-      <div class="min-w-0">
+      <div
+        class="min-w-0 max-lg:order-last max-lg:col-span-full max-lg:has-[>h1]:sr-only"
+      >
         <slot name="breadcrumb" />
       </div>
     </div>
     <nav
       aria-label="Main navigation"
-      class="flex items-center justify-center gap-1 font-serif text-lg"
+      class="flex grid-cols-3 items-center gap-1 font-serif text-base min-[360px]:max-lg:grid lg:justify-center lg:text-lg"
     >
       <RouterLink
-        class="nav-icon-btn compact-nav-button"
-        active-class="nav-icon-btn-active"
-        :to="guildsTabTo"
-        aria-label="Guilds"
-        title="Guilds"
+        v-for="tab in tabs"
+        :key="tab.icon"
+        class="nav-icon-btn h-7 w-auto shrink-0 gap-1 rounded px-1.5 leading-6 lg:h-6"
+        active-class="nav-icon-btn-active max-[360px]:flex-1 [&>span]:inline"
+        :to="tab.to"
+        :aria-label="tab.label"
+        :title="tab.label"
       >
         <UiIcon
-          name="guilds"
+          :name="tab.icon"
           class="size-[18px]"
         />
-        <span>Guilds</span>
-      </RouterLink>
-      <RouterLink
-        class="nav-icon-btn compact-nav-button"
-        active-class="nav-icon-btn-active"
-        :to="{ name: routeNames.plants }"
-        aria-label="Plants"
-        title="Plants"
-      >
-        <UiIcon
-          name="plants"
-          class="size-[18px]"
-        />
-        <span>Plants</span>
-      </RouterLink>
-      <RouterLink
-        class="nav-icon-btn compact-nav-button"
-        active-class="nav-icon-btn-active"
-        :to="calendarTabTo"
-        aria-label="Calendar"
-        title="Calendar"
-      >
-        <UiIcon
-          name="calendar"
-          class="size-[18px]"
-        />
-        <span>Calendar</span>
+        <span class="hidden min-[360px]:inline">{{ tab.label }}</span>
       </RouterLink>
     </nav>
-    <div class="flex min-w-0 items-center justify-end gap-2">
+    <div
+      class="col-span-full flex min-w-0 flex-col justify-center gap-2 empty:hidden min-[368px]:flex-row min-[368px]:items-center lg:col-span-1 lg:justify-end"
+    >
       <slot />
     </div>
   </header>
@@ -102,15 +91,3 @@
     :trigger-element="planToggle"
   />
 </template>
-
-<style scoped>
-  .compact-nav-button {
-    width: auto;
-    flex-shrink: 0;
-    gap: 4px;
-    padding: 0 6px;
-    height: 24px;
-    line-height: 24px;
-    border-radius: 4px;
-  }
-</style>

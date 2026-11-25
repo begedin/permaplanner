@@ -1,6 +1,13 @@
-import { shapeFromPath, rectangleShapePath } from './mapShapeGeometry';
+import {
+  fitShapeRotation,
+  shapeFromPath,
+  shapeMapPoints,
+  rectangleShapePath,
+  startShapeDrag,
+  SHAPE_RESIZE_HANDLES,
+} from './mapShapeGeometry';
 import { expect, it } from 'vitest';
-import { shapeAtPointer, SHAPE_RESIZE_HANDLES } from './mapShapeGeometry';
+const map = { width: 1000, height: 1000 };
 
 const house = {
   id: 'house',
@@ -25,23 +32,23 @@ it.each([
 ])('anchors the opposite side when resizing %s', (name, expected) => {
   const direction = SHAPE_RESIZE_HANDLES.find((handle) => handle.name === name)!;
   expect(
-    shapeAtPointer(
+    startShapeDrag(
       { kind: 'resize', shape: house, direction },
       { x: 100, y: 50 },
-      { x: 110, y: 70 },
       7,
-    ),
+      map,
+    )({ x: 110, y: 70 }),
   ).toEqual({ ...house, ...expected });
 });
 
 it('resizes in local axes without moving the opposite rotated edge', () => {
   expect(
-    shapeAtPointer(
+    startShapeDrag(
       { kind: 'resize', shape: { ...house, rotation: 30 }, direction: { x: 1, y: 0 } },
       { x: 100, y: 50 },
-      { x: 100 + 10 * Math.sqrt(3), y: 60 },
       7,
-    ),
+      map,
+    )({ x: 100 + 10 * Math.sqrt(3), y: 60 }),
   ).toMatchObject({
     x: expect.closeTo(100 + 5 * Math.sqrt(3)),
     y: expect.closeTo(55),
@@ -82,4 +89,73 @@ it('normalizes an arbitrary landmark path without changing its map bounds', () =
       ),
     ),
   ).toEqual(path);
+});
+
+it('slides a corner along the map boundary and keeps the opposite corner fixed', () => {
+  const drag = startShapeDrag(
+    { kind: 'resize', shape: house, direction: { x: 1, y: 1 } },
+    { x: 140, y: 80 },
+    7,
+    { width: 200, height: 100 },
+  );
+  expect(drag({ x: 160, y: 180 })).toMatchObject({
+    x: 110,
+    y: 60,
+    width: 100,
+    height: 80,
+  });
+  expect(drag({ x: 140, y: 90 })).toMatchObject({ x: 100, y: 55, width: 80, height: 70 });
+});
+
+it('rotates and resizes a diamond to the map edge using its outline', () => {
+  const shape = shapeFromPath('diamond', 'Diamond', [
+    [
+      [
+        { x: 500, y: 75 },
+        { x: 925, y: 500 },
+        { x: 500, y: 925 },
+        { x: 75, y: 500 },
+        { x: 500, y: 75 },
+      ],
+    ],
+  ]);
+  const rotated = fitShapeRotation(shape, 45, map)!;
+  expect(rotated).toEqual({ ...shape, rotation: 45 });
+  const resize = startShapeDrag(
+    { kind: 'resize', shape: rotated, direction: { x: 1, y: 1 } },
+    { x: 0, y: 0 },
+    7,
+    map,
+  );
+  const enlarged = resize({ x: 0, y: 1000 });
+  expect(enlarged.width).toBeGreaterThan(rotated.width);
+  expect(enlarged.height).toBeCloseTo(enlarged.width);
+  expect(Math.max(...shapeMapPoints(enlarged).map((point) => point.y))).toBeCloseTo(
+    map.height,
+  );
+});
+
+it('slides a rotated corner along the bottom edge while its opposite stays fixed', () => {
+  const shape = {
+    ...house,
+    x: 500,
+    y: 1000 - 50 * Math.SQRT2,
+    width: 100,
+    height: 100,
+    rotation: 45,
+  };
+  const points = shapeMapPoints(shape);
+  const corner = points[2]!;
+  const drag = startShapeDrag(
+    { kind: 'resize', shape, direction: { x: 1, y: 1 } },
+    corner,
+    7,
+    map,
+  );
+  const resized = shapeMapPoints(drag({ x: corner.x + 30, y: corner.y + 3 }));
+  expect(resized[0]).toMatchObject({
+    x: expect.closeTo(points[0]!.x),
+    y: expect.closeTo(points[0]!.y),
+  });
+  expect(resized[2]).toMatchObject({ x: expect.closeTo(530), y: expect.closeTo(1000) });
 });

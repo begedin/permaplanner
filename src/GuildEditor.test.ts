@@ -181,6 +181,10 @@ it('shows the add control and removes the only individual', async () => {
   expect(
     card(wrapper).getByRole('button', { name: 'Add one plant to bed' }),
   ).toBeVisible();
+  expect(
+    card(wrapper).queryByRole('button', { name: /^Remove .* from bed$/ }),
+  ).not.toBeInTheDocument();
+  await fireEvent.click(card(wrapper).getByRole('button', { name: /^Expand / }));
   await fireEvent.click(
     card(wrapper).getByRole('button', { name: /^Remove .*#1 from bed$/ }),
   );
@@ -441,9 +445,7 @@ it('cancels edit plant without changing the guild', async () => {
   expect(usePlanStateStore().state.guilds[0].plants).toEqual([
     baseThing({ id: 'thing-a', plantId: 'plant' }),
   ]);
-  expect(
-    card(wrapper).getByRole('button', { name: /^Remove Comfrey .*#1 from bed$/ }),
-  ).toBeVisible();
+  expect(card(wrapper).getByRole('button', { name: /^Expand Comfrey / })).toBeVisible();
 });
 
 it('expands a plant group to edit per-instance phase and condition', async () => {

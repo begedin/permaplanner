@@ -4,6 +4,9 @@
   import { SHAPE_FEATURES, type ShapeFeature } from './mapShapeFeatures';
   import type { MapShape } from './gardenDocument';
   import { useMapScaleStore } from './useMapScaleStore';
+  import { useAerialMapBounds } from './aerialMapBounds';
+  import { fitShapeRotation } from './mapShapeGeometry';
+  const world = useAerialMapBounds();
   const props = defineProps<{ shape: MapShape; feature: ShapeFeature }>();
   const appearance = computed(() => SHAPE_FEATURES[props.feature]);
   const emit = defineEmits<{ update: [shape: MapShape]; remove: []; done: [] }>();
@@ -11,11 +14,11 @@
   const update = (field: 'name' | 'rotation', event: Event) => {
     const value = (event.target as HTMLInputElement).value;
     if (field === 'rotation') {
-      if (!Number.isFinite(Number(value))) return;
-      emit('update', {
-        ...props.shape,
-        rotation: ((Number(value) % 360) + 360) % 360,
-      });
+      if (!world.value || !Number.isFinite(Number(value))) return;
+      const shape =
+        fitShapeRotation(props.shape, Number(value), world.value) ?? props.shape;
+      (event.target as HTMLInputElement).value = String(Math.round(shape.rotation));
+      emit('update', shape);
     } else
       emit('update', { ...props.shape, name: value.trim() || appearance.value.label });
   };
@@ -46,6 +49,7 @@
       >Rotation (degrees)
       <input
         type="number"
+        :disabled="!world"
         class="input-soft w-full px-3 py-2 font-normal text-ink-800"
         :value="Math.round(props.shape.rotation)"
         @change="update('rotation', $event)"

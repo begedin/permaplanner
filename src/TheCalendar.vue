@@ -279,7 +279,7 @@
                       <UiIcon
                         v-if="row.showPhaseOverflow"
                         name="ellipsis"
-                        class="size-4 shrink-0 text-ink-400"
+                        class="hidden size-4 shrink-0 text-ink-400 sm:block"
                         :title="`${row.guildInstanceCount - 8} more plants`"
                         aria-label="More plants"
                       />

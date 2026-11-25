@@ -1,5 +1,6 @@
 <script lang="ts" setup>
   import { computed, ref, toRef } from 'vue';
+  import { phenologySummaryForPlant } from './plantCatalog';
   import { hasPlantPlacement } from './gardenTypes';
   import type { GuildLayer } from './gardenTypes';
 
@@ -74,10 +75,8 @@
     closePlantEditor,
     onConfirmPlant,
     mulchStars,
-    phenologySummaryForThingIds,
     togglePlantGroup,
-    isPlantGroupExpanded,
-    guildThing,
+    expandedPlantGroupId,
     setThingGrowthPhase,
   } = useGuildEditor(toRef(props, 'guildId'), guild);
 
@@ -101,12 +100,17 @@
   const sortedGuildPlants = computed(() => {
     const rows = groupedGuildPlants.value.map((row) => ({
       ...row,
-      individuals: row.thingIds.map((id) => ({
-        id,
+      phenology: phenologySummaryForPlant(
+        row.representativeResolved.speciesId,
+        row.representativeResolved.cultivarId,
+      ),
+      singlePlant: row.count === 1 ? row.instances[0] : undefined,
+      individuals: row.instances.map((thing) => ({
+        thing,
         placementStatus:
-          props.placingThingId === id
+          props.placingThingId === thing.id
             ? PLACEMENT_STATUS.editing
-            : hasPlantPlacement(guildThing(id))
+            : hasPlantPlacement(thing)
               ? PLACEMENT_STATUS.placed
               : PLACEMENT_STATUS.unplaced,
       })),
@@ -127,12 +131,12 @@
 
 <template>
   <article
-    class="flex flex-col gap-1 items-start justify-start p-2 text-ink-600 w-full min-w-0 max-w-full h-full min-h-0 paper-card"
+    class="flex flex-col gap-1 items-start justify-start p-2 text-ink-600 w-full min-w-0 max-w-full h-full min-h-0 max-lg:overflow-y-auto paper-card"
     :class="{ 'paper-card-not-on-aerial': !placedOnMap }"
     :aria-label="guild.name"
   >
-    <div class="flex flex-col flex-1 min-h-0 w-full gap-1">
-      <div class="flex flex-col gap-1 w-full min-h-0 overflow-y-auto shrink -ml-2 pl-2">
+    <div class="flex flex-col flex-1 w-full gap-1 lg:min-h-0">
+      <div class="flex flex-col gap-1 w-full -ml-2 pl-2 lg:min-h-0 lg:overflow-y-auto">
         <div class="flex flex-row items-center justify-between gap-2 w-full flex-wrap">
           <p
             v-if="!placedOnMap"
@@ -166,19 +170,21 @@
           </div>
           <div class="ml-auto flex shrink-0 items-center gap-1">
             <button
-              v-if="!layoutMode"
+              :class="{ 'lg:hidden': layoutMode }"
               type="button"
               class="btn-soft inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs disabled:opacity-50"
               :disabled="!placedOnMap"
               :title="
                 placedOnMap
-                  ? 'Arrange individual plants'
+                  ? layoutMode
+                    ? 'Return to plant layout'
+                    : 'Arrange individual plants'
                   : 'Draw the guild on the aerial map first'
               "
               @click="emit('openLayout')"
             >
               <UiIcon name="place" />
-              Place plants
+              {{ layoutMode ? 'Return to plant layout' : 'Place plants' }}
             </button>
             <button
               type="button"
@@ -302,9 +308,9 @@
                 <button
                   type="button"
                   class="btn-icon bg-transparent hover:bg-blossom-100 p-0.5 shrink-0"
-                  :aria-expanded="isPlantGroupExpanded(row.plantId)"
+                  :aria-expanded="expandedPlantGroupId === row.plantId"
                   :aria-label="
-                    isPlantGroupExpanded(row.plantId)
+                    expandedPlantGroupId === row.plantId
                       ? `Collapse ${row.label}`
                       : `Expand ${row.label}`
                   "
@@ -313,7 +319,7 @@
                   <UiIcon
                     name="chevron-down"
                     class="size-4 transition-transform duration-150"
-                    :class="isPlantGroupExpanded(row.plantId) ? 'rotate-180' : ''"
+                    :class="{ 'rotate-180': expandedPlantGroupId === row.plantId }"
                   />
                 </button>
                 <PlantIcon
@@ -335,10 +341,10 @@
                     {{ row.layerLabels.join(', ') || 'No layer assigned' }}
                   </span>
                   <span
-                    v-if="phenologySummaryForThingIds(row.thingIds)"
+                    v-if="row.phenology"
                     class="text-[10px] leading-tight text-ink-500"
                   >
-                    {{ phenologySummaryForThingIds(row.thingIds) }}
+                    {{ row.phenology }}
                   </span>
                 </div>
                 <div
@@ -353,7 +359,7 @@
                   <UiIcon
                     v-if="row.showPhaseOverflow"
                     name="ellipsis"
-                    class="size-4 shrink-0 text-ink-400"
+                    class="hidden size-4 shrink-0 text-ink-400 sm:block"
                     :title="`${row.count - GROUP_HEADER_MAX_PHASE_ICONS} more plants`"
                     aria-label="More plants"
                   />
@@ -369,15 +375,12 @@
                   class="flex flex-row items-center gap-0 shrink-0"
                 >
                   <button
-                    v-for="thingId in row.thingIds
-                      .filter((id) => row.count === 1 && !guildThing(id)?.note)
-                      .slice(0, 1)"
-                    :key="thingId"
+                    v-if="row.singlePlant && !row.singlePlant.note"
                     type="button"
-                    :title="`Add note for ${row.label}${row.count > 1 ? ` instance ${row.thingIds.indexOf(thingId) + 1}` : ''}`"
-                    :aria-label="`Add note for ${row.label}${row.count > 1 ? ` instance ${row.thingIds.indexOf(thingId) + 1}` : ''}`"
+                    :title="`Add note for ${row.label}`"
+                    :aria-label="`Add note for ${row.label}`"
                     class="btn-icon bg-transparent hover:bg-blossom-100 p-0.5 px-1"
-                    @click.stop="editingPlantNoteId = thingId"
+                    @click.stop="editingPlantNoteId = row.singlePlant.id"
                   >
                     <UiIcon name="document" />
                   </button>
@@ -403,28 +406,28 @@
               </div>
               <div class="flex flex-col gap-1 pb-1 pl-7 pr-1">
                 <div
-                  v-for="({ id: thingId, placementStatus }, index) in row.individuals"
-                  :key="thingId"
+                  v-for="({ thing, placementStatus }, index) in row.individuals"
+                  :key="thing.id"
                   v-show="
-                    layoutMode ||
-                    isPlantGroupExpanded(row.plantId) ||
-                    guildThing(thingId)?.note ||
-                    row.count === 1
+                    expandedPlantGroupId === row.plantId ||
+                    thing.note ||
+                    editingPlantNoteId === thing.id
                   "
-                  class="flex flex-col gap-1 rounded-lg border border-parchment-300/80 bg-parchment-50/60 px-2 py-1.5"
-                  :class="
-                    layoutMode && selectedThingId === thingId
-                      ? 'ring-2 ring-sage-600 bg-sage-100'
-                      : ''
-                  "
+                  class="flex flex-col gap-1"
+                  :class="{
+                    'rounded-lg border border-parchment-300/80 bg-parchment-50/60 px-2 py-1.5':
+                      expandedPlantGroupId === row.plantId,
+                    'ring-2 ring-sage-600 bg-sage-100':
+                      expandedPlantGroupId === row.plantId &&
+                      layoutMode &&
+                      selectedThingId === thing.id,
+                  }"
                   :aria-label="
                     row.count > 1 ? `${row.label} instance ${index + 1}` : row.label
                   "
                 >
                   <div
-                    v-if="
-                      layoutMode || row.count === 1 || isPlantGroupExpanded(row.plantId)
-                    "
+                    v-if="expandedPlantGroupId === row.plantId"
                     class="flex items-center gap-2"
                   >
                     <span
@@ -439,11 +442,11 @@
                       type="button"
                       class="min-w-0 flex-1 text-left text-xs hover:underline"
                       :aria-label="`Select ${row.label} #${index + 1}`"
-                      :aria-pressed="selectedThingId === thingId"
+                      :aria-pressed="selectedThingId === thing.id"
                       @click="
                         emit(
                           'selectPlant',
-                          selectedThingId === thingId ? undefined : thingId,
+                          selectedThingId === thing.id ? undefined : thing.id,
                         )
                       "
                     >
@@ -460,7 +463,7 @@
                       class="btn-icon shrink-0 p-1 hover:bg-sage-200"
                       :title="placementStatus"
                       :aria-label="`Place ${row.label} #${index + 1} — ${placementStatus}`"
-                      @click.stop="emit('placePlant', thingId)"
+                      @click.stop="emit('placePlant', thing.id)"
                     >
                       <UiIcon
                         name="place"
@@ -474,12 +477,12 @@
                       />
                     </button>
                     <button
-                      v-if="row.count > 1 && isPlantGroupExpanded(row.plantId)"
+                      v-if="row.count > 1"
                       type="button"
-                      :title="`${guildThing(thingId)?.note ? 'Edit' : 'Add'} note for ${row.label} instance ${index + 1}`"
-                      :aria-label="`${guildThing(thingId)?.note ? 'Edit' : 'Add'} note for ${row.label} instance ${index + 1}`"
+                      :title="`${thing.note ? 'Edit' : 'Add'} note for ${row.label} instance ${index + 1}`"
+                      :aria-label="`${thing.note ? 'Edit' : 'Add'} note for ${row.label} instance ${index + 1}`"
                       class="btn-icon bg-transparent hover:bg-blossom-100 p-0.5 px-1"
-                      @click.stop="editingPlantNoteId = thingId"
+                      @click.stop="editingPlantNoteId = thing.id"
                     >
                       <UiIcon name="document" />
                     </button>
@@ -488,7 +491,7 @@
                       class="btn-icon shrink-0 p-1 hover:bg-red-200"
                       :title="`Remove ${row.label} #${index + 1} from bed`"
                       :aria-label="`Remove ${row.label} #${index + 1} from bed`"
-                      @click.stop="garden.removeGuildThings(guildId, [thingId])"
+                      @click.stop="garden.removeGuildThings(guildId, [thing.id])"
                     >
                       <UiIcon
                         name="remove-one"
@@ -498,22 +501,20 @@
                   </div>
                   <button
                     v-if="
-                      row.count > 1 &&
-                      !isPlantGroupExpanded(row.plantId) &&
-                      guildThing(thingId)?.note
+                      row.count > 1 && expandedPlantGroupId !== row.plantId && thing.note
                     "
                     type="button"
                     title="Expand and edit note"
                     class="whitespace-pre-wrap break-words text-left text-xs text-ink-600 hover:text-ink-900"
                     @click.stop="
                       togglePlantGroup(row.plantId);
-                      editingPlantNoteId = thingId;
+                      editingPlantNoteId = thing.id;
                     "
                   >
-                    Plant {{ index + 1 }}: {{ guildThing(thingId)?.note }}
+                    Plant {{ index + 1 }}: {{ thing.note }}
                   </button>
                   <div
-                    v-if="isPlantGroupExpanded(row.plantId)"
+                    v-if="expandedPlantGroupId === row.plantId"
                     class="flex flex-row flex-wrap items-center gap-x-2 gap-y-1"
                   >
                     <label
@@ -522,10 +523,10 @@
                       <span class="shrink-0">Phase</span>
                       <select
                         class="min-w-0 max-w-[9.5rem] rounded-md border border-parchment-400/70 bg-white px-1 py-0.5 text-[11px] text-ink-700"
-                        :value="guildThing(thingId)?.growthPhase ?? ''"
+                        :value="thing.growthPhase ?? ''"
                         @change="
                           setThingGrowthPhase(
-                            thingId,
+                            thing.id,
                             ($event.target as HTMLSelectElement).value,
                           )
                         "
@@ -545,23 +546,23 @@
                     >
                       <span class="shrink-0">Condition</span>
                       <PlantVigorRating
-                        :vigor="guildThing(thingId)?.vigor"
+                        :vigor="thing.vigor"
                         @update:vigor="
-                          garden.setGuildThingVigor(guildId, thingId, $event)
+                          garden.setGuildThingVigor(guildId, thing.id, $event)
                         "
                       />
                     </label>
                   </div>
                   <GuildPlantNote
-                    v-if="row.count === 1 || isPlantGroupExpanded(row.plantId)"
+                    v-if="row.count === 1 || expandedPlantGroupId === row.plantId"
                     :read-only="row.count > 1"
-                    :editing="editingPlantNoteId === thingId"
-                    @update:editing="editingPlantNoteId = $event ? thingId : null"
-                    :note="guildThing(thingId)?.note"
+                    :editing="editingPlantNoteId === thing.id"
+                    @update:editing="editingPlantNoteId = $event ? thing.id : null"
+                    :note="thing.note"
                     :label="
                       row.count > 1 ? `${row.label} instance ${index + 1}` : row.label
                     "
-                    @update:note="garden.updateGuildThingNote(guildId, thingId, $event)"
+                    @update:note="garden.updateGuildThingNote(guildId, thing.id, $event)"
                   />
                 </div>
               </div>
@@ -663,10 +664,10 @@
         :blooming="guildMonthPhenologyCounts.blooming"
         :tooltip-rows="guildTooltipRows"
       />
-      <div class="flex flex-col flex-1 min-h-0 w-full gap-1 pt-1">
+      <div class="flex flex-col flex-1 w-full gap-1 pt-1 lg:min-h-0">
         <GuildCardSectionLabel>Note</GuildCardSectionLabel>
         <textarea
-          class="input-soft w-full flex-1 min-h-0 resize-none p-2 text-sm text-ink-800 leading-relaxed"
+          class="input-soft w-full flex-1 resize-none p-2 text-sm text-ink-800 leading-relaxed lg:min-h-0"
           :value="displayedNote"
           aria-label="Guild note"
           placeholder="Notes for this guild…"

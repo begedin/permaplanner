@@ -2,6 +2,7 @@
   import type { DeepReadonly } from 'vue';
   import { computed, ref, toRef, watch } from 'vue';
 
+  import { useAerialMapBounds } from './aerialMapBounds';
   import { placedCanopies } from './gardenTypes';
   import type { Guild } from './gardenTypes';
   import { useCameraStore } from './useCameraStore';
@@ -67,6 +68,7 @@
 
   const { isMoving, onPathPointerDown } = useGuildPathMove({
     path,
+    worldBounds: useAerialMapBounds(),
     selected,
     tool,
     onCommit: () => emit('move', [...path.value]),

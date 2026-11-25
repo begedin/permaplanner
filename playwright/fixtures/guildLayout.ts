@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
+import type { MapShape } from '../../src/gardenDocument';
 import type { GardenThing, UserPlant } from '../../src/gardenTypes';
 import { waitForMainApp } from '../helpers';
 
@@ -53,7 +54,7 @@ export const createStrawberry = (canopy: Canopy) =>
 export const importLayoutGarden = async (
   page: Page,
   plants: LayoutPlant[],
-  { legacy = false } = {},
+  { legacy = false, landmarks = [] }: { legacy?: boolean; landmarks?: MapShape[] } = {},
 ) => {
   const empty = JSON.parse(
     readFileSync(new URL('./emptyPlan.json', import.meta.url), 'utf8'),
@@ -85,7 +86,7 @@ export const importLayoutGarden = async (
     ...empty,
     version: legacy ? 10 : 11,
     plants: plants.map(({ plant }) => plant),
-    landmarks: [],
+    landmarks,
     paths: [],
     plotBorder: [],
     mapScale: { ...empty.mapScale, unit: 'm' },

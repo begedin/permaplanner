@@ -2,6 +2,7 @@
   import { computed, ref } from 'vue';
   import { useElementBounding, useWindowSize } from '@vueuse/core';
   import FutureViewControls from './FutureViewControls.vue';
+  import GardenCalendarToggle from './GardenCalendarToggle.vue';
   import UiIcon from './uiIcons/UiIcon.vue';
 
   const props = defineProps<{ inHeader?: boolean }>();
@@ -23,36 +24,56 @@
 
 <template>
   <div
-    data-map-settings
     class="text-sm"
-    :class="inHeader ? 'map-settings-header' : 'map-settings-aerial'"
+    :class="
+      inHeader
+        ? 'relative shrink-0'
+        : 'map-settings-aerial pointer-events-none absolute inset-x-2 bottom-2 z-10 flex max-h-[calc(100%-1rem)] flex-col-reverse items-center sm:items-end'
+    "
     role="group"
     aria-label="Map settings"
   >
-    <button
-      ref="toggle"
-      type="button"
-      class="flex shrink-0 items-center gap-1"
-      :aria-expanded="open"
-      aria-controls="map-settings-controls"
-      @click="open = !open"
+    <div
+      class="pointer-events-auto flex max-w-full shrink-0 items-stretch gap-0.5 [@container(min-width:46rem)]:gap-1.5"
     >
-      <UiIcon
-        name="guilds"
-        class="size-5"
-      />
-      Map settings
-    </button>
+      <slot name="tools" />
+      <GardenCalendarToggle />
+      <button
+        ref="toggle"
+        type="button"
+        class="map-control-button"
+        data-map-settings
+        :aria-expanded="open"
+        aria-controls="map-settings-controls"
+        title="Map settings"
+        @click="open = !open"
+      >
+        <UiIcon
+          name="guilds"
+          class="size-5"
+        />
+        <span class="sr-only sm:not-sr-only [@container(width<40rem)]:sr-only"
+          >Map settings</span
+        >
+      </button>
+    </div>
     <div
       id="map-settings-controls"
-      class="flex min-h-0 flex-col"
+      data-map-settings
+      class="pointer-events-auto flex min-h-0 flex-col"
+      :class="
+        inHeader
+          ? 'absolute right-0 z-10 my-1 w-60 max-w-[calc(100vw-1.5rem)]'
+          : 'max-w-full'
+      "
       :style="headerPanelStyle"
       :inert="!open"
     >
       <Transition name="settings">
         <div
           v-if="open"
-          class="settings-panel grid min-h-0 grid-rows-[1fr]"
+          class="paper-floating grid min-h-0 w-60 max-w-full grid-rows-[1fr]"
+          :class="{ 'mb-1.5': !inHeader }"
         >
           <div class="min-h-0 overflow-y-auto overscroll-contain">
             <div class="flex flex-col gap-2 p-3">

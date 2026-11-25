@@ -21,9 +21,11 @@ it('moves a corner in map coordinates while preserving closed rings and other re
   svg.getScreenCTM = () =>
     ({ inverse: () => ({ a: 0.5, b: 0, c: 0, d: 0.5, e: -10, f: -20 }) }) as DOMMatrix;
   svg.append(wrapper.element);
-  await wrapper
-    .get('[aria-label="Plot border corner 5"]')
-    .trigger('pointerdown', { button: 0, clientX: 640, clientY: 60 });
+  const corner = wrapper.get('[aria-label="Plot border corner 5"]');
+  await corner.trigger('pointerdown', { button: 0, clientX: 641, clientY: 59 });
+  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 641, clientY: 59 }));
+  expect(wrapper.emitted('commit')).toBeUndefined();
+  await corner.trigger('pointerdown', { button: 0, clientX: 640, clientY: 60 });
   document.dispatchEvent(new MouseEvent('pointerup', { clientX: 680, clientY: 80 }));
   const expected = cloneGuildPath(path);
   expected[1]![0]![1] = { x: 330, y: 20 };

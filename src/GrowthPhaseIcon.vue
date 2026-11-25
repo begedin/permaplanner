@@ -9,7 +9,7 @@
 <template>
   <svg
     :viewBox="`0 0 ${ICON_CANVAS} ${ICON_CANVAS}`"
-    class="block aspect-square shrink-0 size-4 text-sage-700"
+    class="hidden aspect-square shrink-0 size-4 text-sage-700 sm:block"
     :aria-label="`Phase: ${GROWTH_PHASE_LABEL[phase]}`"
     :title="GROWTH_PHASE_LABEL[phase]"
     role="img"

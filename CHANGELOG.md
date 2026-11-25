@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.38.0
+
+- [CHANGE] On small screens, open the guild list from the top bar and switch between Details and Aerial for the selected guild. The editor scrolls horizontally below 320 pixels.
+- [CHANGE] Group the map tools beside Map settings. Use Season to open the garden calendar, which now starts collapsed on all screen sizes.
+- [CHANGE] On small screens, show plant condition as a five-part ring. Expand a plant group to see its individual removal controls.
+- [FIX] Drag the aerial map with one finger and pinch to zoom. Minimum zoom shows the whole map. Panning stops at the map edges.
+- [FIX] Keep the selected guild in view when the screen rotates. A click without movement preserves that focus.
+- [FIX] Keep edits within the map bounds. Use Map settings to recover off-map features or individual handles on oversized reference lines and plot borders. Recovery preserves calibration and supports undo.
+
 ## 0.37.1
 
 - [CHANGE] Moved Future view into Map settings below Scale. Select Off to hide projections. The help button explains the slider.

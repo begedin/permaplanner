@@ -1,19 +1,16 @@
-import { computed, ref, watch } from 'vue';
+import { computed, shallowRef, watch } from 'vue';
+import { defaultMapSize, type MapSize } from './aerialMapBounds';
 import { usePermaplannerStore } from './usePermaplannerStore';
 
 export const useBackgroundImage = () => {
   const permaplanner = usePermaplannerStore();
-  const ready = ref(false);
-  const imgWidth = ref(0);
-  const imgHeight = ref(0);
+  const mapSize = shallowRef<MapSize>();
   const imgDataUrl = computed(() => permaplanner.backgroundImageDataUrl);
 
   watch(
     imgDataUrl,
     (dataUrl, _previous, onCleanup) => {
-      ready.value = false;
-      imgWidth.value = 0;
-      imgHeight.value = 0;
+      mapSize.value = dataUrl ? undefined : defaultMapSize;
       if (!dataUrl) return;
 
       const img = new Image();
@@ -21,25 +18,16 @@ export const useBackgroundImage = () => {
       onCleanup(() => {
         active = false;
         img.onload = null;
-        img.onerror = null;
         img.removeAttribute('src');
       });
       img.onload = () => {
-        if (!active) return;
-        imgWidth.value = img.naturalWidth;
-        imgHeight.value = img.naturalHeight;
-        ready.value = imgWidth.value > 0 && imgHeight.value > 0;
-      };
-      img.onerror = () => {
-        if (!active) return;
-        imgWidth.value = 0;
-        imgHeight.value = 0;
-        ready.value = false;
+        if (active && img.naturalWidth > 0 && img.naturalHeight > 0)
+          mapSize.value = { width: img.naturalWidth, height: img.naturalHeight };
       };
       img.src = dataUrl;
     },
     { immediate: true, flush: 'sync' },
   );
 
-  return { imgWidth, imgHeight, imgDataUrl, ready };
+  return { imgDataUrl, mapSize };
 };

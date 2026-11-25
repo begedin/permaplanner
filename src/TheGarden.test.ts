@@ -474,9 +474,14 @@ it('edits background opacity from settings inside the aerial map and supports un
 it('records calibration and onboarding together without delayed document changes', async () => {
   setActivePinia(createPinia());
   useGardenSessionStore().gardenId = 'g1';
+  const photo = new Image();
+  vi.spyOn(window, 'Image').mockImplementation(() => photo);
+  vi.spyOn(photo, 'naturalWidth', 'get').mockReturnValue(1);
+  vi.spyOn(photo, 'naturalHeight', 'get').mockReturnValue(1);
   usePlanStateStore().state.backgroundImageDataUrl =
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWZkAAAAASUVORK5CYII=';
   await renderGarden();
+  await fireEvent.load(photo);
   const scale = useMapScaleStore();
   const history = usePlanCommandHistory();
   const session = useGardenSessionStore();

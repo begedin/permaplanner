@@ -2,7 +2,13 @@ import { computed, readonly } from 'vue';
 import { defineStore } from 'pinia';
 import { usePlanStateStore } from './usePlanStateStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
-import { cloneGuildPath, joinPaths, type GuildPath } from './guildPathClip';
+import {
+  cloneGuildPath,
+  joinPaths,
+  translatePath,
+  type GuildPath,
+  type PathPoint,
+} from './guildPathClip';
 
 export const usePlotBorderStore = defineStore('plotBorder', () => {
   const plan = usePlanStateStore();
@@ -18,5 +24,10 @@ export const usePlotBorderStore = defineStore('plotBorder', () => {
     });
     return true;
   };
-  return { path, savePath };
+  const translate = (delta: PathPoint) => {
+    history.runMutation(() => {
+      plan.state.plotBorder = translatePath(plan.state.plotBorder, delta);
+    });
+  };
+  return { path, savePath, translate };
 });

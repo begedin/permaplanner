@@ -4,6 +4,7 @@ import { defineStore } from 'pinia';
 import { SCALE_UNITS, type ScaleUnit } from './gardenDocument';
 import { usePlanStateStore } from './usePlanStateStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
+import type { PathPoint } from './guildPathClip';
 import { onboardingAfterScaleDrag } from './onboardingTypes';
 
 const METERS_PER_UNIT: Record<Exclude<ScaleUnit, 'unspecified'>, number> = {
@@ -24,6 +25,16 @@ export const useMapScaleStore = defineStore('mapScale', () => {
     history.runMutation(() => {
       plan.state.mapScale[endpoint] = { ...point };
       plan.state.onboardingState = onboardingAfterScaleDrag(plan.state.onboardingState);
+    });
+  };
+
+  const translateLine = (delta: PathPoint) => {
+    history.runMutation(() => {
+      const { start, end } = plan.state.mapScale;
+      for (const point of [start, end]) {
+        point.x += delta.x;
+        point.y += delta.y;
+      }
     });
   };
 
@@ -77,6 +88,7 @@ export const useMapScaleStore = defineStore('mapScale', () => {
     unitLabel,
     setUnit,
     movePoint,
+    translateLine,
     setPhysicalLength,
     start,
     end,

@@ -1,13 +1,14 @@
 import { onScopeDispose } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useEventListener } from '@vueuse/core';
-import { isEditableTarget, isInMapSettingsOrDialog } from './keyboardShortcuts';
+import { isEditableTarget, useMapShortcutGuard } from './keyboardShortcuts';
 import { useAerialToolHotkeys } from './useAerialTool';
 import { useMapInteractionStore } from './useMapInteractionStore';
 
 /** Install map shortcuts only while the map is mounted. */
 export const useMapInteraction = () => {
   const interaction = useMapInteractionStore();
+  const mapInputBlocked = useMapShortcutGuard();
   const refs = storeToRefs(interaction);
   onScopeDispose(interaction.resetMode);
   useAerialToolHotkeys({
@@ -19,7 +20,7 @@ export const useMapInteraction = () => {
     window,
     'keydown',
     (event) => {
-      if (isInMapSettingsOrDialog(event.target)) return;
+      if (mapInputBlocked(event.target)) return;
       if (event.key === 'Escape' && interaction.isMerging) {
         event.preventDefault();
         interaction.resetMode();

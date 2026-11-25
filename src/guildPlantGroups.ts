@@ -12,7 +12,7 @@ export type GuildPlantGroupRow = {
   plantId: string;
   label: string;
   count: number;
-  thingIds: string[];
+  instances: readonly GardenThing[];
   representativeResolved: Plant;
   headerPhaseSlots: { thingId: string; phase: GrowthPhase }[];
   showPhaseOverflow: boolean;
@@ -26,34 +26,28 @@ export const buildGroupedGuildPlants = (
   things: readonly GardenThing[],
   resolvePlant: (plantId: string) => Plant,
 ): GuildPlantGroupRow[] => {
-  const byPlantId = new Map<string, { thingIds: string[]; rp: Plant }>();
+  const byPlantId = new Map<string, GardenThing[]>();
   for (const thing of things) {
-    const rp = resolvePlant(thing.plantId);
-    let bucket = byPlantId.get(thing.plantId);
-    if (!bucket) {
-      bucket = { thingIds: [], rp };
-      byPlantId.set(thing.plantId, bucket);
-    }
-    bucket.thingIds.push(thing.id);
+    const group = byPlantId.get(thing.plantId);
+    if (group) group.push(thing);
+    else byPlantId.set(thing.plantId, [thing]);
   }
 
-  const rows: GuildPlantGroupRow[] = [...byPlantId.values()].map(({ thingIds, rp }) => {
-    const groupThings = thingIds
-      .map((id) => things.find((t) => t.id === id))
-      .filter((t): t is GardenThing => t !== undefined);
+  const rows: GuildPlantGroupRow[] = [...byPlantId].map(([plantId, group]) => {
+    const plant = resolvePlant(plantId);
     return {
-      plantId: rp.id,
-      label: plantGuildGroupLabel(rp),
-      count: thingIds.length,
-      thingIds,
-      representativeResolved: rp,
-      headerPhaseSlots: groupThings
+      plantId: plant.id,
+      label: plantGuildGroupLabel(plant),
+      count: group.length,
+      instances: group,
+      representativeResolved: plant,
+      headerPhaseSlots: group
         .slice(0, GROUP_HEADER_MAX_PHASE_ICONS)
         .flatMap((t) =>
           t.growthPhase !== undefined ? [{ thingId: t.id, phase: t.growthPhase }] : [],
         ),
-      showPhaseOverflow: groupThings.length > GROUP_HEADER_MAX_PHASE_ICONS,
-      averageVigor: averagePlantVigor(groupThings.map((t) => t.vigor)),
+      showPhaseOverflow: group.length > GROUP_HEADER_MAX_PHASE_ICONS,
+      averageVigor: averagePlantVigor(group.map((t) => t.vigor)),
     };
   });
 

@@ -56,7 +56,7 @@
         Calendar
       </h1>
     </template>
-    <label class="w-56 min-w-0 shrink">
+    <label class="w-full min-w-0 lg:w-56">
       <span class="sr-only">Search garden plants</span>
       <input
         ref="searchInputRef"

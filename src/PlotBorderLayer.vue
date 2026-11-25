@@ -2,8 +2,8 @@
   import { computed, ref, watch, type DeepReadonly } from 'vue';
   import { useCameraStore } from './useCameraStore';
   import { usePointerSession } from './usePointerSession';
-  import { clientToSvgUser } from './svgClientToUser';
   import { cloneGuildPath, guildPathData, type GuildPath } from './guildPathClip';
+  import { startMapPointDrag, useAerialMapBounds } from './aerialMapBounds';
   import type { AerialTool } from './useAerialTool';
 
   const props = defineProps<{
@@ -13,6 +13,7 @@
     tool: AerialTool;
   }>();
   const emit = defineEmits<{ select: []; commit: [path: GuildPath] }>();
+  const world = useAerialMapBounds();
   const camera = useCameraStore();
   const session = usePointerSession();
   const draft = ref<GuildPath>();
@@ -27,18 +28,23 @@
     ),
   );
   const radius = computed(() => 7 / (camera.scale * camera.zoom || 1));
-  watch(() => [props.path, props.tool, props.selected], session.cancel, {
+  watch(() => [props.path, props.tool, props.selected, world.value], session.cancel, {
     flush: 'sync',
   });
   const dragCorner = (event: PointerEvent, corner: (typeof corners.value)[number]) => {
-    if (!props.selected || props.tool !== 'select') return;
+    if (!props.selected || props.tool !== 'select' || !world.value) return;
     const svg = (event.currentTarget as SVGElement).closest('svg')!;
-    const original = cloneGuildPath(props.path);
+    const original = props.path;
+    const drag = startMapPointDrag(svg, event, corner.point, world.value);
     session.start(event, {
       update: (next) => {
+        const point = drag(next);
+        if (!point) {
+          draft.value = undefined;
+          return;
+        }
         const path = cloneGuildPath(original);
         const ring = path[corner.polygonIndex]![corner.ringIndex]!;
-        const point = clientToSvgUser(svg, next.clientX, next.clientY);
         ring[corner.pointIndex] = point;
         if (corner.pointIndex === 0) ring[ring.length - 1] = { ...point };
         draft.value = path;

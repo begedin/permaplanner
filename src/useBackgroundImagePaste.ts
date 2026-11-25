@@ -1,11 +1,13 @@
 import { onScopeDispose, ref, watch } from 'vue';
 import { useEventListener } from '@vueuse/core';
+import { useGuildWorkspaceStore } from './useGuildWorkspaceStore';
 import { useGardenSessionStore } from './stores/useGardenSessionStore';
 import { usePermaplannerStore } from './usePermaplannerStore';
 
 export const MAX_BACKGROUND_IMAGE_BYTES = 3_000_000;
 
 export const useBackgroundImagePaste = () => {
+  const workspace = useGuildWorkspaceStore();
   const session = useGardenSessionStore();
   const permaplanner = usePermaplannerStore();
   const errorMessage = ref<string>();
@@ -24,6 +26,7 @@ export const useBackgroundImagePaste = () => {
   });
 
   useEventListener(document, 'paste', (event) => {
+    if (workspace.mapVisibility === 'hidden') return;
     const file = Array.from(event.clipboardData?.items ?? [])
       .find((item) => item.type.startsWith('image/'))
       ?.getAsFile();

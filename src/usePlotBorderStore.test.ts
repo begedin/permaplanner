@@ -1,5 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, expect, it } from 'vitest';
+import { usePlanStateStore } from './usePlanStateStore';
 import { usePlotBorderStore } from './usePlotBorderStore';
 import { usePlanCommandHistory } from './usePlanCommandHistory';
 import { cloneGuildPath } from './guildPathClip';
@@ -37,4 +38,14 @@ it('normalizes either winding, clones geometry and supports undoing removal', ()
   expect(border.path).toEqual([]);
   usePlanCommandHistory().undo();
   expect(border.path).toEqual(path);
+});
+
+it('keeps imported corners in order when moving the whole border', () => {
+  const ring = [...triangle].reverse();
+  usePlanStateStore().state.plotBorder = [[ring]];
+  const border = usePlotBorderStore();
+  border.translate({ x: -4, y: 9 });
+  expect(border.path).toEqual([[ring.map(({ x, y }) => ({ x: x - 4, y: y + 9 }))]]);
+  usePlanCommandHistory().undo();
+  expect(border.path).toEqual([[ring]]);
 });

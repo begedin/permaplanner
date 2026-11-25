@@ -1,5 +1,17 @@
 import { onScopeDispose } from 'vue';
 
+export const trackDragMovement = (down: PointerEvent) => {
+  let dragging = false;
+  return (next: PointerEvent) => {
+    const dx = next.clientX - down.clientX;
+    const dy = next.clientY - down.clientY;
+    if (dx === 0 && dy === 0) return false;
+    if (!dragging && down.pointerType === 'touch' && Math.hypot(dx, dy) < 3) return false;
+    dragging = true;
+    return true;
+  };
+};
+
 /** One captured pointer, one commit; all cancellation paths discard the preview. */
 export const usePointerSession = () => {
   let dispose: (() => void) | undefined;
@@ -19,7 +31,7 @@ export const usePointerSession = () => {
       cancel: () => void;
     },
   ) => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || (event.pointerType === 'touch' && !event.isPrimary)) return;
     cancel();
     event.preventDefault();
     event.stopPropagation();
@@ -35,6 +47,22 @@ export const usePointerSession = () => {
       discard = undefined;
     };
     target.setPointerCapture?.(pointerId);
+    if (event.pointerType === 'touch') {
+      const svg = target.closest('svg');
+      document.addEventListener(
+        'pointerdown',
+        (next) => {
+          if (
+            next.pointerType === 'touch' &&
+            next.pointerId !== pointerId &&
+            next.target instanceof Node &&
+            svg?.contains(next.target)
+          )
+            cancel();
+        },
+        { capture: true, signal },
+      );
+    }
     const finish = (next: PointerEvent) => {
       if (next.pointerId !== pointerId) return;
       handlers.update(next);

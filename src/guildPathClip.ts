@@ -11,6 +11,14 @@ export type GuildPath = PathPoint[][][];
 export const cloneGuildPath = (path: DeepReadonly<GuildPath>): GuildPath =>
   path.map((polygon) => polygon.map((ring) => ring.map((point) => ({ ...point }))));
 
+export const translatePath = (
+  path: DeepReadonly<GuildPath>,
+  delta: PathPoint,
+): GuildPath =>
+  path.map((polygon) =>
+    polygon.map((ring) => ring.map(({ x, y }) => ({ x: x + delta.x, y: y + delta.y }))),
+  );
+
 export const toMultiPolygon = (path: GuildPath): clipping.MultiPolygon =>
   path.map((polygon) => polygon.map((ring) => ring.map(({ x, y }) => [x, y])));
 

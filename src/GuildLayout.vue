@@ -12,7 +12,7 @@
   import { useGardenStore } from './useGardenStore';
   import { useMapShapeStore } from './useMapShapeStore';
   import { useEventListener } from '@vueuse/core';
-  import { isEditableTarget, isInMapSettingsOrDialog } from './keyboardShortcuts';
+  import { isEditableTarget, useMapShortcutGuard } from './keyboardShortcuts';
   import UiIcon from './uiIcons/UiIcon.vue';
   import { usePointerSession } from './usePointerSession';
   import { transformClientPoint } from './svgClientToUser';
@@ -54,6 +54,7 @@
   const hoveredThingId = ref<string>();
   const focusedThingId = ref<string>();
   const session = usePointerSession();
+  const mapInputBlocked = useMapShortcutGuard();
   const placedThings = computed(() =>
     placedCanopies(
       guild.value.plants.map((t) => (t.id === draft.value?.id ? draft.value : t)),
@@ -103,7 +104,7 @@
   useEventListener(window, 'keydown', (event) => {
     if (
       isEditableTarget(event.target) ||
-      isInMapSettingsOrDialog(event.target) ||
+      mapInputBlocked(event.target) ||
       event.isComposing ||
       event.metaKey ||
       event.ctrlKey ||

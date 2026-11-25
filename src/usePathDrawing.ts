@@ -13,10 +13,12 @@ import {
 } from './guildPathClip';
 import type { DrawingBrush } from './useAerialTool';
 import { usePointerSession } from './usePointerSession';
+import { insideMap, pointOnMap, type MapSize } from './aerialMapBounds';
 import { clientToSvgUser } from './svgClientToUser';
 
 export const usePathDrawing = (options: {
   svg: Ref<SVGSVGElement | undefined>;
+  worldBounds: Readonly<Ref<MapSize | undefined>>;
   savedPath: Ref<DeepReadonly<GuildPath> | undefined>;
   onCommit: (path: GuildPath) => boolean;
   onCancel: () => void;
@@ -35,7 +37,8 @@ export const usePathDrawing = (options: {
   const drawingBrush = options.drawingBrush;
 
   const brush = computed(() => {
-    if (!isEditing.value) {
+    const map = options.worldBounds.value;
+    if (!isEditing.value || !map || !insideMap(pointer.value, map)) {
       return [];
     }
 
@@ -47,7 +50,9 @@ export const usePathDrawing = (options: {
     const r = brushSize.value;
     for (let i = 0; i < totalPoints; i++) {
       const angle = theta * i;
-      points.push({ x: x + r * Math.cos(angle), y: y + r * Math.sin(angle) });
+      points.push(
+        pointOnMap({ x: x + r * Math.cos(angle), y: y + r * Math.sin(angle) }, map),
+      );
     }
     return points;
   });
@@ -58,9 +63,11 @@ export const usePathDrawing = (options: {
   });
   useEventListener(options.svg, 'pointerdown', (event: PointerEvent) => {
     const svg = options.svg.value;
-    if (!isEditing.value || !svg || event.button !== 0) return;
-    svg.focus({ preventScroll: true });
+    const map = options.worldBounds.value;
+    if (!isEditing.value || !svg || !map || event.button !== 0) return;
     const origin = clientToSvgUser(svg, event.clientX, event.clientY);
+    if (!insideMap(origin, map)) return;
+    svg.focus({ preventScroll: true });
     if (drawingBrush.value === 'polygon') {
       event.preventDefault();
       const first = corners.value[0];
@@ -80,7 +87,7 @@ export const usePathDrawing = (options: {
     let axis: 'x' | 'y' | undefined;
     session.start(event, {
       update: (next) => {
-        let point = clientToSvgUser(svg, next.clientX, next.clientY);
+        let point = pointOnMap(clientToSvgUser(svg, next.clientX, next.clientY), map);
         if (drawingBrush.value === 'rectangle') {
           stroke.value = [
             [
@@ -155,7 +162,8 @@ export const usePathDrawing = (options: {
   };
 
   watch(
-    () => [options.savedPath.value, drawingBrush.value] as const,
+    () =>
+      [options.savedPath.value, drawingBrush.value, options.worldBounds.value] as const,
     ([savedPath]) => {
       session.cancel();
       stroke.value = [];
@@ -167,6 +175,7 @@ export const usePathDrawing = (options: {
   useEventListener(options.svg, 'keydown', (event: KeyboardEvent) => {
     if (
       !isEditing.value ||
+      !options.worldBounds.value ||
       event.target !== event.currentTarget ||
       event.isComposing ||
       event.metaKey ||

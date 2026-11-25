@@ -27,10 +27,12 @@
   import { usePermaplannerStore } from './usePermaplannerStore';
   import AerialMapToolbar from './AerialMapToolbar.vue';
 
+  import { useAerialMapBounds } from './aerialMapBounds';
+  import RecoverMapFeatures from './RecoverMapFeatures.vue';
+
+  const worldBounds = useAerialMapBounds();
   const props = defineProps<{
     svg: SVGSVGElement;
-    worldBounds: { width: number; height: number };
-    viewport: { width: number; height: number };
   }>();
   const container = toRef(props, 'svg');
   const plotBorder = usePlotBorderStore();
@@ -54,14 +56,6 @@
   const shapeControls = ref<SVGGElement>();
   const guildLabelLayer = ref<SVGGElement>();
   const camera = useCameraStore();
-
-  const center = computed(() => {
-    const x = camera.x / camera.scale;
-    const y = camera.y / camera.scale;
-    const width = props.viewport.width / camera.scale;
-    const height = props.viewport.height / camera.scale;
-    return { x: x + width / 2, y: y + height / 2 };
-  });
 
   const mapScale = useMapScaleStore();
   const onboarding = useOnboardingStore();
@@ -132,6 +126,7 @@
     strokeColor,
   } = usePathDrawing({
     svg: container,
+    worldBounds,
     savedPath: drawingPath,
     drawingBrush,
     onCommit: commitDrawing,
@@ -156,19 +151,17 @@
     </button>
   </div>
   <div
-    class="pointer-events-none absolute top-2 right-2 z-10 flex w-max max-w-[calc(100%-1rem)] max-h-[calc(100%-1rem)] flex-col items-end gap-4"
+    class="pointer-events-none absolute top-2 right-2 z-10 flex w-max max-w-[calc(100%-1rem)] max-h-[calc(100%-3.75rem)] flex-col items-end gap-4"
   >
-    <AerialMapToolbar
-      :active-tool="activeTool"
-      :feature="feature"
-      :drawing-brush="drawingBrush"
-      @update:feature="setFeature"
-      @update:drawing-brush="setBrush"
-      :can-use-guild-tools="canUseGuildTools"
-      @update:active-tool="setTool"
-    />
+    <p
+      v-if="!worldBounds"
+      role="status"
+      class="paper-floating max-w-full px-3 py-2 text-sm text-ink-700"
+    >
+      Map editing needs the photo dimensions. You can paste a replacement photo.
+    </p>
     <div
-      v-if="drawing"
+      v-else-if="drawing"
       class="paper-floating max-w-full px-3 py-2 text-sm text-ink-700"
     >
       <p v-if="drawingBrush === 'path'">
@@ -237,7 +230,7 @@
         </radialGradient>
       </defs>
       <text
-        v-if="!imgDataUrl"
+        v-if="!imgDataUrl && worldBounds"
         :x="worldBounds.width / 2"
         :y="worldBounds.height / 2"
         fill="red"
@@ -249,7 +242,7 @@
         screenshot
       </text>
       <rect
-        v-if="mapScale.unitLengthPx"
+        v-if="mapScale.unitLengthPx && worldBounds"
         x="0"
         y="0"
         :width="worldBounds.width"
@@ -314,7 +307,7 @@
         @commit="commitBorder"
       />
       <DrawingOverlay
-        v-if="drawing"
+        v-if="drawing && worldBounds"
         :width="worldBounds.width"
         :height="worldBounds.height"
         :stroke="stroke"
@@ -327,9 +320,8 @@
       />
       <ReferenceLine v-slot="{ onboardingState }">
         <OnboardingText
-          v-if="imgDataUrl"
-          :x="center.x"
-          :y="center.y"
+          v-if="imgDataUrl && worldBounds"
+          v-bind="camera.center"
           :onboarding-state="onboardingState"
         />
       </ReferenceLine>
@@ -345,6 +337,18 @@
     </g>
   </Teleport>
   <MapSettings>
+    <template #tools>
+      <AerialMapToolbar
+        v-if="worldBounds"
+        :active-tool="activeTool"
+        :feature="feature"
+        :drawing-brush="drawingBrush"
+        :can-use-guild-tools="canUseGuildTools"
+        @update:feature="setFeature"
+        @update:drawing-brush="setBrush"
+        @update:active-tool="setTool"
+      />
+    </template>
     <fieldset class="flex flex-col gap-2">
       <legend class="mb-2 font-serif font-medium text-ink-800">Labels</legend>
       <label class="flex cursor-pointer items-center gap-2 text-ink-700">
@@ -429,5 +433,6 @@
       </button>
     </fieldset>
     <hr class="border-parchment-300" />
+    <RecoverMapFeatures />
   </MapSettings>
 </template>

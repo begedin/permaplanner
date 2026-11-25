@@ -5,10 +5,10 @@ import {
   defaultCatalogPick,
   type CatalogPlantPick,
 } from './catalogPlantPick';
-import type { GardenThing, Guild, MulchLevel } from './gardenTypes';
+import type { Guild, MulchLevel } from './gardenTypes';
 import type { GuildPlantGroupRow } from './guildPlantGroups';
 import { GROWTH_PHASES_FOR_SELECT } from './guildPlantInstanceStatus';
-import { phenologySummaryForPlant, plantCatalog } from './plantCatalog';
+import { plantCatalog } from './plantCatalog';
 import { useGardenStore } from './useGardenStore';
 
 type PlantEditor =
@@ -90,7 +90,7 @@ export const useGuildEditor = (guildId: Ref<string>, guild: Ref<DeepReadonly<Gui
     plantEditor.value = {
       kind: 'edit',
       plantId: row.plantId,
-      thingIds: [...row.thingIds],
+      thingIds: row.instances.map((thing) => thing.id),
     };
     selectedPick.value = catalogPickForUserPlant(row.plantId);
   };
@@ -126,28 +126,9 @@ export const useGuildEditor = (guildId: Ref<string>, guild: Ref<DeepReadonly<Gui
 
   const mulchStars: MulchLevel[] = [1, 2, 3, 4, 5];
 
-  const phenologySummaryForThingIds = (thingIds: string[]): string | null => {
-    if (thingIds.length === 0) {
-      return null;
-    }
-    const id0 = thingIds[0]!;
-    const row = guild.value.plants.find((p) => p.id === id0);
-    if (!row) {
-      return null;
-    }
-    const rp = garden.resolvedPlant(row.plantId);
-    return phenologySummaryForPlant(rp.speciesId, rp.cultivarId);
-  };
-
   const togglePlantGroup = (plantId: string) => {
     expandedPlantGroupId.value = expandedPlantGroupId.value === plantId ? null : plantId;
   };
-
-  const isPlantGroupExpanded = (plantId: string): boolean =>
-    expandedPlantGroupId.value === plantId;
-
-  const guildThing = (thingId: string): GardenThing | undefined =>
-    guild.value.plants.find((t) => t.id === thingId);
 
   const setThingGrowthPhase = (thingId: string, raw: string) => {
     const phase = GROWTH_PHASES_FOR_SELECT.find((option) => option === raw);
@@ -173,10 +154,8 @@ export const useGuildEditor = (guildId: Ref<string>, guild: Ref<DeepReadonly<Gui
     closePlantEditor,
     onConfirmPlant,
     mulchStars,
-    phenologySummaryForThingIds,
     togglePlantGroup,
-    isPlantGroupExpanded,
-    guildThing,
+    expandedPlantGroupId,
     setThingGrowthPhase,
   };
 };

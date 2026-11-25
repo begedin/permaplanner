@@ -1,15 +1,15 @@
-import { nextTick, ref, watch } from 'vue';
+import { nextTick, ref, watch, type Ref } from 'vue';
 
 import { useGuildSelection } from './useGuildSelection';
 
-export const useGuildListScroll = () => {
+export const useGuildListScroll = (visible: Ref<boolean>) => {
   const guildListScroll = ref<HTMLElement>();
   const { selectedGuildId } = useGuildSelection();
 
   watch(
-    selectedGuildId,
-    async (id) => {
-      if (!id) {
+    [selectedGuildId, visible],
+    async ([id, isVisible]) => {
+      if (!id || !isVisible) {
         return;
       }
       await nextTick();

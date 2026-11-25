@@ -1,4 +1,11 @@
-import { setupAuthenticatedGarden, waitForMainApp } from './helpers';
+import {
+  registerAndReachImport,
+  pasteAerialPhotoOntoMap,
+  setupAuthenticatedGarden,
+  waitForMainApp,
+} from './helpers';
+import { importLayoutGarden } from './fixtures/guildLayout';
+import { rectangleShapePath } from '../src/mapShapeGeometry';
 import { expect, test } from './test';
 
 for (const feature of ['Path', 'Landmark']) {
@@ -14,7 +21,7 @@ for (const feature of ['Path', 'Landmark']) {
     await page.goto('/guilds');
     await waitForMainApp(page);
     const map = page.locator('[data-main-svg]');
-    const bounds = await map.boundingBox();
+    const bounds = await map.locator('[data-world-stage]').boundingBox();
     if (!bounds) throw new Error('Map not visible');
 
     for (const [index, brush] of [
@@ -30,7 +37,7 @@ for (const feature of ['Path', 'Landmark']) {
         .click();
       await page.getByRole('button', { name: brush, exact: true }).click();
       const x = bounds.x + 70 + index * 150;
-      const y = bounds.y + 200;
+      const y = bounds.y + (brush === 'Bounding box (R)' ? 80 : 200);
       if (brush === 'Polygon (P)') {
         await page.mouse.click(x, y);
         await page.mouse.click(x + 80, y);
@@ -47,13 +54,26 @@ for (const feature of ['Path', 'Landmark']) {
       } else {
         await page.mouse.move(x, y);
         await page.mouse.down();
-        await page.mouse.move(x + 80, y + 80, { steps: 10 });
+        await page.mouse.move(
+          x + 80,
+          brush === 'Bounding box (R)' ? bounds.y - 2 : y + 80,
+          { steps: 10 },
+        );
         await page.mouse.up();
       }
       await page.keyboard.press('Enter');
       await expect(page.getByLabel(`${feature} name`, { exact: true })).toHaveValue(
         feature,
       );
+      if (brush === 'Bounding box (R)') {
+        const grip = page.getByLabel(`Rotate ${feature.toLowerCase()}`, { exact: true });
+        await grip.hover();
+        await page.mouse.down();
+        const box = (await grip.boundingBox())!;
+        await page.mouse.move(box.x + box.width / 2 + 20, box.y + box.height / 2 + 20);
+        await page.mouse.up();
+        await expect(page.getByLabel('Rotation (degrees)')).not.toHaveValue('0');
+      }
       await page
         .getByLabel(`${feature} name`, { exact: true })
         .fill(`Walkway ${index + 1}`);
@@ -77,7 +97,7 @@ for (const feature of ['Path', 'Landmark']) {
     });
     await page.mouse.up();
     await expect(walkway.locator('..')).not.toHaveAttribute('transform', original!);
-    const beforeResize = await walkway.getAttribute('d');
+    const beforeResize = (await walkway.boundingBox())!;
     const handle = await page
       .getByLabel(`Resize ${feature.toLowerCase()} right edge`, { exact: true })
       .boundingBox();
@@ -92,7 +112,9 @@ for (const feature of ['Path', 'Landmark']) {
       },
     );
     await page.mouse.up();
-    await expect(walkway).not.toHaveAttribute('d', beforeResize!);
+    await expect
+      .poll(async () => (await walkway.boundingBox())?.width)
+      .toBeGreaterThan(beforeResize.width);
     await page.getByLabel('Rotation (degrees)').fill('30');
     await page.getByLabel('Rotation (degrees)').press('Tab');
     await page
@@ -131,16 +153,30 @@ test('keeps map controls reachable at 320px without overlapping the shape editor
   const features = map.getByRole('group', { name: 'Feature' });
   const bounds = await map.boundingBox();
   if (!bounds) throw new Error('Map not visible');
+  const selectBounds = (await tools
+    .getByRole('button', { name: 'Select (V)' })
+    .boundingBox())!;
+  const settings = map.getByRole('button', { name: 'Map settings' });
   for (const button of [
     ...(await features.getByRole('button').all()),
     ...(await tools.getByRole('button').all()),
+    map.getByRole('button', { name: 'Season', exact: true }),
+    settings,
   ]) {
     await expect(button).toBeInViewport({ ratio: 1 });
     const box = await button.boundingBox();
     if (!box) throw new Error('Map control not visible');
+    expect(box.y + box.height / 2).toBe(selectBounds.y + selectBounds.height / 2);
+    expect(box.width).toBeCloseTo(selectBounds.width, 1);
     expect(box.x).toBeGreaterThanOrEqual(bounds.x);
     expect(box.x + box.width).toBeLessThanOrEqual(bounds.x + bounds.width);
   }
+  const leftEdge = (await features.boundingBox())!.x;
+  const lastButton = (await settings.boundingBox())!;
+  expect((leftEdge + lastButton.x + lastButton.width) / 2).toBeCloseTo(
+    bounds.x + bounds.width / 2,
+    1,
+  );
   await features.getByRole('button', { name: 'Path', exact: true }).click();
   await tools.getByRole('button', { name: 'Select (V)' }).click();
   await expect(tools.getByRole('button', { name: 'Select (V)' })).toHaveAttribute(
@@ -150,15 +186,83 @@ test('keeps map controls reachable at 320px without overlapping the shape editor
   await tools.getByRole('button', { name: 'Bounding box (R)' }).click();
   await page.mouse.move(bounds.x + 30, bounds.y + bounds.height - 100);
   await page.mouse.down();
-  await page.mouse.move(bounds.x + 100, bounds.y + bounds.height - 40, { steps: 5 });
+  await page.mouse.move(bounds.x + 100, bounds.y + bounds.height - 60, { steps: 5 });
   await page.mouse.up();
   await page.keyboard.press('Enter');
   const editor = map.getByRole('group', { name: 'Path details' });
+  await expect(editor).toHaveCount(0);
+  const stage = (await map.locator('[data-world-stage]').boundingBox())!;
+  await page.mouse.move(stage.x + 30, stage.y + stage.height - 30);
+  await page.mouse.down();
+  await page.mouse.move(stage.x + 100, stage.y + stage.height + 50, { steps: 5 });
+  await page.mouse.up();
+  await page.keyboard.press('Enter');
   await expect(editor).toBeVisible();
+  const bottom = await map
+    .getByRole('button', { name: 'Path: Path', exact: true })
+    .evaluate((element) => {
+      const path = element as SVGGraphicsElement;
+      const box = path.getBBox();
+      return new DOMPoint(box.x, box.y + box.height).matrixTransform(path.getScreenCTM()!)
+        .y;
+    });
+  expect(bottom).toBeCloseTo(stage.y + stage.height, 0);
   const editorBounds = await editor.boundingBox();
   const toolsBounds = await tools.boundingBox();
   if (!editorBounds || !toolsBounds) throw new Error('Editor or tools not visible');
-  expect(editorBounds.y).toBeGreaterThan(toolsBounds.y + toolsBounds.height);
+  expect(editorBounds.y + editorBounds.height).toBeLessThan(toolsBounds.y);
   await tools.getByRole('button', { name: 'Select (V)' }).click();
   expect(errors).toEqual([]);
+});
+
+test('recovers landmarks only when the aerial map dimensions are known', async ({
+  page,
+}) => {
+  await registerAndReachImport(page);
+  await importLayoutGarden(page, [], {
+    landmarks: [1500, 2500].map((x) => ({
+      id: String(x),
+      name: `Shed at ${x}`,
+      x,
+      y: 50,
+      width: 60,
+      height: 30,
+      rotation: 0,
+      path: rectangleShapePath(),
+    })),
+  });
+  const settings = page.getByRole('button', { name: 'Map settings' });
+  const recovery = page.getByRole('group', { name: 'Move onto map' });
+  const shed = page.getByRole('button', { name: 'Landmark: Shed at 1500' }).locator('..');
+  const position = await shed.getAttribute('transform');
+  await settings.click();
+  await expect(recovery.getByRole('button')).toHaveCount(2);
+
+  await pasteAerialPhotoOntoMap(page, 'data:image/png;base64,YnJva2Vu');
+  const unknownSize = page.getByText('Map editing needs the photo dimensions.', {
+    exact: false,
+  });
+  await expect(unknownSize).toBeVisible();
+  await expect(recovery).toHaveCount(0);
+  const save = page.getByRole('button', { name: 'Save', exact: true });
+  await save.click();
+  await expect(save).toBeDisabled();
+  await page.reload();
+  await expect(unknownSize).toBeVisible();
+  await expect(shed).toHaveAttribute('transform', position!);
+  await settings.click();
+  await expect(recovery).toHaveCount(0);
+
+  const photo = await page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 2048;
+    canvas.height = 100;
+    return canvas.toDataURL();
+  });
+  await pasteAerialPhotoOntoMap(page, photo);
+  const outside = recovery.getByRole('button', { name: 'Landmark · Shed at 2500' });
+  await expect(recovery.getByRole('button')).toHaveCount(1);
+  await outside.click();
+  await expect(recovery).toHaveCount(0);
+  await expect(shed).toHaveAttribute('transform', position!);
 });

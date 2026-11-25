@@ -15,6 +15,9 @@
   import { useSearchFocusHotkeys } from './useSearchFocusHotkeys';
 
   const searchQuery = defineModel<string>('searchQuery', { default: '' });
+  const guildListOpen = defineModel<boolean>('guildListOpen', { default: false });
+  const props = defineProps<{ showGuildDetails?: boolean }>();
+  const emit = defineEmits<{ selectView: [view: 'details' | 'aerial'] }>();
 
   const route = useRoute();
   const isLayout = computed(() => route.name === routeNames.guildLayout);
@@ -26,14 +29,31 @@
   const commandHistory = usePlanCommandHistory();
   const { canUndo, canRedo } = storeToRefs(commandHistory);
   const searchInputRef = ref<HTMLInputElement | null>(null);
+  const listToggle = ref<HTMLButtonElement>();
+  defineExpose({
+    focusListToggle: () => listToggle.value?.focus({ preventScroll: true }),
+  });
   const searchPlaceholder = searchInputPlaceholder();
+  const views = [
+    { id: 'details', label: 'Details', icon: 'edit', controls: 'guild-details' },
+    { id: 'aerial', label: 'Aerial', icon: 'guilds', controls: 'guild-map' },
+  ] as const;
+  const activeView = computed(() => {
+    if (guildListOpen.value) return;
+    if (props.showGuildDetails) return 'details';
+    if (!isLayout.value) return 'aerial';
+  });
+  const selectView = (view: 'details' | 'aerial') => {
+    guildListOpen.value = false;
+    emit('selectView', view);
+  };
 
   const selectedGuildName = computed(() => {
     const id = selectedGuildId.value;
     if (!id) {
       return undefined;
     }
-    return garden.guilds.find((g) => g.id === id)?.name;
+    return garden.guilds.find((g) => g.id === id)?.name.trim() || 'Unnamed guild';
   });
 
   useSearchFocusHotkeys(searchInputRef);
@@ -41,59 +61,103 @@
 
 <template>
   <AppPageHeader>
-    <template #breadcrumb>
-      <nav
-        v-if="selectedGuildId && selectedGuildName"
-        aria-label="Breadcrumb"
-        class="flex flex-row items-center gap-1.5 min-w-0 text-lg font-medium"
+    <template #menu>
+      <button
+        id="guild-list-toggle"
+        ref="listToggle"
+        type="button"
+        class="nav-icon-btn lg:hidden"
+        :class="{ 'nav-icon-btn-active': guildListOpen }"
+        aria-label="Guild list"
+        title="Guild list"
+        aria-controls="guild-list"
+        :aria-expanded="guildListOpen"
+        @click="guildListOpen = !guildListOpen"
       >
-        <button
-          type="button"
-          class="link-soft text-ink-800 hover:underline shrink-0"
-          aria-label="Deselect guild, Guilds"
-          @click="clearSelection"
+        <UiIcon
+          name="list"
+          class="size-5"
+        />
+      </button>
+    </template>
+    <template #breadcrumb>
+      <template v-if="selectedGuildId && selectedGuildName">
+        <nav
+          aria-label="Breadcrumb"
+          class="hidden lg:flex flex-row items-center gap-1.5 min-w-0 text-lg font-medium"
         >
-          Guilds
-        </button>
-        <span
-          class="text-ink-400 shrink-0"
-          aria-hidden="true"
-        >
-          /
-        </span>
-        <RouterLink
-          v-if="isLayout"
-          class="link-soft truncate text-ink-800 hover:underline"
-          :to="{ name: routeNames.guildsDetail, params: { guildId: selectedGuildId } }"
-        >
-          <HighlightText
-            :text="selectedGuildName"
-            :query="searchQuery"
-          />
-        </RouterLink>
-        <span
-          v-else
-          class="text-ink-800 truncate"
-          aria-current="page"
-        >
-          <HighlightText
-            :text="selectedGuildName"
-            :query="searchQuery"
-          />
-        </span>
-        <template v-if="isLayout">
+          <button
+            type="button"
+            class="link-soft text-ink-800 hover:underline shrink-0"
+            aria-label="Deselect guild, Guilds"
+            @click="clearSelection"
+          >
+            Guilds
+          </button>
           <span
             class="text-ink-400 shrink-0"
             aria-hidden="true"
-            >/</span
           >
+            /
+          </span>
+          <RouterLink
+            v-if="isLayout"
+            class="link-soft truncate text-ink-800 hover:underline"
+            :to="{ name: routeNames.guildsDetail, params: { guildId: selectedGuildId } }"
+          >
+            <HighlightText
+              :text="selectedGuildName"
+              :query="searchQuery"
+            />
+          </RouterLink>
           <span
-            class="text-ink-800 shrink-0"
+            v-else
+            class="text-ink-800 truncate"
             aria-current="page"
-            >Plant layout</span
           >
-        </template>
-      </nav>
+            <HighlightText
+              :text="selectedGuildName"
+              :query="searchQuery"
+            />
+          </span>
+          <template v-if="isLayout">
+            <span
+              class="text-ink-400 shrink-0"
+              aria-hidden="true"
+              >/</span
+            >
+            <span
+              class="text-ink-800 shrink-0"
+              aria-current="page"
+              >Plant layout</span
+            >
+          </template>
+        </nav>
+        <nav
+          class="flex items-center gap-1 border-t border-parchment-300 pt-1.5 lg:hidden"
+          aria-label="Guild views"
+        >
+          <span
+            class="mr-auto min-w-0 truncate font-serif font-medium text-ink-800"
+            :title="selectedGuildName"
+            >{{ selectedGuildName }}</span
+          >
+          <button
+            v-for="view in views"
+            :key="view.id"
+            type="button"
+            class="nav-icon-btn h-8 w-auto shrink-0 gap-1 rounded px-2"
+            :class="{ 'nav-icon-btn-active': activeView === view.id }"
+            :aria-pressed="activeView === view.id"
+            :aria-controls="view.controls"
+            :title="view.label"
+            @click="selectView(view.id)"
+          >
+            <UiIcon :name="view.icon" />
+            <span class="sr-only min-[360px]:not-sr-only">{{ view.label }}</span>
+          </button>
+        </nav>
+      </template>
       <h1
         v-else
         class="text-lg font-medium text-ink-800"
@@ -101,7 +165,7 @@
         Guilds
       </h1>
     </template>
-    <label class="w-56 min-w-0 shrink">
+    <label class="w-full min-w-0 lg:w-56">
       <span class="sr-only">Search guilds</span>
       <input
         ref="searchInputRef"
@@ -111,7 +175,22 @@
         v-model="searchQuery"
       />
     </label>
-    <div class="flex flex-row items-center gap-1 shrink-0">
+    <div
+      class="grid shrink-0 grid-cols-4 gap-1 min-[368px]:flex"
+      role="group"
+      aria-label="Guild actions"
+    >
+      <button
+        type="button"
+        class="btn-soft-muted btn-soft-sm flex h-9 min-w-9 items-center justify-center gap-0.5 whitespace-nowrap px-0.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed min-[368px]:gap-1.5 min-[368px]:px-2"
+        @click="addGuild"
+      >
+        <UiIcon
+          name="add"
+          class="size-5"
+        />
+        <span class="sr-only min-[360px]:not-sr-only">Add guild</span>
+      </button>
       <button
         type="button"
         class="btn-soft-muted btn-soft-sm flex h-9 min-w-9 items-center justify-center gap-1.5 px-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -141,17 +220,6 @@
       <button
         type="button"
         class="btn-soft-muted btn-soft-sm flex h-9 min-w-9 items-center justify-center gap-1.5 px-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-        @click="addGuild"
-      >
-        <UiIcon
-          name="add"
-          class="size-5"
-        />
-        <span>Add guild</span>
-      </button>
-      <button
-        type="button"
-        class="btn-soft-muted btn-soft-sm flex h-9 min-w-9 items-center justify-center gap-1.5 px-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         :disabled="!gardenSession.canSave"
         @click="gardenSession.save()"
       >
@@ -159,7 +227,9 @@
           name="save"
           class="size-5"
         />
-        <span>{{ gardenSession.status === 'saving' ? 'Saving…' : 'Save' }}</span>
+        <span class="sr-only min-[360px]:not-sr-only">
+          {{ gardenSession.status === 'saving' ? 'Saving…' : 'Save' }}
+        </span>
       </button>
     </div>
   </AppPageHeader>

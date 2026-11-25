@@ -5,6 +5,7 @@ import {
   createStrawberry,
   importLayoutGarden,
 } from './fixtures/guildLayout';
+import { rectangleShapePath } from '../src/mapShapeGeometry';
 import { expect, test } from './test';
 
 const appleCanopy = { x: 40, y: 40, diameter: 20 };
@@ -20,12 +21,169 @@ test.beforeEach(async ({ page }) => {
 });
 test.afterEach(() => expect(browserErrors).toEqual([]));
 
+test.describe('touch aerial map', () => {
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+
+  test('pinches over a landmark, pans, and selects plants without moving the map', async ({
+    page,
+  }) => {
+    await importLayoutGarden(
+      page,
+      [
+        createGrannySmiths({ x: 72, y: 64, diameter: 20 }),
+        createStrawberry({ x: 88, y: 85, diameter: 12 }),
+      ],
+      {
+        landmarks: [
+          {
+            id: 'shed',
+            name: 'Shed',
+            x: 38,
+            y: 59,
+            width: 28,
+            height: 28,
+            rotation: 0,
+            path: rectangleShapePath(),
+          },
+        ],
+      },
+    );
+    const map = page.getByLabel('Aerial map canvas');
+    const bed = map.locator('path.pointer-events-fill').first();
+    const corner = (await bed.boundingBox())!;
+    // Chromium must generate the touch events to test pointer capture during a pinch.
+    const touch = await page.context().newCDPSession(page);
+    const sendTouch = (
+      type: 'touchStart' | 'touchMove' | 'touchEnd',
+      touchPoints: { x: number; y: number; id?: number }[] = [],
+    ) => touch.send('Input.dispatchTouchEvent', { type, touchPoints });
+    const fingers = (gap: number) =>
+      [-1, 1].map((sign, id) => ({
+        x: corner.x + 15,
+        y: corner.y + 35 + sign * gap,
+        id: id + 1,
+      }));
+    const shed = map.getByRole('button', { name: 'Landmark: Shed' }).locator('..');
+    const original = await shed.getAttribute('transform');
+    const [first] = fingers(12);
+    await sendTouch('touchStart', [{ ...first!, x: first!.x - 3 }]);
+    await sendTouch('touchMove', [{ ...first!, x: first!.x - 2 }]);
+    await expect(shed).toHaveAttribute('transform', original!);
+    await sendTouch('touchMove', [first!]);
+    await expect(shed).not.toHaveAttribute('transform', original!);
+    await sendTouch('touchStart', fingers(12));
+    await sendTouch('touchMove', fingers(42));
+    await sendTouch('touchEnd');
+    await expect(shed).toHaveAttribute('transform', original!);
+    await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeDisabled();
+    await page.getByRole('button', { name: 'Done', exact: true }).click();
+    const before = (await bed.boundingBox())!;
+    const box = (await map.boundingBox())!;
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    expect(before.width / corner.width).toBeCloseTo(3.5, 1);
+    await sendTouch('touchStart', [{ x, y }]);
+    await sendTouch('touchMove', [{ x: x - 25, y: y - 35 }]);
+    await sendTouch('touchEnd');
+    const after = (await bed.boundingBox())!;
+    expect(after.x - before.x).toBeCloseTo(-25, 0);
+    expect(after.y - before.y).toBeCloseTo(-35, 0);
+    const plant = map.getByRole('button', { name: 'Granny Smith', exact: true });
+    await plant.locator('.canopy-focus-ring').tap();
+    await expect(plant).toHaveAttribute('aria-pressed', 'true');
+    await expect(map.locator('[data-map-measure]')).toContainText('0.154 × 0.154 m');
+    await expect(map.locator('[data-map-measure]')).toBeInViewport();
+    const beforeSwitch = await bed.boundingBox();
+    const berry = map.getByRole('button', { name: /^Strawberry/ });
+    await berry.locator('.canopy-focus-ring').tap();
+    await expect(berry).toHaveAttribute('aria-pressed', 'true');
+    await expect.poll(() => bed.boundingBox()).toEqual(beforeSwitch);
+    await page.getByRole('button', { name: 'Guild list', exact: true }).tap();
+    await page.getByRole('button', { name: 'Aerial', exact: true }).tap();
+    await expect
+      .poll(async () => (await bed.boundingBox())!.width)
+      .toBeGreaterThan(beforeSwitch!.width);
+    await map.dispatchEvent('wheel', {
+      ctrlKey: true,
+      deltaY: 1000,
+      clientX: x,
+      clientY: y,
+    });
+    await map.locator('path.pointer-events-fill').nth(1).tap();
+    await expect(page).toHaveURL(/\/guilds\/other$/);
+    await expect(page.getByRole('region', { name: 'Guild details' })).toBeVisible();
+  });
+});
+
+test('fits the whole aerial photo at minimum zoom and stops at each corner when zoomed in', async ({
+  page,
+}) => {
+  await importLayoutGarden(page, []);
+  await pasteAerialPhotoOntoMap(page);
+  const map = page.getByLabel('Aerial map canvas');
+  const photo = map.locator('image');
+  await expect(photo).toBeVisible();
+  const settings = page.getByRole('button', { name: 'Map settings', exact: true });
+  await settings.click();
+  const other = map.locator('path.pointer-events-fill').nth(1);
+  const original = await other.getAttribute('d');
+  const recover = page.getByRole('button', { name: 'Guild · Other guild' });
+  await recover.click();
+  await expect(recover).toBeHidden();
+  await expect(other).not.toHaveAttribute('d', original!);
+  const moved = (await other.boundingBox())!;
+  const image = (await photo.boundingBox())!;
+  expect(moved.x + moved.width).toBeCloseTo(image.x + image.width, 0);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect(other).toHaveAttribute('d', original!);
+  await expect(recover).toBeVisible();
+  await settings.click();
+
+  for (const viewport of [
+    { width: 1440, height: 720 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const box = (await map.boundingBox())!;
+    const clientX = box.x + box.width / 2;
+    const clientY = box.y + box.height / 2;
+    await map.dispatchEvent('wheel', { ctrlKey: true, deltaY: 1000, clientX, clientY });
+    await map.dispatchEvent('wheel', { deltaX: 100000, deltaY: -100000 });
+    await expect
+      .poll(async () => {
+        const fitted = (await photo.boundingBox())!;
+        return [fitted.width, fitted.x + fitted.width / 2, fitted.y + fitted.height / 2];
+      })
+      .toEqual([
+        expect.closeTo(Math.min(box.width, box.height), 0),
+        expect.closeTo(clientX, 0),
+        expect.closeTo(clientY, 0),
+      ]);
+
+    await map.dispatchEvent('wheel', { ctrlKey: true, deltaY: -300, clientX, clientY });
+    for (const dx of [-100000, 100000]) {
+      for (const dy of [-100000, 100000]) {
+        await map.dispatchEvent('wheel', { deltaX: dx, deltaY: dy });
+        const image = (await photo.boundingBox())!;
+        expect(image.width).toBeGreaterThan(box.width);
+        expect(image.height).toBeGreaterThan(box.height);
+        expect(image.x).toBeCloseTo(dx < 0 ? box.x : box.x + box.width - image.width, 0);
+        expect(image.y).toBeCloseTo(
+          dy < 0 ? box.y : box.y + box.height - image.height,
+          0,
+        );
+      }
+    }
+  }
+});
+
 test('draws and saves a placement without changing the individual', async ({ page }) => {
   await importLayoutGarden(page, [createGrannySmiths()]);
   await page.goto('/guilds/bed/layout');
   const map = page.getByLabel('Draw plant canopies');
   const card = page.getByRole('region', { name: 'Guild details' });
   const place = card.getByRole('button', { name: /^Place .*#1 —/ });
+  await card.getByRole('button', { name: /^Expand .*Granny Smith/ }).click();
   await place.click();
   const box = await map.boundingBox();
   if (!box) throw new Error('Missing layout');
@@ -102,6 +260,7 @@ test('draws and saves a placement without changing the individual', async ({ pag
   await map.focus();
   await page.keyboard.press('Delete');
   await expect(canopy).toHaveCount(0);
+  await card.getByRole('button', { name: /^Expand .*Granny Smith/ }).click();
   await expect(card.getByRole('button', { name: /^Place .*#1 —/ })).toHaveAttribute(
     'title',
     'Not placed',
@@ -117,6 +276,7 @@ test('accepts a canopy centered inside when its starting corner is outside', asy
   await page.goto('/guilds/bed/layout');
   const map = page.getByLabel('Draw plant canopies');
   const boundary = map.locator('path[fill-rule="evenodd"][stroke="#42613b"]');
+  await page.getByRole('button', { name: /^Expand .*Granny Smith/ }).click();
   const box = await boundary.boundingBox();
   if (!box) throw new Error('Missing guild boundary');
   await page.getByRole('button', { name: /^Place .*#1 —/ }).click();
@@ -219,8 +379,10 @@ test('previews future spreads on both maps and saves a nursery width', async ({
   await time.press('ArrowLeft');
   await expect(outline).toHaveAttribute('r', '390');
   await expect(strawberry).toHaveCount(0);
+  await page.getByRole('button', { name: /^Expand .*Strawberry/i }).click();
   await page.getByRole('button', { name: /^Select .*Strawberry.*#1$/i }).click();
   await expect(page.getByText('Mature width appears in Final.')).toBeVisible();
+  await page.getByRole('button', { name: /^Expand .*Granny Smith/ }).click();
   await page.getByRole('button', { name: /^Select .*Granny Smith.*#1$/ }).click();
   await time.press('End');
   await expect(outline).toHaveAttribute('r', '390');
@@ -255,6 +417,10 @@ test('previews future spreads on both maps and saves a nursery width', async ({
   await expect(outline).toHaveAttribute('r', '175.5');
   await expect(outline).toBeInViewport({ ratio: 0.95 });
   await map.getByRole('button', { name: 'Select Granny Smith on layout' }).click();
+  await page
+    .getByRole('navigation', { name: 'Guild views' })
+    .getByRole('button', { name: 'Details' })
+    .click();
   await expect(width).toHaveValue('2.7');
 });
 
@@ -372,6 +538,7 @@ test('switches selection, cancels placement, and resizes immediately after Place
   const secondPlace = card.getByRole('button', { name: /^Place .*#2 —/ });
   const firstSelect = card.getByRole('button', { name: /^Select .*#1$/ });
   const secondSelect = card.getByRole('button', { name: /^Select .*#2$/ });
+  await card.getByRole('button', { name: /^Expand .*Granny Smith/ }).click();
   await expect(firstPlace).toHaveAccessibleName(/ — Placed$/);
   await expect(secondPlace).toHaveAccessibleName(/ — Not placed$/);
   await expect(firstPlace).toHaveAttribute('title', 'Placed');
@@ -437,6 +604,11 @@ test('keeps the same map, card and sidebar through animated navigation', async (
   await expect(
     page.getByRole('button', { name: 'Map settings', exact: true }),
   ).toBeVisible();
+  await page.setViewportSize({ width: 1354, height: 810 });
+  for (const name of ['Season', 'Map settings']) {
+    const label = page.getByRole('button', { name, exact: true }).locator('span');
+    await expect.poll(async () => (await label.boundingBox())!.width).toBe(1);
+  }
   await pasteAerialPhotoOntoMap(page);
   await expect(page.locator('[data-main-svg] image')).toBeVisible();
   const svg = await page.locator('[data-map-camera]').elementHandle();
@@ -469,11 +641,43 @@ test('keeps the same map, card and sidebar through animated navigation', async (
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByLabel('Draw plant canopies')).toBeInViewport();
   await expect(page.getByRole('link', { name: 'Back to aerial' })).toBeInViewport();
+  await page.getByRole('button', { name: 'Details', exact: true }).click();
+  const details = page.getByRole('region', { name: 'Guild details' });
+  await details.getByRole('button', { name: /^Expand .*Granny Smith/ }).click();
+  await details.getByRole('button', { name: /^Select .*#1/ }).click();
+  await details.getByRole('button', { name: 'Return to plant layout' }).click();
+  await expect(
+    page.getByLabel('Draw plant canopies').locator('.canopy[aria-pressed="true"]'),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/\/guilds\/bed\/layout$/);
+  await page.getByRole('button', { name: 'Guild list' }).click();
   await page
     .getByRole('complementary', { name: 'Guild list' })
     .getByRole('article', { name: 'Other guild', exact: true })
     .click();
   await expect(page).toHaveURL(/\/guilds\/other\/layout$/);
+  await expect(page.getByRole('complementary', { name: 'Guild list' })).toBeHidden();
+  await page.getByRole('button', { name: 'Aerial', exact: true }).click();
+  const aerial = page.getByLabel('Aerial map canvas');
+  const label = aerial.getByText('Other guild', { exact: true });
+  await expect(label).toBeInViewport();
+  const mapBox = (await aerial.boundingBox())!;
+  const photo = (await aerial.locator('image').boundingBox())!;
+  expect(photo.x + photo.width).toBeCloseTo(mapBox.x + mapBox.width, 0);
+  expect(photo.y).toBeCloseTo(mapBox.y, 0);
+  await expect(aerial.getByText('Orchard', { exact: true })).not.toBeInViewport();
+  const focusedX = (await label.boundingBox())!.x;
+  await aerial.dispatchEvent('wheel', { deltaX: -65 });
+  const pannedX = (await label.boundingBox())!.x;
+  expect(pannedX - focusedX).toBeCloseTo(65, 0);
+  const season = page.getByRole('button', { name: 'Season', exact: true });
+  await season.click();
+  await expect
+    .poll(async () => (await aerial.boundingBox())!.height)
+    .toBeLessThan(mapBox.height);
+  await expect.poll(async () => (await label.boundingBox())!.x).toBeCloseTo(pannedX, 0);
+  await season.click();
+  await page.getByRole('button', { name: 'Guild list' }).click();
   await page
     .getByRole('complementary', { name: 'Guild list' })
     .getByRole('article', { name: 'Unmapped guild', exact: true })
@@ -545,6 +749,7 @@ test('legacy placeholders remain unplaced after import and reload', async ({ pag
   await expect(map).toBeVisible();
   await expect(map.locator('.canopy')).toHaveCount(0);
   await page.reload();
+  await page.getByRole('button', { name: /^Expand .*Granny Smith/ }).click();
   await expect(page.getByRole('button', { name: /^Place .*#1 —/ })).toHaveAttribute(
     'title',
     'Not placed',
@@ -557,6 +762,7 @@ test('moves a small selected canopy and resizes it without an initial size jump'
 }) => {
   await importLayoutGarden(page, [createGrannySmiths({ ...appleCanopy, diameter: 0.3 })]);
   await page.goto('/guilds/bed/layout');
+  await page.getByRole('button', { name: /^Expand .*Granny Smith/ }).click();
   await page.getByRole('button', { name: /^Select .*#1$/ }).click();
   const canopy = page.getByLabel('Draw plant canopies').locator('.canopy');
   await expect(canopy).toBeVisible();
@@ -674,6 +880,7 @@ test('toggles labels, reveals them across the canopy, and removes the exact indi
   await expect(canopy).toHaveAccessibleDescription(/0.154 × 0.154 m · R/);
   await page.getByRole('button', { name: 'Show labels' }).click();
   await expect(label).toBeVisible();
+  await page.getByRole('button', { name: /^Expand .*Granny Smith/ }).click();
   await page.getByRole('button', { name: /^Select .*#1$/ }).click();
   await page.getByRole('button', { name: /^Remove .*#1 from bed$/ }).click();
   await expect(canopy).toHaveCount(0);
@@ -729,6 +936,11 @@ test('removes specific individuals from the aerial and unmapped guild editors', 
     await expect(card.getByRole('button', { name: /^Remove .* from bed$/ })).toHaveCount(
       1,
     );
+    await expand.click();
+    await expect(card.getByRole('button', { name: /^Remove .* from bed$/ })).toHaveCount(
+      0,
+    );
+    await expand.click();
     if (guildId === 'bed') {
       await card.getByRole('button', { name: 'Place plants' }).click();
       await expect(page.getByRole('button', { name: /^Place .*#1 —/ })).toHaveAttribute(

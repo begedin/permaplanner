@@ -2,6 +2,7 @@ import type { UiIconId } from './iconIds';
 
 /** Inner SVG for each ui-icon symbol (viewBox 0 0 48 48). */
 export const UI_ICON_SYMBOL_INNER: Record<UiIconId, string> = {
+  list: `<path d="M9 12h3m7 0h20M9 24h3m7 0h20M9 36h3m7 0h20" />`,
   place: `<g stroke="var(--place-icon-color, inherit)"><path d="M24 40 C19 33 13 26 13 19 A11 11 0 0 1 35 19 C35 26 29 33 24 40 Z" /><circle cx="24" cy="19" r="4.5" /></g>`,
   labels: `<path d="M8 10 L24 10 L40 26 L26 40 L8 22 Z" /><circle cx="16" cy="18" r="2.5" />`,
   guilds: `

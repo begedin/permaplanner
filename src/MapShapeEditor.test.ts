@@ -15,8 +15,8 @@ it.each<ShapeFeature>(['landmark', 'path'])(
     const shape = {
       id: 'house',
       name: 'Landmark',
-      x: 10,
-      y: 20,
+      x: 210,
+      y: 220,
       width: 130,
       height: 260,
       rotation: 0,
