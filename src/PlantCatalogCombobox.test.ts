@@ -9,6 +9,14 @@ import {
 import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
 import { plantCatalog } from './plantCatalog';
 
+vi.mock(import('./data/plantCatalog.json'), async (importOriginal) => {
+  const catalog = await importOriginal();
+  const species = catalog.default.species.filter(({ id }) =>
+    ['unknown', 'apple', 'comfrey'].includes(id),
+  );
+  return { ...catalog, species, default: { species } };
+});
+
 afterEach(cleanup);
 
 const knownSpecies = () => plantCatalog.species.filter((s) => s.id !== 'unknown');
@@ -64,15 +72,10 @@ it('lists catalog species groups and cultivar rows when open', async () => {
     props: { modelValue: defaultPick() },
   });
   await openList(wrapper);
-  const apple = buildCatalogPickGroups(knownSpecies()).find(
-    (g) => g.speciesId === 'apple',
-  )!;
-  const honeycrisp = apple.picks.find((p) => p.cultivarId === 'honeycrisp')!;
   await waitFor(() => {
-    expect(wrapper.getByRole('listbox').textContent).toContain('Malus domestica');
-    expect(wrapper.getByText(honeycrisp.rowLabel)).toBeVisible();
+    expect(wrapper.getByRole('listbox')).toHaveTextContent('Malus domestica');
+    expect(wrapper.getByRole('option', { name: 'Honeycrisp' })).toBeVisible();
   });
-  expect(honeycrisp.rowLabel).toBe('Honeycrisp');
 });
 
 it('filters options by search query', async () => {
@@ -83,7 +86,7 @@ it('filters options by search query', async () => {
   await fireEvent.update(wrapper.getByRole('combobox'), 'comfrey');
   await waitFor(() => {
     expect(wrapper.getByText(/Comfrey/)).toBeVisible();
-    expect(wrapper.queryByText('Apple')).not.toBeInTheDocument();
+    expect(wrapper.queryByText(/Apple/)).not.toBeInTheDocument();
   });
 });
 
@@ -95,7 +98,7 @@ it('filters options by Latin species name', async () => {
   await fireEvent.update(wrapper.getByRole('combobox'), 'malus domestica');
   await waitFor(() => {
     expect(wrapper.getByText(/Apple/)).toBeVisible();
-    expect(wrapper.queryByText('Comfrey')).not.toBeInTheDocument();
+    expect(wrapper.queryByText(/Comfrey/)).not.toBeInTheDocument();
   });
 });
 
@@ -123,5 +126,8 @@ it('clears the search query when modelValue changes', async () => {
   const next = comfreyPick();
   await wrapper.rerender({ modelValue: next });
 
-  expect((wrapper.getByRole('combobox') as HTMLInputElement).value).toBe(next.inputLabel);
+  await waitFor(() => {
+    expect(wrapper.getByRole('combobox')).toHaveValue(next.inputLabel);
+    expect(wrapper.getByText(/Apple/)).toBeVisible();
+  });
 });
