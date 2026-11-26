@@ -21,6 +21,10 @@ export const SHAPE_RESIZE_HANDLES = [
   { name: 'bottom-left', x: -1, y: 1, angle: 135 },
 ] as const;
 
+export const SHAPE_RESIZE_EDGES = SHAPE_RESIZE_HANDLES.filter(
+  (handle) => handle.x === 0 || handle.y === 0,
+);
+
 export const shapeMapPoints = (shape: MapShape): PathPoint[] => {
   const angle = (shape.rotation * Math.PI) / 180;
   const cos = Math.cos(angle);

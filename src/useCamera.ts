@@ -20,6 +20,7 @@ type Pan = {
   touch: boolean;
   last: Point;
   dragging: boolean;
+  tapTarget?: Element;
 };
 type CameraInteraction =
   | { kind: 'idle' }
@@ -36,7 +37,7 @@ type CameraInteraction =
   | { kind: 'pinching'; zoom: number; anchor: Point };
 
 export const useCamera = (
-  element: Ref<SVGElement | undefined>,
+  element: Ref<SVGSVGElement | undefined>,
   dimensions: Ref<CameraDimensions>,
   canPanWithTouch = () => true,
   focus: Readonly<Ref<CameraFocus | undefined>> = shallowRef(),
@@ -79,10 +80,7 @@ export const useCamera = (
 
   let teardownController = new AbortController();
 
-  const setupGestures = () => {
-    const svg = element.value;
-    if (!(svg instanceof SVGSVGElement)) return;
-
+  const setupGestures = (svg: SVGSVGElement) => {
     svg.addEventListener(
       'wheel',
       (e) => {
@@ -157,9 +155,6 @@ export const useCamera = (
       },
       { passive: false, signal: teardownController.signal },
     );
-    window.addEventListener('blur', resetInteraction, {
-      signal: teardownController.signal,
-    });
   };
 
   const setupKeyBindings = () => {
@@ -179,13 +174,46 @@ export const useCamera = (
     );
   };
 
-  const setupPointerPan = () => {
-    const svg = element.value;
-    if (!(svg instanceof SVGSVGElement)) {
-      return;
-    }
-
+  const setupPointerPan = (svg: SVGSVGElement, hasMapSize: boolean) => {
     const options = { signal: teardownController.signal };
+    // A touch owns its compatibility click. Only a completed tap has a target.
+    let touchClick: { target?: Element } | undefined;
+    window.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key !== 'Escape' || !touchClick) return;
+        touchClick.target = undefined;
+        if (interaction.kind === 'panning') interaction.tapTarget = undefined;
+      },
+      options,
+    );
+    svg.addEventListener(
+      'click',
+      (event) => {
+        if (event.detail === 0 || !touchClick) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const { target } = touchClick;
+        touchClick = undefined;
+        if (target && svg.contains(target)) {
+          // A small finger movement can send the browser click to a different feature.
+          target.dispatchEvent(
+            new MouseEvent('click', {
+              bubbles: true,
+              cancelable: true,
+              view: event.view,
+              clientX: event.clientX,
+              clientY: event.clientY,
+              altKey: event.altKey,
+              ctrlKey: event.ctrlKey,
+              metaKey: event.metaKey,
+              shiftKey: event.shiftKey,
+            }),
+          );
+        }
+      },
+      { ...options, capture: true },
+    );
     const applyPan = (pan: Pan, e: PointerEvent) => {
       const dx = e.clientX - pan.last.x;
       const dy = e.clientY - pan.last.y;
@@ -194,7 +222,8 @@ export const useCamera = (
         pan.dragging = true;
         svg.setPointerCapture(e.pointerId);
       }
-      panTo(camera.x - camera.cameraToWorld(dx), camera.y - camera.cameraToWorld(dy));
+      if (hasMapSize)
+        panTo(camera.x - camera.cameraToWorld(dx), camera.y - camera.cameraToWorld(dy));
       pan.last = { x: e.clientX, y: e.clientY };
     };
 
@@ -202,6 +231,7 @@ export const useCamera = (
     svg.addEventListener(
       'pointerdown',
       (e) => {
+        if (e.isPrimary) touchClick = undefined;
         if (
           e.pointerType !== 'touch' ||
           !canPanWithTouch() ||
@@ -209,6 +239,7 @@ export const useCamera = (
         )
           return;
         if (e.isPrimary) {
+          touchClick = {};
           resetInteraction();
           interaction = {
             kind: 'touchContact',
@@ -218,6 +249,10 @@ export const useCamera = (
         }
         e.preventDefault();
         e.stopImmediatePropagation();
+        if (!hasMapSize) {
+          resetInteraction();
+          return;
+        }
         let first: Finger;
         if (interaction.kind === 'touchContact') first = interaction.finger;
         else if (interaction.kind === 'panning' && interaction.touch)
@@ -246,13 +281,14 @@ export const useCamera = (
       (e) => {
         const touch =
           interaction.kind === 'touchContact' && interaction.finger.id === e.pointerId;
-        if (e.defaultPrevented || (!touch && e.button !== 1)) return;
+        if (e.defaultPrevented || (!touch && (e.button !== 1 || !hasMapSize))) return;
         if (!touch) resetInteraction();
         interaction = {
           kind: 'panning',
           pointerId: e.pointerId,
           touch,
           dragging: !touch,
+          tapTarget: touch && e.target instanceof Element ? e.target : undefined,
           last: { x: e.clientX, y: e.clientY },
         };
         if (!touch) {
@@ -318,7 +354,10 @@ export const useCamera = (
         e.pointerId === interaction.pointerId
       ) {
         const pan = interaction;
-        if (e.type === 'pointerup') applyPan(pan, e);
+        if (e.type === 'pointerup') {
+          applyPan(pan, e);
+          if (!pan.dragging && touchClick) touchClick.target = pan.tapTarget;
+        }
         resetInteraction();
         if (!pan.touch && e.type === 'pointerup') wheelZoomCooldown.start();
       }
@@ -331,12 +370,19 @@ export const useCamera = (
     resetInteraction();
     teardownController.abort();
   };
-  const setupCamera = () => {
+  const setupCamera = (hasMapSize = true) => {
     teardownCamera();
+    const svg = element.value;
+    if (!svg) return;
     teardownController = new AbortController();
-    setupGestures();
-    setupKeyBindings();
-    setupPointerPan();
+    if (hasMapSize) {
+      setupGestures(svg);
+      setupKeyBindings();
+    }
+    setupPointerPan(svg, hasMapSize);
+    window.addEventListener('blur', resetInteraction, {
+      signal: teardownController.signal,
+    });
   };
 
   return {

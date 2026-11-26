@@ -54,6 +54,8 @@
   const { errorMessage: backgroundPasteError } = useBackgroundImagePaste();
 
   const shapeControls = ref<SVGGElement>();
+  const shapeResizeControls = ref<SVGGElement>();
+  const detailsToolbar = ref<HTMLElement>();
   const guildLabelLayer = ref<SVGGElement>();
   const camera = useCameraStore();
 
@@ -189,8 +191,10 @@
     </div>
     <MapShapeEditor
       v-if="selectedShape"
+      :key="`${selectedShape.feature}-${selectedShape.shape.id}`"
       :shape="selectedShape.shape"
       :feature="selectedShape.feature"
+      :toolbar-target="detailsToolbar"
       @update="commitShape(selectedShape.feature, $event)"
       @remove="removeSelection"
       @done="clearSelection"
@@ -250,6 +254,7 @@
         fill="url(#grid)"
         class="pointer-events-none"
       />
+      <g ref="shapeResizeControls" />
       <GardenGuild
         v-for="guild in placedGuildsRenderOrder"
         :key="guild.id"
@@ -290,6 +295,7 @@
         :show-labels="shapeLabels[shapeFeature]"
         :preview-path="drawing?.target.feature === shapeFeature ? brushPath : undefined"
         :controls-target="shapeControls"
+        :resize-target="shapeResizeControls"
         :selected-id="
           selectedShape?.feature === shapeFeature ? selectedShape.shape.id : undefined
         "
@@ -347,6 +353,10 @@
         @update:feature="setFeature"
         @update:drawing-brush="setBrush"
         @update:active-tool="setTool"
+      />
+      <div
+        ref="detailsToolbar"
+        class="contents"
       />
     </template>
     <fieldset class="flex flex-col gap-2">

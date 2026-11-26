@@ -1,11 +1,12 @@
 <script setup lang="ts">
   import { guildPathData, type GuildPath } from './guildPathClip';
   import { computed, ref, watch } from 'vue';
+  import MapShapeResizeControls from './MapShapeResizeControls.vue';
   import { useCameraStore } from './useCameraStore';
   import { transformClientPoint } from './svgClientToUser';
   import { trackDragMovement, usePointerSession } from './usePointerSession';
   import {
-    SHAPE_RESIZE_HANDLES,
+    SHAPE_RESIZE_EDGES,
     startShapeDrag,
     type ShapeGesture,
   } from './mapShapeGeometry';
@@ -22,6 +23,7 @@
       shapes: readonly MapShape[];
       selectedId?: string;
       controlsTarget?: SVGGElement;
+      resizeTarget?: SVGGElement;
       tool: AerialTool;
     }>(),
     { showLabels: true },
@@ -39,10 +41,7 @@
     displayed.value.find((item) => item.id === props.selectedId),
   );
   const handleSize = computed(() => 7 / (camera.scale * camera.zoom || 1));
-  const resizeEdges = SHAPE_RESIZE_HANDLES.filter(
-    (handle) => handle.x === 0 || handle.y === 0,
-  );
-  let grabbedRotationEdge: (typeof resizeEdges)[number] | undefined;
+  let grabbedRotationEdge: (typeof SHAPE_RESIZE_EDGES)[number] | undefined;
   const rotationGrip = computed(() => {
     const shape = selectedShape.value;
     if (!shape) return;
@@ -63,7 +62,7 @@
     let shortest = Infinity;
     for (const edge of draft.value && grabbedRotationEdge
       ? [grabbedRotationEdge]
-      : resizeEdges) {
+      : SHAPE_RESIZE_EDGES) {
       const dx = cos * edge.x - sin * edge.y;
       const dy = sin * edge.x + cos * edge.y;
       const halfSize = (edge.x ? shape.width : shape.height) / 2;
@@ -88,14 +87,20 @@
     }
     return best;
   });
-  const resizeCursors = ['ew-resize', 'nwse-resize', 'ns-resize', 'nesw-resize'];
   const session = usePointerSession();
   watch(() => [props.tool, props.shapes, world.value], session.cancel, { flush: 'sync' });
 
   const start = (event: PointerEvent, gesture: ShapeGesture) => {
     if (event.button !== 0 || props.tool !== 'select') return;
+    const touch = event.pointerType === 'touch';
+    if (
+      touch &&
+      (!event.isPrimary ||
+        (gesture.kind === 'move' && gesture.shape.id !== props.selectedId))
+    )
+      return;
     if (!world.value) {
-      emit('select', gesture.shape.id);
+      if (!touch) emit('select', gesture.shape.id);
       return;
     }
     const svg = (event.currentTarget as SVGElement).closest('svg');
@@ -145,6 +150,7 @@
         :d="outlines[index]"
         :transform="`scale(${item.width} ${item.height})`"
         fill-rule="evenodd"
+        :data-map-feature="selectedId === item.id ? 'selected' : ''"
         :fill="appearance.fill"
         :stroke="selectedId === item.id ? '#315b45' : appearance.stroke"
         stroke-width="2"
@@ -156,7 +162,7 @@
         @keydown.enter="emit('select', item.id)"
         @pointerdown="start($event, { kind: 'move', shape: item })"
         @mousedown.stop
-        @click.stop
+        @click.stop="$event.detail === 0 && tool === 'select' && emit('select', item.id)"
       />
       <text
         v-if="showLabels"
@@ -183,66 +189,24 @@
       pointer-events="none"
     />
     <Teleport
+      v-if="world && selectedShape && tool === 'select'"
+      :to="resizeTarget ?? controlsTarget ?? 'body'"
+      :disabled="!resizeTarget && !controlsTarget"
+    >
+      <MapShapeResizeControls
+        :key="selectedShape.id"
+        :shape="selectedShape"
+        :feature="feature"
+        :size="handleSize"
+        :map="resizeTarget?.ownerSVGElement ?? undefined"
+        @resize="start"
+      />
+    </Teleport>
+    <Teleport
       v-if="selectedShape"
       :to="controlsTarget ?? 'body'"
       :disabled="!controlsTarget"
     >
-      <g
-        :transform="`translate(${selectedShape.x} ${selectedShape.y}) rotate(${selectedShape.rotation})`"
-        :style="{ pointerEvents: tool === 'select' ? 'auto' : 'none' }"
-        style="touch-action: none"
-      >
-        <line
-          v-for="edge in resizeEdges"
-          :key="edge.name"
-          :x1="
-            edge.x === 0 ? -selectedShape.width / 2 : (edge.x * selectedShape.width) / 2
-          "
-          :x2="
-            edge.x === 0 ? selectedShape.width / 2 : (edge.x * selectedShape.width) / 2
-          "
-          :y1="
-            edge.y === 0 ? -selectedShape.height / 2 : (edge.y * selectedShape.height) / 2
-          "
-          :y2="
-            edge.y === 0 ? selectedShape.height / 2 : (edge.y * selectedShape.height) / 2
-          "
-          stroke="transparent"
-          stroke-width="14"
-          vector-effect="non-scaling-stroke"
-          :aria-label="`Resize ${appearance.label.toLowerCase()} ${edge.name} edge`"
-          :style="{
-            cursor:
-              resizeCursors[Math.round((selectedShape.rotation + edge.angle) / 45) % 4],
-          }"
-          @pointerdown="
-            start($event, { kind: 'resize', shape: selectedShape, direction: edge })
-          "
-          @mousedown.stop
-        />
-        <rect
-          v-for="handle in SHAPE_RESIZE_HANDLES"
-          :key="handle.name"
-          :x="(handle.x * selectedShape.width) / 2 - handleSize / 2"
-          :y="(handle.y * selectedShape.height) / 2 - handleSize / 2"
-          :width="handleSize"
-          :height="handleSize"
-          fill="#315b45"
-          :aria-label="`Resize ${appearance.label.toLowerCase()} ${handle.name} handle`"
-          :style="{
-            cursor:
-              resizeCursors[Math.round((selectedShape.rotation + handle.angle) / 45) % 4],
-          }"
-          @pointerdown="
-            start($event, {
-              kind: 'resize',
-              shape: selectedShape,
-              direction: handle,
-            })
-          "
-          @mousedown.stop
-        />
-      </g>
       <g
         v-if="rotationGrip"
         :style="{ pointerEvents: tool === 'select' ? 'auto' : 'none' }"

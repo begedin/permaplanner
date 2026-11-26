@@ -1,11 +1,11 @@
 import {
+  collectBrowserErrors,
   registerAndReachImport,
   pasteAerialPhotoOntoMap,
   setupAuthenticatedGarden,
   waitForMainApp,
 } from './helpers';
-import { importLayoutGarden } from './fixtures/guildLayout';
-import { rectangleShapePath } from '../src/mapShapeGeometry';
+import { importLayoutGarden, mapShape, pointOnShape } from './fixtures/guildLayout';
 import { expect, test } from './test';
 
 for (const feature of ['Path', 'Landmark']) {
@@ -13,11 +13,7 @@ for (const feature of ['Path', 'Landmark']) {
     page,
   }) => {
     await setupAuthenticatedGarden(page);
-    const errors: string[] = [];
-    page.on('console', (message) => {
-      if (['error', 'warning'].includes(message.type())) errors.push(message.text());
-    });
-    page.on('pageerror', (error) => errors.push(error.message));
+    const errors = collectBrowserErrors(page);
     await page.goto('/guilds');
     await waitForMainApp(page);
     const map = page.locator('[data-main-svg]');
@@ -92,25 +88,22 @@ for (const feature of ['Path', 'Landmark']) {
     if (!box) throw new Error('Path not visible');
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
+    const details = page.getByRole('group', { name: `${feature} details` });
+    await expect(details).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.mouse.up();
+    await expect(details).toBeHidden();
+    await page.mouse.down();
     await page.mouse.move(box.x + box.width / 2 + 25, box.y + box.height / 2 + 20, {
       steps: 5,
     });
     await page.mouse.up();
     await expect(walkway.locator('..')).not.toHaveAttribute('transform', original!);
     const beforeResize = (await walkway.boundingBox())!;
-    const handle = await page
-      .getByLabel(`Resize ${feature.toLowerCase()} right edge`, { exact: true })
-      .boundingBox();
-    if (!handle) throw new Error('Resize handle not visible');
-    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+    const edge = await pointOnShape(walkway, 0.5, 0.22);
+    await page.mouse.move(edge.x, edge.y);
     await page.mouse.down();
-    await page.mouse.move(
-      handle.x + handle.width / 2 + 20,
-      handle.y + handle.height / 2,
-      {
-        steps: 5,
-      },
-    );
+    await page.mouse.move(edge.x + 20, edge.y, { steps: 5 });
     await page.mouse.up();
     await expect
       .poll(async () => (await walkway.boundingBox())?.width)
@@ -140,11 +133,7 @@ test('keeps map controls reachable at 320px without overlapping the shape editor
   page,
 }) => {
   await setupAuthenticatedGarden(page);
-  const errors: string[] = [];
-  page.on('console', (message) => {
-    if (['error', 'warning'].includes(message.type())) errors.push(message.text());
-  });
-  page.on('pageerror', (error) => errors.push(error.message));
+  const errors = collectBrowserErrors(page);
   await page.setViewportSize({ width: 320, height: 900 });
   await page.goto('/guilds');
   await waitForMainApp(page);
@@ -220,16 +209,7 @@ test('recovers landmarks only when the aerial map dimensions are known', async (
 }) => {
   await registerAndReachImport(page);
   await importLayoutGarden(page, [], {
-    landmarks: [1500, 2500].map((x) => ({
-      id: String(x),
-      name: `Shed at ${x}`,
-      x,
-      y: 50,
-      width: 60,
-      height: 30,
-      rotation: 0,
-      path: rectangleShapePath(),
-    })),
+    landmarks: [1500, 2500].map((x) => mapShape(`Shed at ${x}`, x, 50, 60, 30)),
   });
   const settings = page.getByRole('button', { name: 'Map settings' });
   const recovery = page.getByRole('group', { name: 'Move onto map' });

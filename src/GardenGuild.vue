@@ -99,6 +99,7 @@
     <path
       v-if="path.length > 0"
       :d="outline"
+      data-map-feature
       fill-rule="evenodd"
       :fill="
         selected

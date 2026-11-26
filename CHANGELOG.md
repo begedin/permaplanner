@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.38.1
+
+- [FIX] Swipe across an unselected feature to pan the aerial map. Tap a path or landmark to select it, then drag it to move it. A slight finger movement still counts as a tap.
+- [FIX] Keep small landmarks and nearby paths reachable when resize handles overlap. Keep the handles for visible edges on screen.
+- [CHANGE] Tap the path or landmark details heading to collapse the panel and reach the map beneath it. Reopen it from the map toolbar.
+
 ## 0.38.0
 
 - [CHANGE] On small screens, open the guild list from the top bar and switch between Details and Aerial for the selected guild. The editor scrolls horizontally below 320 pixels.

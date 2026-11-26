@@ -326,6 +326,13 @@ name it, drag it to move, drag the round handle to rotate, or drag any edge or c
 to resize while keeping the opposite side fixed. You can also enter a rotation in degrees.
 Escape cancels a gesture; landmark edits support undo/redo and JSON export/import.
 
+On the aerial map, swipe across an unselected feature to pan. Tap a landmark or
+path to select it, then drag it to move it. Drag a square handle to resize it.
+Tap the details heading to hide the panel while the shape is selected.
+Tap the document icon in the map toolbar to reopen it.
+Tap **Done** to pan across the shape again.
+To move a guild, select it and choose **Move guild**.
+
 Landmarks store an ID, name, local path, centre (`x`, `y`), width, height, and clockwise
 rotation in degrees. Dimensions use map coordinates. Both garden and guild MCP
 responses include all landmarks, the scale unit, and coordinate conventions.

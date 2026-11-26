@@ -1,8 +1,39 @@
 import { readFileSync } from 'node:fs';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import type { MapShape } from '../../src/gardenDocument';
 import type { GardenThing, UserPlant } from '../../src/gardenTypes';
-import { waitForMainApp } from '../helpers';
+import { rectangleShapePath } from '../../src/mapShapeGeometry';
+import { collectBrowserErrors, registerAndReachImport, waitForMainApp } from '../helpers';
+import { expect, test } from '../test';
+
+export const layoutTest = test.extend({
+  page: async ({ page }, use) => {
+    await registerAndReachImport(page);
+    const errors = collectBrowserErrors(page);
+    await use(page);
+    expect(errors).toEqual([]);
+  },
+});
+
+export const mapShape = (
+  name: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  path = rectangleShapePath(),
+): MapShape => ({ id: name.toLowerCase(), name, x, y, width, height, rotation: 0, path });
+
+export const pointOnShape = (shape: Locator, x = 0, y = 0) =>
+  shape.evaluate(
+    (element, local) => {
+      const point = new DOMPoint(local.x, local.y).matrixTransform(
+        (element as SVGGraphicsElement).getScreenCTM()!,
+      );
+      return { x: point.x, y: point.y };
+    },
+    { x, y },
+  );
 
 type Canopy = { x: number; y: number; diameter: number };
 type LayoutPlant = { plant: UserPlant; individuals: Omit<GardenThing, 'plantId'>[] };
@@ -54,7 +85,11 @@ export const createStrawberry = (canopy: Canopy) =>
 export const importLayoutGarden = async (
   page: Page,
   plants: LayoutPlant[],
-  { legacy = false, landmarks = [] }: { legacy?: boolean; landmarks?: MapShape[] } = {},
+  {
+    legacy = false,
+    landmarks = [],
+    paths = [],
+  }: { legacy?: boolean; landmarks?: MapShape[]; paths?: MapShape[] } = {},
 ) => {
   const empty = JSON.parse(
     readFileSync(new URL('./emptyPlan.json', import.meta.url), 'utf8'),
@@ -87,7 +122,7 @@ export const importLayoutGarden = async (
     version: legacy ? 10 : 11,
     plants: plants.map(({ plant }) => plant),
     landmarks,
-    paths: [],
+    paths,
     plotBorder: [],
     mapScale: { ...empty.mapScale, unit: 'm' },
     guilds: [

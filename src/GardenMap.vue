@@ -83,7 +83,7 @@
   watch(
     [svg, view, transitioning, worldBounds],
     ([element, layoutId, moving, size]) => {
-      if (element && !layoutId && !moving && size) setupCamera();
+      if (element && !layoutId && !moving) setupCamera(!!size);
       else teardownCamera();
     },
     { flush: 'post' },

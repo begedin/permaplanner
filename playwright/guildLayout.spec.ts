@@ -1,119 +1,14 @@
-import { registerAndReachImport, pasteAerialPhotoOntoMap } from './helpers';
+import { pasteAerialPhotoOntoMap } from './helpers';
 import {
   createGrannySmiths,
   createLayoutPlant,
   createStrawberry,
   importLayoutGarden,
+  layoutTest as test,
 } from './fixtures/guildLayout';
-import { rectangleShapePath } from '../src/mapShapeGeometry';
-import { expect, test } from './test';
+import { expect } from './test';
 
 const appleCanopy = { x: 40, y: 40, diameter: 20 };
-
-let browserErrors: string[];
-test.beforeEach(async ({ page }) => {
-  await registerAndReachImport(page);
-  browserErrors = [];
-  page.on('console', (message) => {
-    if (['warning', 'error'].includes(message.type())) browserErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => browserErrors.push(error.message));
-});
-test.afterEach(() => expect(browserErrors).toEqual([]));
-
-test.describe('touch aerial map', () => {
-  test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
-
-  test('pinches over a landmark, pans, and selects plants without moving the map', async ({
-    page,
-  }) => {
-    await importLayoutGarden(
-      page,
-      [
-        createGrannySmiths({ x: 72, y: 64, diameter: 20 }),
-        createStrawberry({ x: 88, y: 85, diameter: 12 }),
-      ],
-      {
-        landmarks: [
-          {
-            id: 'shed',
-            name: 'Shed',
-            x: 38,
-            y: 59,
-            width: 28,
-            height: 28,
-            rotation: 0,
-            path: rectangleShapePath(),
-          },
-        ],
-      },
-    );
-    const map = page.getByLabel('Aerial map canvas');
-    const bed = map.locator('path.pointer-events-fill').first();
-    const corner = (await bed.boundingBox())!;
-    // Chromium must generate the touch events to test pointer capture during a pinch.
-    const touch = await page.context().newCDPSession(page);
-    const sendTouch = (
-      type: 'touchStart' | 'touchMove' | 'touchEnd',
-      touchPoints: { x: number; y: number; id?: number }[] = [],
-    ) => touch.send('Input.dispatchTouchEvent', { type, touchPoints });
-    const fingers = (gap: number) =>
-      [-1, 1].map((sign, id) => ({
-        x: corner.x + 15,
-        y: corner.y + 35 + sign * gap,
-        id: id + 1,
-      }));
-    const shed = map.getByRole('button', { name: 'Landmark: Shed' }).locator('..');
-    const original = await shed.getAttribute('transform');
-    const [first] = fingers(12);
-    await sendTouch('touchStart', [{ ...first!, x: first!.x - 3 }]);
-    await sendTouch('touchMove', [{ ...first!, x: first!.x - 2 }]);
-    await expect(shed).toHaveAttribute('transform', original!);
-    await sendTouch('touchMove', [first!]);
-    await expect(shed).not.toHaveAttribute('transform', original!);
-    await sendTouch('touchStart', fingers(12));
-    await sendTouch('touchMove', fingers(42));
-    await sendTouch('touchEnd');
-    await expect(shed).toHaveAttribute('transform', original!);
-    await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeDisabled();
-    await page.getByRole('button', { name: 'Done', exact: true }).click();
-    const before = (await bed.boundingBox())!;
-    const box = (await map.boundingBox())!;
-    const x = box.x + box.width / 2;
-    const y = box.y + box.height / 2;
-    expect(before.width / corner.width).toBeCloseTo(3.5, 1);
-    await sendTouch('touchStart', [{ x, y }]);
-    await sendTouch('touchMove', [{ x: x - 25, y: y - 35 }]);
-    await sendTouch('touchEnd');
-    const after = (await bed.boundingBox())!;
-    expect(after.x - before.x).toBeCloseTo(-25, 0);
-    expect(after.y - before.y).toBeCloseTo(-35, 0);
-    const plant = map.getByRole('button', { name: 'Granny Smith', exact: true });
-    await plant.locator('.canopy-focus-ring').tap();
-    await expect(plant).toHaveAttribute('aria-pressed', 'true');
-    await expect(map.locator('[data-map-measure]')).toContainText('0.154 × 0.154 m');
-    await expect(map.locator('[data-map-measure]')).toBeInViewport();
-    const beforeSwitch = await bed.boundingBox();
-    const berry = map.getByRole('button', { name: /^Strawberry/ });
-    await berry.locator('.canopy-focus-ring').tap();
-    await expect(berry).toHaveAttribute('aria-pressed', 'true');
-    await expect.poll(() => bed.boundingBox()).toEqual(beforeSwitch);
-    await page.getByRole('button', { name: 'Guild list', exact: true }).tap();
-    await page.getByRole('button', { name: 'Aerial', exact: true }).tap();
-    await expect
-      .poll(async () => (await bed.boundingBox())!.width)
-      .toBeGreaterThan(beforeSwitch!.width);
-    await map.dispatchEvent('wheel', {
-      ctrlKey: true,
-      deltaY: 1000,
-      clientX: x,
-      clientY: y,
-    });
-    await map.locator('path.pointer-events-fill').nth(1).tap();
-    await expect(page).toHaveURL(/\/guilds\/other$/);
-    await expect(page.getByRole('region', { name: 'Guild details' })).toBeVisible();
-  });
-});
 
 test('fits the whole aerial photo at minimum zoom and stops at each corner when zoomed in', async ({
   page,
