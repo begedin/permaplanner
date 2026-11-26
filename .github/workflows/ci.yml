@@ -57,6 +57,15 @@ jobs:
           TEST_DATABASE_URL: ecto://postgres:postgres@localhost:5432/permaplanner_test
         run: mix deps.get && mix test
 
+      - name: Verify the production release command
+        env:
+          MIX_ENV: prod
+          DATABASE_URL: ecto://postgres:postgres@localhost:5432/permaplanner_test
+          MCP_BASE_URL: https://permaplanner.example
+        run: |
+          mix release
+          SECRET_KEY_BASE="$(openssl rand -hex 64)" _build/prod/rel/permaplanner/bin/permaplanner eval Permaplanner.Release.migrate
+
       - name: Upload reports
         uses: actions/upload-artifact@v4
         with:

@@ -41,13 +41,11 @@ FROM debian:trixie-slim AS final
 WORKDIR /app
 
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y libstdc++6 openssl libncurses6 locales ca-certificates && \
+    apt-get install --no-install-recommends -y libstdc++6 libatomic1 openssl libncurses6 libsctp1 ca-certificates && \
     apt-get clean && \
     rm -f /var/lib/apt/lists/*/*
 
-ENV LANG=en_US.UTF-8
-ENV LANGUAGE=en_US:en
-ENV LC_ALL=en_US.UTF-8
+ENV LANG=C.UTF-8
 ENV MIX_ENV=prod
 ENV PORT=8080
 
@@ -55,7 +53,8 @@ ENV PORT=8080
 COPY --from=frontend /usr/local/bin/node /usr/local/bin/node
 COPY --from=build /app/_build/prod/rel/permaplanner ./
 
-RUN chown -R nobody:root /app && \
+RUN node --version && \
+    chown -R nobody:root /app && \
     chmod -R ug+rwx /app
 
 USER nobody

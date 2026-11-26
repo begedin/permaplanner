@@ -36,6 +36,5 @@ if config_env() == :prod do
     url: [scheme: public_uri.scheme, host: public_uri.host, port: public_uri.port],
     http: [ip: {0, 0, 0, 0}, port: port],
     secret_key_base: secret_key_base,
-    server: true,
-    force_ssl: [rewrite_on: [:x_forwarded_proto]]
+    server: true
 end
