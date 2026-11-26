@@ -26,7 +26,13 @@
       resizeTarget?: SVGGElement;
       tool: AerialTool;
     }>(),
-    { showLabels: true },
+    {
+      showLabels: true,
+      previewPath: undefined,
+      selectedId: undefined,
+      controlsTarget: undefined,
+      resizeTarget: undefined,
+    },
   );
   const appearance = computed(() => SHAPE_FEATURES[props.feature]);
   const emit = defineEmits<{ select: [id: string]; commit: [shape: MapShape] }>();

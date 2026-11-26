@@ -4,8 +4,8 @@ defmodule Permaplanner.MixProject do
   def project do
     [
       app: :permaplanner,
-      version: "0.38.1",
-      elixir: "~> 1.15",
+      version: "0.39.0",
+      elixir: "~> 1.20",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -35,21 +35,19 @@ defmodule Permaplanner.MixProject do
 
   defp deps do
     [
-      {:phoenix, "~> 1.7.18"},
-      {:phoenix_html, "~> 4.1"},
-      {:phoenix_live_view, "~> 1.0"},
-      {:phoenix_ecto, "~> 4.5"},
-      {:ecto_sql, "~> 3.12"},
-      {:postgrex, ">= 0.0.0"},
-      {:plug_cowboy, "~> 2.7"},
+      {:phoenix, "~> 1.8.17"},
+      {:phoenix_html, "~> 4.4"},
+      {:phoenix_live_view, "~> 1.2"},
+      {:phoenix_ecto, "~> 4.7"},
+      {:ecto_sql, "~> 3.14"},
+      {:postgrex, "~> 0.23.0"},
+      {:plug_cowboy, "~> 2.9"},
       {:jason, "~> 1.4"},
-      {:req, "~> 0.5"},
-      {:bcrypt_elixir, "~> 3.2"},
+      {:bcrypt_elixir, "~> 4.0"},
       {:nimble_totp, "~> 1.0"},
-      {:eqrcode, "~> 0.2"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:lazy_html, "~> 0.1.0", only: :test},
-      {:bypass, "~> 2.1", only: :test}
+      {:eqrcode, "~> 0.3"},
+      {:phoenix_live_reload, "~> 1.7", only: :dev},
+      {:lazy_html, "~> 0.1.16", only: :test}
     ]
   end
 

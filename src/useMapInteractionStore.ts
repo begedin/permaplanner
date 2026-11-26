@@ -200,15 +200,10 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
   const drawingPath = computed(() => {
     const target = drawing.value?.target;
     if (!target) return undefined;
-    switch (target.feature) {
-      case 'guild':
-        return garden.guilds.find((guild) => guild.id === target.id)?.path;
-      case 'border':
-        return border.path;
-      case 'landmark':
-      case 'path':
-        return [];
+    if (target.feature === 'guild') {
+      return garden.guilds.find((guild) => guild.id === target.id)?.path;
     }
+    return target.feature === 'border' ? border.path : [];
   });
   const startDrawing = (feature: MapFeature, brush: DrawingBrush) => {
     const id = guildSelection.selectedGuildId.value;

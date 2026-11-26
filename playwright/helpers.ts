@@ -107,7 +107,9 @@ export const registerAndReachImport = async (page: Page): Promise<void> => {
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(E2E_PASSWORD);
   await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByText('Scan this QR code in your authenticator')).toBeVisible();
+  const qrCode = page.getByRole('img', { name: 'Authenticator QR code' });
+  await expect(qrCode).toBeVisible();
+  await qrCode.evaluate((image: HTMLImageElement) => image.decode());
   const secret = (await page.locator('.font-mono').first().textContent())?.trim();
   if (!secret) {
     throw new Error('TOTP secret missing on registration screen');

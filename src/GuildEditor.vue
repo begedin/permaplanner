@@ -198,7 +198,7 @@
           </div>
         </div>
         <input
-          class="appearance-none bg-transparent border-none focus:outline-none text-ink-600 w-full truncate"
+          class="appearance-none bg-transparent border-none focus:outline-hidden text-ink-600 w-full truncate"
           :value="displayedName"
           @focus="editingName = guild.name"
           @input="setEditingName"
@@ -256,15 +256,15 @@
             </ToggleButton>
           </div>
           <template
-            v-for="(row, index) in sortedGuildPlants"
+            v-for="(row, rowIndex) in sortedGuildPlants"
             :key="row.plantId"
           >
             <h4
               v-if="
                 plantSort === 'layer' &&
                 groupPlants &&
-                (index === 0 ||
-                  row.layerLabels[0] !== sortedGuildPlants[index - 1]?.layerLabels[0])
+                (rowIndex === 0 ||
+                  row.layerLabels[0] !== sortedGuildPlants[rowIndex - 1]?.layerLabels[0])
               "
               class="mt-2 rounded-md bg-sage-100 px-2 py-1 text-xs font-semibold text-ink-700"
             >
@@ -407,12 +407,12 @@
               <div class="flex flex-col gap-1 pb-1 pl-7 pr-1">
                 <div
                   v-for="({ thing, placementStatus }, index) in row.individuals"
-                  :key="thing.id"
                   v-show="
                     expandedPlantGroupId === row.plantId ||
                     thing.note ||
                     editingPlantNoteId === thing.id
                   "
+                  :key="thing.id"
                   class="flex flex-col gap-1"
                   :class="{
                     'rounded-lg border border-parchment-300/80 bg-parchment-50/60 px-2 py-1.5':
@@ -458,8 +458,8 @@
                       >
                     </button>
                     <button
-                      type="button"
                       v-if="layoutMode"
+                      type="button"
                       class="btn-icon shrink-0 p-1 hover:bg-sage-200"
                       :title="placementStatus"
                       :aria-label="`Place ${row.label} #${index + 1} — ${placementStatus}`"
@@ -505,7 +505,7 @@
                     "
                     type="button"
                     title="Expand and edit note"
-                    class="whitespace-pre-wrap break-words text-left text-xs text-ink-600 hover:text-ink-900"
+                    class="whitespace-pre-wrap wrap-break-word text-left text-xs text-ink-600 hover:text-ink-900"
                     @click.stop="
                       togglePlantGroup(row.plantId);
                       editingPlantNoteId = thing.id;
@@ -522,7 +522,7 @@
                     >
                       <span class="shrink-0">Phase</span>
                       <select
-                        class="min-w-0 max-w-[9.5rem] rounded-md border border-parchment-400/70 bg-white px-1 py-0.5 text-[11px] text-ink-700"
+                        class="min-w-0 max-w-38 rounded-md border border-parchment-400/70 bg-white px-1 py-0.5 text-[11px] text-ink-700"
                         :value="thing.growthPhase ?? ''"
                         @change="
                           setThingGrowthPhase(
@@ -557,11 +557,11 @@
                     v-if="row.count === 1 || expandedPlantGroupId === row.plantId"
                     :read-only="row.count > 1"
                     :editing="editingPlantNoteId === thing.id"
-                    @update:editing="editingPlantNoteId = $event ? thing.id : null"
                     :note="thing.note"
                     :label="
                       row.count > 1 ? `${row.label} instance ${index + 1}` : row.label
                     "
+                    @update:editing="editingPlantNoteId = $event ? thing.id : null"
                     @update:note="garden.updateGuildThingNote(guildId, thing.id, $event)"
                   />
                 </div>

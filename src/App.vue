@@ -64,8 +64,8 @@
         :aria-hidden="!calendar.open"
       >
         <Transition
-          enter-from-class="!grid-rows-[0fr] opacity-0"
-          leave-to-class="!grid-rows-[0fr] opacity-0"
+          enter-from-class="grid-rows-[0fr]! opacity-0"
+          leave-to-class="grid-rows-[0fr]! opacity-0"
         >
           <div
             v-if="calendar.open"

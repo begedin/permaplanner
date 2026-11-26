@@ -119,9 +119,9 @@ it.each(['dispose', 'deselect', 'change tool'])(
   'cancels an unfinished drag on %s and ignores later document events',
   async (action) => {
     const { path, selected, tool, polygon, onCommit } = setup('move');
-    polygon.dispatchEvent(new MouseEvent('pointerdown', { button: 0 }));
+    polygon.dispatchEvent(new PointerEvent('pointerdown', { button: 0 }));
     document.dispatchEvent(
-      new MouseEvent('pointermove', { buttons: 1, clientX: 5, clientY: 7 }),
+      new PointerEvent('pointermove', { buttons: 1, clientX: 5, clientY: 7 }),
     );
     expect(path.value).toEqual(
       initialPath.map((polygon) =>
@@ -133,9 +133,9 @@ it.each(['dispose', 'deselect', 'change tool'])(
     else tool.value = 'select';
     await nextTick();
     document.dispatchEvent(
-      new MouseEvent('pointermove', { buttons: 1, clientX: 5, clientY: 7 }),
+      new PointerEvent('pointermove', { buttons: 1, clientX: 5, clientY: 7 }),
     );
-    document.dispatchEvent(new MouseEvent('pointerup'));
+    document.dispatchEvent(new PointerEvent('pointerup'));
     expect(path.value).toEqual(initialPath);
     expect(onCommit).not.toHaveBeenCalled();
   },
@@ -146,20 +146,20 @@ it.each(['pointercancel', 'blur', 'deselect', 'change tool', 'dispose'])(
   async (action) => {
     const { svg, edit, selected, tool, onCommit } = setup('draw');
     svg.dispatchEvent(
-      new MouseEvent('pointerdown', { button: 0, clientX: 50, clientY: 50 }),
+      new PointerEvent('pointerdown', { button: 0, clientX: 50, clientY: 50 }),
     );
     document.dispatchEvent(
-      new MouseEvent('pointermove', { buttons: 1, clientX: 60, clientY: 60 }),
+      new PointerEvent('pointermove', { buttons: 1, clientX: 60, clientY: 60 }),
     );
     expect(edit.stroke.value.length).toBeGreaterThan(0);
     if (action === 'pointercancel')
-      document.dispatchEvent(new MouseEvent('pointercancel'));
+      document.dispatchEvent(new PointerEvent('pointercancel'));
     else if (action === 'blur') window.dispatchEvent(new Event('blur'));
     else if (action === 'deselect') selected.value = false;
     else if (action === 'change tool') tool.value = 'select';
     else scope.stop();
     await nextTick();
-    document.dispatchEvent(new MouseEvent('pointerup', { clientX: 60, clientY: 60 }));
+    document.dispatchEvent(new PointerEvent('pointerup', { clientX: 60, clientY: 60 }));
     expect({ path: edit.path.value, stroke: edit.stroke.value }).toEqual({
       path: action === 'deselect' || action === 'change tool' ? [] : initialPath,
       stroke: [],
@@ -171,9 +171,9 @@ it.each(['pointercancel', 'blur', 'deselect', 'change tool', 'dispose'])(
 it('keeps completed brush strokes local until Enter and discards them when switching tools', async () => {
   const { svg, edit, tool, onCommit } = setup('draw');
   svg.dispatchEvent(
-    new MouseEvent('pointerdown', { button: 0, clientX: 50, clientY: 50 }),
+    new PointerEvent('pointerdown', { button: 0, clientX: 50, clientY: 50 }),
   );
-  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 50, clientY: 50 }));
+  document.dispatchEvent(new PointerEvent('pointerup', { clientX: 50, clientY: 50 }));
   expect(edit.path.value).not.toEqual(initialPath);
   expect(onCommit).not.toHaveBeenCalled();
   const preview = [...edit.path.value];
@@ -193,7 +193,7 @@ it.each([
 ])('locks a Shift stroke to its nearest axis', (clientX, clientY, expected) => {
   const { svg, edit } = setup('draw');
   svg.dispatchEvent(
-    new MouseEvent('pointerdown', {
+    new PointerEvent('pointerdown', {
       button: 0,
       clientX: 50,
       clientY: 50,
@@ -201,12 +201,12 @@ it.each([
     }),
   );
   document.dispatchEvent(
-    new MouseEvent('pointermove', { buttons: 1, clientX, clientY, shiftKey: true }),
+    new PointerEvent('pointermove', { buttons: 1, clientX, clientY, shiftKey: true }),
   );
   expect(edit.pointer.value).toEqual(expected);
   expect(edit.stroke.value).toHaveLength(1);
   document.dispatchEvent(
-    new MouseEvent('pointermove', { buttons: 1, clientX: 120, clientY: 120 }),
+    new PointerEvent('pointermove', { buttons: 1, clientX: 120, clientY: 120 }),
   );
   expect(edit.pointer.value).toEqual({ x: 120, y: 120 });
 });
@@ -214,7 +214,7 @@ it.each([
 it('closes a polygon at its first corner, supports Backspace, and discards drafts when changing brushes', async () => {
   const { svg, edit, drawingBrush, onCommit } = setup('draw', 'polygon');
   const click = (clientX: number, clientY: number) =>
-    svg.dispatchEvent(new MouseEvent('pointerdown', { button: 0, clientX, clientY }));
+    svg.dispatchEvent(new PointerEvent('pointerdown', { button: 0, clientX, clientY }));
   click(50, 50);
   click(100, 50);
   click(100, 100);
@@ -245,7 +245,7 @@ it('uses the same acceptance contract for polygon closure and Enter', () => {
     [100, 100],
     [50, 50],
   ]) {
-    svg.dispatchEvent(new MouseEvent('pointerdown', { button: 0, clientX, clientY }));
+    svg.dispatchEvent(new PointerEvent('pointerdown', { button: 0, clientX, clientY }));
   }
   expect(edit.corners.value).toHaveLength(3);
   svg.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
@@ -270,7 +270,7 @@ it.each(
         new KeyboardEvent('keydown', { key: 'Meta', code: 'MetaLeft', metaKey: true }),
       );
     svg.dispatchEvent(
-      new MouseEvent('pointerdown', {
+      new PointerEvent('pointerdown', {
         button: 0,
         clientX: 50,
         clientY: 50,
@@ -288,7 +288,7 @@ it.each(
       subtract ? 'rgba(100, 0, 0, 0.3)' : 'rgba(0, 100, 0, 0.6)',
     );
     document.dispatchEvent(
-      new MouseEvent('pointerup', { clientX: 70, clientY: 70, metaKey: subtract }),
+      new PointerEvent('pointerup', { clientX: 70, clientY: 70, metaKey: subtract }),
     );
     if (subtract) expect(edit.path.value).toEqual(joinPaths([], initialPath));
     else expect(edit.path.value).toHaveLength(2);

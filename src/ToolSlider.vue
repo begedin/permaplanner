@@ -55,7 +55,7 @@
         :max="max"
         :step="step"
         :value="value"
-        class="flex-grow flex-shrink w-3/4 accent-sage-600"
+        class="grow shrink w-3/4 accent-sage-600"
         @pointerdown="startPointerInteraction"
         @input="updateValue"
         @blur="endInteraction"

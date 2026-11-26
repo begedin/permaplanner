@@ -108,7 +108,7 @@
         />
         <details class="text-sm text-ink-600">
           <summary class="cursor-pointer text-ink-700">Can't scan the code?</summary>
-          <p class="mt-2 text-xs font-mono break-all bg-parchment-50 p-2 rounded">
+          <p class="mt-2 text-xs font-mono break-all bg-parchment-50 p-2 rounded-sm">
             {{ totpSecret }}
           </p>
           <a
@@ -168,7 +168,7 @@
         class="mt-6 space-y-4"
       >
         <p class="text-sm text-ink-700 font-medium">Save these recovery codes</p>
-        <ul class="text-sm font-mono bg-parchment-50 p-3 rounded space-y-1">
+        <ul class="text-sm font-mono bg-parchment-50 p-3 rounded-sm space-y-1">
           <li
             v-for="code in recoveryCodes"
             :key="code"

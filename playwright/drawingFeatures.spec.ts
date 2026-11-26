@@ -6,19 +6,15 @@ import { expect, test } from './test';
 const bedPaths = (page: Page) => page.locator('[data-main-svg] path.pointer-events-fill');
 
 const drawBrushStroke = async (page: Page, points: { x: number; y: number }[]) => {
-  const mapBounds = await page.getByRole('region', { name: 'Aerial map' }).boundingBox();
+  const map = page.locator('[data-main-svg]');
+  const [first, ...rest] = points;
+  if (!first) throw new Error('drawBrushStroke requires at least one point');
+  await map.hover({ position: first });
+  const mapBounds = await map.boundingBox();
   if (!mapBounds) throw new Error('Map has no bounding box');
-  const [first, ...rest] = points.map((point) => ({
-    x: mapBounds.x + point.x - 300,
-    y: point.y,
-  }));
-  if (!first) {
-    throw new Error('drawBrushStroke requires at least one point');
-  }
-  await page.mouse.move(first.x, first.y);
   await page.mouse.down();
   for (const point of rest) {
-    await page.mouse.move(point.x, point.y, { steps: 8 });
+    await page.mouse.move(mapBounds.x + point.x, mapBounds.y + point.y, { steps: 8 });
   }
   await page.mouse.up();
   await page.keyboard.press('Enter');
@@ -55,12 +51,12 @@ test.describe('drawing features', () => {
 
     await selectGuildAndEditBrush(page, 0);
     await drawBrushStroke(page, [
-      { x: 400, y: 200 },
-      { x: 400, y: 400 },
-      { x: 410, y: 200 },
-      { x: 410, y: 400 },
-      { x: 420, y: 200 },
-      { x: 420, y: 400 },
+      { x: 100, y: 150 },
+      { x: 100, y: 350 },
+      { x: 110, y: 150 },
+      { x: 110, y: 350 },
+      { x: 120, y: 150 },
+      { x: 120, y: 350 },
     ]);
 
     await expect(bedPaths(page)).toHaveCount(1);
@@ -72,8 +68,8 @@ test.describe('drawing features', () => {
 
     await selectGuildAndEditBrush(page, 1);
     await drawBrushStroke(page, [
-      { x: 600, y: 400 },
-      { x: 400, y: 500 },
+      { x: 300, y: 350 },
+      { x: 100, y: 450 },
     ]);
 
     await expect(bedPaths(page)).toHaveCount(2);
@@ -86,8 +82,8 @@ test.describe('drawing features', () => {
     await expect(page.getByText('Enter saves; Escape cancels.')).toBeVisible();
     await settings.press('Enter');
     await drawBrushStroke(page, [
-      { x: 500, y: 300 },
-      { x: 520, y: 350 },
+      { x: 200, y: 250 },
+      { x: 220, y: 300 },
     ]);
 
     await expect(bedPaths(page)).toHaveCount(2);
@@ -105,7 +101,7 @@ test.describe('drawing features', () => {
     await page.getByRole('link', { name: 'Guilds' }).click();
 
     await selectGuildAndEditBrush(page, 0);
-    await drawBrushStroke(page, [{ x: 500, y: 300 }]);
+    await drawBrushStroke(page, [{ x: 200, y: 250 }]);
 
     const bed = bedPaths(page);
     await expect(bed).toHaveCount(1);

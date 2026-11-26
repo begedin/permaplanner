@@ -19,11 +19,6 @@ import type { GardenThing, Guild, GuildLayer } from './gardenTypes';
 import { plantCatalog } from './plantCatalog';
 import { createAuthedTestRouter } from './testing/authedTestSession';
 
-const popoverShim = {
-  showPopover: vi.fn(),
-  hidePopover: vi.fn(),
-};
-
 const knownSpecies = () => plantCatalog.species.filter((s) => s.id !== 'unknown');
 
 const comfreyPick = () =>
@@ -54,7 +49,6 @@ const testGuild = {
 } satisfies Guild;
 
 beforeEach(() => {
-  Object.assign(HTMLElement.prototype, popoverShim);
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
   usePlanStateStore().state.guilds = [{ ...testGuild, plants: [] }];
   usePlanStateStore().state.plants = [];
@@ -62,8 +56,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  popoverShim.showPopover.mockClear();
-  popoverShim.hidePopover.mockClear();
   vi.restoreAllMocks();
   cleanup();
 });
@@ -469,8 +461,8 @@ it('expands a plant group to edit per-instance phase and condition', async () =>
 
   const phaseSelects = card(wrapper).getAllByLabelText('Phase');
   expect(phaseSelects).toHaveLength(2);
-  await fireEvent.change(phaseSelects[0]!, { target: { value: 'young' } });
-  await fireEvent.change(phaseSelects[1]!, { target: { value: 'producing' } });
+  await fireEvent.update(phaseSelects[0]!, 'young');
+  await fireEvent.update(phaseSelects[1]!, 'producing');
 
   expect(usePlanStateStore().state.guilds[0].plants).toMatchObject([
     { id: 'thing-a', growthPhase: 'young' },

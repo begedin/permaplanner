@@ -40,7 +40,7 @@
   />
   <p
     v-else-if="note && readOnly"
-    class="whitespace-pre-wrap break-words text-xs text-ink-600"
+    class="whitespace-pre-wrap wrap-break-word text-xs text-ink-600"
   >
     {{ note }}
   </p>
@@ -56,6 +56,6 @@
       name="edit"
       class="size-4 shrink-0"
     />
-    <span class="whitespace-pre-wrap break-words min-w-0">{{ note }}</span>
+    <span class="whitespace-pre-wrap wrap-break-word min-w-0">{{ note }}</span>
   </button>
 </template>

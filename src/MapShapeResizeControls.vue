@@ -153,9 +153,9 @@
     </g>
     <rect
       v-for="handle in resizeHandles"
+      v-show="handle.visible"
       :key="handle.direction.name"
       :data-resize="handle.direction.name"
-      v-show="handle.visible"
       :transform="`translate(${handle.x} ${handle.y}) rotate(${shape.rotation})`"
       :x="-size / 2"
       :y="-size / 2"

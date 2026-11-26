@@ -1,8 +1,11 @@
 import eslint from '@eslint/js';
+import globals from 'globals';
+import skipFormatting from '@vue/eslint-config-prettier/skip-formatting';
+import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 import pluginVue from 'eslint-plugin-vue';
 
-export default tseslint.config(
+export default defineConfig(
   {
     ignores: [
       'dist/**',
@@ -13,25 +16,19 @@ export default tseslint.config(
       '_build/**',
       'deps/**',
       'priv/static/**',
+      'priv/repo/support/guild-boundaries-v8.cjs',
     ],
+  },
+  {
+    files: ['src/**/*.vue', 'priv/admin/**/*.js', 'test/fixtures/static/**/*.js'],
+    languageOptions: { globals: globals.browser },
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/recommended'],
+  skipFormatting,
   {
     rules: {
-      'vue/html-self-closing': 'off',
-      'vue/singleline-html-element-content-newline': 'off',
-      // Keep in sync with .prettierrc.mjs (tabWidth, bracketSameLine, singleAttributePerLine).
-      'vue/html-indent': ['warn', 2, { baseIndent: 1, attribute: 1 }],
-      'vue/html-closing-bracket-newline': [
-        'warn',
-        {
-          singleline: 'never',
-          multiline: 'always',
-          selfClosingTag: { singleline: 'never', multiline: 'always' },
-        },
-      ],
       '@typescript-eslint/no-unused-vars': [
         'error',
         {

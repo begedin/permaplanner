@@ -23,10 +23,10 @@ it('moves a corner in map coordinates while preserving closed rings and other re
   svg.append(wrapper.element);
   const corner = wrapper.get('[aria-label="Plot border corner 5"]');
   await corner.trigger('pointerdown', { button: 0, clientX: 641, clientY: 59 });
-  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 641, clientY: 59 }));
+  document.dispatchEvent(new PointerEvent('pointerup', { clientX: 641, clientY: 59 }));
   expect(wrapper.emitted('commit')).toBeUndefined();
   await corner.trigger('pointerdown', { button: 0, clientX: 640, clientY: 60 });
-  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 680, clientY: 80 }));
+  document.dispatchEvent(new PointerEvent('pointerup', { clientX: 680, clientY: 80 }));
   const expected = cloneGuildPath(path);
   expected[1]![0]![1] = { x: 330, y: 20 };
   expect(wrapper.emitted('commit')).toEqual([[expected]]);
@@ -46,7 +46,7 @@ it('cancels a corner drag when the selection changes', async () => {
     .get('[aria-label="Plot border corner 1"]')
     .trigger('pointerdown', { button: 0, clientX: 20, clientY: 20 });
   await wrapper.setProps({ selected: false });
-  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 30, clientY: 30 }));
+  document.dispatchEvent(new PointerEvent('pointerup', { clientX: 30, clientY: 30 }));
   expect(wrapper.emitted('commit')).toBeUndefined();
   wrapper.unmount();
 });

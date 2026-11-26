@@ -8,7 +8,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        image: postgres:18.6
         env:
           POSTGRES_PASSWORD: postgres
         ports:
@@ -31,7 +31,7 @@ jobs:
       - name: 'Install Node'
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version-file: '.tool-versions'
 
       - name: Restore cache
         uses: actions/cache@v4
@@ -49,12 +49,12 @@ jobs:
       - name: Install Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: '1.20'
-          otp-version: '29'
+          version-file: '.tool-versions'
+          version-type: strict
 
       - name: Test server
         env:
-          DATABASE_URL: ecto://postgres:postgres@localhost:5432/permaplanner_test
+          TEST_DATABASE_URL: ecto://postgres:postgres@localhost:5432/permaplanner_test
         run: mix deps.get && mix test
 
       - name: Upload reports

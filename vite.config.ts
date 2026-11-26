@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from 'node:url';
-import { codecovVitePlugin } from '@codecov/vite-plugin';
+import { codecovRollupPlugin } from '@codecov/rollup-plugin';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
@@ -12,7 +13,8 @@ export default defineConfig({
   },
   plugins: [
     vue(),
-    codecovVitePlugin({
+    tailwindcss(),
+    codecovRollupPlugin({
       enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
       bundleName: 'Permaplanner',
       uploadToken: process.env.CODECOV_TOKEN,
@@ -39,13 +41,6 @@ export default defineConfig({
       '/api': phoenixDevUrl,
       '/share': phoenixDevUrl,
       '/sandbox': phoenixDevUrl,
-    },
-  },
-  test: {
-    include: ['src/**/*.test.ts'],
-    coverage: {
-      reporter: ['text', 'json', 'json-summary', 'html', 'clover'],
-      reportOnFailure: true,
     },
   },
 });

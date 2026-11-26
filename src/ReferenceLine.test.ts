@@ -37,7 +37,7 @@ it('previews locally and commits only the scale edit as one undo step', async ()
     .get('[data-ref-line-start]')
     .trigger('pointerdown', { button: 0, clientX: 20, clientY: 20 });
   document.dispatchEvent(
-    new MouseEvent('pointermove', { buttons: 1, clientX: 45, clientY: 60 }),
+    new PointerEvent('pointermove', { buttons: 1, clientX: 45, clientY: 60 }),
   );
   await nextTick();
   expect(wrapper.get('[data-ref-line-start]').attributes()).toMatchObject({
@@ -48,7 +48,7 @@ it('previews locally and commits only the scale edit as one undo step', async ()
   history.runMutation(() => {
     usePlanStateStore().state.backgroundOpacity = 0.8;
   });
-  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 50, clientY: 70 }));
+  document.dispatchEvent(new PointerEvent('pointerup', { clientX: 50, clientY: 70 }));
   expect(usePlanStateStore().state.onboardingState).toBe('movedFirst');
   expect(scale.start).toEqual({ x: 50, y: 70 });
   history.undo();
@@ -71,7 +71,7 @@ it.each(['unmount', 'escape', 'replace'] as const)(
     else if (cancel === 'escape')
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     else await useGardenSessionStore().reset();
-    document.dispatchEvent(new MouseEvent('pointerup', { clientX: 100, clientY: 100 }));
+    document.dispatchEvent(new PointerEvent('pointerup', { clientX: 100, clientY: 100 }));
     expect(scale.start).toEqual({ x: 20, y: 20 });
     expect(usePlanCommandHistory().canUndo).toBe(false);
     if (cancel !== 'unmount') wrapper.unmount();
@@ -85,7 +85,7 @@ it('shows transient guidance for both drags and restores it on cancellation', as
     .trigger('pointerdown', { button: 0, clientX: 30, clientY: 40 });
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('Try to be as precise');
   expect(usePlanStateStore().state.onboardingState).toBe('initial');
-  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 34, clientY: 45 }));
+  document.dispatchEvent(new PointerEvent('pointerup', { clientX: 34, clientY: 45 }));
   await nextTick();
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('move the other point');
   expect(usePlanStateStore().state.onboardingState).toBe('movedFirst');
@@ -100,7 +100,7 @@ it('shows transient guidance for both drags and restores it on cancellation', as
   await wrapper
     .get('[data-ref-line-end]')
     .trigger('pointerdown', { button: 0, clientX: 100, clientY: 40 });
-  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 110, clientY: 50 }));
+  document.dispatchEvent(new PointerEvent('pointerup', { clientX: 110, clientY: 50 }));
   await nextTick();
   expect(wrapper.get('[data-onboarding-text]').text()).toContain('set the length');
   expect(usePlanStateStore().state.onboardingState).toBe('movedSecond');
@@ -114,7 +114,7 @@ it('keeps an off-map endpoint and calibration unchanged on a tap', async () => {
   const wrapper = renderLine();
   const contact = { button: 0, clientX: 41, clientY: -99 };
   await wrapper.get('[data-ref-line-start]').trigger('pointerdown', contact);
-  document.dispatchEvent(new MouseEvent('pointerup', contact));
+  document.dispatchEvent(new PointerEvent('pointerup', contact));
   expect(scale).toMatchObject({ start: { x: 40, y: -100 }, unitLengthPx: calibration });
   expect(usePlanCommandHistory().canUndo).toBe(false);
   wrapper.unmount();

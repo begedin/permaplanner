@@ -10,12 +10,6 @@ import {
 
 import { speciesIsPlacedInGuilds } from './calendarGardenPlants';
 import type { Guild, Plant } from './gardenTypes';
-import PrivacyPolicy from './PrivacyPolicy.vue';
-import TheCalendar from './TheCalendar.vue';
-import TheLegacyImport from './TheLegacyImport.vue';
-import TheLogin from './TheLogin.vue';
-import ThePlants from './ThePlants.vue';
-import TheRegister from './TheRegister.vue';
 import { useAuthStore } from './stores/useAuthStore';
 import { needsGardenSetup } from './useAuthGate';
 import { useGardenStore } from './useGardenStore';
@@ -84,9 +78,17 @@ const selectionRedirect = (
 
 const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/guilds' },
-  { path: '/login', name: routeNames.login, component: TheLogin },
-  { path: '/register', name: routeNames.register, component: TheRegister },
-  { path: '/import', name: routeNames.import, component: TheLegacyImport },
+  { path: '/login', name: routeNames.login, component: () => import('./TheLogin.vue') },
+  {
+    path: '/register',
+    name: routeNames.register,
+    component: () => import('./TheRegister.vue'),
+  },
+  {
+    path: '/import',
+    name: routeNames.import,
+    component: () => import('./TheLegacyImport.vue'),
+  },
   {
     path: '/guilds',
     component: () => import('./TheGarden.vue'),
@@ -113,14 +115,26 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  { path: '/plants', name: routeNames.plants, component: ThePlants },
-  { path: '/calendar', name: routeNames.calendar, component: TheCalendar },
+  {
+    path: '/plants',
+    name: routeNames.plants,
+    component: () => import('./ThePlants.vue'),
+  },
+  {
+    path: '/calendar',
+    name: routeNames.calendar,
+    component: () => import('./TheCalendar.vue'),
+  },
   {
     path: '/calendar/:speciesId',
     name: routeNames.calendarDetail,
-    component: TheCalendar,
+    component: () => import('./TheCalendar.vue'),
   },
-  { path: '/privacy', name: routeNames.privacy, component: PrivacyPolicy },
+  {
+    path: '/privacy',
+    name: routeNames.privacy,
+    component: () => import('./PrivacyPolicy.vue'),
+  },
   { path: '/:pathMatch(.*)*', redirect: '/guilds' },
 ];
 

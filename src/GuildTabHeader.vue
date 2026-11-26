@@ -39,9 +39,9 @@
     { id: 'aerial', label: 'Aerial', icon: 'guilds', controls: 'guild-map' },
   ] as const;
   const activeView = computed(() => {
-    if (guildListOpen.value) return;
+    if (guildListOpen.value) return undefined;
     if (props.showGuildDetails) return 'details';
-    if (!isLayout.value) return 'aerial';
+    return isLayout.value ? undefined : 'aerial';
   });
   const selectView = (view: 'details' | 'aerial') => {
     guildListOpen.value = false;
@@ -146,7 +146,7 @@
             v-for="view in views"
             :key="view.id"
             type="button"
-            class="nav-icon-btn h-8 w-auto shrink-0 gap-1 rounded px-2"
+            class="nav-icon-btn h-8 w-auto shrink-0 gap-1 rounded-sm px-2"
             :class="{ 'nav-icon-btn-active': activeView === view.id }"
             :aria-pressed="activeView === view.id"
             :aria-controls="view.controls"
@@ -169,10 +169,10 @@
       <span class="sr-only">Search guilds</span>
       <input
         ref="searchInputRef"
+        v-model="searchQuery"
         type="search"
         class="w-full input-soft py-1.5 px-2 text-sm text-ink-800"
         :placeholder="searchPlaceholder"
-        v-model="searchQuery"
       />
     </label>
     <div

@@ -267,12 +267,12 @@
         :tool="selectedGuildId === guild.id ? activeTool : undefined"
         :hovered="hoveredId === guild.id"
         :guild="guild"
+        :preview-path="editingGuildId === guild.id ? brushPath : undefined"
         @click.exact="selectGuild(guild.id)"
         @select-plant="selectGuild(guild.id, $event)"
         @mouseenter="hoveredId = guild.id"
         @mouseleave="clearHover()"
         @move="garden.setGuildPath(guild.id, $event, true)"
-        :preview-path="editingGuildId === guild.id ? brushPath : undefined"
       ></GardenGuild>
 
       <GardenGuild

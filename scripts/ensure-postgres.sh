@@ -16,29 +16,13 @@ DEV_DB=permaplanner_dev
 TEST_DB=permaplanner_test
 POSTGRES_HOME="$(asdf where postgres)"
 export PATH="${POSTGRES_HOME}/bin:${PATH}"
-PGDATA="${POSTGRES_HOME}/data"
+PGDATA="${PERMAPLANNER_PGDATA:-${POSTGRES_HOME}/data}"
 PGLOG="$(dirname "$PGDATA")/postgres.log"
-POSTGRES_CONF="$PGDATA/postgresql.conf"
-
 if [[ ! -d "$PGDATA" ]]; then
   echo "asdf Postgres data directory not found: $PGDATA" >&2
   echo "Run: asdf install" >&2
   exit 1
 fi
-
-ensure_port_config() {
-  if grep -qE "^port = ${PGPORT}[[:space:]]*$" "$POSTGRES_CONF"; then
-    return
-  fi
-
-  if grep -qE "^#?port = " "$POSTGRES_CONF"; then
-    sed -i '' -E "s/^#?port = .*/port = ${PGPORT}/" "$POSTGRES_CONF"
-  else
-    echo "port = ${PGPORT}" >>"$POSTGRES_CONF"
-  fi
-
-  echo "Set asdf Postgres port to ${PGPORT} in $POSTGRES_CONF"
-}
 
 postgres_ready() {
   pg_isready -h localhost -p "$PGPORT" -U postgres -q 2>/dev/null
@@ -49,7 +33,7 @@ postgres_running_for_data_dir() {
 }
 
 start_postgres() {
-  pg_ctl -D "$PGDATA" -l "$PGLOG" start
+  pg_ctl -D "$PGDATA" -l "$PGLOG" -o "-p $PGPORT" start
 }
 
 wait_for_postgres() {
@@ -72,12 +56,10 @@ list_user_databases() {
     "SELECT datname FROM pg_database WHERE datistemplate = false AND datname <> 'postgres' ORDER BY datname"
 }
 
-ensure_port_config
-
 if ! postgres_ready; then
   if postgres_running_for_data_dir; then
-    echo "Stopping asdf Postgres to apply port ${PGPORT}..."
-    pg_ctl -D "$PGDATA" stop
+    echo "$PGDATA already runs on another port. Set PERMAPLANNER_PGDATA to the garden database directory." >&2
+    exit 1
   fi
 
   echo "Starting asdf Postgres on port ${PGPORT}..."

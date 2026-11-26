@@ -2,7 +2,7 @@
   import { computed } from 'vue';
   import { GuildFunction } from './gardenTypes';
 
-  const props = withDefaults(defineProps<{ value: GuildFunction[] }>(), {
+  const props = withDefaults(defineProps<{ value?: GuildFunction[] }>(), {
     value: () => [],
   });
   const emit = defineEmits<{ (e: 'update:value', value: GuildFunction[]): void }>();
@@ -42,7 +42,7 @@
           @change="toggle(guildFunction.value)"
         />
         <div
-          class="relative w-11 h-6 bg-parchment-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-sage-200 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-parchment-50 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-parchment-50 after:border-parchment-400 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sage-500"
+          class="relative w-11 h-6 bg-parchment-300 peer-focus:outline-hidden peer-focus:ring-4 peer-focus:ring-sage-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:rtl:after:-translate-x-full peer-checked:after:border-parchment-50 after:content-[''] after:absolute after:top-[2px] after:inset-s-[2px] after:bg-parchment-50 after:border-parchment-400 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sage-500"
         ></div>
         <span class="ms-3 text-sm font-medium text-ink-800">{{
           guildFunction.label

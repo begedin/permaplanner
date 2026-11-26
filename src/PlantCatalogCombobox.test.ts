@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/vue';
-import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 
 import {
   buildCatalogPickGroups,
@@ -9,20 +9,7 @@ import {
 import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
 import { plantCatalog } from './plantCatalog';
 
-const popoverShim = {
-  showPopover: vi.fn(),
-  hidePopover: vi.fn(),
-};
-
-beforeEach(() => {
-  Object.assign(HTMLElement.prototype, popoverShim);
-});
-
-afterEach(() => {
-  cleanup();
-  popoverShim.showPopover.mockClear();
-  popoverShim.hidePopover.mockClear();
-});
+afterEach(cleanup);
 
 const knownSpecies = () => plantCatalog.species.filter((s) => s.id !== 'unknown');
 

@@ -66,9 +66,7 @@
       return;
     }
     if (!open) {
-      if (panel.matches(':popover-open')) {
-        panel.hidePopover();
-      }
+      panel.hidePopover();
       return;
     }
     panel.showPopover({ source: anchor });
@@ -124,7 +122,7 @@
       static
       :unmount="false"
       popover="manual"
-      class="combobox-options-popover paper-card z-20 max-h-60 overflow-auto py-1 focus:outline-none"
+      class="combobox-options-popover paper-card z-20 max-h-60 overflow-auto py-1 focus:outline-hidden"
     >
       <slot name="options" />
     </ComboboxOptions>

@@ -67,7 +67,7 @@
       <RouterLink
         v-for="tab in tabs"
         :key="tab.icon"
-        class="nav-icon-btn h-7 w-auto shrink-0 gap-1 rounded px-1.5 leading-6 lg:h-6"
+        class="nav-icon-btn h-7 w-auto shrink-0 gap-1 rounded-sm px-1.5 leading-6 lg:h-6"
         active-class="nav-icon-btn-active max-[360px]:flex-1 [&>span]:inline"
         :to="tab.to"
         :aria-label="tab.label"

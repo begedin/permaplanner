@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.39.0
+
+- [CHANGE] Update the editor and server dependencies. The release uses Node.js 26, Elixir 1.20 and Erlang/OTP 29.
+- [DB] Move the production database to PostgreSQL 18.6.
+
 ## 0.38.1
 
 - [FIX] Swipe across an unselected feature to pan the aerial map. Tap a path or landmark to select it, then drag it to move it. A slight finger movement still counts as a tap.

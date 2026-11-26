@@ -6,40 +6,28 @@ defmodule Permaplanner.Gardens.DocumentMigrationTest do
 
   @migration Permaplanner.Repo.Migrations.AddLandmarksAndScaleUnits
   @version 20_261_106_211_236
-  Code.require_file(
-    "../../../priv/repo/migrations/20261106211236_add_landmarks_and_scale_units.exs",
-    __DIR__
-  )
-
   @border_migration Permaplanner.Repo.Migrations.AddPlotBorder
   @border_version 20_261_108_054_137
-  Code.require_file("../../../priv/repo/migrations/20261108054137_add_plot_border.exs", __DIR__)
-
   @guild_migration Permaplanner.Repo.Migrations.SeparateGuildBoundaries
   @guild_version 20_261_109_080_243
-  Code.require_file(
-    "../../../priv/repo/migrations/20261109080243_separate_guild_boundaries.exs",
-    __DIR__
-  )
-
   @feature_migration Permaplanner.Repo.Migrations.UnifyFeaturePaths
   @feature_version 20_261_110_160_055
-  Code.require_file(
-    "../../../priv/repo/migrations/20261110160055_unify_feature_paths.exs",
-    __DIR__
-  )
-
   @paths_migration Permaplanner.Repo.Migrations.AddGardenPaths
   @paths_version 20_261_111_085_623
-  Code.require_file("../../../priv/repo/migrations/20261111085623_add_garden_paths.exs", __DIR__)
-
   @placement_migration Permaplanner.Repo.Migrations.MarkExplicitPlantPlacements
   @placement_version 20_261_112_215_926
-  if not Code.ensure_loaded?(@placement_migration) do
-    Code.require_file(
-      "../../../priv/repo/migrations/20261112215926_mark_explicit_plant_placements.exs",
-      __DIR__
-    )
+
+  for {version, module} <- [
+        {@version, @migration},
+        {@border_version, @border_migration},
+        {@guild_version, @guild_migration},
+        {@feature_version, @feature_migration},
+        {@paths_version, @paths_migration},
+        {@placement_version, @placement_migration}
+      ],
+      not Code.ensure_loaded?(module) do
+    [file] = Path.wildcard(Path.expand("../../../priv/repo/migrations/#{version}_*.exs", __DIR__))
+    Code.require_file(file)
   end
 
   setup do

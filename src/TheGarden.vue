@@ -168,8 +168,8 @@
             >
               <GuildListRow
                 v-for="guild in filteredGuilds"
-                :guild-id="guild.id"
                 :key="guild.id"
+                :guild-id="guild.id"
                 @selected="
                   closeGuildList();
                   if (isLayout) workspace.showMap();
@@ -207,6 +207,7 @@
               :layout-mode="isLayout"
               :selected-thing-id="selectedThingId"
               :placing-thing-id="placingThingId"
+              class="flex-1 min-h-0"
               @select-plant="layout.selectPlant($event)"
               @place-plant="
                 layout.beginPlacement($event);
@@ -220,7 +221,6 @@
                     params: { guildId: selectedGuildId },
                   });
               "
-              class="flex-1 min-h-0"
             >
               <template #plant-details>
                 <PlantSpreadEditor

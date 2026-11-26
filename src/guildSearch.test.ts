@@ -160,8 +160,8 @@ it('highlights a case-insensitive substring match', () => {
 
 it('highlights fuzzy prefix matches as one span', () => {
   expect(highlightSegments('Strawberry', 'straw')).toEqual([
-    { text: 'Strawberr', match: true },
-    { text: 'y', match: false },
+    { text: 'Straw', match: true },
+    { text: 'berry', match: false },
   ]);
 });
 

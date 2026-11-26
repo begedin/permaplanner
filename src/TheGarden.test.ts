@@ -192,7 +192,7 @@ it('switches selection to another guild and discards the previous edit', async (
   await wrapper
     .get('svg')
     .trigger('pointerdown', { button: 0, clientX: 50, clientY: 50 });
-  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 50, clientY: 50 }));
+  document.dispatchEvent(new PointerEvent('pointerup', { clientX: 50, clientY: 50 }));
   await wrapper.vm.$nextTick();
 
   const guildB = wrapper
@@ -332,7 +332,7 @@ it('does not edit a bed while the select tool is active', async () => {
   await wrapper
     .get('svg')
     .trigger('pointerdown', { button: 0, clientX: 50, clientY: 50 });
-  document.dispatchEvent(new MouseEvent('pointerup', { clientX: 50, clientY: 50 }));
+  document.dispatchEvent(new PointerEvent('pointerup', { clientX: 50, clientY: 50 }));
   await wrapper.vm.$nextTick();
 
   expect(usePlanStateStore().state.guilds.find((g) => g.id === 'guild')?.path).toEqual(
@@ -475,7 +475,9 @@ it('records calibration and onboarding together without delayed document changes
   setActivePinia(createPinia());
   useGardenSessionStore().gardenId = 'g1';
   const photo = new Image();
-  vi.spyOn(window, 'Image').mockImplementation(() => photo);
+  vi.spyOn(window, 'Image').mockImplementation(function () {
+    return photo;
+  });
   vi.spyOn(photo, 'naturalWidth', 'get').mockReturnValue(1);
   vi.spyOn(photo, 'naturalHeight', 'get').mockReturnValue(1);
   usePlanStateStore().state.backgroundImageDataUrl =
@@ -776,7 +778,12 @@ it.each(
   const surface = screen.getByLabelText('Draw feature');
   await fireEvent(
     surface,
-    new MouseEvent('pointerdown', { bubbles: true, button: 0, clientX: 60, clientY: 80 }),
+    new PointerEvent('pointerdown', {
+      bubbles: true,
+      button: 0,
+      clientX: 60,
+      clientY: 80,
+    }),
   );
   if (brush === 'Polygon (P)') {
     for (const [clientX, clientY] of [
@@ -785,11 +792,11 @@ it.each(
     ]) {
       await fireEvent(
         surface,
-        new MouseEvent('pointerdown', { bubbles: true, button: 0, clientX, clientY }),
+        new PointerEvent('pointerdown', { bubbles: true, button: 0, clientX, clientY }),
       );
     }
   } else {
-    document.dispatchEvent(new MouseEvent('pointerup', { clientX: 160, clientY: 180 }));
+    document.dispatchEvent(new PointerEvent('pointerup', { clientX: 160, clientY: 180 }));
   }
   expect(useGardenSessionStore().snapshot()).toEqual(before);
   await fireEvent.keyDown(svg, { key: 'Enter' });
@@ -844,7 +851,7 @@ it.each(['save', 'cancel'])(
     await fireEvent.keyDown(window, { key: 'Meta', code: 'MetaLeft', metaKey: true });
     await fireEvent(
       surface,
-      new MouseEvent('pointerdown', {
+      new PointerEvent('pointerdown', {
         bubbles: true,
         button: 0,
         clientX: 0,
@@ -854,7 +861,7 @@ it.each(['save', 'cancel'])(
     );
     await fireEvent(
       document,
-      new MouseEvent('pointerup', { clientX: 30, clientY: 30, metaKey: true }),
+      new PointerEvent('pointerup', { clientX: 30, clientY: 30, metaKey: true }),
     );
     await fireEvent.keyUp(window, { key: 'Meta', code: 'MetaLeft', metaKey: false });
     expect(
@@ -873,14 +880,17 @@ it.each(['save', 'cancel'])(
     expect(useMapInteractionStore().activeTool).toBe('draw');
     await fireEvent(
       surface,
-      new MouseEvent('pointerdown', {
+      new PointerEvent('pointerdown', {
         bubbles: true,
         button: 0,
         clientX: 50,
         clientY: 50,
       }),
     );
-    await fireEvent(document, new MouseEvent('pointerup', { clientX: 80, clientY: 80 }));
+    await fireEvent(
+      document,
+      new PointerEvent('pointerup', { clientX: 80, clientY: 80 }),
+    );
     await fireEvent.keyDown(svg, { key: 'Enter' });
     expect(usePlanStateStore().state.plotBorder).toEqual([
       [

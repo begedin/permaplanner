@@ -60,10 +60,10 @@
       <span class="sr-only">Search garden plants</span>
       <input
         ref="searchInputRef"
+        v-model="searchQuery"
         type="search"
         class="w-full input-soft py-1.5 px-2 text-sm text-ink-800"
         :placeholder="searchPlaceholder"
-        v-model="searchQuery"
       />
     </label>
   </AppPageHeader>

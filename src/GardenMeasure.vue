@@ -57,10 +57,10 @@
 </script>
 <template>
   <text
-    ref="text"
     v-if="label && box.width > 0 && box.height > 0"
-    data-map-measure
     :id="plant ? `plant-size-${plant.id}` : undefined"
+    ref="text"
+    data-map-measure
     v-bind="position"
     :font-size="fontSize"
     class="pointer-events-none"

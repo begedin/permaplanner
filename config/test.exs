@@ -1,6 +1,9 @@
 import Config
 
+config :bcrypt_elixir, log_rounds: 4
+
 config :permaplanner, Permaplanner.Repo,
+  url: System.get_env("TEST_DATABASE_URL"),
   username: "postgres",
   password: "postgres",
   hostname: "localhost",

@@ -78,11 +78,11 @@ it.each([
     .trigger('pointerdown', { button: 0, ...start });
   if (move) {
     document.dispatchEvent(
-      new MouseEvent('pointermove', { ...move, buttons: 1, bubbles: true }),
+      new PointerEvent('pointermove', { ...move, buttons: 1, bubbles: true }),
     );
     await nextTick();
   }
-  document.dispatchEvent(new MouseEvent('pointerup', { ...release, bubbles: true }));
+  document.dispatchEvent(new PointerEvent('pointerup', { ...release, bubbles: true }));
   await nextTick();
 
   expect(wrapper.emitted('move')?.at(0)).toEqual([[[expected]]]);
@@ -213,7 +213,7 @@ it.each(['cancel', 'commit'] as const)(
       .get('path.pointer-events-fill')
       .trigger('pointerdown', { button: 0, clientX: 0, clientY: 0 });
     document.dispatchEvent(
-      new MouseEvent('pointermove', {
+      new PointerEvent('pointermove', {
         clientX: 5,
         clientY: 7,
         buttons: 1,
@@ -230,7 +230,7 @@ it.each(['cancel', 'commit'] as const)(
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     else
       document.dispatchEvent(
-        new MouseEvent('pointerup', { clientX: 5, clientY: 7, bubbles: true }),
+        new PointerEvent('pointerup', { clientX: 5, clientY: 7, bubbles: true }),
       );
     await nextTick();
     expect(canopy.element.parentElement).toHaveAttribute('transform', 'translate(0 0)');

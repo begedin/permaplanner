@@ -66,7 +66,7 @@ Phoenix expects the **asdf** Postgres instance from [`.tool-versions`](.tool-ver
 
 `npm run dev` runs [`scripts/ensure-postgres.sh`](scripts/ensure-postgres.sh) first: it starts asdf Postgres on 5434 when needed, runs `mix ecto.setup` when the dev/test databases are missing, applies pending dev migrations, and errors if the instance contains unexpected databases.
 
-One-time: if your asdf data directory was previously on 5432, the script rewrites `port` in `$(asdf where postgres)/data/postgresql.conf` and restarts Postgres.
+Set `PERMAPLANNER_PGDATA` to reuse an existing garden database directory after a PostgreSQL minor update. The startup script uses port 5434 and leaves instances on other ports running.
 
 While a migration is still uncommitted, edit that file in place rather than adding a follow-up migration. After changing a migration that was already applied locally, reset and re-run tests:
 
@@ -86,7 +86,7 @@ npm run deploy:fly
 Runtime secrets on Fly:
 
 - `SECRET_KEY_BASE` (64+ bytes): `fly secrets set SECRET_KEY_BASE="$(mix phx.gen.secret)"`
-- `DATABASE_URL` — set automatically by `fly postgres attach permaplanner-db -a permaplanner`
+- `DATABASE_URL` connects to the production database at `permaplanner-db-pg18.flycast:5432`.
 
 After setting secrets, deploy them: `fly secrets deploy -a permaplanner` (Fly may show secrets as “Staged” until you do).
 
@@ -171,7 +171,7 @@ migration and local imports use the same polygon-clipping conversion for version
 paths. Crossed outlines are split into their filled regions; only paths with no
 filled area become empty geometry (zero signed area alone does not mean empty).
 The database migration runs the frozen `priv/repo/support/guild-boundaries-v8.cjs`
-bundle with Node.js 22, which is included in the release image. It requires no npm
+bundle with Node.js 26, which is included in the release image. It requires no npm
 installation at runtime. To rebuild this bundle before its first release, run
 `npm run bundle:migration:v8`; do not regenerate a shipped migration bundle.
 Conversion errors abort the transaction, preserving all original documents.

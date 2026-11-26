@@ -94,7 +94,7 @@
 <template>
   <section
     class="relative flex min-h-0 min-w-0 flex-1 flex-col"
-    :class="guild ? 'gap-2 p-3' : '[container-type:inline-size]'"
+    :class="guild ? 'gap-2 p-3' : '@container'"
     :aria-label="guild ? 'Plant layout' : 'Aerial map'"
     :inert="transitioning"
     :data-view-transition="transitioning ? 'active' : undefined"

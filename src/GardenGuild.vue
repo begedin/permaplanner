@@ -28,7 +28,13 @@
       showPlantLabels?: boolean;
       labelLayer?: SVGGElement;
     }>(),
-    { showLabel: true },
+    {
+      showLabel: true,
+      previewPath: undefined,
+      selectedPlantId: undefined,
+      tool: undefined,
+      labelLayer: undefined,
+    },
   );
   const camera = useCameraStore();
   const hoveredPlantId = ref<string>();

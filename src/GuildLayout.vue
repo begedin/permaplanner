@@ -332,8 +332,8 @@
       </template>
       <PlantMapLabel
         v-for="thing in placedThings"
-        :key="`label-${thing.id}`"
         v-show="showLabels || hoveredThingId === thing.id || focusedThingId === thing.id"
+        :key="`label-${thing.id}`"
         :thing="thing"
         :font-size="plantLabelFontSize"
       />

@@ -7,7 +7,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-bash scripts/ensure-postgres.sh
+if [[ -z "${TEST_DATABASE_URL:-}" ]]; then
+  bash scripts/ensure-postgres.sh
+fi
 
 export MIX_ENV=test
 export PHX_SERVER=true

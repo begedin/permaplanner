@@ -1,14 +1,11 @@
 # syntax = docker/dockerfile:1
 
-ARG NODE_VERSION=22.2.0
-ARG ELIXIR_IMAGE=elixir:1.20-otp-29
+ARG NODE_VERSION=26.13.1
+ARG ELIXIR_IMAGE=hexpm/elixir:1.20.5-erlang-29.1.3-debian-trixie-20261123-slim
 
 FROM node:${NODE_VERSION}-slim AS frontend
 
 WORKDIR /app
-
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3
 
 COPY --link package-lock.json package.json ./
 RUN npm ci --include=dev
