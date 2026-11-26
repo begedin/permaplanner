@@ -26,15 +26,15 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
 
       - name: 'Install Node'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7.1.0
         with:
           node-version-file: '.tool-versions'
 
       - name: Restore cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6.1.0
         with:
           path: node_modules
           key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
@@ -47,7 +47,7 @@ jobs:
         run: npm run test:coverage
 
       - name: Install Elixir
-        uses: erlef/setup-beam@v1
+        uses: erlef/setup-beam@v1.24.1
         with:
           version-file: '.tool-versions'
           version-type: strict
@@ -67,19 +67,19 @@ jobs:
           SECRET_KEY_BASE="$(openssl rand -hex 64)" _build/prod/rel/permaplanner/bin/permaplanner eval Permaplanner.Release.migrate
 
       - name: Upload reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: coverage
           path: coverage
           retention-days: 2
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4.0.1
+        uses: codecov/codecov-action@v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Pass or fail
         if: ${{ steps.test.outcome == 'failure' }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9.0.0
         with:
           script: core.setFailed('Tests failed!')

@@ -23,11 +23,11 @@ jobs:
     env:
       TEST_DATABASE_URL: ecto://postgres:postgres@localhost:5432/permaplanner_test
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
+    - uses: actions/checkout@v7.0.1
+    - uses: actions/setup-node@v7.1.0
       with:
         node-version-file: '.tool-versions'
-    - uses: erlef/setup-beam@v1
+    - uses: erlef/setup-beam@v1.24.1
       with:
         version-file: '.tool-versions'
         version-type: strict
@@ -40,7 +40,7 @@ jobs:
       run: npx playwright install --with-deps
     - name: Run Playwright tests
       run: npm run test:e2e
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7.0.2
       if: always()
       with:
         name: playwright-report

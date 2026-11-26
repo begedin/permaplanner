@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.39.1
+
+- [CHANGE] Update the GitHub Actions that run tests, upload coverage and save browser reports.
+
 ## 0.39.0
 
 - [CHANGE] Update the editor and server dependencies. The release uses Node.js 26, Elixir 1.20 and Erlang/OTP 29.
