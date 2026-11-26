@@ -39,12 +39,15 @@ const touchscreen = async (page: Page) => {
   const sendTouch = (
     type: 'touchStart' | 'touchMove' | 'touchEnd',
     touchPoints: TouchPoint[] = [],
-  ) => touch.send('Input.dispatchTouchEvent', { type, touchPoints });
+    timestamp?: number,
+  ) => touch.send('Input.dispatchTouchEvent', { type, touchPoints, timestamp });
   const swipe = async (from: Point, dx: number, dy: number) => {
     const to = { x: from.x + dx, y: from.y + dy };
-    await sendTouch('touchStart', [from]);
-    await sendTouch('touchMove', [to]);
-    await sendTouch('touchEnd');
+    // CDP uses seconds. A finger pauses at the end of a drag before it lifts.
+    const end = Date.now() / 1000;
+    await sendTouch('touchStart', [from], end - 0.16);
+    await sendTouch('touchMove', [to], end - 0.08);
+    await sendTouch('touchEnd', [], end);
     return to;
   };
   return { sendTouch, swipe };
