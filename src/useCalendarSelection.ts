@@ -54,7 +54,7 @@ export const useCalendarSelection = () => {
 
   const clearSelection = async () => {
     if (rawSpeciesId.value) {
-      await router.replace({ name: routeNames.calendar });
+      await router.replace({ name: routeNames.calendar, query: { view: 'plants' } });
     }
   };
 

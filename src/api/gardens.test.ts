@@ -1,3 +1,4 @@
+import { observationToday } from '../observations';
 import legacyBoundaryCases from '../../test/fixtures/guild-boundaries-v8.json';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
@@ -14,6 +15,7 @@ vi.unmock('./gardens');
 
 const document: GardenDocument = {
   landmarks: [],
+  observations: [],
   paths: [],
   plotBorder: [],
   version: GARDEN_DOCUMENT_VERSION,
@@ -30,7 +32,6 @@ const document: GardenDocument = {
     {
       id: 'g1',
       name: 'Herbs',
-      note: 'North bed',
       mulchLevel: 3,
       path: [
         [
@@ -53,7 +54,6 @@ const document: GardenDocument = {
           placed: true,
           width: 7,
           height: 7,
-          note: 'Prune after harvest\nCheck new growth',
           growthPhase: 'young',
           vigor: 4,
         },
@@ -215,18 +215,55 @@ it('surfaces a rejected import from the backend', async () => {
   });
 });
 
-it('imports older documents without plant notes unchanged', async () => {
-  const olderDocument = structuredClone(document);
-  for (const guild of olderDocument.guilds) {
-    for (const plant of guild.plants) delete plant.note;
-  }
-  fetchMock.mockResolvedValueOnce(
-    new Response(JSON.stringify({ garden: { id: 'garden1', document: olderDocument } })),
+it('converts guild and individual notes once on the import date', async () => {
+  const guild = document.guilds[0]!;
+  const old = {
+    ...document,
+    version: 11,
+    guilds: [
+      {
+        ...guild,
+        note: 'North bed',
+        plants: [
+          { ...guild.plants[0], note: 'Prune after harvest\nCheck new growth' },
+          { ...guild.plants[0], id: 'second', note: '  ' },
+        ],
+      },
+    ],
+  };
+  fetchMock.mockImplementation(
+    async () => new Response(JSON.stringify({ garden: { id: 'garden1' } })),
   );
-  await importJsonText(buildLocalPlanJsonText(olderDocument));
-  expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
-    document: olderDocument,
+  await importJsonText(JSON.stringify(old));
+  const converted = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)).document;
+  const date = observationToday();
+  expect(converted).toEqual({
+    ...document,
+    guilds: [
+      {
+        ...guild,
+        observations: [{ id: expect.any(String), type: 'note', date, text: 'North bed' }],
+        plants: [
+          {
+            ...guild.plants[0],
+            observations: [
+              {
+                id: expect.any(String),
+                type: 'note',
+                date,
+                text: 'Prune after harvest\nCheck new growth',
+              },
+            ],
+          },
+          { ...guild.plants[0], id: 'second' },
+        ],
+      },
+    ],
   });
+  await importJsonText(buildLocalPlanJsonText(converted));
+  expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body)).document).toEqual(
+    converted,
+  );
 });
 
 it.each([legacyDocument, splitDocument])(
@@ -243,6 +280,7 @@ it.each([legacyDocument, splitDocument])(
       document: {
         ...document,
         landmarks: [],
+        observations: [],
         paths: [],
         plotBorder: [],
         mapScale: { ...mapScale, unit: 'unspecified' },

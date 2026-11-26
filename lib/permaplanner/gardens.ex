@@ -42,7 +42,7 @@ defmodule Permaplanner.Gardens do
          guild when not is_nil(guild) <-
            Enum.find(garden.document["guilds"], &(&1["id"] == guild_id)) do
       %{guilds: [resolved]} = snapshot = Permaplanner.Gardens.Snapshot.build(garden, [guild])
-      {:ok, snapshot |> Map.drop([:guilds, :plants]) |> Map.put(:guild, resolved)}
+      {:ok, snapshot |> Map.drop([:guilds, :plants, :observations]) |> Map.put(:guild, resolved)}
     else
       nil -> {:error, :not_found}
       error -> error
@@ -142,6 +142,7 @@ defmodule Permaplanner.Gardens do
       "syncRevision" => 0,
       "plants" => [],
       "guilds" => [],
+      "observations" => [],
       "landmarks" => [],
       "paths" => [],
       "plotBorder" => [],

@@ -1,3 +1,4 @@
+import { createObservation, observationToday } from '../observations';
 import { rectangleShapePath } from '../mapShapeGeometry';
 import { convertLegacyGuildPath } from './guildPath';
 import * as gardensApi from '../api/gardens';
@@ -146,6 +147,31 @@ export const importGardenDocument = async (
                 plant.height > 0 &&
                 !(plant.width === 16 && plant.height === 16),
         })),
+      })),
+    };
+  }
+  if (
+    document &&
+    typeof document === 'object' &&
+    'version' in document &&
+    document.version === 11
+  ) {
+    const old = document as Record<string, unknown>;
+    const today = observationToday();
+    const convertNote = ({ note, ...owner }: Record<string, unknown>) =>
+      typeof note === 'string' && note.trim()
+        ? {
+            ...owner,
+            observations: [createObservation({ date: today, text: note, type: 'note' })],
+          }
+        : owner;
+    document = {
+      ...old,
+      version: 12,
+      observations: [],
+      guilds: records(old.guilds).map((guild) => ({
+        ...convertNote(guild),
+        plants: records(guild.plants).map(convertNote),
       })),
     };
   }

@@ -47,7 +47,9 @@ it('buildGuildSearchRecord collects guild, instance, and catalog plant labels', 
     guild({
       id: 'g1',
       name: 'Berry guild',
-      note: 'North slope',
+      observations: [
+        { id: 'North', type: 'note' as const, date: '2026-01-01', text: 'North slope' },
+      ],
       plants: [
         thing({
           id: 't1',
@@ -70,7 +72,7 @@ it('buildGuildSearchRecord collects guild, instance, and catalog plant labels', 
     guildId: 'g1',
     name: 'Berry guild',
     plantLabels: 'Sunrise strawberry Sunrise Strawberry',
-    note: 'North slope',
+    observations: 'North slope',
   });
 });
 
@@ -105,9 +107,20 @@ it('ranks guild name matches above plant label matches', () => {
   ).toEqual(['name-hit', 'plant-hit']);
 });
 
-it('matches guild notes', () => {
+it('matches guild observations', () => {
   const guilds = [
-    guild({ id: 'a', name: 'Alpha', note: 'Needs more mulch near the fence' }),
+    guild({
+      id: 'a',
+      name: 'Alpha',
+      observations: [
+        {
+          id: 'Needs',
+          type: 'note' as const,
+          date: '2026-01-01',
+          text: 'Needs more mulch near the fence',
+        },
+      ],
+    }),
     guild({ id: 'b', name: 'Beta' }),
   ];
 

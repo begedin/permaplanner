@@ -5,7 +5,11 @@ defmodule PermaplannerWeb.OAuthHTML do
     ~H"""
     <!doctype html>
     <html lang="en">
-      <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Permaplanner connections</title></head>
+      <head>
+        <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>
+          Permaplanner connections
+        </title>
+      </head>
       <body>
         <main>
           <h1>Permaplanner connections</h1>
@@ -13,7 +17,9 @@ defmodule PermaplannerWeb.OAuthHTML do
             <p>Signed in as {@user.email}</p>
             <%= if @client do %>
               <h2>Connect {@client.name}?</h2>
-              <p>This connection can read all your saved gardens, guilds, plants, notes and layouts, and search the plant catalog. It cannot change your gardens.</p>
+              <p>
+                This connection can read all your saved gardens, guilds, plants, observations and layouts, and search the plant catalog. It cannot change your gardens.
+              </p>
               <form action="/oauth/authorize" method="post">
                 <input type="hidden" name="_csrf_token" value={get_csrf_token()} />
                 <input :for={{key, value} <- @params} type="hidden" name={key} value={value} />
@@ -24,7 +30,10 @@ defmodule PermaplannerWeb.OAuthHTML do
               <p :if={@connections == []}>No active connections.</p>
               <ul>
                 <li :for={connection <- @connections}>
-                  {connection.client_id} — connected {Calendar.strftime(connection.inserted_at, "%Y-%m-%d")}
+                  {connection.client_id} — connected {Calendar.strftime(
+                    connection.inserted_at,
+                    "%Y-%m-%d"
+                  )}
                   <form action="/oauth/connections/revoke" method="post">
                     <input type="hidden" name="_csrf_token" value={get_csrf_token()} />
                     <input type="hidden" name="connection_id" value={connection.id} />

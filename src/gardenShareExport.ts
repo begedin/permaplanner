@@ -1,3 +1,4 @@
+import { observationTypeLabels } from './observations';
 import type { GardenDocument } from './gardenDocument';
 import type { Guild } from './gardenTypes';
 import { GROWTH_PHASE_LABEL, PLANT_VIGOR_LABEL } from './guildPlantInstanceStatus';
@@ -34,7 +35,10 @@ export const buildGardenShareSummary = (guilds: readonly Guild[]): string =>
         '- plants:',
         plants.join('\n') || '  - (none)',
         `- mulch level: ${guild.mulchLevel}/5`,
-        `- note: ${guild.note?.trim() || '(none)'}`,
+        ...(guild.observations ?? []).map(
+          (entry) =>
+            `- ${entry.date} · ${observationTypeLabels[entry.type]}: ${entry.text.trim()}`,
+        ),
       ].join('\n');
     })
     .join('\n\n---\n\n') || '(no guilds)';

@@ -9,6 +9,7 @@ export type PlanSavableState = Omit<
 export const createEmptyPlanState = (): PlanSavableState => ({
   plants: [],
   guilds: [],
+  observations: [],
   landmarks: [],
   paths: [],
   plotBorder: [],

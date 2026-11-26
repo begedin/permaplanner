@@ -8,7 +8,7 @@ export const isEditableTarget = (target: EventTarget | null): boolean => {
 };
 
 export const isInDialog = (target: EventTarget | null): boolean =>
-  target instanceof Element && target.closest('[role="dialog"]') !== null;
+  target instanceof Element && target.closest('dialog, [role="dialog"]') !== null;
 
 export const useMapShortcutGuard = () => {
   const workspace = useGuildWorkspaceStore();

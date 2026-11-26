@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.40.0
+
+- [CHANGE] Record dated Flowering, Harvest, Care, and Note observations for a plant, a guild, or the whole garden. Calendar lists all observations, newest first, and shows older entries as you scroll.
+- [DB] Garden document version 12 converts existing plant and guild notes to observations dated on the day of migration or file import.
+
 ## 0.39.1
 
 - [CHANGE] Update the GitHub Actions that run tests, upload coverage and save browser reports.

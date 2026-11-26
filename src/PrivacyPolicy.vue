@@ -35,9 +35,9 @@
         </h2>
         <p class="mt-2">
           Permaplanner is a garden planner. When you sign in, your garden plans (plants,
-          guilds, map layout, notes, and background images) are stored on the hosted
-          service so you can reopen them across devices. You can also download and import
-          plan JSON files on your own device. The public app is at
+          guilds, map layout, observations, and background images) are stored on the
+          hosted service so you can reopen them across devices. You can also download and
+          import plan JSON files on your own device. The public app is at
           <strong>permaplanner.fly.dev</strong>.
         </p>
       </section>

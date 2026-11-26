@@ -29,9 +29,13 @@ defmodule Permaplanner.Gardens.ShareSummary do
       "- id: #{display_text(guild["id"], "n/a")}",
       "- plants:",
       plant_lines(guild["plants"]),
-      "- mulch level: #{guild["mulchLevel"]}/5",
-      "- note: #{display_text(guild["note"], "(none)")}"
+      "- mulch level: #{guild["mulchLevel"]}/5"
     ]
+    |> Enum.concat(
+      Enum.map(guild["observations"] || [], fn entry ->
+        "- #{entry["date"]} · #{String.capitalize(entry["type"])}: #{String.trim(entry["text"])}"
+      end)
+    )
     |> Enum.join("\n")
   end
 

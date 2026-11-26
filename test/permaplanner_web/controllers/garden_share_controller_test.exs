@@ -28,7 +28,14 @@ defmodule PermaplannerWeb.GardenShareControllerTest do
                 "name" => "Edge guild",
                 "path" => [],
                 "mulchLevel" => 3,
-                "note" => "North bed",
+                "observations" => [
+                  %{
+                    "id" => "field",
+                    "type" => "note",
+                    "date" => "2026-01-01",
+                    "text" => "North bed"
+                  }
+                ],
                 "plants" => [
                   %{
                     "nameOrCultivar" => "Thai Basil",
@@ -72,7 +79,14 @@ defmodule PermaplannerWeb.GardenShareControllerTest do
                  "name" => "Edge guild",
                  "path" => [],
                  "mulchLevel" => 3,
-                 "note" => "North bed",
+                 "observations" => [
+                   %{
+                     "id" => "field",
+                     "type" => "note",
+                     "date" => "2026-01-01",
+                     "text" => "North bed"
+                   }
+                 ],
                  "plants" => [
                    %{
                      "nameOrCultivar" => "Thai Basil",
@@ -111,7 +125,9 @@ defmodule PermaplannerWeb.GardenShareControllerTest do
           "name" => "Updated guild",
           "path" => [],
           "mulchLevel" => 2,
-          "note" => "Changed",
+          "observations" => [
+            %{"id" => "field", "type" => "note", "date" => "2026-01-01", "text" => "Changed"}
+          ],
           "plants" => [
             %{
               "nameOrCultivar" => "Mint",
@@ -144,7 +160,9 @@ defmodule PermaplannerWeb.GardenShareControllerTest do
                "name" => "Updated guild",
                "path" => [],
                "mulchLevel" => 2,
-               "note" => "Changed",
+               "observations" => [
+                 %{"id" => "field", "type" => "note", "date" => "2026-01-01", "text" => "Changed"}
+               ],
                "plants" => [
                  %{
                    "nameOrCultivar" => "Mint",

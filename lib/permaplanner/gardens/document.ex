@@ -28,7 +28,7 @@ defmodule Permaplanner.Gardens.Document do
       is_integer(doc["syncRevision"]) and doc["syncRevision"] >= 0 and
       rows?(doc["plants"], &plant?/1) and rows?(doc["guilds"], &guild?/1) and
       rows?(doc["landmarks"], &landmark?/1) and
-      rows?(doc["paths"], &landmark?/1) and
+      rows?(doc["paths"], &landmark?/1) and observations?(doc["observations"]) and
       rows?(doc["plotBorder"], &polygon?/1) and
       scale?(doc["mapScale"]) and is_number(doc["backgroundOpacity"]) and
       doc["backgroundOpacity"] >= 0 and doc["backgroundOpacity"] <= 1 and
@@ -44,8 +44,11 @@ defmodule Permaplanner.Gardens.Document do
     plants = MapSet.new(doc["plants"], & &1["id"])
     instances = Enum.flat_map(doc["guilds"], & &1["plants"])
 
+    observations =
+      Enum.flat_map([doc | doc["guilds"] ++ instances], &Map.get(&1, "observations", []))
+
     Enum.all?(
-      [doc["plants"], doc["guilds"], doc["landmarks"], doc["paths"], instances],
+      [doc["plants"], doc["guilds"], doc["landmarks"], doc["paths"], instances, observations],
       fn rows ->
         MapSet.size(MapSet.new(rows, & &1["id"])) == length(rows)
       end
@@ -97,7 +100,8 @@ defmodule Permaplanner.Gardens.Document do
   defp guild?(guild) when is_map(guild) do
     is_binary(guild["id"]) and is_binary(guild["name"]) and
       rows?(guild["path"], &polygon?/1) and rows?(guild["plants"], &thing?/1) and
-      guild["mulchLevel"] in 1..5 and optional?(guild, "note", &is_binary/1)
+      guild["mulchLevel"] in 1..5 and not Map.has_key?(guild, "note") and
+      optional?(guild, "observations", &observations?/1)
   end
 
   defp guild?(_), do: false
@@ -119,12 +123,24 @@ defmodule Permaplanner.Gardens.Document do
       is_number(thing["width"]) and thing["height"] == thing["width"] and
       optional?(thing, "placed", &is_boolean/1) and
       optional?(thing, "matureSpreadM", &(is_number(&1) and &1 > 0)) and
-      optional?(thing, "note", &is_binary/1) and
+      not Map.has_key?(thing, "note") and optional?(thing, "observations", &observations?/1) and
       optional?(thing, "growthPhase", &(&1 in @phases)) and
       optional?(thing, "vigor", &(&1 in 1..5))
   end
 
   defp thing?(_), do: false
+
+  defp observations?(entries) do
+    rows?(entries, &observation?/1)
+  end
+
+  defp observation?(%{"id" => id, "date" => date, "text" => text, "type" => type})
+       when is_binary(id) and is_binary(date) and is_binary(text) do
+    type in ~w(note flowering harvest care) and id != "" and String.trim(text) != "" and
+      match?({:ok, _}, Date.from_iso8601(date))
+  end
+
+  defp observation?(_), do: false
 
   defp rows?(rows, valid?), do: is_list(rows) and Enum.all?(rows, valid?)
 

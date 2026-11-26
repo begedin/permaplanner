@@ -1,3 +1,4 @@
+import type { Observation } from './observations';
 import type { GuildPath } from './guildPathClip';
 import type { GrowthPhase, PlantVigor } from './guildPlantInstanceStatus';
 import type { PlantIconId } from './plantIcons/iconIds';
@@ -78,8 +79,7 @@ export type GardenThing = {
   /** Canopy diameter. The garden document stores the same value in height. */
   width: number;
   height: number;
-  /** Optional note for this individual plant. */
-  note?: string;
+  observations?: readonly Observation[];
   /** Development phase (Option C: sown → germinated|transplanted → …). */
   growthPhase?: GrowthPhase;
   /** Health / vigor (1 = struggling … 5 = thriving). */
@@ -117,5 +117,5 @@ export type Guild = {
   path: GuildPath;
   plants: GardenThing[];
   mulchLevel: MulchLevel;
-  note?: string;
+  observations?: readonly Observation[];
 };

@@ -19,6 +19,7 @@ defmodule Permaplanner.Gardens.Snapshot do
       mapScale: garden.document["mapScale"],
       landmarks: garden.document["landmarks"],
       paths: garden.document["paths"],
+      observations: garden.document["observations"],
       plotBorder: garden.document["plotBorder"],
       coordinateSystem: %{
         axes: "x right, y down",

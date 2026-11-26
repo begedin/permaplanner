@@ -125,7 +125,14 @@ defmodule PermaplannerWeb.AdminLiveTest do
       "y" => 0,
       "width" => 1,
       "height" => 1,
-      "note" => "PRIVATE-PLANT-NOTE",
+      "observations" => [
+        %{
+          "id" => "plant-entry",
+          "type" => "note",
+          "date" => "2026-01-01",
+          "text" => "PRIVATE-PLANT-NOTE"
+        }
+      ],
       "growthPhase" => "producing",
       "vigor" => 2
     }
@@ -133,10 +140,17 @@ defmodule PermaplannerWeb.AdminLiveTest do
     guild = %{
       "id" => "guild",
       "name" => "Kitchen herbs",
-      "plants" => [plant, Map.put(plant, "id", "duplicate")],
+      "plants" => [plant, %{plant | "id" => "duplicate", "observations" => []}],
       "path" => [],
       "mulchLevel" => 4,
-      "note" => "PRIVATE-GUILD-NOTE"
+      "observations" => [
+        %{
+          "id" => "field",
+          "type" => "note",
+          "date" => "2026-01-01",
+          "text" => "PRIVATE-GUILD-NOTE"
+        }
+      ]
     }
 
     document =
@@ -151,7 +165,7 @@ defmodule PermaplannerWeb.AdminLiveTest do
       ])
       |> Map.put("guilds", [
         guild,
-        %{guild | "id" => "empty", "name" => "New bed", "plants" => []}
+        %{guild | "id" => "empty", "name" => "New bed", "plants" => [], "observations" => []}
       ])
 
     {:ok, garden} =

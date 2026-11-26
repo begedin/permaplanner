@@ -3,6 +3,9 @@
   import { useMediaQuery } from '@vueuse/core';
   import { LayoutGroup, motion } from 'motion-v';
   import { computed } from 'vue';
+  import { useRoute } from 'vue-router';
+  import ObservationFeed from './ObservationFeed.vue';
+  import { useGardenSessionStore } from './stores/useGardenSessionStore';
 
   import {
     type CalendarCultivarRow,
@@ -41,6 +44,11 @@
     useCalendarSearchStore(),
   );
 
+  const route = useRoute();
+  const session = useGardenSessionStore();
+  const showPlants = computed(
+    () => !!selectedSpeciesId.value || route.query.view === 'plants',
+  );
   const isMdUp = useMediaQuery('(min-width: 768px)');
   const showMobileDetail = computed(() => Boolean(selectedSpeciesId.value));
 
@@ -113,10 +121,34 @@
 
 <template>
   <div class="flex flex-col h-full min-h-0 bg-parchment-100/50">
-    <CalendarTabHeader v-model:search-query="searchQuery" />
+    <CalendarTabHeader
+      v-model:search-query="searchQuery"
+      :show-search="showPlants"
+    />
+    <nav
+      aria-label="Calendar views"
+      class="flex gap-3 border-b border-parchment-300 px-4 py-2 text-sm"
+    >
+      <RouterLink
+        to="/calendar"
+        :aria-current="!showPlants ? 'page' : undefined"
+        :class="{ 'font-semibold underline': !showPlants }"
+        >Observations</RouterLink
+      >
+      <RouterLink
+        to="/calendar?view=plants"
+        :aria-current="showPlants ? 'page' : undefined"
+        :class="{ 'font-semibold underline': showPlants }"
+        >Plant calendar</RouterLink
+      >
+    </nav>
+    <ObservationFeed
+      v-if="!showPlants"
+      :key="session.gardenId"
+    />
 
     <div
-      v-if="speciesRows.length === 0"
+      v-else-if="speciesRows.length === 0"
       class="p-4 text-ink-600 text-sm"
     >
       No plants in your guilds yet. Add plants on the

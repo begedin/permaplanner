@@ -14,3 +14,12 @@ HTMLElement.prototype.showPopover = function () {
 HTMLElement.prototype.hidePopover = function () {
   this.style.removeProperty('display');
 };
+
+// jsdom does not implement the native dialog lifecycle.
+HTMLDialogElement.prototype.showModal = function () {
+  this.open = true;
+};
+HTMLDialogElement.prototype.close = function () {
+  this.open = false;
+  this.dispatchEvent(new Event('close'));
+};

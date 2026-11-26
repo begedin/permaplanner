@@ -54,7 +54,9 @@ defmodule PermaplannerWeb.MCPControllerTest do
           "id" => "g1",
           "name" => "North bed",
           "mulchLevel" => 4,
-          "note" => "Needs water",
+          "observations" => [
+            %{"id" => "field", "type" => "note", "date" => "2026-01-01", "text" => "Needs water"}
+          ],
           "path" => [
             [
               [
@@ -74,7 +76,14 @@ defmodule PermaplannerWeb.MCPControllerTest do
               "y" => 20,
               "width" => 3,
               "height" => 3,
-              "note" => "Planted yesterday",
+              "observations" => [
+                %{
+                  "id" => "plant-entry",
+                  "type" => "note",
+                  "date" => "2026-01-01",
+                  "text" => "Planted yesterday"
+                }
+              ],
               "growthPhase" => "transplanted",
               "vigor" => 3
             }
@@ -100,13 +109,27 @@ defmodule PermaplannerWeb.MCPControllerTest do
     assert scale == document["mapScale"]
 
     assert %{
-             "note" => "Needs water",
+             "observations" => [
+               %{
+                 "id" => "field",
+                 "type" => "note",
+                 "date" => "2026-01-01",
+                 "text" => "Needs water"
+               }
+             ],
              "mulchLevel" => 4,
              "plants" => [
                %{
                  "growthPhase" => "transplanted",
                  "vigor" => 3,
-                 "note" => "Planted yesterday",
+                 "observations" => [
+                   %{
+                     "id" => "plant-entry",
+                     "type" => "note",
+                     "date" => "2026-01-01",
+                     "text" => "Planted yesterday"
+                   }
+                 ],
                  "plant" => %{
                    "name" => "My cypress",
                    "cultivar" => "My Ellwoodii",

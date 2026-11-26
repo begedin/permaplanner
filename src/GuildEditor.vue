@@ -16,7 +16,8 @@
   import { functionLabelTooltip, layerLabelTooltip } from './guildPlantTooltips';
   import GrowthPhaseIcon from './GrowthPhaseIcon.vue';
   import GuildCardSectionLabel from './GuildCardSectionLabel.vue';
-  import GuildPlantNote from './GuildPlantNote.vue';
+  import ObservationDialog from './ObservationDialog.vue';
+  import { newestObservationFirst, observationTypeLabels } from './observations';
   import { useGardenStore } from './useGardenStore';
   import GuildSeasonStrip from './GuildSeasonStrip.vue';
   import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
@@ -31,7 +32,7 @@
   import { useGuildSearch } from './useGuildSearch';
 
   const garden = useGardenStore();
-  const editingPlantNoteId = ref<string | null>(null);
+  const recording = ref<{ thingId?: string; label: string }>();
 
   const props = defineProps<{
     guildId: string;
@@ -59,16 +60,11 @@
   } = summary;
   const {
     editingName,
-    editingNote,
     displayedName,
-    displayedNote,
     plantEditor,
     selectedPick,
     setEditingName,
     commitName,
-    setEditingNote,
-    commitNote,
-    onNoteKeydown,
     openAddPlantEditor,
     openEditPlantEditor,
     isEditingRow,
@@ -80,6 +76,9 @@
     setThingGrowthPhase,
   } = useGuildEditor(toRef(props, 'guildId'), guild);
 
+  const latestGuildObservation = computed(
+    () => guild.value.observations?.toSorted(newestObservationFirst)[0],
+  );
   const PLACEMENT_STATUS = {
     editing: 'Editing placement',
     placed: 'Placed',
@@ -107,6 +106,7 @@
       singlePlant: row.count === 1 ? row.instances[0] : undefined,
       individuals: row.instances.map((thing) => ({
         thing,
+        latest: thing.observations?.toSorted(newestObservationFirst)[0],
         placementStatus:
           props.placingThingId === thing.id
             ? PLACEMENT_STATUS.editing
@@ -375,12 +375,14 @@
                   class="flex flex-row items-center gap-0 shrink-0"
                 >
                   <button
-                    v-if="row.singlePlant && !row.singlePlant.note"
+                    v-if="row.singlePlant"
                     type="button"
-                    :title="`Add note for ${row.label}`"
-                    :aria-label="`Add note for ${row.label}`"
+                    :title="`Record observation for ${row.label}`"
+                    :aria-label="`Record observation for ${row.label}`"
                     class="btn-icon bg-transparent hover:bg-blossom-100 p-0.5 px-1"
-                    @click.stop="editingPlantNoteId = row.singlePlant.id"
+                    @click.stop="
+                      recording = { thingId: row.singlePlant.id, label: row.label }
+                    "
                   >
                     <UiIcon name="document" />
                   </button>
@@ -406,12 +408,8 @@
               </div>
               <div class="flex flex-col gap-1 pb-1 pl-7 pr-1">
                 <div
-                  v-for="({ thing, placementStatus }, index) in row.individuals"
-                  v-show="
-                    expandedPlantGroupId === row.plantId ||
-                    thing.note ||
-                    editingPlantNoteId === thing.id
-                  "
+                  v-for="({ thing, latest, placementStatus }, index) in row.individuals"
+                  v-show="expandedPlantGroupId === row.plantId || latest"
                   :key="thing.id"
                   class="flex flex-col gap-1"
                   :class="{
@@ -479,10 +477,15 @@
                     <button
                       v-if="row.count > 1"
                       type="button"
-                      :title="`${thing.note ? 'Edit' : 'Add'} note for ${row.label} instance ${index + 1}`"
-                      :aria-label="`${thing.note ? 'Edit' : 'Add'} note for ${row.label} instance ${index + 1}`"
+                      :title="`Record observation for ${row.label} instance ${index + 1}`"
+                      :aria-label="`Record observation for ${row.label} instance ${index + 1}`"
                       class="btn-icon bg-transparent hover:bg-blossom-100 p-0.5 px-1"
-                      @click.stop="editingPlantNoteId = thing.id"
+                      @click.stop="
+                        recording = {
+                          thingId: thing.id,
+                          label: `${row.label} #${index + 1}`,
+                        }
+                      "
                     >
                       <UiIcon name="document" />
                     </button>
@@ -499,20 +502,6 @@
                       />
                     </button>
                   </div>
-                  <button
-                    v-if="
-                      row.count > 1 && expandedPlantGroupId !== row.plantId && thing.note
-                    "
-                    type="button"
-                    title="Expand and edit note"
-                    class="whitespace-pre-wrap wrap-break-word text-left text-xs text-ink-600 hover:text-ink-900"
-                    @click.stop="
-                      togglePlantGroup(row.plantId);
-                      editingPlantNoteId = thing.id;
-                    "
-                  >
-                    Plant {{ index + 1 }}: {{ thing.note }}
-                  </button>
                   <div
                     v-if="expandedPlantGroupId === row.plantId"
                     class="flex flex-row flex-wrap items-center gap-x-2 gap-y-1"
@@ -553,17 +542,13 @@
                       />
                     </label>
                   </div>
-                  <GuildPlantNote
-                    v-if="row.count === 1 || expandedPlantGroupId === row.plantId"
-                    :read-only="row.count > 1"
-                    :editing="editingPlantNoteId === thing.id"
-                    :note="thing.note"
-                    :label="
-                      row.count > 1 ? `${row.label} instance ${index + 1}` : row.label
-                    "
-                    @update:editing="editingPlantNoteId = $event ? thing.id : null"
-                    @update:note="garden.updateGuildThingNote(guildId, thing.id, $event)"
-                  />
+                  <p
+                    v-if="latest"
+                    class="whitespace-pre-wrap wrap-break-word text-xs text-ink-600"
+                  >
+                    <time :datetime="latest.date">{{ latest.date }}</time> ·
+                    {{ observationTypeLabels[latest.type] }} · {{ latest.text }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -664,19 +649,39 @@
         :blooming="guildMonthPhenologyCounts.blooming"
         :tooltip-rows="guildTooltipRows"
       />
-      <div class="flex flex-col flex-1 w-full gap-1 pt-1 lg:min-h-0">
-        <GuildCardSectionLabel>Note</GuildCardSectionLabel>
-        <textarea
-          class="input-soft w-full flex-1 resize-none p-2 text-sm text-ink-800 leading-relaxed lg:min-h-0"
-          :value="displayedNote"
-          aria-label="Guild note"
-          placeholder="Notes for this guild…"
-          @focus="editingNote = guild.note ?? ''"
-          @input="setEditingNote"
-          @blur="commitNote"
-          @keydown="onNoteKeydown"
-        />
+      <div class="flex flex-col w-full items-start gap-1 pt-1">
+        <GuildCardSectionLabel>Observations</GuildCardSectionLabel>
+        <button
+          type="button"
+          class="btn-soft px-2 py-1 text-sm"
+          @click="recording = { label: guild.name }"
+        >
+          Record observation
+        </button>
+        <p
+          v-if="latestGuildObservation"
+          class="whitespace-pre-wrap wrap-break-word text-sm"
+        >
+          <time :datetime="latestGuildObservation.date">{{
+            latestGuildObservation.date
+          }}</time>
+          · {{ observationTypeLabels[latestGuildObservation.type] }} ·
+          {{ latestGuildObservation.text }}
+        </p>
       </div>
+      <ObservationDialog
+        v-if="recording"
+        :key="guildId"
+        :label="recording.label"
+        :guild-id="guildId"
+        :thing-id="recording.thingId"
+        :observations="
+          recording.thingId
+            ? guild.plants.find((p) => p.id === recording?.thingId)?.observations
+            : guild.observations
+        "
+        @close="recording = undefined"
+      />
     </div>
   </article>
 </template>

@@ -96,7 +96,9 @@ it('copies the current guild share JSON payload to the clipboard', async () => {
       name: 'Edge guild',
       path: [],
       mulchLevel: 3,
-      note: 'North bed',
+      observations: [
+        { id: 'North', type: 'note' as const, date: '2026-01-01', text: 'North bed' },
+      ],
       plants: [
         {
           id: 'p1',

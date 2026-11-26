@@ -1,9 +1,10 @@
 import type { DeepReadonly } from 'vue';
 import type { GuildPath } from './guildPathClip';
 import type { Guild, UserPlant } from './gardenTypes';
+import type { Observation } from './observations';
 import type { OnboardingState } from './onboardingTypes';
 
-export const GARDEN_DOCUMENT_VERSION = 11 as const;
+export const GARDEN_DOCUMENT_VERSION = 12 as const;
 
 export type ScaleUnit = 'unspecified' | 'm' | 'ft' | 'cm' | 'in' | 'yd';
 export const SCALE_UNITS: { value: ScaleUnit; label: string }[] = [
@@ -37,6 +38,7 @@ export type GardenDocument = {
   syncRevision: number;
   plants: UserPlant[];
   guilds: Guild[];
+  observations: Observation[];
   landmarks: Landmark[];
   paths: GardenPath[];
   /** Empty when no optional plot border has been drawn. */

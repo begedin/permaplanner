@@ -1,12 +1,14 @@
 <script setup lang="ts">
   import { ref } from 'vue';
 
+  import GardenSaveButton from './GardenSaveButton.vue';
   import AppPageHeader from './AppPageHeader.vue';
   import HighlightText from './HighlightText.vue';
   import { searchInputPlaceholder } from './searchContext';
   import { useCalendarSelection } from './useCalendarSelection';
   import { useSearchFocusHotkeys } from './useSearchFocusHotkeys';
 
+  defineProps<{ showSearch: boolean }>();
   const searchQuery = defineModel<string>('searchQuery', { required: true });
 
   const { selectedSpeciesId, selectedSpeciesName, clearSelection } =
@@ -56,7 +58,10 @@
         Calendar
       </h1>
     </template>
-    <label class="w-full min-w-0 lg:w-56">
+    <label
+      v-if="showSearch"
+      class="w-full min-w-0 lg:w-56"
+    >
       <span class="sr-only">Search garden plants</span>
       <input
         ref="searchInputRef"
@@ -66,5 +71,6 @@
         :placeholder="searchPlaceholder"
       />
     </label>
+    <GardenSaveButton v-if="!showSearch" />
   </AppPageHeader>
 </template>

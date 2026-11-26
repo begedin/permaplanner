@@ -19,6 +19,7 @@ it('round-trips every editable field without retaining document or snapshot refe
     version: GARDEN_DOCUMENT_VERSION,
     syncRevision: 8,
     landmarks: [],
+    observations: [],
     paths: [],
     plotBorder: [],
     plants: [{ id: 'p1', speciesId: 'apple', cultivarId: null }],
@@ -45,6 +46,7 @@ it('round-trips every editable field without retaining document or snapshot refe
   document.mapScale.start.x = 100;
   expect(session.snapshot()).toMatchObject({
     landmarks: [],
+    observations: [],
     paths: [],
     plotBorder: [],
     plants: [{ id: 'p1' }],
@@ -70,6 +72,7 @@ it('round-trips every editable field without retaining document or snapshot refe
     version: GARDEN_DOCUMENT_VERSION,
     syncRevision: 0,
     landmarks: [],
+    observations: [],
     paths: [],
     plotBorder: [],
     plants: [],

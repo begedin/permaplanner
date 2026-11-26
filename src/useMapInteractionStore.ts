@@ -139,7 +139,7 @@ export const useMapInteractionStore = defineStore('mapInteraction', () => {
       if (
         source.id === id ||
         !window.confirm(
-          `Merge “${source.name}” with “${target.name}”? Their areas, plants, names, and notes will be combined. You can undo this merge.`,
+          `Merge “${source.name}” with “${target.name}”? Their areas, plants, names, and observations will be combined. You can undo this merge.`,
         )
       )
         return;

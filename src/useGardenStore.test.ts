@@ -149,21 +149,10 @@ it('setGuildPath replaces the guild path', () => {
   ]);
 });
 
-it('updateGuildName and updateGuildNote mutate guild fields', () => {
-  const store = useGardenStore();
-  usePlanStateStore().state.guilds = [
-    { id: 'g1', path: [], name: 'Old', plants: [], mulchLevel: 1, note: 'keep' },
-  ];
-
-  store.updateGuildName('g1', 'New');
-  store.updateGuildNote('g1', 'Bed notes');
-  expect(usePlanStateStore().state.guilds[0]).toMatchObject({
-    name: 'New',
-    note: 'Bed notes',
-  });
-
-  store.updateGuildNote('g1', '');
-  expect(usePlanStateStore().state.guilds[0]).not.toHaveProperty('note');
+it('renames the guild', () => {
+  const { store, guild } = createGuildWithPlant();
+  store.updateGuildName(guild.id, 'Bed');
+  expect(store.guilds[0]?.name).toBe('Bed');
 });
 
 it('setGuildMulchLevel updates mulch', () => {
@@ -310,7 +299,7 @@ it('setGuildThingGrowthPhase and setGuildThingVigor set and clear fields', () =>
   expect(usePlanStateStore().state.guilds[0]!.plants[0]?.vigor).toBeUndefined();
 });
 
-it('merges guild contents and notes as one undoable change', () => {
+it('merges guild contents and observations as one undoable change', () => {
   const store = useGardenStore();
   const plant = {
     id: 'p1',
@@ -326,7 +315,9 @@ it('merges guild contents and notes as one undoable change', () => {
     {
       id: 'a',
       name: 'A',
-      note: 'First',
+      observations: [
+        { id: 'First', type: 'note' as const, date: '2026-01-01', text: 'First' },
+      ],
       path: [],
       plants: [plant],
       mulchLevel: 1 as const,
@@ -334,7 +325,9 @@ it('merges guild contents and notes as one undoable change', () => {
     {
       id: 'b',
       name: 'B',
-      note: 'Second',
+      observations: [
+        { id: 'Second', type: 'note' as const, date: '2026-01-01', text: 'Second' },
+      ],
       path: [],
       plants: [otherPlant],
       mulchLevel: 2 as const,
@@ -344,7 +337,7 @@ it('merges guild contents and notes as one undoable change', () => {
     {
       ...original[0],
       name: 'A + B',
-      note: 'First + Second',
+      observations: original.flatMap((g) => g.observations),
       plants: [plant, otherPlant],
     },
   ];
@@ -369,57 +362,46 @@ it('ignores missing guilds and self merges', () => {
   expect(usePlanStateStore().state.guilds).toEqual([guild]);
 });
 
-it.each([
-  [undefined, 'Second', 'Second'],
-  ['First', undefined, 'First'],
-  [undefined, undefined, undefined],
-])('joins optional notes without empty separators', (first, second, expected) => {
-  const store = useGardenStore();
-  usePlanStateStore().state.guilds = [
-    { id: 'a', name: 'A', note: first, path: [], plants: [], mulchLevel: 1 },
-    { id: 'b', name: 'B', note: second, path: [], plants: [], mulchLevel: 1 },
-  ];
-  store.mergeGuilds('a', 'b');
-  expect(usePlanStateStore().state.guilds).toMatchObject([
-    { name: 'A + B', note: expected },
-  ]);
-});
-
-it('updates individual plant notes with undo and removes empty notes', () => {
-  const store = useGardenStore();
-  const thing = {
-    id: 'a',
-    plantId: 'apple',
-    nameOrCultivar: 'Apple',
-    x: 0,
-    y: 0,
-    width: 10,
-    height: 10,
-  };
-  usePlanStateStore().state.guilds = [
-    {
-      id: 'g',
-      name: 'Trees',
-      path: [],
-      mulchLevel: 1,
-      plants: [thing, { ...thing, id: 'b', note: 'Keep' }],
-    },
-  ];
-  store.updateGuildThingNote('g', 'a', 'Prune');
-  expect(usePlanStateStore().state.guilds).toMatchObject([
-    {
-      plants: [
-        { id: 'a', note: 'Prune' },
-        { id: 'b', note: 'Keep' },
-      ],
-    },
-  ]);
+it('records dated observations for each scope and undoes one entry at a time', () => {
+  const { store, guild, thing } = createGuildWithPlant();
+  const date = '2026-04-05';
+  store.recordObservation({ date, text: 'Frost', type: 'note' });
+  store.recordObservation(
+    { date, text: 'Sheltered', type: 'note' },
+    { guildId: guild.id },
+  );
+  store.recordObservation(
+    { date, text: 'First flower', type: 'note' },
+    { guildId: guild.id, thingId: thing.id },
+  );
+  store.recordObservation(
+    { date, text: 'More flowers', type: 'note' },
+    { guildId: guild.id, thingId: thing.id },
+  );
+  store.recordObservation(
+    { date, text: '  ', type: 'note' },
+    { guildId: guild.id, thingId: thing.id },
+  );
+  store.recordObservation(
+    { date, text: 'Lost target', type: 'note' },
+    { guildId: guild.id, thingId: 'missing' },
+  );
+  expect(store.observations).toMatchObject([{ date, text: 'Frost' }]);
+  expect(store.guilds[0]).toMatchObject({
+    observations: [{ date, text: 'Sheltered' }],
+    plants: [
+      {
+        observations: [
+          { date, text: 'First flower' },
+          { date, text: 'More flowers' },
+        ],
+      },
+    ],
+  });
   usePlanCommandHistory().undo();
-  expect(usePlanStateStore().state.guilds[0]?.plants[0]).not.toHaveProperty('note');
-  usePlanCommandHistory().redo();
-  expect(usePlanStateStore().state.guilds[0]?.plants[0]).toMatchObject({ note: 'Prune' });
-  store.updateGuildThingNote('g', 'a', '  ');
-  expect(usePlanStateStore().state.guilds[0]?.plants[0]).not.toHaveProperty('note');
+  expect(store.guilds[0]?.plants[0]?.observations).toMatchObject([
+    { date, text: 'First flower' },
+  ]);
 });
 
 it('keeps referenced plants and makes unused plant deletion undoable', () => {
@@ -467,16 +449,35 @@ const createGuildWithPlant = () => {
 it('places and redraws individuals as undoable edits without losing their notes', () => {
   const { store, guild, thing } = createGuildWithPlant();
   const history = usePlanCommandHistory();
-  store.updateGuildThingNote(guild.id, thing.id, 'Keep this tree');
+  store.recordObservation(
+    { date: '2026-01-01', text: 'Keep this tree', type: 'note' },
+    {
+      guildId: guild.id,
+      thingId: thing.id,
+    },
+  );
   history.clear();
   const bounds = { x: 25, y: 40, width: 32 };
   store.setPlantPlacement(guild.id, thing.id, bounds);
   expect(store.guilds[0]?.plants).toMatchObject([
-    { ...bounds, height: 32, id: thing.id, note: 'Keep this tree', placed: true },
+    {
+      ...bounds,
+      height: 32,
+      id: thing.id,
+      observations: [{ text: 'Keep this tree' }],
+      placed: true,
+    },
   ]);
   history.undo();
   expect(store.guilds[0]?.plants).toMatchObject([
-    { x: 0, y: 0, width: 0, height: 0, note: 'Keep this tree', placed: false },
+    {
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+      observations: [{ text: 'Keep this tree' }],
+      placed: false,
+    },
   ]);
   history.redo();
   expect(store.guilds[0]?.plants).toMatchObject([{ ...bounds, id: thing.id }]);
@@ -517,7 +518,13 @@ it('rejects invalid plant placements and moves individuals with their guild', ()
 
 it('removes only the placement and restores it with undo', () => {
   const { store, guild, thing } = createGuildWithPlant();
-  store.updateGuildThingNote(guild.id, thing.id, 'My tree');
+  store.recordObservation(
+    { date: '2026-01-01', text: 'My tree', type: 'note' },
+    {
+      guildId: guild.id,
+      thingId: thing.id,
+    },
+  );
   store.setGuildThingVigor(guild.id, thing.id, 4);
   store.setPlantPlacement(guild.id, thing.id, { x: 20, y: 30, width: 40 });
   const placed = JSON.parse(JSON.stringify(store.guilds));
@@ -526,7 +533,7 @@ it('removes only the placement and restores it with undo', () => {
     {
       id: thing.id,
       plantId: thing.plantId,
-      note: 'My tree',
+      observations: [{ text: 'My tree' }],
       vigor: 4,
       placed: false,
       x: 0,

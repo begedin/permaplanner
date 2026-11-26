@@ -1,5 +1,10 @@
 import { defineStore } from 'pinia';
 import { computed, readonly, toRefs } from 'vue';
+import {
+  createObservation,
+  type Observation,
+  type ObservationTarget,
+} from './observations';
 import { uuid } from './utils';
 import { usePlanStateStore } from './usePlanStateStore';
 import { withPersistedGuildPlantLabels } from './guildPlantLabels';
@@ -39,7 +44,7 @@ const matchesCatalogPlant = (
 
 export const useGardenStore = defineStore('garden', () => {
   const plan = usePlanStateStore();
-  const { plants, guilds } = toRefs(plan.state);
+  const { plants, guilds, observations } = toRefs(plan.state);
   const commandHistory = usePlanCommandHistory();
   const { clearHoverIf } = useGuildHover();
 
@@ -52,8 +57,9 @@ export const useGardenStore = defineStore('garden', () => {
     const path = joinPaths(source.path, target.path);
     commandHistory.runMutation(() => {
       source.name = `${source.name} + ${target.name}`;
-      const note = [source.note, target.note].filter(Boolean).join(' + ');
-      if (note) source.note = note;
+      if (target.observations?.length) {
+        source.observations = [...(source.observations ?? []), ...target.observations];
+      }
       source.path = path;
       source.plants.push(...target.plants);
       removeGuildWithoutConfirm(targetId);
@@ -215,30 +221,35 @@ export const useGardenStore = defineStore('garden', () => {
     });
   };
 
-  const updateGuildNote = (guildId: string, note: string) => {
+  const changeObservations = (
+    { guildId, thingId }: ObservationTarget,
+    change: (entries: readonly Observation[]) => Observation[],
+  ) => {
+    const guild = guilds.value.find((g) => g.id === guildId);
+    const owner =
+      thingId === undefined ? guild : guild?.plants.find((plant) => plant.id === thingId);
+    if ((guildId !== undefined || thingId !== undefined) && !owner) return;
     commandHistory.runMutation(() => {
-      const guild = guilds.value.find((g) => g.id === guildId);
-      if (!guild) {
-        return;
-      }
-      if (note === '') {
-        delete guild.note;
-      } else {
-        guild.note = note;
-      }
+      if (owner) owner.observations = change(owner.observations ?? []);
+      else observations.value = change(observations.value);
     });
   };
 
-  const updateGuildThingNote = (guildId: string, thingId: string, note: string) => {
-    commandHistory.runMutation(() => {
-      const thing = guilds.value
-        .find((g) => g.id === guildId)
-        ?.plants.find((p) => p.id === thingId);
-      if (!thing) return;
-      if (note.trim() === '') delete thing.note;
-      else thing.note = note;
-    });
+  const recordObservation = (
+    fields: Omit<Observation, 'id'>,
+    target: ObservationTarget = {},
+    id?: string,
+  ) => {
+    if (!fields.text.trim() || !fields.date) return;
+    changeObservations(target, (entries) =>
+      id
+        ? entries.map((entry) => (entry.id === id ? { ...entry, ...fields } : entry))
+        : [...entries, createObservation(fields)],
+    );
   };
+
+  const removeObservation = (target: ObservationTarget, id: string) =>
+    changeObservations(target, (entries) => entries.filter((entry) => entry.id !== id));
 
   const setGuildMulchLevel = (guildId: string, level: MulchLevel) => {
     commandHistory.runMutation(() => {
@@ -397,8 +408,9 @@ export const useGardenStore = defineStore('garden', () => {
     addCatalogPlantToGuild,
     replaceGuildThingsWithCatalogPlant,
     updateGuildName,
-    updateGuildNote,
-    updateGuildThingNote,
+    observations: computed(() => readonly(observations.value)),
+    recordObservation,
+    removeObservation,
     setGuildMulchLevel,
     removeGuildThings,
     setGuildThingGrowthPhase,

@@ -23,14 +23,14 @@ export type GuildSearchRecord = {
   guildId: string;
   name: string;
   plantLabels: string;
-  note: string;
+  observations: string;
 };
 
 export const guildFuseOptions: IFuseOptions<GuildSearchRecord> = {
   keys: [
     { name: 'name', weight: 0.6 },
     { name: 'plantLabels', weight: 0.3 },
-    { name: 'note', weight: 0.1 },
+    { name: 'observations', weight: 0.1 },
   ],
   ...defaultFuzzySearchOptions,
 };
@@ -68,7 +68,12 @@ export const buildGuildSearchRecord = (
     guildId: guild.id,
     name: guild.name,
     plantLabels: [...labels].filter(Boolean).join(' '),
-    note: guild.note ?? '',
+    observations: [
+      ...(guild.observations ?? []),
+      ...guild.plants.flatMap((plant) => plant.observations ?? []),
+    ]
+      .map((entry) => entry.text)
+      .join(' '),
   };
 };
 

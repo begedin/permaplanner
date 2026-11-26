@@ -85,23 +85,6 @@ const baseThing = (
   ...overrides,
 });
 
-it('updates guild note from the note textarea', async () => {
-  const wrapper = await renderGuildEditor();
-  const note = card(wrapper).getByRole('textbox', { name: 'Guild note' });
-  fireEvent.update(note, 'Bed notes');
-  fireEvent.blur(note);
-  expect(usePlanStateStore().state.guilds[0]).toMatchObject({ note: 'Bed notes' });
-});
-
-it('clears guild note when the textarea is emptied', async () => {
-  usePlanStateStore().state.guilds[0] = { ...testGuild, note: 'Old note' };
-  const wrapper = await renderGuildEditor();
-  const note = card(wrapper).getByRole('textbox', { name: 'Guild note' });
-  fireEvent.update(note, '');
-  fireEvent.blur(note);
-  expect(usePlanStateStore().state.guilds[0]).not.toHaveProperty('note');
-});
-
 it('updates guild name from the name input', async () => {
   usePlanStateStore().state.guilds[0]!.name = 'Old';
   const wrapper = await renderGuildEditor();
@@ -643,76 +626,32 @@ it('orders all layer groups from canopy to roots using the highest layer of each
   wrapper.unmount();
 });
 
-it('keeps notes separate for individual plants and shows them beneath collapsed groups', async () => {
+it('records an observation on the selected individual in a group', async () => {
   usePlanStateStore().state.plants = [
     { id: 'apple', speciesId: 'apple', cultivarId: null },
   ];
-  usePlanStateStore().state.guilds[0]!.plants = [
-    baseThing({ id: 'a', plantId: 'apple' }),
-    baseThing({ id: 'b', plantId: 'apple', note: 'Second tree' }),
-  ];
+  usePlanStateStore().state.guilds[0]!.plants = ['a', 'b'].map((id) =>
+    baseThing({ id, plantId: 'apple' }),
+  );
   const wrapper = await renderGuildEditor();
-  expect(card(wrapper).getByText('Plant 2: Second tree')).toBeVisible();
-  expect(
-    card(wrapper).queryByRole('button', { name: /^Remove .* from bed$/ }),
-  ).not.toBeInTheDocument();
-  expect(
-    card(wrapper).queryByRole('button', { name: /note for .* instance/ }),
-  ).not.toBeInTheDocument();
   await fireEvent.click(card(wrapper).getByRole('button', { name: /Expand Apple/ }));
-  expect(
-    card(wrapper).getByRole('button', { name: /Edit note for .* instance 2/ }),
-  ).toHaveAttribute('title', 'Edit note for Apple (Malus domestica) instance 2');
   await fireEvent.click(
-    card(wrapper).getByRole('button', { name: /Add note for .* instance 1/ }),
+    card(wrapper).getByRole('button', { name: /Record observation for .* instance 2/ }),
   );
-  const editor = card(wrapper).getByRole('textbox', { name: /Note for .* instance 1/ });
-  await fireEvent.update(editor, 'First tree');
-  await fireEvent.blur(editor);
-  expect(usePlanStateStore().state.guilds).toMatchObject([
-    {
-      plants: [
-        { id: 'a', note: 'First tree' },
-        { id: 'b', note: 'Second tree' },
-      ],
-    },
-  ]);
-  await fireEvent.click(card(wrapper).getByRole('button', { name: /Collapse Apple/ }));
-  expect(card(wrapper).getByText('Plant 1: First tree')).toBeVisible();
-  expect(card(wrapper).getByText('Plant 2: Second tree')).toBeVisible();
+  await fireEvent.update(
+    card(wrapper).getByRole('textbox', { name: 'Observation' }),
+    'First blossom',
+  );
+  await fireEvent.click(card(wrapper).getByRole('button', { name: 'Save observation' }));
   expect(
-    card(wrapper).queryByRole('button', { name: /note for .* instance/ }),
-  ).not.toBeInTheDocument();
-  await fireEvent.click(
-    card(wrapper).getByRole('button', { name: 'Plant 2: Second tree' }),
-  );
-  await waitFor(() => {
-    expect(
-      card(wrapper).getByRole('textbox', { name: /Note for .* instance 2/ }),
-    ).toHaveFocus();
-  });
-  expect(card(wrapper).getByRole('button', { name: /Collapse Apple/ })).toHaveAttribute(
-    'aria-expanded',
-    'true',
-  );
-  const secondEditor = card(wrapper).getByRole('textbox', {
-    name: /Note for .* instance 2/,
-  });
-  expect(secondEditor).toHaveValue('Second tree');
-  await fireEvent.update(secondEditor, 'Updated second tree');
-  await fireEvent.blur(secondEditor);
-  expect(usePlanStateStore().state.guilds).toMatchObject([
-    {
-      plants: [
-        { id: 'a', note: 'First tree' },
-        { id: 'b', note: 'Updated second tree' },
-      ],
-    },
-  ]);
+    usePlanStateStore().state.guilds[0]?.plants.map((p) =>
+      p.observations?.map((o) => o.text),
+    ),
+  ).toEqual([undefined, ['First blossom']]);
   wrapper.unmount();
 });
 
-it('shows an icon-only note action alongside plant actions with tooltips', async () => {
+it('shows an icon-only observation action alongside plant actions with tooltips', async () => {
   usePlanStateStore().state.plants = [
     { id: 'apple', speciesId: 'apple', cultivarId: null },
   ];
@@ -729,38 +668,11 @@ it('shows an icon-only note action alongside plant actions with tooltips', async
     })),
   ).toEqual([
     {
-      label: 'Add note for Apple (Malus domestica)',
-      title: 'Add note for Apple (Malus domestica)',
+      label: 'Record observation for Apple (Malus domestica)',
+      title: 'Record observation for Apple (Malus domestica)',
     },
     { label: 'Edit plant in bed', title: 'Edit plant in bed' },
     { label: 'Add one plant to bed', title: 'Add one plant to bed' },
   ]);
-  expect(
-    actions.getByRole('button', { name: 'Add note for Apple (Malus domestica)' }),
-  ).toHaveTextContent('');
-  await fireEvent.click(
-    actions.getByRole('button', { name: 'Add note for Apple (Malus domestica)' }),
-  );
-  const editor = card(wrapper).getByRole('textbox', {
-    name: 'Note for Apple (Malus domestica)',
-  });
-  await fireEvent.update(editor, 'Water weekly');
-  await fireEvent.blur(editor);
-  expect(
-    actions.queryByRole('button', { name: 'Add note for Apple (Malus domestica)' }),
-  ).not.toBeInTheDocument();
-  await fireEvent.click(
-    card(wrapper).getByRole('button', { name: 'Edit note for Apple (Malus domestica)' }),
-  );
-  await fireEvent.update(
-    card(wrapper).getByRole('textbox', { name: 'Note for Apple (Malus domestica)' }),
-    '',
-  );
-  await fireEvent.blur(
-    card(wrapper).getByRole('textbox', { name: 'Note for Apple (Malus domestica)' }),
-  );
-  expect(
-    actions.getByRole('button', { name: 'Add note for Apple (Malus domestica)' }),
-  ).toBeVisible();
   wrapper.unmount();
 });

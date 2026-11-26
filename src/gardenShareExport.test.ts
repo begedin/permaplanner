@@ -16,7 +16,9 @@ const sampleGuild: Guild = {
   name: 'Edge guild',
   path: [[[{ x: 10, y: 20 }]]],
   mulchLevel: 3,
-  note: 'North bed',
+  observations: [
+    { id: 'North', type: 'note' as const, date: '2026-01-01', text: 'North bed' },
+  ],
   plants: [
     {
       id: 'p1',
@@ -36,6 +38,7 @@ const sampleDoc: GardenDocument = {
   version: GARDEN_DOCUMENT_VERSION,
   syncRevision: 1,
   landmarks: [],
+  observations: [],
   paths: [],
   plotBorder: [],
   plants: [],

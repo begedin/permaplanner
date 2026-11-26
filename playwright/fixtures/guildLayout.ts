@@ -1,3 +1,4 @@
+import { GARDEN_DOCUMENT_VERSION } from '../../src/gardenDocument';
 import { readFileSync } from 'node:fs';
 import type { Locator, Page } from '@playwright/test';
 import type { MapShape } from '../../src/gardenDocument';
@@ -50,7 +51,14 @@ export const createGrannySmiths = (firstCanopy?: Canopy): LayoutPlant => ({
       width: canopy?.diameter ?? 16,
       height: canopy?.diameter ?? 16,
       placed: !!canopy,
-      note: 'Keep this individual',
+      observations: [
+        {
+          id: `obs-${id}`,
+          type: 'note' as const,
+          date: '2026-01-01',
+          text: 'Keep this individual',
+        },
+      ],
     };
   }),
 });
@@ -70,7 +78,6 @@ export const createLayoutPlant = (
       width: diameter,
       height: diameter,
       placed: true,
-      note: '',
     },
   ],
 });
@@ -110,16 +117,17 @@ export const importLayoutGarden = async (
       ],
     ],
     plants: plants.flatMap(({ plant, individuals }) =>
-      individuals.map(({ placed, ...individual }) => ({
+      individuals.map(({ placed, observations, ...individual }) => ({
         ...individual,
         plantId: plant.id,
-        ...(legacy ? {} : { placed }),
+        ...(legacy ? { note: observations?.[0]?.text } : { placed, observations }),
       })),
     ),
   };
   const document = {
     ...empty,
-    version: legacy ? 10 : 11,
+    version: legacy ? 10 : GARDEN_DOCUMENT_VERSION,
+    observations: [],
     plants: plants.map(({ plant }) => plant),
     landmarks,
     paths,

@@ -75,7 +75,9 @@ defmodule PermaplannerWeb.GardenControllerTest do
           "id" => "g1",
           "name" => "Herbs",
           "mulchLevel" => 3,
-          "note" => "North bed",
+          "observations" => [
+            %{"id" => "field", "type" => "note", "date" => "2026-01-01", "text" => "North bed"}
+          ],
           "path" => [
             [
               [

@@ -17,13 +17,17 @@ defmodule Permaplanner.Gardens.DocumentMigrationTest do
   @placement_migration Permaplanner.Repo.Migrations.MarkExplicitPlantPlacements
   @placement_version 20_261_112_215_926
 
+  @observations_migration Permaplanner.Repo.Migrations.ConvertGardenNotesToObservations
+  @observations_version 20_261_126_130_524
+
   for {version, module} <- [
         {@version, @migration},
         {@border_version, @border_migration},
         {@guild_version, @guild_migration},
         {@feature_version, @feature_migration},
         {@paths_version, @paths_migration},
-        {@placement_version, @placement_migration}
+        {@placement_version, @placement_migration},
+        {@observations_version, @observations_migration}
       ],
       not Code.ensure_loaded?(module) do
     [file] = Path.wildcard(Path.expand("../../../priv/repo/migrations/#{version}_*.exs", __DIR__))
@@ -374,5 +378,60 @@ defmodule Permaplanner.Gardens.DocumentMigrationTest do
                ),
                prefix: schema
              )
+  end
+
+  test "replaces notes with observations dated on the migration day", %{
+    schema: schema,
+    document: doc,
+    timestamp: timestamp
+  } do
+    guild = %{
+      "id" => "g",
+      "note" => "Bed",
+      "plants" => [%{"id" => "a", "note" => "One\nTwo"}, %{"id" => "b", "note" => " "}]
+    }
+
+    old = Map.merge(doc, %{"version" => 11, "guilds" => [guild]})
+
+    from(g in "gardens", where: g.id == "garden")
+    |> Repo.update_all([set: [document: old, file_version: 11]], prefix: schema)
+
+    assert :ok =
+             Ecto.Migrator.up(Repo, @observations_version, @observations_migration,
+               prefix: schema,
+               log: false
+             )
+
+    [{saved, 12, 3, ^timestamp}] =
+      Repo.all(
+        from(g in "gardens", select: {g.document, g.file_version, g.sync_revision, g.updated_at}),
+        prefix: schema
+      )
+
+    today = Date.to_iso8601(Date.utc_today())
+
+    assert [
+             %{
+               "observations" => [
+                 %{"type" => "note", "date" => ^today, "text" => "Bed", "id" => first}
+               ],
+               "plants" => [
+                 %{
+                   "observations" => [
+                     %{"type" => "note", "date" => ^today, "text" => "One\nTwo", "id" => second}
+                   ]
+                 },
+                 %{"id" => "b"}
+               ]
+             } = updated
+           ] = saved["guilds"]
+
+    assert first != second
+    assert saved["observations"] == []
+    refute Map.has_key?(updated, "note")
+    assert Enum.all?(updated["plants"], &(not Map.has_key?(&1, "note")))
+
+    assert Map.drop(saved, ["version", "guilds", "observations"]) ==
+             Map.drop(old, ["version", "guilds"])
   end
 end

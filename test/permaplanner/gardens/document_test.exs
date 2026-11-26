@@ -55,8 +55,17 @@ defmodule Permaplanner.Gardens.DocumentTest do
 
     [guild] = document["guilds"]
 
+    entry = %{"id" => "entry", "type" => "note", "date" => "2026-02-05", "text" => "First frost"}
+
     invalid_documents = [
       nil,
+      document
+      |> Map.put("observations", [entry])
+      |> put_in(["guilds", Access.at(0), "observations"], [entry]),
+      Map.put(document, "observations", [Map.put(entry, "type", "other")]),
+      Map.put(document, "observations", [Map.put(entry, "date", "2026-02-30")]),
+      put_in(document, ["guilds", Access.at(0), "observations"], [Map.put(entry, "text", " ")]),
+      put_in(document, ["guilds", Access.at(0), "plants", Access.at(0), "observations"], "old"),
       Map.put(document, "landmarks", [landmark, landmark]),
       Map.put(document, "guilds", [guild, Map.put(guild, "id", "other")]),
       Map.put(document, "plants", document["plants"] ++ document["plants"]),

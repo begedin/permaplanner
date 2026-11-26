@@ -161,7 +161,7 @@ Month ranges are approximate outdoor northern-hemisphere seasons and vary with c
 ## Garden document format
 
 Stored documents, API responses, frontend state, and downloadable JSON use the
-shared feature-path format (version 11). `syncRevision` tracks save conflicts.
+shared feature-path format (version 12). `syncRevision` tracks save conflicts.
 Guild `path` stores polygons → rings → `{x, y}` points. Each polygon has one
 closed exterior ring followed by closed hole rings; disconnected regions have
 separate polygons. Only boundaries are saved, with no connecting bridges or brush
@@ -188,9 +188,12 @@ the document; unknown catalog species remain supported.
 Create, update, and import prepare validated document fields and parsed image changes
 through `Permaplanner.Gardens.Document` before opening a transaction. Saves lock the garden row and require the expected
 revision before atomically updating the document and background image.
-Each plant instance in a guild can have an optional `note`, displayed beneath the
-plant. Notes are preserved in saves and JSON imports/exports; older documents
-without plant notes remain valid without a backfill.
+Record an observation from a plant or guild, or from Calendar for the whole garden.
+Each entry has a date, text, and a type (Flowering, Harvest, Care, or Note). Calendar shows all entries, newest first. Scroll for
+older entries. Select Plant calendar for bloom and harvest periods.
+Version 12 converts each nonblank guild and plant note to one Note observation. Stored
+notes receive the UTC date of the migration. Notes in older files receive the local
+date of import. Current files keep their observation dates and IDs.
 
 Before sending JSON to `/api/legacy-import/local`, the frontend file importer checks
 for `guildLocations`, joins geometry to guilds and plant instances by ID, and
@@ -220,7 +223,7 @@ Available tools:
 
 - `list_gardens()` returns the signed-in user's garden IDs, names, revisions, and update times.
 - `get_garden_context({gardenId})` returns all saved guilds and resolved plants,
-  including notes, vigor, growth phases, mulch, geometry, and map scale.
+  including observations, vigor, growth phases, mulch, geometry, and map scale.
 - `get_guild({gardenId, guildId})` returns one guild with resolved plants and map scale.
 - `search_plant_catalog({query, offset?, limit?})` searches species/cultivars and
   catalog traits. Terms are case-insensitive and ANDed; an empty query browses.
@@ -367,7 +370,7 @@ Click a garden name to open `/admin/gardens/:id` and view its guild and plant na
 Plant entries are deduplicated by their saved plant reference, then named from the
 catalog (including cultivar and name overrides). Missing references use the first
 nonempty saved label, or “Unknown plant”. Older query-based garden links still work. Garden
-details omit quantities, notes, growth stages, condition, and layout information.
+details omit quantities, observations, growth stages, condition, and layout information.
 It does not change stored data or expose full garden documents or authentication secrets.
 A persistent **Admin · Read only** banner distinguishes it from the planner.
 
@@ -422,7 +425,7 @@ Add species through the card, then click an individual's **Place** pin and drag
 from its center outward to draw a canopy. Click its card entry or canopy to select
 it. Drag a canopy to move it, or drag its edge handle to resize it. **Delete** or
 **Remove placement** clears only its map placement; the individual, quantity,
-notes, and condition remain in the guild. Use its Place pin to place it again.
+observations, and condition remain in the guild. Use its Place pin to place it again.
 Centers must be inside the guild; canopies may extend beyond its edge.
 Trees, shrubs, and smaller plants use different stylized canopy textures.
 Placements support undo/redo, appear on the main map, and move with the guild.

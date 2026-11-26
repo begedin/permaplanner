@@ -12,18 +12,15 @@ import { plantCatalog } from './plantCatalog';
 import { useGardenStore } from './useGardenStore';
 
 type PlantEditor =
-  | { kind: 'add' }
-  | { kind: 'edit'; plantId: string; thingIds: string[] };
+  { kind: 'add' } | { kind: 'edit'; plantId: string; thingIds: string[] };
 export const useGuildEditor = (guildId: Ref<string>, guild: Ref<DeepReadonly<Guild>>) => {
   const garden = useGardenStore();
   const editingName = ref<string | null>(null);
-  const editingNote = ref<string | null>(null);
   const plantEditor = ref<PlantEditor | null>(null);
   const selectedPick = ref<CatalogPlantPick | null>(null);
   const expandedPlantGroupId = ref<string | null>(null);
 
   const displayedName = computed(() => editingName.value ?? guild.value.name);
-  const displayedNote = computed(() => editingNote.value ?? guild.value.note ?? '');
 
   const catalogSpecies = () => plantCatalog.species.filter((s) => s.id !== 'unknown');
 
@@ -50,35 +47,6 @@ export const useGuildEditor = (guildId: Ref<string>, guild: Ref<DeepReadonly<Gui
     const value = editingName.value;
     editingName.value = null;
     garden.updateGuildName(guildId.value, value || '');
-  };
-
-  const setEditingNote = (e: Event) => {
-    editingNote.value = (e.target as HTMLTextAreaElement).value;
-  };
-
-  const commitNote = () => {
-    if (editingNote.value === null) {
-      return;
-    }
-    const value = editingNote.value;
-    editingNote.value = null;
-    garden.updateGuildNote(guildId.value, value);
-  };
-
-  const onNoteKeydown = (e: KeyboardEvent) => {
-    if (e.key !== 'Tab') {
-      return;
-    }
-    e.preventDefault();
-    const el = e.target as HTMLTextAreaElement;
-    const start = el.selectionStart ?? 0;
-    const end = el.selectionEnd ?? 0;
-    const next = `${el.value.slice(0, start)}\t${el.value.slice(end)}`;
-    editingNote.value = next;
-    requestAnimationFrame(() => {
-      el.selectionStart = start + 1;
-      el.selectionEnd = start + 1;
-    });
   };
 
   const openAddPlantEditor = () => {
@@ -138,16 +106,11 @@ export const useGuildEditor = (guildId: Ref<string>, guild: Ref<DeepReadonly<Gui
 
   return {
     editingName,
-    editingNote,
     displayedName,
-    displayedNote,
     plantEditor,
     selectedPick,
     setEditingName,
     commitName,
-    setEditingNote,
-    commitNote,
-    onNoteKeydown,
     openAddPlantEditor,
     openEditPlantEditor,
     isEditingRow,
