@@ -2,9 +2,20 @@
 
 A garden planner with permaculture undertones
 
+## Install PermaPlanner on your phone
+
+Open PermaPlanner over HTTPS while connected to the internet.
+
+- **iPhone (Safari)** — If **Share** is hidden, open the **Page Menu** first. Tap **Share**, then **Add to Home Screen**. If **Open as Web App** appears, turn it on. Tap **Add**.
+- **Android (Chrome)** — Open the **⋮** menu. Tap **Install app**, or choose **Install and create shortcut** (called **Add to Home screen** in some versions) and then **Install**.
+
+Tap the green sprout icon on your home screen to open PermaPlanner in its own window. You still need an internet connection to open your garden and save observations.
+
 ## Development
 
 ### Toolchain
+
+The app icons use Git LFS. Install Git LFS and run `git lfs pull` in your checkout before the first build.
 
 Node, Erlang, and Elixir versions are pinned in [`.tool-versions`](.tool-versions). Install them with asdf:
 

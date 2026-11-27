@@ -1,3 +1,5 @@
+import { globSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 import { codecovRollupPlugin } from '@codecov/rollup-plugin';
 import tailwindcss from '@tailwindcss/vite';
@@ -12,6 +14,21 @@ export default defineConfig({
     target: 'esnext',
   },
   plugins: [
+    {
+      name: 'check-lfs-icons',
+      apply: 'build',
+      configResolved({ publicDir }) {
+        const icons = globSync(['favicon.ico', 'icons/*.{png,svg}'], { cwd: publicDir });
+        for (const icon of icons) {
+          const data = readFileSync(join(publicDir, icon), 'utf8');
+          if (data.startsWith('version https://git-lfs.github.com/spec/v1')) {
+            throw new Error(
+              `${icon} is a Git LFS pointer. Run "git lfs pull" before building.`,
+            );
+          }
+        }
+      },
+    },
     vue(),
     tailwindcss(),
     codecovRollupPlugin({

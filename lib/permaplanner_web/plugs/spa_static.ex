@@ -85,15 +85,12 @@ defmodule PermaplannerWeb.Plugs.SpaStatic do
   end
 
   defp content_type(path) do
-    cond do
-      String.ends_with?(path, ".html") -> "text/html; charset=utf-8"
-      String.ends_with?(path, ".js") -> "application/javascript; charset=utf-8"
-      String.ends_with?(path, ".css") -> "text/css; charset=utf-8"
-      String.ends_with?(path, ".json") -> "application/json; charset=utf-8"
-      String.ends_with?(path, ".svg") -> "image/svg+xml"
-      String.ends_with?(path, ".ico") -> "image/x-icon"
-      String.ends_with?(path, ".woff2") -> "font/woff2"
-      true -> "application/octet-stream"
+    case :string.find(path, ".", :trailing) do
+      "." <> ext when ext in ~w(html css json) -> MIME.type(ext) <> "; charset=utf-8"
+      "." <> ext when ext in ~w(webmanifest png svg woff2) -> MIME.type(ext)
+      ".js" -> "application/javascript; charset=utf-8"
+      ".ico" -> "image/x-icon"
+      _ -> "application/octet-stream"
     end
   end
 end

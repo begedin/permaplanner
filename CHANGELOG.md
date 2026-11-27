@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.41.0
+
+- [CHANGE] Install PermaPlanner on an iPhone or Android home screen. Tap the sprout icon to open the planner in its own window.
+
 ## 0.40.1
 
 - [CHANGE] On small screens, tap the X beside the selected guild name to clear the selection from Details or Aerial.

@@ -1,5 +1,9 @@
 # Agent notes (permaplanner)
 
+## Project tracker
+
+Read [todo.md](todo.md) at the start of each task. Use it to track plans, feature ideas, and bugs. Update the relevant entries as work progresses and mark them complete after verification. Changes to the tracker do not need a changelog entry.
+
 ## Browser validation
 
 Before completing application changes, run the app in a browser and exercise the affected user flows. Check the browser console for warnings and errors. Changes must introduce neither; fix any new warnings or errors before considering the work complete. Passing unit tests and type checks alone is not sufficient. For saved-data changes, apply pending local migrations and verify an existing garden as well as newly created data. Report what was checked and any browser validation that could not be completed.
