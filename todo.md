@@ -1,5 +1,9 @@
 # PermaPlanner project tracker
 
+## Garden reads
+
+- [x] Read the garden layout and aerial image from the same saved revision. A database test verifies a read during a save. Chromium verified that a garden opens without an image and restores its image and map scale after a save.
+
 ## Home-screen installation
 
 - [x] Add home-screen installation for iPhone and Android with the Plants sprout icon. The production build passed. Phoenix served the manifest and all four PNG icons. Desktop Chrome opened the signed-in garden in a separate window with its open-in-window preference selected.

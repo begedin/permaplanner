@@ -15,19 +15,27 @@ defmodule Permaplanner.Gardens do
     |> Repo.all()
   end
 
-  def fetch_garden(%User{id: user_id}, id) do
-    with {:ok, id} <- Ecto.UUID.cast(id),
-         %Garden{} = garden <- Repo.get_by(Garden, id: id, user_id: user_id) do
-      {:ok, garden}
-    else
-      _ -> {:error, :not_found}
+  def fetch_garden(user, id) do
+    case find_garden(user, id, Garden) do
+      nil -> {:error, :not_found}
+      garden -> {:ok, garden}
     end
   end
 
   def get_garden!(%User{} = user, id) do
-    case fetch_garden(user, id) do
-      {:ok, garden} -> Repo.preload(garden, :background_image)
-      {:error, :not_found} -> raise Ecto.NoResultsError, queryable: Garden
+    query =
+      from(g in Garden,
+        left_join: image in assoc(g, :background_image),
+        preload: [background_image: image]
+      )
+
+    find_garden(user, id, query) || raise Ecto.NoResultsError, queryable: Garden
+  end
+
+  defp find_garden(%User{id: user_id}, id, query) do
+    case Ecto.UUID.cast(id) do
+      {:ok, id} -> Repo.get_by(query, id: id, user_id: user_id)
+      :error -> nil
     end
   end
 

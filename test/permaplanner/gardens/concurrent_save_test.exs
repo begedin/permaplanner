@@ -4,8 +4,8 @@ defmodule Permaplanner.Gardens.ConcurrentSaveTest do
   alias Ecto.Adapters.SQL.Sandbox
   alias Permaplanner.{Accounts, Gardens, Repo}
 
-  test "only one competing save commits its document and background image" do
-    # Separate real transactions are required: a shared sandbox connection serializes callers.
+  setup do
+    # Separate connections let each caller see commits from the other callers.
     {user, garden} =
       Sandbox.unboxed_run(Repo, fn ->
         {:ok, user} =
@@ -19,7 +19,10 @@ defmodule Permaplanner.Gardens.ConcurrentSaveTest do
       end)
 
     on_exit(fn -> Sandbox.unboxed_run(Repo, fn -> Repo.delete!(user) end) end)
+    %{user: user, garden: garden}
+  end
 
+  test "only one competing save commits the document and image", %{user: user, garden: garden} do
     parent = self()
 
     tasks =
@@ -29,14 +32,7 @@ defmodule Permaplanner.Gardens.ConcurrentSaveTest do
             send(parent, {:ready, self()})
             receive do: (:save -> :ok)
 
-            document =
-              garden.document
-              |> Map.put("backgroundOpacity", index / 10)
-              |> Map.put(
-                "backgroundImage",
-                "data:image/png;base64," <> Base.encode64("image #{index}")
-              )
-
+            document = revised_document(garden, index)
             {document, Gardens.update_garden(user, garden.id, %{"document" => document})}
           end)
         end)
@@ -54,11 +50,50 @@ defmodule Permaplanner.Gardens.ConcurrentSaveTest do
     assert saved.sync_revision == 1
     assert Enum.count(results, &match?({_, {:error, :stale}}, &1)) == 3
 
-    actual =
-      Sandbox.unboxed_run(Repo, fn ->
-        Gardens.garden_json(Gardens.get_garden!(user, garden.id))
+    assert read_document(user, garden) == Map.put(winning_document, "syncRevision", 1)
+  end
+
+  test "a read keeps its original revision during a save", %{user: user, garden: garden} do
+    parent = self()
+    handler = make_ref()
+    on_exit(fn -> :telemetry.detach(handler) end)
+
+    pause_after_layout = fn _, _, query, reader ->
+      if self() == reader and query.source == "gardens" do
+        send(parent, :layout_read)
+        receive do: (:saved -> :ok)
+      end
+    end
+
+    reader =
+      Task.async(fn ->
+        :ok =
+          :telemetry.attach(handler, [:permaplanner, :repo, :query], pause_after_layout, self())
+
+        read_document(user, garden)
       end)
 
-    assert actual.document == Map.put(winning_document, "syncRevision", 1)
+    assert_receive :layout_read, 5000
+
+    assert {:ok, %{sync_revision: 1}} =
+             Sandbox.unboxed_run(Repo, fn ->
+               Gardens.update_garden(user, garden.id, %{"document" => revised_document(garden, 1)})
+             end)
+
+    send(reader.pid, :saved)
+    assert Task.await(reader) == garden.document
+  end
+
+  defp read_document(user, garden) do
+    Sandbox.unboxed_run(Repo, fn ->
+      Gardens.garden_json(Gardens.get_garden!(user, garden.id)).document
+    end)
+  end
+
+  defp revised_document(garden, index) do
+    Map.merge(garden.document, %{
+      "backgroundOpacity" => index / 10,
+      "backgroundImage" => "data:image/png;base64," <> Base.encode64("image #{index}")
+    })
   end
 end

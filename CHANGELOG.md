@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.41.1
+
+- [FIX] Opening a garden shows its layout and aerial image from the same saved revision, even when another device saves at the same time.
+
 ## 0.41.0
 
 - [CHANGE] Install PermaPlanner on an iPhone or Android home screen. Tap the sprout icon to open the planner in its own window.
