@@ -29,9 +29,8 @@
   const { canUndo, canRedo } = storeToRefs(commandHistory);
   const searchInputRef = ref<HTMLInputElement | null>(null);
   const listToggle = ref<HTMLButtonElement>();
-  defineExpose({
-    focusListToggle: () => listToggle.value?.focus({ preventScroll: true }),
-  });
+  const focusListToggle = () => listToggle.value?.focus({ preventScroll: true });
+  defineExpose({ focusListToggle });
   const searchPlaceholder = searchInputPlaceholder();
   const views = [
     { id: 'details', label: 'Details', icon: 'edit', controls: 'guild-details' },
@@ -136,6 +135,21 @@
           class="flex items-center gap-1 border-t border-parchment-300 pt-1.5 lg:hidden"
           aria-label="Guild views"
         >
+          <button
+            type="button"
+            class="nav-icon-btn size-11 shrink-0"
+            aria-label="Clear guild selection"
+            title="Clear guild selection"
+            @click="
+              clearSelection();
+              focusListToggle();
+            "
+          >
+            <UiIcon
+              name="remove"
+              class="size-5"
+            />
+          </button>
           <span
             class="mr-auto min-w-0 truncate font-serif font-medium text-ink-800"
             :title="selectedGuildName"

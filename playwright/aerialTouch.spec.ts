@@ -153,10 +153,23 @@ test('taps plants without moving the map and opens the tapped guild', async ({
   await expect
     .poll(async () => (await bed.boundingBox())!.width)
     .toBeGreaterThan(beforeSwitch!.width);
+  const views = page.getByRole('navigation', { name: 'Guild views' });
+  const clear = views.getByRole('button', { name: 'Clear guild selection' });
+  const button = (await clear.boundingBox())!;
+  const name = (await views.getByText('Orchard', { exact: true }).boundingBox())!;
+  expect(button.x + button.width).toBeLessThanOrEqual(name.x);
+  await clear.tap();
+  await expect(page).toHaveURL(/\/guilds$/);
+  await expect(views).toBeHidden();
   await zoomBy(map, 0.01, center);
   await map.locator('path.pointer-events-fill').nth(1).tap();
   await expect(page).toHaveURL(/\/guilds\/other$/);
   await expect(page.getByRole('region', { name: 'Guild details' })).toBeVisible();
+  await clear.press('Enter');
+  await expect(map).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Guild list', exact: true }),
+  ).toBeFocused();
 });
 
 test('moves a landmark after collapsing its details on a short phone', async ({

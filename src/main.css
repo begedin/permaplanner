@@ -349,3 +349,15 @@
 .guild-merge-mode * {
   cursor: copy !important;
 }
+
+/* The native SVG outline scales with the shape and can cover the map. */
+[data-map-camera] path[role='button']:focus {
+  outline: none;
+}
+
+[data-map-camera] path[role='button']:focus-visible {
+  vector-effect: non-scaling-stroke;
+  stroke: Highlight;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}

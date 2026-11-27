@@ -88,7 +88,11 @@ test('records, edits, and reloads observations across the garden', async ({ page
     'Whole garden',
   );
   await dialog.getByLabel('Observation', { exact: true }).fill('First frost');
-  await dialog.getByLabel('Date', { exact: true }).fill('2026-02-06');
+  const date = dialog.getByLabel('Date', { exact: true });
+  await date.fill('10000-01-01');
+  await dialog.getByRole('button', { name: 'Save observation' }).click();
+  await expect(date).toBeFocused();
+  await date.fill('2026-02-06');
   await dialog.getByRole('button', { name: 'Save observation' }).click();
 
   await openNavTab(page, 'Guilds');

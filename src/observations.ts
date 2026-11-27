@@ -37,3 +37,11 @@ export const createObservation = (fields: Omit<Observation, 'id'>): Observation 
 
 export const newestObservationFirst = (a: Observation, b: Observation) =>
   b.date.localeCompare(a.date) || b.id.localeCompare(a.id);
+
+export const latestObservation = (entries: readonly Observation[] = []) => {
+  let latest: Observation | undefined;
+  for (const entry of entries) {
+    if (!latest || newestObservationFirst(entry, latest) < 0) latest = entry;
+  }
+  return latest;
+};

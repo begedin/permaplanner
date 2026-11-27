@@ -2,7 +2,7 @@
   import { computed, ref, toRef } from 'vue';
   import { phenologySummaryForPlant } from './plantCatalog';
   import { hasPlantPlacement } from './gardenTypes';
-  import type { GuildLayer } from './gardenTypes';
+  import type { GardenThing, GuildLayer } from './gardenTypes';
 
   import HighlightText from './HighlightText.vue';
   import {
@@ -17,7 +17,11 @@
   import GrowthPhaseIcon from './GrowthPhaseIcon.vue';
   import GuildCardSectionLabel from './GuildCardSectionLabel.vue';
   import ObservationDialog from './ObservationDialog.vue';
-  import { newestObservationFirst, observationTypeLabels } from './observations';
+  import {
+    latestObservation,
+    observationTypeLabels,
+    type ObservationLocation,
+  } from './observations';
   import { useGardenStore } from './useGardenStore';
   import GuildSeasonStrip from './GuildSeasonStrip.vue';
   import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
@@ -32,7 +36,7 @@
   import { useGuildSearch } from './useGuildSearch';
 
   const garden = useGardenStore();
-  const recording = ref<{ thingId?: string; label: string }>();
+  const recording = ref<ObservationLocation>();
 
   const props = defineProps<{
     guildId: string;
@@ -76,9 +80,17 @@
     setThingGrowthPhase,
   } = useGuildEditor(toRef(props, 'guildId'), guild);
 
-  const latestGuildObservation = computed(
-    () => guild.value.observations?.toSorted(newestObservationFirst)[0],
+  const latestGuildObservation = computed(() =>
+    latestObservation(guild.value.observations),
   );
+  const recordForPlant = (plant: GardenThing, label: string) => {
+    recording.value = {
+      guildId: props.guildId,
+      thingId: plant.id,
+      label,
+      observations: plant.observations,
+    };
+  };
   const PLACEMENT_STATUS = {
     editing: 'Editing placement',
     placed: 'Placed',
@@ -106,7 +118,7 @@
       singlePlant: row.count === 1 ? row.instances[0] : undefined,
       individuals: row.instances.map((thing) => ({
         thing,
-        latest: thing.observations?.toSorted(newestObservationFirst)[0],
+        latest: latestObservation(thing.observations),
         placementStatus:
           props.placingThingId === thing.id
             ? PLACEMENT_STATUS.editing
@@ -380,9 +392,7 @@
                     :title="`Record observation for ${row.label}`"
                     :aria-label="`Record observation for ${row.label}`"
                     class="btn-icon bg-transparent hover:bg-blossom-100 p-0.5 px-1"
-                    @click.stop="
-                      recording = { thingId: row.singlePlant.id, label: row.label }
-                    "
+                    @click.stop="recordForPlant(row.singlePlant, row.label)"
                   >
                     <UiIcon name="document" />
                   </button>
@@ -480,12 +490,7 @@
                       :title="`Record observation for ${row.label} instance ${index + 1}`"
                       :aria-label="`Record observation for ${row.label} instance ${index + 1}`"
                       class="btn-icon bg-transparent hover:bg-blossom-100 p-0.5 px-1"
-                      @click.stop="
-                        recording = {
-                          thingId: thing.id,
-                          label: `${row.label} #${index + 1}`,
-                        }
-                      "
+                      @click.stop="recordForPlant(thing, `${row.label} #${index + 1}`)"
                     >
                       <UiIcon name="document" />
                     </button>
@@ -546,6 +551,9 @@
                     v-if="latest"
                     class="whitespace-pre-wrap wrap-break-word text-xs text-ink-600"
                   >
+                    <template v-if="row.count > 1 && expandedPlantGroupId !== row.plantId"
+                      >Plant #{{ index + 1 }} ·
+                    </template>
                     <time :datetime="latest.date">{{ latest.date }}</time> ·
                     {{ observationTypeLabels[latest.type] }} · {{ latest.text }}
                   </p>
@@ -654,7 +662,9 @@
         <button
           type="button"
           class="btn-soft px-2 py-1 text-sm"
-          @click="recording = { label: guild.name }"
+          @click="
+            recording = { guildId, label: guild.name, observations: guild.observations }
+          "
         >
           Record observation
         </button>
@@ -671,15 +681,7 @@
       </div>
       <ObservationDialog
         v-if="recording"
-        :key="guildId"
-        :label="recording.label"
-        :guild-id="guildId"
-        :thing-id="recording.thingId"
-        :observations="
-          recording.thingId
-            ? guild.plants.find((p) => p.id === recording?.thingId)?.observations
-            : guild.observations
-        "
+        :location="recording"
         @close="recording = undefined"
       />
     </div>

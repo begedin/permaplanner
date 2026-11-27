@@ -648,6 +648,10 @@ it('records an observation on the selected individual in a group', async () => {
       p.observations?.map((o) => o.text),
     ),
   ).toEqual([undefined, ['First blossom']]);
+  await fireEvent.click(card(wrapper).getByRole('button', { name: /Collapse Apple/ }));
+  expect(card(wrapper).getByText(/Note · First blossom/)).toHaveTextContent(
+    /Plant #2.*Note · First blossom/,
+  );
   wrapper.unmount();
 });
 

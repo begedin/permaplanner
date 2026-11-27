@@ -5,8 +5,41 @@ import {
   setupAuthenticatedGarden,
   waitForMainApp,
 } from './helpers';
-import { importLayoutGarden, mapShape, pointOnShape } from './fixtures/guildLayout';
+import {
+  importLayoutGarden,
+  layoutTest,
+  mapShape,
+  pointOnShape,
+} from './fixtures/guildLayout';
 import { expect, test } from './test';
+
+layoutTest('keeps landmark focus on the shape at map scale', async ({ page }) => {
+  await importLayoutGarden(page, [], {
+    landmarks: [mapShape('Shed', 500, 550, 110, 75)],
+  });
+  const shed = page.getByRole('button', { name: 'Landmark: Shed' });
+  await shed.click();
+  await expect(page.getByLabel('Landmark name')).toHaveValue('Shed');
+  const { x, y, height } = (await shed.boundingBox())!;
+  const beside = {
+    x: Math.floor(x - 12),
+    y: Math.floor(y),
+    width: 6,
+    height: Math.ceil(height),
+  };
+  const clicked = await shed.screenshot();
+  const background = await page.screenshot({ clip: beside });
+  await page.getByLabel('Aerial map canvas').press('Tab');
+  await expect(shed).toBeFocused();
+  expect(
+    clicked.equals(await shed.screenshot()),
+    'Keyboard focus marks the landmark',
+  ).toBe(false);
+  expect(
+    background.equals(await page.screenshot({ clip: beside })),
+    'Keyboard focus leaves the surrounding map visible',
+  ).toBe(true);
+});
 
 for (const feature of ['Path', 'Landmark']) {
   test(`draws ${feature.toLowerCase()}s with every brush, edits them, and restores saved shapes`, async ({

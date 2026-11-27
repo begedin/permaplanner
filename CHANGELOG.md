@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.40.1
+
+- [CHANGE] On small screens, tap the X beside the selected guild name to clear the selection from Details or Aerial.
+- [FIX] Keyboard focus follows the edge of a landmark, path, or plot border at a fixed width as the map zooms.
+- [FIX] Show the plant number beside its latest observation in a collapsed group. The observation form now rejects dates beyond year 9999 before you save the garden.
+
 ## 0.40.0
 
 - [CHANGE] Record dated Flowering, Harvest, Care, and Note observations for a plant, a guild, or the whole garden. Calendar lists all observations, newest first, and shows older entries as you scroll.

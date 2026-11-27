@@ -7,35 +7,28 @@
     type ObservationType,
     type Observation,
     type ObservationLocation,
-    type ObservationTarget,
   } from './observations';
   import { useGardenStore } from './useGardenStore';
 
   const props = defineProps<{
-    label: string;
-    guildId?: string;
-    thingId?: string;
+    location: ObservationLocation;
     entry?: Observation;
     locations?: readonly ObservationLocation[];
-    observations?: readonly Observation[];
   }>();
   const emit = defineEmits<{ close: [] }>();
   const garden = useGardenStore();
   const dialog = ref<HTMLDialogElement>();
-  const target = ref<ObservationTarget>({
-    guildId: props.guildId,
-    thingId: props.thingId,
-  });
+  const target = ref(props.location);
   const type = ref<ObservationType>(props.entry?.type ?? 'note');
   const date = ref(props.entry?.date ?? observationToday());
   const text = ref(props.entry?.text ?? '');
   const history = computed(() =>
-    [...(props.observations ?? [])].sort(newestObservationFirst),
+    props.location.observations?.toSorted(newestObservationFirst),
   );
   onMounted(() => dialog.value?.showModal());
   const remove = () => {
     if (!props.entry || !window.confirm('Delete this observation?')) return;
-    garden.removeObservation(props, props.entry.id);
+    garden.removeObservation(props.location, props.entry.id);
     dialog.value?.close();
   };
   const save = () => {
@@ -63,7 +56,7 @@
       v-if="!locations"
       class="mb-3 text-sm text-ink-600"
     >
-      {{ label }}
+      {{ location.label }}
     </p>
     <form
       class="grid gap-3"
@@ -78,11 +71,11 @@
           class="input-soft px-2 py-1"
         >
           <option
-            v-for="location in locations"
-            :key="JSON.stringify([location.guildId, location.thingId])"
-            :value="{ guildId: location.guildId, thingId: location.thingId }"
+            v-for="option in locations"
+            :key="JSON.stringify([option.guildId, option.thingId])"
+            :value="option"
           >
-            {{ location.label }}
+            {{ option.label }}
           </option>
         </select>
       </label>
@@ -120,6 +113,7 @@
           v-model="date"
           required
           type="date"
+          max="9999-12-31"
           class="input-soft px-2 py-1"
         />
       </label>
@@ -149,7 +143,7 @@
       </div>
     </form>
     <section
-      v-if="!entry && history.length"
+      v-if="!entry && !locations && history?.length"
       class="mt-4 border-t border-parchment-300 pt-2"
     >
       <h3 class="text-sm font-medium">Previous observations</h3>

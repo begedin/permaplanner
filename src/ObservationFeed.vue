@@ -12,12 +12,12 @@
   import { useGardenStore } from './useGardenStore';
 
   const garden = useGardenStore();
-  const editing = ref<ObservationLocation & { entry?: Observation }>();
+  const editing = ref<{ location: ObservationLocation; entry?: Observation }>();
   const scrollArea = ref<HTMLElement>();
   const pageSize = 30;
   const limit = ref(pageSize);
   const locations = computed(() => {
-    const rows: ObservationLocation[] = [
+    const rows: [ObservationLocation, ...ObservationLocation[]] = [
       { label: 'Whole garden', observations: garden.observations },
     ];
     for (const guild of garden.guilds) {
@@ -65,7 +65,7 @@
       <h2 class="font-medium text-ink-800">Observations</h2>
       <button
         class="btn-soft px-3 py-1.5 text-sm"
-        @click="editing = { label: 'Whole garden' }"
+        @click="editing = { location: locations[0] }"
       >
         Record observation
       </button>
@@ -102,7 +102,7 @@
               type="button"
               :aria-label="`Edit observation for ${location.label} on ${entry.date}`"
               class="ml-auto btn-icon p-1"
-              @click="editing = { ...location, entry }"
+              @click="editing = { location, entry }"
             >
               <UiIcon
                 name="edit"

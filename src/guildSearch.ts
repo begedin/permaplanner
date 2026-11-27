@@ -102,6 +102,7 @@ export const searchGuilds = (
   query: string,
   resolvePlant: (plantId: string) => Plant,
 ): DeepReadonly<Guild>[] => {
+  if (!query.trim()) return [...guilds];
   const byId = new Map(guilds.map((g) => [g.id, g]));
   return searchByFuse(
     guilds.map((g) => buildGuildSearchRecord(g, resolvePlant)),
