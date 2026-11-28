@@ -2,7 +2,7 @@
 
 ## Project tracker
 
-Read [todo.md](todo.md) at the start of each task. Use it to track plans, feature ideas, and bugs. Update the relevant entries as work progresses and mark them complete after verification. Changes to the tracker do not need a changelog entry.
+Read [todo.md](todo.md) at the start of each task. Use it to track plans, feature ideas, and bugs. Update entries as work progresses. After verification, remove completed architecture review items and keep the remaining numbers. Mark other completed items done. Changes to the tracker do not need a changelog entry.
 
 ## Browser validation
 
