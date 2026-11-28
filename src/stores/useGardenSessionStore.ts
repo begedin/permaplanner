@@ -30,7 +30,7 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
   const syncRevision = ref(0);
   const auth = useAuthStore();
 
-  const gardens = ref<GardenSummary[]>([]);
+  const gardens = ref<GardenSummary[]>();
   const loading = ref(false);
   const isBootstrapping = ref(true);
   const saving = ref(false);
@@ -64,7 +64,7 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
     if (gardenName.value) {
       rows.push({ label: 'Garden', value: gardenName.value });
     }
-    const summary = gardens.value.find((garden) => garden.id === gardenId.value);
+    const summary = gardens.value?.find((garden) => garden.id === gardenId.value);
     rows.push({ label: 'Last saved', value: formatTimestamp(summary?.updatedAt) });
     return rows;
   });
@@ -116,19 +116,29 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
     markSaved();
   };
 
-  const commitGarden = (garden: GardenRecord, request: number): boolean => {
-    if (request !== activationRequest) return false;
-    hydrateFromDocument(garden.document, { id: garden.id, name: garden.name });
-    persistActiveId(garden.id);
-    return true;
+  const commitGarden = (garden: GardenRecord, request: number) => {
+    if (request !== activationRequest) return;
+    const { id, name, syncRevision, updatedAt, document } = garden;
+    hydrateFromDocument(document, { id, name });
+    persistActiveId(id);
+
+    const summary = { id, name, syncRevision, updatedAt };
+    gardens.value ??= [];
+    const index = gardens.value.findIndex((entry) => entry.id === id);
+    if (index === -1) {
+      gardens.value.push(summary);
+    } else {
+      gardens.value[index] = summary;
+    }
   };
 
   const refreshList = async () => {
     const request = ++listRequest;
+    const generation = sessionGeneration.value;
     loading.value = true;
     try {
       const nextGardens = await gardensApi.listGardens();
-      if (request === listRequest) {
+      if (request === listRequest && generation === sessionGeneration.value) {
         gardens.value = nextGardens;
       }
     } finally {
@@ -153,10 +163,7 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
   const createEmptyGarden = async (name?: string) => {
     const request = ++activationRequest;
     const garden = await gardensApi.createGarden(name);
-    const committed = commitGarden(garden, request);
-    if (committed) {
-      await refreshList().catch(() => undefined);
-    }
+    commitGarden(garden, request);
     return garden;
   };
 
@@ -255,7 +262,7 @@ export const useGardenSessionStore = defineStore('gardenSession', () => {
     saving.value = false;
     errorMessage.value = undefined;
     savedState.value = undefined;
-    gardens.value = [];
+    gardens.value = undefined;
     persistActiveId(undefined);
     const { backgroundImageDataUrl: _image, ...data } = createEmptyPlanState();
     hydrateFromDocument({

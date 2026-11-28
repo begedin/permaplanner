@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.41.3
+
+- [FIX] The editor opens the garden you create or import without waiting for another garden list request.
+
 ## 0.41.2
 
 - [FIX] The plant editor keeps your selected guild functions and layers when you change a plant’s name or icon before saving.

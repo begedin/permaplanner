@@ -16,7 +16,6 @@
     try {
       const garden = await pickAndImportLocalFile();
       gardenSession.activateGardenRecord(garden);
-      await gardenSession.refreshList().catch(() => undefined);
       await router.replace({ name: routeNames.guilds });
     } catch (e) {
       if (e instanceof DOMException && e.name === 'AbortError') {

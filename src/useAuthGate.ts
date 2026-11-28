@@ -20,10 +20,8 @@ export const authGateMode = computed((): AuthGateMode | null => {
 export const showMainApp = computed(() => authGateMode.value === 'ready');
 
 export const needsGardenSetup = computed(() => {
-  const auth = useAuthStore();
   const gardenSession = useGardenSessionStore();
-  if (auth.bootstrapping || gardenSession.isBootstrapping || !auth.user?.totpConfirmed) {
-    return false;
-  }
-  return gardenSession.gardens.length === 0;
+  return (
+    showMainApp.value && !gardenSession.gardenId && gardenSession.gardens?.length === 0
+  );
 });
