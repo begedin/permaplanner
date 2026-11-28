@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.41.2
+
+- [FIX] The plant editor keeps your selected guild functions and layers when you change a plant’s name or icon before saving.
+
 ## 0.41.1
 
 - [FIX] Opening a garden shows its layout and aerial image from the same saved revision, even when another device saves at the same time.

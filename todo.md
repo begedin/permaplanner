@@ -1,5 +1,12 @@
 # PermaPlanner project tracker
 
+## Architecture review
+
+- [ ] 3. Use the active garden ID to open the editor after creation or import, even if the next garden list request fails. Open setup when the list request succeeds with an empty list and there is no active garden.
+- [ ] 4. Use the grouped plant counts and the same season chart in the footer, guild view, and plant calendar. Five trees of one variety must give the same harvest color and tooltip count in all three views.
+- [ ] 5. Select only the ID, name, sync revision, and update time for the HTTP and MCP garden lists. Select only the owned garden ID to list or create share links.
+- [ ] 6. Remove the `LegacyImport` and `LocalFile` forwarding modules. Have the import controller supply the default name and call `Gardens.create_garden` directly. Keep the current validation responses.
+
 ## Garden reads
 
 - [x] Read the garden layout and aerial image from the same saved revision. A database test verifies a read during a save. Chromium verified that a garden opens without an image and restores its image and map scale after a save.

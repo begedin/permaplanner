@@ -12,73 +12,57 @@ import {
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createTestingPinia } from '@pinia/testing';
 
-import { defaultCatalogPick } from './catalogPlantPick';
 import { createAuthedTestRouter } from './testing/authedTestSession';
 import ThePlants from './ThePlants.vue';
 import { setActivePinia } from 'pinia';
 import { PLANT_ICON_IDS } from './plantIcons/iconIds';
-import { plantCatalog } from './plantCatalog';
-import { resolveUserPlant } from './resolvePlant';
 
 vi.mock('./api/gardens');
+vi.mock(import('./data/plantCatalog.json'), async (importOriginal) => {
+  const catalog = await importOriginal();
+  const species = catalog.default.species.filter(({ id }) =>
+    ['unknown', 'basil', 'hibiscus'].includes(id),
+  );
+  return { ...catalog, species, default: { species } };
+});
 
 beforeEach(() => {
   setActivePinia(createTestingPinia({ createSpy: vi.fn, stubActions: false }));
-  usePlanStateStore().state.plants = [];
 });
 
-afterEach(() => {
-  cleanup();
-});
+afterEach(cleanup);
+
+const renderPlants = async () => {
+  const router = await createAuthedTestRouter('/plants');
+  render(ThePlants, { global: { plugins: [router] } });
+};
 
 it('creates a plant from catalog defaults', async () => {
-  const router = await createAuthedTestRouter('/plants');
-  render(ThePlants, { global: { plugins: [router] } });
+  await renderPlants();
 
+  expect(screen.getByRole('checkbox', { name: 'Edible' })).toBeChecked();
   await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
-
-  expect(usePlanStateStore().state.plants).toHaveLength(1);
-  const up = usePlanStateStore().state.plants[0];
-  const expected = defaultCatalogPick(
-    plantCatalog.species.filter((s) => s.id !== 'unknown'),
-  );
-  expect(up.speciesId).toBe(expected?.speciesId);
-  expect(up.cultivarId).toBe(expected?.cultivarId ?? null);
-  const r = resolveUserPlant(up, plantCatalog);
-  expect(r.functions.length).toBeGreaterThan(0);
+  expect(usePlanStateStore().state.plants).toEqual([
+    { id: expect.any(String), speciesId: 'basil', cultivarId: null },
+  ]);
 });
 
-it('can override guild functions and save', async () => {
-  const router = await createAuthedTestRouter('/plants');
-  render(ThePlants, { global: { plugins: [router] } });
+it('keeps function, layer, name, and icon edits through save and reopen', async () => {
+  usePlanStateStore().state.plants = [
+    { id: 'hibiscus', speciesId: 'hibiscus', cultivarId: 'lord_baltimore' },
+  ];
+  await renderPlants();
+  await fireEvent.click(screen.getByRole('button', { name: 'Hibiscus' }));
 
-  await fireEvent.click(screen.getByRole('checkbox', { name: 'Wildfire Suppressor' }));
-  await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
-
-  expect(usePlanStateStore().state.plants).toHaveLength(1);
-  const r = resolveUserPlant(usePlanStateStore().state.plants[0], plantCatalog);
-  expect(r.functions).toContain('wildfire_suppressor');
-});
-
-it('can set custom species name', async () => {
-  const router = await createAuthedTestRouter('/plants');
-  render(ThePlants, { global: { plugins: [router] } });
-
+  const wildfire = screen.getByRole('checkbox', { name: 'Wildfire Suppressor' });
+  const root = screen.getByRole('checkbox', { name: 'Root' });
+  await fireEvent.click(wildfire);
   await fireEvent.update(
     screen.getByPlaceholderText('Uses catalog name if empty'),
     'Herb patch',
   );
-  await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
-
-  expect(resolveUserPlant(usePlanStateStore().state.plants[0], plantCatalog).name).toBe(
-    'Herb patch',
-  );
-});
-
-it('offers every plant icon and saves a newly added icon choice', async () => {
-  const router = await createAuthedTestRouter('/plants');
-  render(ThePlants, { global: { plugins: [router] } });
-
+  expect(wildfire).toBeChecked();
+  await fireEvent.click(root);
   const picker = within(screen.getByRole('list', { name: 'Plant icons' }));
   expect(
     picker.getAllByRole('button').map((button) => button.getAttribute('aria-label')),
@@ -89,18 +73,25 @@ it('offers every plant icon and saves a newly added icon choice', async () => {
     'aria-pressed',
     'true',
   );
-  await fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+  await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
   expect(usePlanStateStore().state.plants).toMatchObject([
-    { speciesOverride: { iconId: 'bouquet' } },
+    {
+      speciesOverride: { iconId: 'bouquet' },
+      cultivarOverride: { layers: ['herb', 'root'] },
+    },
   ]);
+  await fireEvent.click(screen.getByRole('button', { name: 'New' }));
+  await fireEvent.click(screen.getByRole('button', { name: 'Herb patch' }));
+  expect(wildfire).toBeChecked();
+  expect(root).toBeChecked();
+  expect(screen.getByRole('button', { name: 'bouquet', pressed: true })).toBeVisible();
 });
 
 it('focuses and selects the current catalog value when editing an existing plant', async () => {
   usePlanStateStore().state.plants = [
     { id: 'basil', speciesId: 'basil', cultivarId: 'genovese' },
   ];
-  const router = await createAuthedTestRouter('/plants');
-  render(ThePlants, { global: { plugins: [router] } });
+  await renderPlants();
 
   await fireEvent.click(screen.getByRole('button', { name: 'Basil' }));
 
@@ -120,7 +111,6 @@ it('focuses and selects the current catalog value when editing an existing plant
 });
 
 it('explains why a placed plant cannot be deleted and keeps the plan savable', async () => {
-  const router = await createAuthedTestRouter('/plants');
   const plant = { id: 'basil', speciesId: 'basil', cultivarId: null };
   usePlanStateStore().state.plants = [plant];
   usePlanStateStore().state.guilds = [
@@ -145,7 +135,7 @@ it('explains why a placed plant cannot be deleted and keeps the plan savable', a
   useGardenSessionStore().gardenId = 'garden';
   const session = useGardenSessionStore();
   session.markSaved();
-  render(ThePlants, { global: { plugins: [router] } });
+  await renderPlants();
   const button = screen.getByRole('button', { name: 'Delete plant' });
   expect(button).toBeDisabled();
   expect(button).toHaveAttribute(

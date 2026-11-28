@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import type { DeepReadonly } from 'vue';
-  import { computed, ref, watch } from 'vue';
+  import { computed, ref } from 'vue';
   import { v4 as uuidV4 } from 'uuid';
   import {
     buildCatalogPickGroups,
@@ -9,15 +9,10 @@
     type CatalogPlantPick,
   } from './catalogPlantPick';
   import { useGardenStore } from './useGardenStore';
-  import type {
-    GuildFunction,
-    GuildLayer,
-    PlantOverrideFields,
-    UserPlant,
-  } from './gardenTypes';
-  import { plantCatalog } from './plantCatalog';
+  import type { PlantOverrideFields, UserPlant } from './gardenTypes';
+  import { getSpecies, plantCatalog } from './plantCatalog';
   import { resolveUserPlant } from './resolvePlant';
-  import { PLANT_ICON_IDS, type PlantIconId } from './plantIcons/iconIds';
+  import { PLANT_ICON_IDS } from './plantIcons/iconIds';
   import PlantCatalogCombobox from './PlantCatalogCombobox.vue';
   import AppPageHeader from './AppPageHeader.vue';
   import PlantIcon from './PlantIcon.vue';
@@ -56,6 +51,21 @@
     resolveUserPlant(plantInEditing.value, plantCatalog),
   );
 
+  const savedPlant = computed(() =>
+    garden.plants.find((p) => p.id === plantInEditing.value.id),
+  );
+
+  const setOverride = (
+    slot: 'speciesOverride' | 'cultivarOverride',
+    patch: PlantOverrideFields,
+  ) => {
+    const plant = plantInEditing.value;
+    const fields = Object.entries({ ...plant[slot], ...patch }).filter(
+      ([, value]) => value !== undefined,
+    );
+    plant[slot] = fields.length ? Object.fromEntries(fields) : undefined;
+  };
+
   const editingCatalogPick = computed({
     get: (): CatalogPlantPick => {
       const groups = buildCatalogPickGroups(knownSpecies.value);
@@ -68,134 +78,70 @@
       return hit ?? fallback!;
     },
     set: (pick: CatalogPlantPick | null) => {
-      if (!pick) {
+      const plant = plantInEditing.value;
+      if (
+        !pick ||
+        (plant.speciesId === pick.speciesId && plant.cultivarId === pick.cultivarId)
+      ) {
         return;
       }
-      plantInEditing.value.speciesId = pick.speciesId;
-      plantInEditing.value.cultivarId = pick.cultivarId;
+      // A new catalog pick starts with the saved checkbox overrides.
+      for (const slot of ['speciesOverride', 'cultivarOverride'] as const) {
+        const saved = savedPlant.value?.[slot];
+        setOverride(slot, {
+          functions: saved?.functions?.slice(),
+          layers: saved?.layers?.slice(),
+        });
+      }
+      plant.speciesId = pick.speciesId;
+      plant.cultivarId = pick.cultivarId;
     },
   });
 
-  const editingFunctions = ref<GuildFunction[]>([]);
-  const editingLayers = ref<GuildLayer[]>([]);
+  const sameChoices = (a: string[], b: string[]) =>
+    a.every((choice) => b.includes(choice)) && b.every((choice) => a.includes(choice));
 
-  const syncGuildFieldsFromResolved = () => {
-    const r = resolveUserPlant(plantInEditing.value, plantCatalog);
-    editingFunctions.value = [...r.functions];
-    editingLayers.value = [...r.layers];
-  };
-
-  watch(
-    () => plantInEditing.value,
-    () => {
-      syncGuildFieldsFromResolved();
-    },
-    { deep: true, immediate: true },
-  );
-
-  const pickIcon = (iconId: PlantIconId) => {
-    const natural = resolveUserPlant(
-      {
-        ...plantInEditing.value,
-        speciesOverride: { ...plantInEditing.value.speciesOverride, iconId: undefined },
-      },
-      plantCatalog,
+  const setTrait = <K extends 'functions' | 'layers' | 'iconId'>(
+    field: K,
+    value: NonNullable<PlantOverrideFields[K]>,
+  ) => {
+    const plant = plantInEditing.value;
+    const cultivar = getSpecies(plant.speciesId)?.cultivars.find(
+      (row) => row.id === plant.cultivarId,
     );
-    if (iconId === natural.iconId) {
-      const rest = { ...plantInEditing.value.speciesOverride };
-      delete rest.iconId;
-      plantInEditing.value.speciesOverride = Object.keys(rest).length ? rest : undefined;
-      return;
-    }
-    plantInEditing.value.speciesOverride = {
-      ...plantInEditing.value.speciesOverride,
-      iconId,
-    };
-  };
-
-  const save = () => {
-    const natural = resolveUserPlant(
-      {
-        ...plantInEditing.value,
-        speciesOverride: {
-          ...plantInEditing.value.speciesOverride,
-          functions: undefined,
-          layers: undefined,
-        },
-      },
-      plantCatalog,
-    );
-
-    const prevSo = plantInEditing.value.speciesOverride;
-    const speciesOverride: PlantOverrideFields = {};
-    if (prevSo?.name) {
-      speciesOverride.name = prevSo.name;
-    }
-    if (prevSo?.iconId) {
-      speciesOverride.iconId = prevSo.iconId;
-    }
-    if (JSON.stringify(editingFunctions.value) !== JSON.stringify(natural.functions)) {
-      speciesOverride.functions = [...editingFunctions.value];
-    }
-    if (JSON.stringify(editingLayers.value) !== JSON.stringify(natural.layers)) {
-      speciesOverride.layers = [...editingLayers.value];
-    }
-    plantInEditing.value.speciesOverride = Object.keys(speciesOverride).length
-      ? speciesOverride
-      : undefined;
-
-    garden.savePlant(plantInEditing.value);
+    const catalogField = field === 'iconId' ? 'defaultIconId' : field;
+    const slot =
+      plant.cultivarOverride?.[field] !== undefined ||
+      savedPlant.value?.cultivarOverride?.[field] !== undefined ||
+      (cultivar && catalogField in cultivar)
+        ? 'cultivarOverride'
+        : 'speciesOverride';
+    const inherited = resolveUserPlant({
+      ...plant,
+      [slot]: { ...plant[slot], [field]: undefined },
+    })[field];
+    const same =
+      Array.isArray(value) && Array.isArray(inherited)
+        ? sameChoices(value, inherited)
+        : value === inherited;
+    setOverride(slot, { [field]: same ? undefined : value });
   };
 
   const edit = (plant: DeepReadonly<UserPlant>) => {
     plantInEditing.value = JSON.parse(JSON.stringify(plant));
-    syncGuildFieldsFromResolved();
     void catalogInput.value?.focusAndSelect();
   };
 
-  const newPlant = () => {
-    plantInEditing.value = makeNewUserPlant();
-    syncGuildFieldsFromResolved();
-  };
-
-  const isNew = computed(
-    () => garden.plants.findIndex((p) => p.id === plantInEditing.value.id) === -1,
-  );
+  const isNew = computed(() => !savedPlant.value);
 
   const customSpeciesName = computed({
     get: () => plantInEditing.value.speciesOverride?.name ?? '',
-    set: (v: string) => {
-      if (!v.trim()) {
-        const rest = { ...plantInEditing.value.speciesOverride };
-        delete rest.name;
-        plantInEditing.value.speciesOverride = Object.keys(rest).length
-          ? rest
-          : undefined;
-        return;
-      }
-      plantInEditing.value.speciesOverride = {
-        ...plantInEditing.value.speciesOverride,
-        name: v.trim(),
-      };
-    },
+    set: (name: string) => setOverride('speciesOverride', { name: name || undefined }),
   });
 
   const customCultivarName = computed({
     get: () => plantInEditing.value.cultivarOverride?.name ?? '',
-    set: (v: string) => {
-      if (!v.trim()) {
-        const rest = { ...plantInEditing.value.cultivarOverride };
-        delete rest.name;
-        plantInEditing.value.cultivarOverride = Object.keys(rest).length
-          ? rest
-          : undefined;
-        return;
-      }
-      plantInEditing.value.cultivarOverride = {
-        ...plantInEditing.value.cultivarOverride,
-        name: v.trim(),
-      };
-    },
+    set: (name: string) => setOverride('cultivarOverride', { name: name || undefined }),
   });
 </script>
 <template>
@@ -245,7 +191,7 @@
           class="selectable-row"
           :class="{ 'selectable-row-active': isNew }"
           :aria-current="isNew ? 'true' : undefined"
-          @click="newPlant"
+          @click="plantInEditing = makeNewUserPlant()"
         >
           <UiIcon
             name="add"
@@ -279,7 +225,7 @@
         <label class="flex flex-col gap-1">
           <span class="text-ink-800">Custom species name (optional)</span>
           <input
-            v-model="customSpeciesName"
+            v-model.trim="customSpeciesName"
             class="p-1 input-soft text-ink-800"
             placeholder="Uses catalog name if empty"
           />
@@ -287,7 +233,7 @@
         <label class="flex flex-col gap-1">
           <span class="text-ink-800">Custom cultivar label (optional)</span>
           <input
-            v-model="customCultivarName"
+            v-model.trim="customCultivarName"
             class="p-1 input-soft text-ink-800"
             placeholder="Uses catalog cultivar if empty"
           />
@@ -308,7 +254,7 @@
               :class="resolvedPreview.iconId === iconId && 'icon-picker-btn-selected'"
               :aria-pressed="resolvedPreview.iconId === iconId"
               :aria-label="iconId"
-              @click="pickIcon(iconId)"
+              @click="setTrait('iconId', iconId)"
             >
               <PlantIcon
                 class="w-7 h-7"
@@ -318,12 +264,18 @@
           </div>
         </div>
 
-        <PlantFunctions v-model:value="editingFunctions" />
-        <PlantLayers v-model:value="editingLayers" />
+        <PlantFunctions
+          :value="[...new Set(resolvedPreview.functions)]"
+          @update:value="setTrait('functions', $event)"
+        />
+        <PlantLayers
+          :value="[...new Set(resolvedPreview.layers)]"
+          @update:value="setTrait('layers', $event)"
+        />
 
         <button
           class="px-3 py-1.5 btn-soft-muted btn-soft-sm text-sm"
-          @click="save"
+          @click="garden.savePlant(plantInEditing)"
         >
           {{ isNew ? 'Create' : 'Save' }}
         </button>
